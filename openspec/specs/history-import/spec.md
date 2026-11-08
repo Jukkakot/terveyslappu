@@ -35,6 +35,10 @@ header names (Finnish, English, Chinese) or, without a header, from the values.
 - **WHEN** the weight column header says lb
 - **THEN** the weights are converted to kilograms
 
+#### Scenario: Jin
+- **WHEN** the weight column header says jin or 斤 (and not 公斤)
+- **THEN** the weights are halved to kilograms
+
 ### Requirement: Date formats
 The app SHALL understand ISO dates (`2024-03-01`, with optional `T`/space time and seconds),
 `d.M.yyyy`, `yyyy/M/d`, `d/M/yyyy` and `M/d/yyyy`, and seconds or milliseconds since 1970. Times
