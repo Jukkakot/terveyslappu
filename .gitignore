@@ -1,0 +1,25 @@
+# Build
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+
+# Signing
+*.jks
+*.keystore
+keystore.properties
+
+# Never commit health data (NFR-1): exports, logs, recordings, screenshots
+*.csv
+*.zip
+*.db
+*.log
+*.log.*
+*.mp4
+*.jpg
+*.jpeg
+Screenshot*
+Screen_Recording*

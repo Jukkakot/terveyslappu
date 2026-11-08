@@ -1,0 +1,41 @@
+schema: spec-driven
+
+context: |
+  Terveyslappu: the user's own Android app (Samsung phone) for logging body
+  weight with as little effort as possible: one tap on a home-screen widget or
+  Quick Settings tile, step on the Bluetooth scale, the weight is saved without
+  opening the app. Grows step by step towards a small personal health app.
+
+  Data: Health Connect on the phone is the interface. The app writes weight
+  there; viewing and analysis happen in other apps (Samsung Health for now).
+  No own backend and no own server database (health data, deliberate choice);
+  a local cache on the phone is fine.
+
+  Stack: Kotlin, Jetpack Compose, Material 3, Gradle (Kotlin DSL), Health
+  Connect client. Developed from cloud sessions: GitHub Actions builds a signed
+  APK, the user installs updates with Obtainium.
+
+  Always: English identifiers; UI text in Finnish; light and dark theme; the
+  public repo never holds real health data (NFR-1); every build can share its
+  log file from the app; budget 0 EUR.
+
+  Knowledge base - start planning here, then verify against the code:
+  - openspec/context/product.md: goal, decisions with reasons, test findings
+  - openspec/context/nfr.md: non-functional requirements for every change
+  - openspec/context/roadmap.md: phases and backlog
+  An existing spec in openspec/specs wins over context/ files.
+
+rules:
+  proposal:
+    - State which parts (app screens, Health Connect, scale, widget, build/CI) the change touches.
+  specs:
+    - Specs describe observable behaviour, never library or class names.
+  tasks:
+    - Each task group lands its own tests (logic gets real unit tests; screens get one or two smoke tests).
+    - Test data is made up; never copy the user's real weights, logs or exports into the repo.
+    - The last task group updates the context/ files the change affects and marks the roadmap item done.
+
+operations:
+  archive:
+    guidance:
+      - Before archiving, check that product.md and roadmap.md reflect the change.

@@ -1,0 +1,1 @@
+- [Open inconveniences](open-inconveniences.md) — recurring friction raised with the user, repeat open ones until they react
