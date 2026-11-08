@@ -95,15 +95,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (isInFuture(time, now)) return
         _state.update { it.copy(saving = true) }
         viewModelScope.launch {
+            val started = System.nanoTime()
             runCatching { weights.write(input.kg, time, zone.rules.getOffset(time)) }
                 .onSuccess { clientId ->
-                    AppLog.i("weight.save", "ok", "kg" to input.kg, "time" to time, "clientId" to clientId)
+                    AppLog.i("weight.save", "ok", "kg" to input.kg, "time" to time, "clientId" to clientId, "ms" to msSince(started))
                     _state.update { it.copy(weightText = "", pickedTime = null, saving = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_saved, listOf(formatKg(input.kg))))
                     load()
                 }
                 .onFailure { error ->
-                    AppLog.e("weight.save", error, "failed", "kg" to input.kg)
+                    AppLog.e("weight.save", error, "failed", "kg" to input.kg, "ms" to msSince(started))
                     _state.update { it.copy(saving = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_save_failed))
                 }
@@ -112,9 +113,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun delete(entry: WeightEntry) {
         viewModelScope.launch {
+            val started = System.nanoTime()
             runCatching { weights.delete(entry) }
                 .onSuccess {
-                    AppLog.i("weight.delete", "ok", "id" to entry.id)
+                    AppLog.i("weight.delete", "ok", "id" to entry.id, "ms" to msSince(started))
                     _messages.tryEmit(UiMessage(R.string.delete_done))
                     load()
                 }
@@ -126,10 +128,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun load() {
+        val started = System.nanoTime()
         runCatching { weights.recent(Instant.now()) }
             .onSuccess { entries ->
                 AppLog.i(
                     "weight.read", "ok",
+                    "ms" to msSince(started),
                     "count" to entries.size,
                     "sources" to entries.groupingBy { it.sourcePackage }.eachCount(),
                 )
@@ -137,10 +141,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update { it.copy(rows = rows, loadFailed = false) }
             }
             .onFailure { error ->
-                AppLog.e("weight.read", error, "failed")
+                AppLog.e("weight.read", error, "failed", "ms" to msSince(started))
                 _state.update { it.copy(loadFailed = true) }
             }
     }
+
+    private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000
 
     private fun labelOf(packageName: String): String {
         val pm = getApplication<Application>().packageManager

@@ -6,6 +6,8 @@
     <string name="menu_version">Versio %1$s</string>
     <string name="menu_share_log">Jaa loki</string>
     <string name="log_share_chooser">Jaa loki</string>
+    <string name="log_empty">Lokia ei löytynyt</string>
+    <string name="open_failed">Avaaminen epäonnistui, syy on lokissa</string>
 
     <string name="hc_checking">Tarkistetaan Health Connectia…</string>
     <string name="hc_unavailable">Health Connect ei ole käytettävissä tässä puhelimessa.</string>

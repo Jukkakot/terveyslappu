@@ -18,10 +18,11 @@
 - [x] 3.2 Health Connect repository: availability check, permission set, write weight (manual entry, client record id), read last 30 days, delete own record, source app label; verify unit tests for record mapping and own-vs-other detection
 - [x] 3.3 Main screen: permission explanation and request, unavailable/denied states, weight form with date and time pickers, recent list with source app, long-press delete with confirmation, menu with version and Jaa loki; verify Robolectric smoke test for the no-permission and form-enabled states
 - [x] 3.4 Log events for start, availability, permission result, save, read, delete and errors; verify by reading the log lines produced in the unit tests
+- [x] 3.5 Durations (`ms`) on Health Connect save, read and delete log lines; a failing intent or missing log file shows a short message (NFR-8, NFR-9); verify `./gradlew test lint` passes
 
 ## 4. CI and release
 
-- [ ] 4.1 `.github/workflows/ci.yml`: test, lint, assembleRelease on push/PR with docs-only paths ignored; publish job replacing the `latest-build` release with `terveyslappu.apk` when the signing secret exists; verify the workflow passes on the first push
+- [x] 4.1 `.github/workflows/ci.yml`: test, lint, assembleRelease on push/PR with docs-only paths ignored; publish job replacing the `latest-build` release with `terveyslappu.apk` when the signing secret exists; verify the workflow passes on the first push
 - [x] 4.2 Write the user's one-time steps (signing secret, Obtainium) into `.claude/CLAUDE.md` → Build, release, logs; verify the steps name the exact secret and URL
 
 ## 5. Docs

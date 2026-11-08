@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.health.connect.HealthConnectManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -75,7 +76,12 @@ class MainActivity : ComponentActivity() {
         AppLog.i("log.share")
         AppLog.flush()
         val files = AppLog.logFile?.files().orEmpty()
-        if (files.isNotEmpty()) open(shareLogIntent(this, files))
+        if (files.isEmpty()) {
+            AppLog.w("log.share", "no log file")
+            Toast.makeText(this, R.string.log_empty, Toast.LENGTH_LONG).show()
+        } else {
+            open(shareLogIntent(this, files))
+        }
     }
 
     private fun open(intent: Intent) {
@@ -83,6 +89,7 @@ class MainActivity : ComponentActivity() {
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
             AppLog.e("intent.open", e, "", "action" to intent.action)
+            Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
         }
     }
 
