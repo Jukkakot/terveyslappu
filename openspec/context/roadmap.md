@@ -20,6 +20,12 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- **Weigh-in without any tap** (idea 2026-11-08): a background Bluetooth scan with a filter
+  (Android delivers matches to the app even with the screen off) saves the weight when the user
+  just steps on the scale. Needs from the first weigh-in log: whether `name=Yoda1` is in the
+  advertisement itself and whether the company id (`key=`) is stable, since background scans
+  must be filtered. Q6.
+
 - Own weight view in the app (only if Samsung Health turns out awkward).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
