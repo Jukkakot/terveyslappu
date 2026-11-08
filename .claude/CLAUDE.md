@@ -36,10 +36,9 @@ archive); a `UserPromptSubmit` hook repeats this.
   read/write/delete), `ui/` (main screen, view model, theme, formats), `log/` (file log, crash
   handler, share intent), `PrivacyActivity` (Health Connect's "why access" page).
 - Checks: `./gradlew test lint assembleDebug` (same in CI). The cloud session-start hook installs
-  the Android SDK to `~/android-sdk` and writes `local.properties`. If Maven Central answers 429 in
-  the container, add a Gradle init script that puts Google's mirror
-  `https://maven-central.storage-download.googleapis.com/maven2/` first, and
-  `robolectricRepoUrl=<same>` to `~/.gradle/gradle.properties` (Robolectric downloads too).
+  the Android SDK to `~/android-sdk` and writes `local.properties`. Maven Central answers 429 in
+  cloud containers; claude-config's `install.sh` routes Gradle and Robolectric (build property
+  `robolectricRepoUrl`) through Google's mirror.
 - Release: every green code push to `main` replaces the GitHub release `latest-build` with
   `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `0.1.<commit count>-<sha>`, shown in
   the app menu and the log's `app.start` line.

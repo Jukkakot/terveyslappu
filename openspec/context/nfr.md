@@ -18,3 +18,14 @@ Every change follows these. IDs are stable; never reuse a removed one.
 - **NFR-5 Finnish UI, light and dark theme.** Texts in Finnish (string resources, so English can
   be added later); follows the system theme.
 - **NFR-6 Budget 0 EUR.** No paid services or APIs.
+- **NFR-7 Replayable inputs (lesson from rubikki-solveri, user 2026-11-08).** Whatever the app
+  reads from the outside world (scale BLE packets, later others) is written to the log raw, so a
+  failure the user shares can be replayed exactly as a JVM test. Rubikki tuned its scanner by
+  guesswork through dozens of fixes until it recorded the scan input; do it from the start.
+  Tests built from shared logs use made-up or object weights, never the user's own (NFR-1).
+- **NFR-8 Timings in the log.** Steps whose speed is the point of the app (tap to saved weight,
+  scan to stable reading, Health Connect calls) log their duration in ms, so speed is measured,
+  not guessed.
+- **NFR-9 Every failure leaves a trace.** No silently swallowed errors: a failing share, intent,
+  permission or Health Connect call logs its cause, and the user sees a short message. (Rubikki's
+  log share failed silently in one browser and the log could not be sent.)

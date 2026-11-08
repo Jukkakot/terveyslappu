@@ -1,1 +1,2 @@
 - [Open inconveniences](open-inconveniences.md) — recurring friction raised with the user, repeat open ones until they react
+- [General fixes only](general-fixes-only.md) — fix the general weakness, never a special case for one capture

@@ -38,6 +38,21 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 
+## Lessons from rubikki-solveri (2026-11-08)
+
+The user's earlier Android app, read through for mistakes worth not repeating:
+
+- Signing key fixed before the first install (rubikki's later key change would have cost the
+  user's history): done, NFR-4.
+- Record the outside input and replay failures as tests (NFR-7); measure speed (NFR-8); no
+  silent failures (NFR-9).
+- Fix the general weakness, never a special case for one situation (rubikki: "no striped-cube
+  fix"). For the scale: a rule that holds for every packet, not a check for one odd capture.
+- Screens with actions fit on one screen and keep buttons clear of the system bars (rubikki
+  needed two fixes for this).
+- When unsure what the real-world truth was (what the scale display showed), ask the user instead
+  of building on a guess.
+
 ## Findings (2026-11-08)
 
 - **Scale:** Prego P814B advertises as `Yoda1` and broadcasts the weight in BLE manufacturer
