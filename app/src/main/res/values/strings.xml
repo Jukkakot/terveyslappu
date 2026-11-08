@@ -32,6 +32,7 @@
 
     <string name="delete_done">Paino poistettu</string>
     <string name="undo">Kumoa</string>
+    <string name="delete_weight">Poista %1$s kg</string>
     <string name="restore_failed">Palautus epäonnistui. Syy on lokissa.</string>
     <string name="delete_failed">Poisto epäonnistui</string>
     <string name="cancel">Peruuta</string>

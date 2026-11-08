@@ -27,6 +27,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -51,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -217,7 +219,7 @@ private fun WeightRowItem(row: WeightRow, onLongPress: () -> Unit) {
             .fillMaxWidth()
             .combinedClickable(onClick = {}, onLongClick = onLongPress)
             .heightIn(min = 48.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -229,6 +231,15 @@ private fun WeightRowItem(row: WeightRow, onLongPress: () -> Unit) {
             )
         }
         Text("${formatKg(row.entry.kg)} kg", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        if (row.entry.own) {
+            // Visible alternative to the long-press (ui rule: no gesture without one).
+            val label = stringResource(R.string.delete_weight, formatKg(row.entry.kg))
+            IconButton(onClick = onLongPress, modifier = Modifier.testTag("delete-${row.entry.id}")) {
+                Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            Spacer(Modifier.width(48.dp))
+        }
     }
 }
 

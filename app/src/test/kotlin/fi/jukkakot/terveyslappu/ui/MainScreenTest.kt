@@ -72,6 +72,9 @@ class MainScreenTest {
         }
         compose.onNodeWithText("82,4 kg").performTouchInput { longClick() }
         assertEquals("1", deleted)
+        deleted = null
+        compose.onNodeWithTag("delete-1").performClick()
+        assertEquals("1", deleted)
     }
 
     @Test
