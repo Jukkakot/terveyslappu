@@ -41,8 +41,9 @@ Connect weight records correctly, and leaves a log good enough to debug from a d
    `terveyslappu.apk`. Obtainium follows the repo's releases. One job builds once; no separate
    debug build.
 10. **Signing:** release builds use `RELEASE_KEYSTORE_BASE64` (+ optional password/alias secrets,
-    default `android`/`androiddebugkey`) like rubikki. Recommended key: the user's Android Studio
-    debug key from the PC, the same value rubikki uses, so one secret is enough. Without the
+    default `android`/`androiddebugkey`) like rubikki. Key: a dedicated key generated in the cloud
+    session (the user works from the phone and GitHub secrets cannot be copied between repos),
+    with the CI default alias and passwords, so one secret is enough. Without the
     secret, publish is skipped with a notice (a debug-signed APK from CI would change key on every
     runner and break updates).
 11. **Cloud builds:** the session-start hook downloads Android command-line tools to

@@ -43,9 +43,10 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Release: every green code push to `main` replaces the GitHub release `latest-build` with
   `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `0.1.<commit count>-<sha>`, shown in
   the app menu and the log's `app.start` line.
-- Signing (NFR-4): secret `RELEASE_KEYSTORE_BASE64` = the user's Android Studio debug key
-  (`%USERPROFILE%\.android\debug.keystore`, base64; same value as in rubikki-solveri). Without it
-  CI builds but publishes nothing.
+- Signing (NFR-4): secret `RELEASE_KEYSTORE_BASE64` = a dedicated PKCS12 key made in a cloud
+  session (2026-11-08, alias `androiddebugkey`, passwords `android`, the CI defaults, so one secret
+  is enough; SHA-256 `04:01:E0:47:...:FB:6B:B5:8A`). The user keeps the base64 text as the backup;
+  losing it means one uninstall. Without the secret CI builds but publishes nothing.
 - Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
 - Logs: in the app, menu ⋮ → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
