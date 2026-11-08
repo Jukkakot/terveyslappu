@@ -5,8 +5,8 @@ Phases in order; one OpenSpec change each unless noted.
 1. **poc-manual-weight** (done 2026-11-08; Samsung Health check Q1 still open): Android app with manual weight entry written to Health
    Connect, recent weights read back, shareable log; CI builds a signed APK for Obtainium. Used to
    test what Samsung Health does with the weight (display, delay, CSV export, Samsung Cloud).
-2. **scale-weigh-in** (implemented 2026-11-08 in autopilot; waiting for the first real weigh-in
-   log): read the `Yoda1` broadcast and save the stable weight; then one-tap
+2. **scale-weigh-in** (done 2026-11-08 in autopilot, archived; first real weigh-in log still to
+   come): read the `Yoda1` broadcast and save the stable weight; then one-tap
    weigh-in from a widget or Quick Settings tile without opening the app. Log every received
    packet raw with the scan's timings (NFR-7, NFR-8), and turn shared failing logs into replay
    tests.
