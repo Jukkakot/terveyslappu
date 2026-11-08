@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  # Pushes that only touch specs, docs or Claude files build nothing.
+  push:
+    branches: [main]
+    paths-ignore: ['openspec/**', '.claude/**', '**/*.md']
+  pull_request:
+    paths-ignore: ['openspec/**', '.claude/**', '**/*.md']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # One job tests, lints and builds the release APK once; on main it also replaces the rolling
+  # release `latest-build`, which Obtainium follows (.claude/CLAUDE.md → Build, release, logs).
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the build number is the commit count
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Keystore from secrets
+        id: key
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No RELEASE_KEYSTORE_BASE64 secret: the APK is not published (it would change key on every run)"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Unit tests, lint and release APK
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD || 'android' }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || 'androiddebugkey' }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || 'android' }}
+        run: |
+          ./gradlew test lint assembleRelease
+          echo "VERSION_NAME=$(./gradlew -q :app:printVersionName)" >> "$GITHUB_ENV"
+      - name: Upload test and lint reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: app/build/reports
+          retention-days: 7
+      - name: Replace the rolling release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.key.outputs.present == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk terveyslappu.apk
+          git log -1 --format=%s > "$RUNNER_TEMP/notes.md"
+          gh release delete latest-build --cleanup-tag --yes || true
+          gh release create latest-build terveyslappu.apk --target "$GITHUB_SHA" --latest \
+            --title "Terveyslappu $VERSION_NAME" --notes-file "$RUNNER_TEMP/notes.md"

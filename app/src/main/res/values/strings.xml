@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Terveyslappu</string>
+
+    <string name="menu">Valikko</string>
+    <string name="menu_version">Versio %1$s</string>
+    <string name="menu_share_log">Jaa loki</string>
+    <string name="log_share_chooser">Jaa loki</string>
+
+    <string name="hc_checking">Tarkistetaan Health Connectia…</string>
+    <string name="hc_unavailable">Health Connect ei ole käytettävissä tässä puhelimessa.</string>
+    <string name="hc_needs_update">Health Connect pitää päivittää ennen käyttöä.</string>
+    <string name="hc_open_store">Avaa kauppa</string>
+    <string name="hc_permission_intro">Terveyslappu tallentaa painon Health Connectiin ja näyttää sieltä viimeisimmät painot. Tähän tarvitaan lupa lukea ja kirjoittaa painoa.</string>
+    <string name="hc_permission_grant">Anna lupa</string>
+    <string name="hc_permission_denied">Painon tallentaminen tarvitsee luvan lukea ja kirjoittaa painoa Health Connectissa.</string>
+    <string name="hc_open_settings">Avaa Health Connectin asetukset</string>
+
+    <string name="weight_label">Paino (kg)</string>
+    <string name="weight_range">Paino 20–300 kg</string>
+    <string name="weight_future">Aika ei voi olla tulevaisuudessa</string>
+    <string name="weight_save">Tallenna</string>
+    <string name="weight_saved">Tallennettu %1$s kg</string>
+    <string name="weight_save_failed">Tallennus epäonnistui</string>
+
+    <string name="recent_title">Viimeiset 30 päivää</string>
+    <string name="recent_empty">Ei vielä painoja.</string>
+    <string name="recent_failed">Painojen lukeminen epäonnistui</string>
+    <string name="recent_this_app">Terveyslappu</string>
+
+    <string name="delete_title">Poistetaanko paino?</string>
+    <string name="delete_body">%1$s kg, %2$s</string>
+    <string name="delete_confirm">Poista</string>
+    <string name="delete_done">Paino poistettu</string>
+    <string name="delete_failed">Poisto epäonnistui</string>
+    <string name="cancel">Peruuta</string>
+    <string name="ok">OK</string>
+
+    <string name="privacy_title">Tietosuoja</string>
+    <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin ja lukee sieltä viimeisten 30 päivän painot näytettäväksi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A bathroom scale seen from above: rounded square with a small dial. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,34h28a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-28a6,6 0,0 1,-6 -6v-28a6,6 0,0 1,6 -6z" />
+    <path
+        android:fillColor="#2E7D6B"
+        android:pathData="M46,40h16a3,3 0,0 1,3 3v5a3,3 0,0 1,-3 3h-16a3,3 0,0 1,-3 -3v-5a3,3 0,0 1,3 -3z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M53,42h2v6h-2z" />
+</vector>

@@ -32,4 +32,21 @@ archive); a `UserPromptSubmit` hook repeats this.
 
 ## Build, release, logs
 
-Filled in by `poc-manual-weight` (Gradle commands, CI workflows, signing secrets, log location).
+- Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
+  read/write/delete), `ui/` (main screen, view model, theme, formats), `log/` (file log, crash
+  handler, share intent), `PrivacyActivity` (Health Connect's "why access" page).
+- Checks: `./gradlew test lint assembleDebug` (same in CI). The cloud session-start hook installs
+  the Android SDK to `~/android-sdk` and writes `local.properties`. If Maven Central answers 429 in
+  the container, add a Gradle init script that puts Google's mirror
+  `https://maven-central.storage-download.googleapis.com/maven2/` first, and
+  `robolectricRepoUrl=<same>` to `~/.gradle/gradle.properties` (Robolectric downloads too).
+- Release: every green code push to `main` replaces the GitHub release `latest-build` with
+  `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `0.1.<commit count>-<sha>`, shown in
+  the app menu and the log's `app.start` line.
+- Signing (NFR-4): secret `RELEASE_KEYSTORE_BASE64` = the user's Android Studio debug key
+  (`%USERPROFILE%\.android\debug.keystore`, base64; same value as in rubikki-solveri). Without it
+  CI builds but publishes nothing.
+- Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
+- Logs: in the app, menu ⋮ → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
+  `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
+  `hc.permission.*`, `weight.save|read|delete`, `log.share`.
