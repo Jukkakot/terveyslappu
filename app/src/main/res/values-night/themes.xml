@@ -3,4 +3,11 @@
     <style name="Theme.Terveyslappu" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/system_neutral1_900</item>
     </style>
+
+    <!-- Weigh-in dialog: transparent window, Compose draws the dim background and the card. -->
+    <style name="Theme.Terveyslappu.WeighIn" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
 </resources>

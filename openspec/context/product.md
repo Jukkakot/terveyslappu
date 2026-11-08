@@ -35,6 +35,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   opening the app, which is the main use case. It is the protocol reference (below).
 - **Native Kotlin:** BLE scanning, Quick Settings tile, widget and Health Connect are all Android
   native; a cross-platform stack would need native modules for each.
+- **Weigh-in as a dialog over the current screen** (autopilot 2026-11-08, scale-weigh-in
+  design): tile, widget and launcher shortcut open a small dialog that scans, saves the stable
+  weight and closes; no background service. Stable = the scale's own flag, confirmed by a second
+  equal packet or 2 s quiet.
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 

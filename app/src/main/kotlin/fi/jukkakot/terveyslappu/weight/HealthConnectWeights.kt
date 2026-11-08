@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -46,6 +47,25 @@ class HealthConnectWeights(private val context: Context) {
         return clientId
     }
 
+    /**
+     * Writes a scale reading [kg] taken at [time] as measured by the Prego scale. The client id comes
+     * from the reading's second, so writing the same reading twice keeps one record (an upsert).
+     */
+    suspend fun writeScale(kg: Double, time: Instant, zoneOffset: ZoneOffset): String {
+        val clientId = scaleClientId(time)
+        val record = WeightRecord(
+            time = time,
+            zoneOffset = zoneOffset,
+            weight = Mass.kilograms(kg),
+            metadata = Metadata.autoRecorded(
+                device = Device(type = Device.TYPE_SCALE, manufacturer = "Prego", model = "P814B"),
+                clientRecordId = clientId,
+            ),
+        )
+        client.insertRecords(listOf(record))
+        return clientId
+    }
+
     /** Weights from every app for the [days] before [now], newest first. */
     suspend fun recent(now: Instant, days: Long = 30): List<WeightEntry> {
         val request = ReadRecordsRequest(
@@ -65,3 +85,6 @@ class HealthConnectWeights(private val context: Context) {
         client.deleteRecords(WeightRecord::class, recordIdsList = listOf(entry.id), clientRecordIdsList = emptyList())
     }
 }
+
+/** Client record id of a scale reading: one per second of the stable reading. */
+fun scaleClientId(time: Instant): String = "terveyslappu-scale-${time.epochSecond}"

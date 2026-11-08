@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
                         onOpenSettings = { open(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)) },
                         onOpenStore = { open(Intent(Intent.ACTION_VIEW, STORE_URL.toUri())) },
                         onShareLog = ::shareLog,
+                        onWeighIn = { open(WeighInActivity.intent(this, "main")) },
                     ),
                 )
             }

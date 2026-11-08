@@ -33,8 +33,13 @@ archive); a `UserPromptSubmit` hook repeats this.
 ## Build, release, logs
 
 - Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
-  read/write/delete), `ui/` (main screen, view model, theme, formats), `log/` (file log, crash
-  handler, share intent), `PrivacyActivity` (Health Connect's "why access" page).
+  read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
+  BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `ui/` (main screen, weigh-in
+  dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
+  `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
+  in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
+- Replay a shared weigh-in log: copy its `scale.packet` lines into a test with made-up weights
+  and run `PacketLog.replay` (see `PacketLogTest`).
 - Checks: `./gradlew test lint assembleDebug` (same in CI). The cloud session-start hook installs
   the Android SDK to `~/android-sdk` and writes `local.properties`. Maven Central answers 429 in
   cloud containers; claude-config's `install.sh` routes Gradle and Robolectric (build property
@@ -49,4 +54,6 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
 - Logs: in the app, menu ⋮ → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
-  `hc.permission.*`, `weight.save|read|delete`, `log.share`.
+  `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
+  `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name=` (raw, DEBUG),
+  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `tile.click`.

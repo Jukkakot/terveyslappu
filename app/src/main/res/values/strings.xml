@@ -38,6 +38,29 @@
     <string name="cancel">Peruuta</string>
     <string name="ok">OK</string>
 
+    <string name="close">Sulje</string>
+
+    <string name="weighin_action">Punnitse</string>
+    <string name="weighin_title">Punnitus</string>
+    <string name="weighin_main_button">Punnitse vaa\'alla</string>
+    <string name="weighin_preparing">Valmistellaan…</string>
+    <string name="weighin_step_on">Astu vaa\'alle</string>
+    <string name="weighin_settling">Odota, että paino asettuu</string>
+    <string name="weighin_saving">Tallennetaan…</string>
+    <string name="weighin_saved">Tallennettu</string>
+    <string name="weighin_save_failed">Tallennus epäonnistui. Syy on lokissa.</string>
+    <string name="weighin_retry">Yritä uudelleen</string>
+    <string name="weighin_not_found">Vaakaa ei löytynyt minuutissa. Onko vaa\'an näyttö päällä?</string>
+    <string name="weighin_not_stable">Paino ei asettunut minuutissa.</string>
+    <string name="weighin_scan_failed">Bluetooth-haku epäonnistui (koodi %1$d).</string>
+    <string name="weighin_permission_denied">Vaakaa ei kuulla ilman lähellä olevien laitteiden lupaa.</string>
+    <string name="weighin_open_app_settings">Avaa asetukset</string>
+    <string name="weighin_bluetooth_off">Bluetooth on pois päältä.</string>
+    <string name="weighin_enable_bluetooth">Laita päälle</string>
+    <string name="weighin_no_health_access">Painon tallentaminen tarvitsee Health Connect -luvan. Anna lupa sovelluksessa.</string>
+    <string name="weighin_open_app">Avaa sovellus</string>
+    <string name="widget_description">Punnitse yhdellä napautuksella</string>
+
     <string name="privacy_title">Tietosuoja</string>
     <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin ja lukee sieltä viimeisten 30 päivän painot näytettäväksi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
 </resources>

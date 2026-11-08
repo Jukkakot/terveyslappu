@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: "Punnitse" opens the weigh-in dialog directly. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scale"
+        android:shortcutId="weigh_in"
+        android:shortcutLongLabel="@string/weighin_title"
+        android:shortcutShortLabel="@string/weighin_action">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="fi.jukkakot.terveyslappu.WeighInActivity"
+            android:targetPackage="fi.jukkakot.terveyslappu">
+            <extra
+                android:name="from"
+                android:value="shortcut" />
+        </intent>
+    </shortcut>
+</shortcuts>

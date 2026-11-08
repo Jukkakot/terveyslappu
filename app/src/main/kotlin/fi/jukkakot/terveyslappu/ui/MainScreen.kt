@@ -77,6 +77,7 @@ class MainActions(
     val onOpenSettings: () -> Unit = {},
     val onOpenStore: () -> Unit = {},
     val onShareLog: () -> Unit = {},
+    val onWeighIn: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -219,6 +220,9 @@ private fun WeightForm(state: MainUiState, actions: MainActions) {
 
     Surface(tonalElevation = 2.dp) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = actions.onWeighIn, modifier = Modifier.fillMaxWidth().testTag("weighIn")) {
+                Text(stringResource(R.string.weighin_main_button))
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { pickDate = true }, modifier = Modifier.weight(1f)) { Text(formatDate(shownTime)) }
                 OutlinedButton(onClick = { pickTime = true }, modifier = Modifier.weight(1f)) { Text(formatTime(shownTime)) }

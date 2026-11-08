@@ -4,6 +4,16 @@
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
 
+    <!-- Scale broadcast (scale-weigh-in): scanning only, never used for location. CONNECT is
+         needed only for the system "turn Bluetooth on" dialog. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+
     <!-- Labels of the apps that write weights to Health Connect (the list's source column). -->
     <queries>
         <package android:name="com.sec.android.app.shealth" />
@@ -33,7 +43,46 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- Weigh-in dialog: own task, not in recents, so the main screen never shows behind it. -->
+        <activity
+            android:name=".WeighInActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/weighin_title"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Terveyslappu.WeighIn" />
+
+        <service
+            android:name=".WeighInTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_scale"
+            android:label="@string/weighin_action"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="false" />
+        </service>
+
+        <receiver
+            android:name=".WeighInWidget"
+            android:exported="true"
+            android:label="@string/weighin_action">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weigh_in_widget" />
+        </receiver>
 
         <!-- Health Connect shows this when the user asks why the app wants access. -->
         <activity

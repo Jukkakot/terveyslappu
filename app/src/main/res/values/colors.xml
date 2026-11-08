@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#2E7D6B</color>
+    <!-- Widget follows the phone's Material You colours; night values in values-night. -->
+    <color name="widget_background">@android:color/system_accent1_100</color>
+    <color name="widget_text">@android:color/system_accent1_900</color>
 </resources>
