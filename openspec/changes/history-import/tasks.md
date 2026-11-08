@@ -2,9 +2,9 @@
 
 ## 1. Parser (pure Kotlin)
 
-- [ ] 1.1 `history/Table`: separator detection and quote-aware split; JVM tests for `;`, tab, `,` with quoted decimals
-- [ ] 1.2 `history/DateParsing`: ISO, `d.M.yyyy`, `yyyy/M/d`, slash day/month order for the whole file, epoch s/ms, optional separate time; JVM tests
-- [ ] 1.3 `history/HistoryParser`: header keywords and value-based column detection, kg/lb, comma decimals, skip reasons (unreadable, range, future, duplicate moment); JVM tests for the spec scenarios with made-up data
+- [x] 1.1 `history/Table`: separator detection and quote-aware split; JVM tests for `;`, tab, `,` with quoted decimals
+- [x] 1.2 `history/DateParsing`: ISO, `d.M.yyyy`, `yyyy/M/d`, slash day/month order for the whole file, epoch s/ms, optional separate time; JVM tests
+- [x] 1.3 `history/HistoryParser`: header keywords and value-based column detection, kg/lb, comma decimals, skip reasons (unreadable, range, future, duplicate moment); JVM tests for the spec scenarios with made-up data
 
 ## 2. Writing
 
