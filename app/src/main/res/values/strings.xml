@@ -77,6 +77,7 @@
     <string name="backup_never">Varmuuskopiota ei ole vielä tehty</string>
     <string name="backup_now">Nyt</string>
     <string name="backup_ok">Varmuuskopioitu %1$s, %2$d painoa</string>
+    <string name="backup_stale">Varmuuskopio on vanha: %1$s, %2$d painoa</string>
     <string name="backup_no_access">Tiedostoon ei saatu pysyvää kirjoitusoikeutta. Valitse toinen paikka.</string>
     <string name="export_done">Viety %1$d painoa</string>
     <string name="export_done_recent">Viety %1$d painoa. Yli 30 päivää vanhat puuttuvat, koska historialupaa ei ole.</string>

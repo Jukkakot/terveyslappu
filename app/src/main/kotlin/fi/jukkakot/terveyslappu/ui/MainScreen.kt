@@ -23,6 +23,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -278,7 +279,7 @@ private fun WeightForm(state: MainUiState, actions: MainActions) {
                     keyboardActions = KeyboardActions(onDone = { if (canSave) actions.onSave() }),
                     modifier = Modifier.weight(1f).testTag("weightField"),
                 )
-                Button(onClick = actions.onSave, enabled = canSave, modifier = Modifier.testTag("save")) {
+                FilledTonalButton(onClick = actions.onSave, enabled = canSave, modifier = Modifier.testTag("save")) {
                     if (state.saving) CircularProgressIndicator(Modifier.width(20.dp), strokeWidth = 2.dp) else Text(stringResource(R.string.weight_save))
                 }
             }

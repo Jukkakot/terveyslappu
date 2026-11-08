@@ -31,7 +31,7 @@ fun BackupCard(status: BackupStatus, now: Instant, onEnable: () -> Unit, onRunNo
         status.failed -> stringResource(R.string.backup_failed, formatDateTime(status.lastFailedAt!!)) to
             (stringResource(R.string.backup_retry) to onRunNow)
         status.lastOkAt == null -> stringResource(R.string.backup_never) to (stringResource(R.string.backup_now) to onRunNow)
-        else -> stringResource(R.string.backup_ok, formatDateTime(status.lastOkAt), status.lastCount) to
+        else -> stringResource(if (warn) R.string.backup_stale else R.string.backup_ok, formatDateTime(status.lastOkAt), status.lastCount) to
             (if (warn) stringResource(R.string.backup_now) to onRunNow else null)
     }
     Surface(
