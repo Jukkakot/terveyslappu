@@ -38,7 +38,7 @@ archive); a `UserPromptSubmit` hook repeats this.
   parser: separator, columns, date order; batch writer; CSV export format; all pure), `backup/` (automatic backup file: status, triggers, prefs, SAF
   write; the singleton lives in `TerveysApp`), `ui/` (main screen, weigh-in
   dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
-  `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
+  `LastWeight` (latest weight cache for widget and tile), `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
 - Replay a shared weigh-in log: copy its `scale.packet` lines into a test with made-up weights
   and run `PacketLog.replay` (see `PacketLogTest`).

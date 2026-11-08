@@ -5,8 +5,8 @@
     android:minWidth="40dp"
     android:minHeight="40dp"
     android:targetCellWidth="1"
-    android:targetCellHeight="1"
+    android:targetCellHeight="2"
     android:previewLayout="@layout/widget_weigh_in"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="10800000"
     android:widgetCategory="home_screen" />

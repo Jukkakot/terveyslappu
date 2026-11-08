@@ -101,6 +101,19 @@ class HealthConnectWeights(private val context: Context) {
         }.newestFirst()
     }
 
+    /** The latest weight from any app before [time] (up to a year back), or null. */
+    suspend fun latestBefore(time: Instant): Pair<Double, Instant>? {
+        val response = client.readRecords(
+            ReadRecordsRequest(
+                recordType = WeightRecord::class,
+                timeRangeFilter = TimeRangeFilter.between(time.minus(Duration.ofDays(365)), time.minusMillis(1)),
+                ascendingOrder = false,
+                pageSize = 1,
+            ),
+        )
+        return response.records.firstOrNull()?.let { it.weight.inKilograms to it.time }
+    }
+
     /** Every weight from every app (as far as the read permissions reach), oldest first, paged. */
     suspend fun all(now: Instant): List<WeightEntry> {
         val ownPackage = context.packageName

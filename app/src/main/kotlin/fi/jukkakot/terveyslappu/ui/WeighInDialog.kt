@@ -19,7 +19,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.view.HapticFeedbackConstants
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalView
+import java.time.LocalDate
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,7 +94,16 @@ private fun Content(state: WeighInState, actions: WeighInActions) {
             Progress(stringResource(R.string.weighin_saving))
         }
         is WeighInState.Saved -> {
+            val view = LocalView.current
+            LaunchedEffect(Unit) { view.performHapticFeedback(HapticFeedbackConstants.CONFIRM) }
             BigWeight(state.kg)
+            state.change?.let { change ->
+                Text(
+                    stringResource(R.string.weighin_change, formatChange(change.deltaKg), formatDay(change.previousTime, LocalDate.now())),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.testTag("change"),
+                )
+            }
             Text(
                 stringResource(R.string.weighin_saved),
                 style = MaterialTheme.typography.titleMedium,

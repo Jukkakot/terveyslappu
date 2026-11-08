@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import fi.jukkakot.terveyslappu.LastWeight
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.backup.appLabel
 import fi.jukkakot.terveyslappu.backup.writeExport
@@ -247,6 +248,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 )
                 val rows = entries.map { WeightRow(it, if (it.own) null else labelOf(it.sourcePackage)) }
                 _state.update { it.copy(rows = rows, loadFailed = false) }
+                LastWeight.replace(getApplication(), entries.firstOrNull()?.let { it.kg to it.time })
             }
             .onFailure { error ->
                 AppLog.e("weight.read", error, "failed", "ms" to msSince(started))

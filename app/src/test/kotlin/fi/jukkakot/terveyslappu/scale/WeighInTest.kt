@@ -54,6 +54,33 @@ class WeighInTest {
         assertEquals(WeighInState.Saved(82.5), w.state.value)
     }
 
+    private fun TestScope.withPrevious(previous: suspend (Instant) -> Pair<Double, Instant>?) = WeighIn(
+        source = source(Triple(100, 825, true), Triple(200, 825, true)),
+        save = { _, _ -> },
+        elapsedMs = { testScheduler.currentTime },
+        now = { wallStart.plusMillis(testScheduler.currentTime) },
+        previous = previous,
+    )
+
+    @Test
+    fun `saved state carries the change from the previous weight`() = runTest {
+        val before = wallStart.minusSeconds(86_400)
+        val w = withPrevious { 82.8 to before }
+        w.start(backgroundScope)
+        settle()
+        val saved = w.state.value as WeighInState.Saved
+        assertEquals(before, saved.change!!.previousTime)
+        assertEquals(-0.3, saved.change.deltaKg, 1e-9)
+    }
+
+    @Test
+    fun `failed previous lookup still shows the saved weight`() = runTest {
+        val w = withPrevious { throw IOException("made-up") }
+        w.start(backgroundScope)
+        settle()
+        assertEquals(WeighInState.Saved(82.5, null), w.state.value)
+    }
+
     @Test
     fun `no scale within the time limit`() = runTest {
         val w = weighIn(source()) { _, _ -> error("must not save") }

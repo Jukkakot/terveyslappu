@@ -4,6 +4,9 @@ import android.app.PendingIntent
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import fi.jukkakot.terveyslappu.log.AppLog
+import fi.jukkakot.terveyslappu.ui.formatDay
+import fi.jukkakot.terveyslappu.ui.formatKg
+import java.time.LocalDate
 
 /** Quick Settings tile "Punnitse": collapses the panel and opens the weigh-in dialog. */
 class WeighInTileService : TileService() {
@@ -11,6 +14,9 @@ class WeighInTileService : TileService() {
     override fun onStartListening() {
         qsTile?.apply {
             state = Tile.STATE_INACTIVE
+            subtitle = LastWeight.load(this@WeighInTileService)?.let { (kg, time) ->
+                getString(R.string.tile_subtitle, formatKg(kg), formatDay(time, LocalDate.now()))
+            }
             updateTile()
         }
     }

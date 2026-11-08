@@ -26,6 +26,13 @@ class WeighInDialogTest {
     }
 
     @Test
+    fun `saved weight shows the change from the previous one`() {
+        val change = fi.jukkakot.terveyslappu.scale.WeightChange(-0.3, java.time.Instant.now().minusSeconds(86_400))
+        compose.setContent { TerveysTheme { WeighInDialog(WeighInState.Saved(82.5, change), WeighInActions()) } }
+        compose.onNodeWithTag("change", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
     fun `not found offers a retry`() {
         var retried = false
         compose.setContent {

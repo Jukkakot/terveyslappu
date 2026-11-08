@@ -59,6 +59,9 @@
     <string name="weighin_enable_bluetooth">Laita päälle</string>
     <string name="weighin_no_health_access">Painon tallentaminen tarvitsee Health Connect -luvan. Anna lupa sovelluksessa.</string>
     <string name="weighin_open_app">Avaa sovellus</string>
+    <string name="weighin_change">%1$s kg edellisestä (%2$s)</string>
+    <string name="widget_weight">%1$s kg</string>
+    <string name="tile_subtitle">%1$s kg · %2$s</string>
     <string name="widget_description">Punnitse yhdellä napautuksella</string>
 
     <string name="menu_import">Tuo historia</string>

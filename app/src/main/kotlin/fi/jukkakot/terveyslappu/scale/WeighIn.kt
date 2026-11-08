@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 
+/** Difference to the latest earlier weight and that weight's time (weigh-in-feedback). */
+data class WeightChange(val deltaKg: Double, val previousTime: Instant)
+
 /** What the weigh-in dialog shows. */
 sealed interface WeighInState {
     /** Checking access (Health Connect, nearby devices, Bluetooth) before scanning. */
@@ -23,7 +26,7 @@ sealed interface WeighInState {
     data object Scanning : WeighInState
     data class Live(val kg: Double, val stable: Boolean) : WeighInState
     data class Saving(val kg: Double) : WeighInState
-    data class Saved(val kg: Double) : WeighInState
+    data class Saved(val kg: Double, val change: WeightChange? = null) : WeighInState
     data class SaveFailed(val kg: Double) : WeighInState
     /** Nothing decided within the time limit; [heard] tells whether any scale packet arrived. */
     data class NotFound(val heard: Boolean) : WeighInState
@@ -37,6 +40,7 @@ sealed interface WeighInState {
  * @param elapsedMs monotonic clock in ms (the ticks are measured with it)
  * @param now wall clock, for the time stamped on the saved weight
  * @param save writes kg at a time to Health Connect
+ * @param previous the latest weight before a time (kg, time), for the change shown after saving
  */
 class WeighIn(
     private val source: PacketSource,
@@ -45,6 +49,7 @@ class WeighIn(
     private val now: () -> Instant,
     private val timeoutMs: Long = TIMEOUT_MS,
     private val tickMs: Long = TICK_MS,
+    private val previous: suspend (before: Instant) -> Pair<Double, Instant>? = { null },
 ) {
     private val openedMs = elapsedMs()
     private val _state = MutableStateFlow<WeighInState>(WeighInState.Preparing)
@@ -108,7 +113,15 @@ class WeighIn(
             save(kg, time)
             AppLog.i("weighin.save", "ok", "kg" to kg, "time" to time, "ms" to elapsedMs() - started)
             AppLog.i("weighin.total", "", "ms" to elapsedMs() - openedMs)
-            _state.value = WeighInState.Saved(kg)
+            val change = try {
+                previous(time)?.let { (prevKg, prevTime) -> WeightChange(kg - prevKg, prevTime) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLog.e("weighin.previous", e, "failed")
+                null
+            }
+            _state.value = WeighInState.Saved(kg, change)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
