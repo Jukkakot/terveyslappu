@@ -1,0 +1,8 @@
+# expect kg=82.5
+# Made-up weigh-in (NFR-1): steps on, settles, two equal stable packets.
+2026-11-08T07:00:00.000+02:00 I scale.scan start
+2026-11-08T07:00:01.100+02:00 D scale.packet t=1100 key=12c0 data=01f4000000000000000000000000 rssi=-62 name=Yoda1
+2026-11-08T07:00:01.400+02:00 D scale.packet t=1400 key=12c0 data=0320000000000000000000000000 rssi=-61 name=Yoda1
+2026-11-08T07:00:01.700+02:00 D scale.packet t=1700 key=12c0 data=0335000000000000000000000000 rssi=-61 name=Yoda1
+2026-11-08T07:00:02.000+02:00 D scale.packet t=2000 key=12c0 data=0339138b00000100000000000000 rssi=-60 name=Yoda1
+2026-11-08T07:00:02.300+02:00 D scale.packet t=2300 key=12c0 data=0339138b00000100000000000000 rssi=-60 name=Yoda1

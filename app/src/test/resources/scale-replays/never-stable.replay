@@ -1,0 +1,5 @@
+# expect none
+# Made-up: the weight keeps changing and is never flagged stable.
+2026-11-08T07:00:00.500+02:00 D scale.packet t=500 key=12c0 data=0320000000000000000000000000 rssi=-62 name=Yoda1
+2026-11-08T07:00:00.800+02:00 D scale.packet t=800 key=12c0 data=0330000000000000000000000000 rssi=-62 name=Yoda1
+2026-11-08T07:00:01.100+02:00 D scale.packet t=1100 key=12c0 data=0325000000000000000000000000 rssi=-62 name=Yoda1

@@ -40,8 +40,9 @@ archive); a `UserPromptSubmit` hook repeats this.
   dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
   `LastWeight` (latest weight cache for widget and tile), `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
-- Replay a shared weigh-in log: copy its `scale.packet` lines into a test with made-up weights
-  and run `PacketLog.replay` (see `PacketLogTest`).
+- Replay a shared weigh-in log: copy its `scale.packet` lines into
+  `app/src/test/resources/scale-replays/<case>.replay`, replace the weight bytes with made-up
+  ones (NFR-1), first line `# expect kg=<weight>` or `# expect none`; `ScaleReplayTest` runs all.
 - Checks: `./gradlew test lint assembleDebug` (same in CI). The cloud session-start hook installs
   the Android SDK to `~/android-sdk` and writes `local.properties`. Maven Central answers 429 in
   cloud containers; claude-config's `install.sh` routes Gradle and Robolectric (build property
