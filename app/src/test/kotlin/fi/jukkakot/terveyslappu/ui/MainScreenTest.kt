@@ -7,7 +7,9 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.weight.weightEntry
 import org.junit.Rule
@@ -15,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.Instant
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
@@ -56,6 +59,19 @@ class MainScreenTest {
         compose.onNodeWithText("Garmin Connect").assertExists()
         // Title bar and the own row's source.
         compose.onAllNodesWithText("Terveyslappu").assertCountEquals(2)
+    }
+
+    @Test
+    fun `long-press on an own weight deletes at once`() {
+        val own = WeightRow(weightEntry("1", Instant.now().minusSeconds(60), null, 82.4, "me", "me"), null)
+        var deleted: String? = null
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(MainUiState(access = Access.GRANTED, rows = listOf(own)), "0.1.1-test", MainActions(onDelete = { deleted = it.id }))
+            }
+        }
+        compose.onNodeWithText("82,4 kg").performTouchInput { longClick() }
+        assertEquals("1", deleted)
     }
 
     @Test

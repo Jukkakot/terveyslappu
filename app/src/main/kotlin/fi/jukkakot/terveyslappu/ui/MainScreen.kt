@@ -184,7 +184,6 @@ private fun Notice(text: String, button: String? = null, onClick: () -> Unit = {
 
 @Composable
 private fun WeightContent(state: MainUiState, actions: MainActions, backup: BackupStatus) {
-    var toDelete by remember { mutableStateOf<WeightEntry?>(null) }
     Column(Modifier.fillMaxSize()) {
         BackupCard(backup, Instant.now(), actions.onBackupEnable, actions.onBackupNow)
         Text(
@@ -200,22 +199,13 @@ private fun WeightContent(state: MainUiState, actions: MainActions, backup: Back
                 rows.isEmpty() -> Notice(stringResource(R.string.recent_empty))
                 else -> LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
                     items(rows, key = { it.entry.id }) { row ->
-                        WeightRowItem(row, onLongPress = { if (row.entry.own) toDelete = row.entry })
+                        WeightRowItem(row, onLongPress = { if (row.entry.own) actions.onDelete(row.entry) })
                         HorizontalDivider()
                     }
                 }
             }
         }
         WeightForm(state, actions)
-    }
-    toDelete?.let { entry ->
-        AlertDialog(
-            onDismissRequest = { toDelete = null },
-            title = { Text(stringResource(R.string.delete_title)) },
-            text = { Text(stringResource(R.string.delete_body, formatKg(entry.kg), formatDateTime(entry.time))) },
-            confirmButton = { TextButton(onClick = { actions.onDelete(entry); toDelete = null }) { Text(stringResource(R.string.delete_confirm)) } },
-            dismissButton = { TextButton(onClick = { toDelete = null }) { Text(stringResource(R.string.cancel)) } },
-        )
     }
 }
 

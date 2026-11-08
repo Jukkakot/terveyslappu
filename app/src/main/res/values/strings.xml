@@ -30,10 +30,9 @@
     <string name="recent_failed">Painojen lukeminen epäonnistui</string>
     <string name="recent_this_app">Terveyslappu</string>
 
-    <string name="delete_title">Poistetaanko paino?</string>
-    <string name="delete_body">%1$s kg, %2$s</string>
-    <string name="delete_confirm">Poista</string>
     <string name="delete_done">Paino poistettu</string>
+    <string name="undo">Kumoa</string>
+    <string name="restore_failed">Palautus epäonnistui. Syy on lokissa.</string>
     <string name="delete_failed">Poisto epäonnistui</string>
     <string name="cancel">Peruuta</string>
     <string name="ok">OK</string>

@@ -50,7 +50,10 @@ data class MainUiState(
     val import: ImportState? = null,
 )
 
-data class UiMessage(@param:StringRes val text: Int, val args: List<Any> = emptyList())
+/** A snackbar action, e.g. Kumoa. */
+class UiAction(@param:StringRes val label: Int, val run: () -> Unit)
+
+data class UiMessage(@param:StringRes val text: Int, val args: List<Any> = emptyList(), val action: UiAction? = null)
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -130,13 +133,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Undo of a delete: writes the weight back (delete-undo). */
+    fun restore(entry: WeightEntry) {
+        viewModelScope.launch {
+            val started = System.nanoTime()
+            runCatching { weights.restore(entry) }
+                .onSuccess {
+                    AppLog.i("weight.restore", "ok", "kg" to entry.kg, "time" to entry.time, "ms" to msSince(started))
+                    load()
+                    backup.request("restore")
+                }
+                .onFailure {
+                    AppLog.e("weight.restore", it, "failed", "time" to entry.time)
+                    _messages.tryEmit(UiMessage(R.string.restore_failed))
+                }
+        }
+    }
+
     fun delete(entry: WeightEntry) {
         viewModelScope.launch {
             val started = System.nanoTime()
             runCatching { weights.delete(entry) }
                 .onSuccess {
                     AppLog.i("weight.delete", "ok", "id" to entry.id, "ms" to msSince(started))
-                    _messages.tryEmit(UiMessage(R.string.delete_done))
+                    _messages.tryEmit(UiMessage(R.string.delete_done, action = UiAction(R.string.undo) { restore(entry) }))
                     load()
                     backup.request("delete")
                 }

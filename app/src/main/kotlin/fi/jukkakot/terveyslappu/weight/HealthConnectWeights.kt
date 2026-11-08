@@ -97,7 +97,7 @@ class HealthConnectWeights(private val context: Context) {
         )
         val ownPackage = context.packageName
         return client.readRecords(request).records.map {
-            weightEntry(it.metadata.id, it.time, it.zoneOffset, it.weight.inKilograms, it.metadata.dataOrigin.packageName, ownPackage)
+            it.toEntry(ownPackage)
         }.newestFirst()
     }
 
@@ -130,7 +130,7 @@ class HealthConnectWeights(private val context: Context) {
                 ),
             )
             response.records.mapTo(entries) {
-                weightEntry(it.metadata.id, it.time, it.zoneOffset, it.weight.inKilograms, it.metadata.dataOrigin.packageName, ownPackage)
+                it.toEntry(ownPackage)
             }
             pageToken = response.pageToken
         } while (pageToken != null)
@@ -145,6 +145,20 @@ class HealthConnectWeights(private val context: Context) {
         return if (HISTORY_PERMISSION in grantedPermissions()) HistoryAccess.GRANTED else HistoryAccess.NOT_GRANTED
     }
 
+    /** Writes a deleted own weight back (undo), with its original client id and origin. */
+    suspend fun restore(entry: WeightEntry) {
+        require(entry.own) { "only own records can be restored" }
+        client.insertRecords(
+            listOf(WeightRecord(time = entry.time, zoneOffset = entry.zoneOffset, weight = Mass.kilograms(entry.kg), metadata = restoreMetadata(entry))),
+        )
+    }
+
+    private fun WeightRecord.toEntry(ownPackage: String) = weightEntry(
+        metadata.id, time, zoneOffset, weight.inKilograms, metadata.dataOrigin.packageName, ownPackage,
+        clientRecordId = metadata.clientRecordId,
+        fromScale = metadata.device?.type == Device.TYPE_SCALE,
+    )
+
     /** Deletes one of this app's own records; others' records are never touched. */
     suspend fun delete(entry: WeightEntry) {
         require(entry.own) { "only own records can be deleted" }
@@ -157,3 +171,13 @@ fun scaleClientId(time: Instant): String = "terveyslappu-scale-${time.epochSecon
 
 /** Client record id of an imported weight: one per second of its time. */
 fun importClientId(time: Instant): String = "terveyslappu-import-${time.epochSecond}"
+
+/** Metadata for writing [entry] back: scale weights stay scale measurements, others manual entries. */
+fun restoreMetadata(entry: WeightEntry): Metadata {
+    val clientId = entry.clientRecordId ?: "terveyslappu-${UUID.randomUUID()}"
+    return if (entry.fromScale) {
+        Metadata.autoRecorded(device = Device(type = Device.TYPE_SCALE), clientRecordId = clientId)
+    } else {
+        Metadata.manualEntry(clientRecordId = clientId)
+    }
+}

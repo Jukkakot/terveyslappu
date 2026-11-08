@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.weight
 
+import androidx.health.connect.client.records.metadata.Metadata
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.test.Test
@@ -26,5 +27,14 @@ class WeightEntryTest {
         val older = weightEntry("old", time.minusSeconds(86_400), null, 83.0, own, own)
         val newer = weightEntry("new", time, null, 82.0, own, own)
         assertEquals(listOf("new", "old"), listOf(older, newer).newestFirst().map { it.id })
+    }
+
+    @Test
+    fun `undo keeps the scale origin and the client id`() {
+        val scale = weightEntry("s", time, null, 82.5, own, own, clientRecordId = "terveyslappu-scale-1", fromScale = true)
+        val manual = weightEntry("m", time, null, 82.5, own, own)
+        assertEquals(Metadata.RECORDING_METHOD_AUTOMATICALLY_RECORDED, restoreMetadata(scale).recordingMethod)
+        assertEquals("terveyslappu-scale-1", restoreMetadata(scale).clientRecordId)
+        assertEquals(Metadata.RECORDING_METHOD_MANUAL_ENTRY, restoreMetadata(manual).recordingMethod)
     }
 }

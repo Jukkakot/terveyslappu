@@ -18,7 +18,9 @@ import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -98,7 +100,12 @@ class MainActivity : ComponentActivity() {
                 }
                 LaunchedEffect(Unit) {
                     viewModel.messages.collect { message ->
-                        snackbar.showSnackbar(getString(message.text, *message.args.toTypedArray()))
+                        val result = snackbar.showSnackbar(
+                            message = getString(message.text, *message.args.toTypedArray()),
+                            actionLabel = message.action?.let { getString(it.label) },
+                            duration = if (message.action != null) SnackbarDuration.Long else SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) message.action?.run?.invoke()
                     }
                 }
 
