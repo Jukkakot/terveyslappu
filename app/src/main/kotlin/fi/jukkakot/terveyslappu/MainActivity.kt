@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.SnackbarHostState
@@ -39,6 +40,10 @@ class MainActivity : ComponentActivity() {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
+                val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    AppLog.i("import.pick", if (uri == null) "cancelled" else "picked")
+                    if (uri != null) viewModel.onImportFile(uri)
+                }
 
                 LifecycleResumeEffect(Unit) {
                     viewModel.refreshAccess()
@@ -67,6 +72,16 @@ class MainActivity : ComponentActivity() {
                         onOpenStore = { open(Intent(Intent.ACTION_VIEW, STORE_URL.toUri())) },
                         onShareLog = ::shareLog,
                         onWeighIn = { open(WeighInActivity.intent(this, "main")) },
+                        onImportHistory = {
+                            try {
+                                importLauncher.launch(IMPORT_TYPES)
+                            } catch (e: ActivityNotFoundException) {
+                                AppLog.e("import.pick", e, "no file picker")
+                                Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        onConfirmImport = viewModel::confirmImport,
+                        onDismissImport = viewModel::dismissImport,
                     ),
                 )
             }
@@ -95,6 +110,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private companion object {
+        /** Text tables; some file managers label CSV files as octet-stream. */
+        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/octet-stream")
         const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }
 }

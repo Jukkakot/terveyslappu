@@ -8,17 +8,17 @@
 
 ## 2. Writing
 
-- [ ] 2.1 `HealthConnectWeights.writeImported`: batches of 200, deterministic ids, progress callback, resume from a batch; unit test for the ids and batch split
+- [x] 2.1 `HealthConnectWeights.writeImported`: batches of 200, deterministic ids, progress callback, resume from a batch; unit test for the ids and batch split
 
 ## 3. UI
 
-- [ ] 3.1 `MainViewModel` import state (reading, preview, writing with progress, failed with saved count, done) and logging; JVM test of the state flow with a fake writer where practical
-- [ ] 3.2 Menu entry "Tuo historia", file picker, preview/progress dialog; Robolectric smoke test that the preview shows the count and a Tuo button
-- [ ] 3.3 `./gradlew test lint assembleDebug` passes
+- [x] 3.1 `MainViewModel` import state (reading, preview, writing with progress, failed with saved count, done) and logging; JVM test of the state flow with a fake writer where practical
+- [x] 3.2 Menu entry "Tuo historia", file picker, preview/progress dialog; Robolectric smoke test that the preview shows the count and a Tuo button
+- [x] 3.3 `./gradlew test lint assembleDebug` passes
 
 ## 4. Docs
 
-- [ ] 4.1 Update `.claude/CLAUDE.md` map and log events, roadmap (phase 3), questions (Q2 note)
+- [x] 4.1 Update `.claude/CLAUDE.md` map and log events, roadmap (phase 3), questions (Q2 note)
 
 ## Workflow follow-up
 

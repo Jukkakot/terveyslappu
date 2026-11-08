@@ -72,8 +72,14 @@ class HistoryParserTest {
     }
 
     @Test
+    fun `utf-16 file with byte order mark`() {
+        val bytes = byteArrayOf(0xFF.toByte(), 0xFE.toByte()) + "Date\tWeight\n2024-03-01\t82,4\n".toByteArray(Charsets.UTF_16LE)
+        assertEquals(1, parse(HistoryParser.decode(bytes)).weights.size)
+    }
+
+    @Test
     fun `byte order mark and blank lines`() {
-        val result = parse("﻿Date,Weight\n\n2024-03-01,82.4\n\n")
+        val result = parse("\uFEFFDate,Weight\n\n2024-03-01,82.4\n\n")
         assertEquals(1, result.weights.size)
         assertEquals(3, result.weights.single().line)
     }

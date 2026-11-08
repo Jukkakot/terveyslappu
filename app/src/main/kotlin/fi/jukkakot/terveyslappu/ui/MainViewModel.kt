@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.ui
 
 import android.app.Application
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +20,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import fi.jukkakot.terveyslappu.history.HistoryParser
+import fi.jukkakot.terveyslappu.history.HistoryWriter
+import fi.jukkakot.terveyslappu.history.ParsedHistory
+import fi.jukkakot.terveyslappu.history.WriteResult
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -36,6 +43,7 @@ data class MainUiState(
     val rows: List<WeightRow>? = null,
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
+    val import: ImportState? = null,
 )
 
 data class UiMessage(@param:StringRes val text: Int, val args: List<Any> = emptyList())
@@ -127,6 +135,70 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private val historyWriter = HistoryWriter({ batch -> weights.writeImported(batch, ZoneId.systemDefault()) })
+
+    /** Reads and parses the picked history file, then shows the preview (history-import). */
+    fun onImportFile(uri: Uri) {
+        _state.update { it.copy(import = ImportState.Reading) }
+        viewModelScope.launch {
+            val started = System.nanoTime()
+            val text = withContext(Dispatchers.IO) {
+                runCatching {
+                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
+                        val bytes = input.readNBytes(MAX_IMPORT_BYTES + 1)
+                        require(bytes.size <= MAX_IMPORT_BYTES) { "file larger than $MAX_IMPORT_BYTES bytes" }
+                        HistoryParser.decode(bytes)
+                    } ?: error("no input stream")
+                }
+            }
+            text.onFailure { error ->
+                AppLog.e("import.read", error, "failed")
+                _state.update { it.copy(import = ImportState.ReadFailed) }
+            }.onSuccess { content ->
+                val parsed = withContext(Dispatchers.Default) { HistoryParser.parse(content, ZoneId.systemDefault(), Instant.now()) }
+                logParsed(parsed, content.length, msSince(started))
+                _state.update { it.copy(import = ImportState.Preview(parsed)) }
+            }
+        }
+    }
+
+    fun confirmImport() {
+        val parsed = when (val current = _state.value.import) {
+            is ImportState.Preview -> current.parsed
+            is ImportState.Failed -> current.parsed
+            else -> return
+        }
+        val from = (_state.value.import as? ImportState.Failed)?.saved ?: 0
+        writeImport(parsed, from)
+    }
+
+    fun dismissImport() {
+        if (_state.value.import is ImportState.Writing) return
+        _state.update { it.copy(import = null) }
+    }
+
+    private fun writeImport(parsed: ParsedHistory, from: Int) {
+        _state.update { it.copy(import = ImportState.Writing(parsed, from)) }
+        viewModelScope.launch {
+            val started = System.nanoTime()
+            val result = historyWriter.write(parsed.weights, from) { saved ->
+                _state.update { it.copy(import = ImportState.Writing(parsed, saved)) }
+            }
+            when (result) {
+                is WriteResult.Done -> {
+                    AppLog.i("import.write", "ok", "count" to result.count, "from" to from, "ms" to msSince(started))
+                    _state.update { it.copy(import = null) }
+                    _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
+                    load()
+                }
+                is WriteResult.Failed -> {
+                    AppLog.e("import.write", result.error, "failed", "saved" to result.saved, "total" to parsed.weights.size, "ms" to msSince(started))
+                    _state.update { it.copy(import = ImportState.Failed(parsed, result.saved)) }
+                }
+            }
+        }
+    }
+
     private suspend fun load() {
         val started = System.nanoTime()
         runCatching { weights.recent(Instant.now()) }
@@ -144,6 +216,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.e("weight.read", error, "failed", "ms" to msSince(started))
                 _state.update { it.copy(loadFailed = true) }
             }
+    }
+
+    private companion object {
+        /** History files are small text tables; 10 MB is far above years of daily weights. */
+        const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
     }
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000

@@ -78,6 +78,9 @@ class MainActions(
     val onOpenStore: () -> Unit = {},
     val onShareLog: () -> Unit = {},
     val onWeighIn: () -> Unit = {},
+    val onImportHistory: () -> Unit = {},
+    val onConfirmImport: () -> Unit = {},
+    val onDismissImport: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,7 +95,7 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
-                actions = { AppMenu(versionName, actions.onShareLog) },
+                actions = { AppMenu(versionName, actions.onShareLog, actions.onImportHistory.takeIf { state.access == Access.GRANTED }) },
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -107,11 +110,12 @@ fun MainScreen(
                 Access.GRANTED -> WeightContent(state, actions)
             }
         }
+        state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
     }
 }
 
 @Composable
-private fun AppMenu(versionName: String, onShareLog: () -> Unit) {
+private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -> Unit)?) {
     var open by remember { mutableStateOf(false) }
     Box {
         val menuLabel = stringResource(R.string.menu)
@@ -123,6 +127,13 @@ private fun AppMenu(versionName: String, onShareLog: () -> Unit) {
                 text = { Text(stringResource(R.string.menu_share_log)) },
                 onClick = { open = false; onShareLog() },
             )
+            if (onImport != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_import)) },
+                    onClick = { open = false; onImport() },
+                    modifier = Modifier.testTag("menuImport"),
+                )
+            }
             HorizontalDivider()
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_version, versionName), style = MaterialTheme.typography.bodySmall) },

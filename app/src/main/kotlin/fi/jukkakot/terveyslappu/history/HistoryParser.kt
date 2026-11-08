@@ -36,6 +36,7 @@ data class ParsedHistory(val weights: List<ImportedWeight>, val skipped: List<Sk
  */
 object HistoryParser {
     private const val SAMPLE = 50
+    private const val BOM = "\uFEFF"
     private const val ENOUGH = 0.6
     private const val LB_IN_KG = 0.45359237
 
@@ -46,7 +47,7 @@ object HistoryParser {
     private val number = Regex("""^-?\d+(\.\d+)?$""")
 
     fun parse(text: String, zone: ZoneId, now: Instant): ParsedHistory {
-        val lines = text.removePrefix("﻿").lines()
+        val lines = text.removePrefix(BOM).lines()
         val numbered = lines.mapIndexedNotNull { i, l -> if (l.isBlank()) null else (i + 1) to l }
         if (numbered.isEmpty()) return ParsedHistory(emptyList(), emptyList(), null)
         val sep = Table.detectSeparator(numbered.map { it.second })
@@ -103,6 +104,13 @@ object HistoryParser {
             }
         }
         return ParsedHistory(bySecond.values.sortedBy { it.time }, skipped.sortedBy { it.line }, layout)
+    }
+
+    /** File bytes to text: UTF-16 when it starts with a UTF-16 byte order mark (Excel "Unicode text"), else UTF-8. */
+    fun decode(bytes: ByteArray): String = when {
+        bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() -> String(bytes, 2, bytes.size - 2, Charsets.UTF_16LE)
+        bytes.size >= 2 && bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte() -> String(bytes, 2, bytes.size - 2, Charsets.UTF_16BE)
+        else -> String(bytes, Charsets.UTF_8)
     }
 
     /** Weight value: comma or dot decimal, optional unit suffix. */

@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.weight
 
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
+import fi.jukkakot.terveyslappu.history.ImportedWeight
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Device
@@ -11,6 +12,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -66,6 +68,19 @@ class HealthConnectWeights(private val context: Context) {
         return clientId
     }
 
+    /** Writes one batch of imported history weights (history-import), upserting by [importClientId]. */
+    suspend fun writeImported(batch: List<ImportedWeight>, zone: ZoneId) {
+        val records = batch.map {
+            WeightRecord(
+                time = it.time,
+                zoneOffset = zone.rules.getOffset(it.time),
+                weight = Mass.kilograms(it.kg),
+                metadata = Metadata.autoRecorded(device = Device(type = Device.TYPE_SCALE), clientRecordId = importClientId(it.time)),
+            )
+        }
+        client.insertRecords(records)
+    }
+
     /** Weights from every app for the [days] before [now], newest first. */
     suspend fun recent(now: Instant, days: Long = 30): List<WeightEntry> {
         val request = ReadRecordsRequest(
@@ -88,3 +103,6 @@ class HealthConnectWeights(private val context: Context) {
 
 /** Client record id of a scale reading: one per second of the stable reading. */
 fun scaleClientId(time: Instant): String = "terveyslappu-scale-${time.epochSecond}"
+
+/** Client record id of an imported weight: one per second of its time. */
+fun importClientId(time: Instant): String = "terveyslappu-import-${time.epochSecond}"
