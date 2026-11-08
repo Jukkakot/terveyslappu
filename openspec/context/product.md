@@ -39,6 +39,11 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   design): tile, widget and launcher shortcut open a small dialog that scans, saves the stable
   weight and closes; no background service. Stable = the scale's own flag, confirmed by a second
   equal packet or 2 s quiet.
+- **Interim phone-move answer: visible backup file** (autopilot 2026-11-08, weight-backup):
+  the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
+  and daily on opening, and the main screen shows last success or failure. Chosen because the
+  user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
+  Tuo historia.
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 

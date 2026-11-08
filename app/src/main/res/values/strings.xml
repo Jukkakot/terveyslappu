@@ -63,6 +63,18 @@
 
     <string name="menu_import">Tuo historia</string>
     <string name="menu_export">Vie painot</string>
+    <string name="menu_backup_now">Varmuuskopioi nyt</string>
+    <string name="menu_backup_change">Vaihda varmuuskopiotiedosto</string>
+    <string name="menu_backup_off">Lopeta varmuuskopio</string>
+    <string name="backup_off">Varmuuskopio ei ole käytössä</string>
+    <string name="backup_enable">Ota käyttöön</string>
+    <string name="backup_running">Varmuuskopioidaan…</string>
+    <string name="backup_failed">Varmuuskopio epäonnistui %1$s</string>
+    <string name="backup_retry">Yritä uudelleen</string>
+    <string name="backup_never">Varmuuskopiota ei ole vielä tehty</string>
+    <string name="backup_now">Nyt</string>
+    <string name="backup_ok">Varmuuskopioitu %1$s, %2$d painoa</string>
+    <string name="backup_no_access">Tiedostoon ei saatu pysyvää kirjoitusoikeutta. Valitse toinen paikka.</string>
     <string name="export_done">Viety %1$d painoa</string>
     <string name="export_done_recent">Viety %1$d painoa. Yli 30 päivää vanhat puuttuvat, koska historialupaa ei ole.</string>
     <string name="export_failed">Vienti epäonnistui. Syy on lokissa.</string>

@@ -8,8 +8,24 @@ import fi.jukkakot.terveyslappu.log.CrashHandler
 import fi.jukkakot.terveyslappu.log.Level
 import fi.jukkakot.terveyslappu.log.LogFile
 import java.io.File
+import java.time.Instant
+import androidx.core.net.toUri
+import fi.jukkakot.terveyslappu.backup.PrefsBackupStore
+import fi.jukkakot.terveyslappu.backup.WeightBackup
+import fi.jukkakot.terveyslappu.backup.writeExport
+import fi.jukkakot.terveyslappu.weight.HealthConnectWeights
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class TerveysApp : Application() {
+
+    /** App-wide work that must outlive a screen (the backup after a tile weigh-in). */
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    lateinit var backup: WeightBackup
+        private set
+
     override fun onCreate() {
         super.onCreate()
         AppLog.install(LogFile(File(filesDir, "logs"))) { level, line ->
@@ -21,6 +37,8 @@ class TerveysApp : Application() {
             }
         }
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(Thread.getDefaultUncaughtExceptionHandler()))
+        val weights = HealthConnectWeights(this)
+        backup = WeightBackup(PrefsBackupStore(this), { uri -> writeExport(this, weights, uri.toUri()) }, Instant::now, appScope)
         AppLog.i(
             "app.start", "",
             "version" to BuildConfig.VERSION_NAME,

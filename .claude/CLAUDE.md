@@ -35,7 +35,8 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
   read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
   BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
-  parser: separator, columns, date order; batch writer; CSV export format; all pure), `ui/` (main screen, weigh-in
+  parser: separator, columns, date order; batch writer; CSV export format; all pure), `backup/` (automatic backup file: status, triggers, prefs, SAF
+  write; the singleton lives in `TerveysApp`), `ui/` (main screen, weigh-in
   dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
@@ -59,4 +60,5 @@ archive); a `UserPromptSubmit` hook repeats this.
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name=` (raw, DEBUG),
   `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `tile.click`; import: `import.pick`, `import.read` (detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick`, `export.history granted|denied`,
-  `export.write ok count= history= ms=`.
+  `export.write ok count= history= ms=`; backup: `backup.enable|disable|pick`,
+  `backup.run reason= ok count= ms=` / `backup.run failed`.

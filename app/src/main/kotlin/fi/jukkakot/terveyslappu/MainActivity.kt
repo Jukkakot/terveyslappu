@@ -11,6 +11,8 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import fi.jukkakot.terveyslappu.backup.keepAccess
+import fi.jukkakot.terveyslappu.backup.releaseAccess
 import fi.jukkakot.terveyslappu.weight.HISTORY_PERMISSION
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,12 +37,16 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    /** What to do once the history permission screen returns (export or backup). */
+    private var afterHistory: (() -> Unit)? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
+                val backupStatus by viewModel.backup.status.collectAsStateWithLifecycle()
                 val snackbar = remember { SnackbarHostState() }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -49,12 +55,38 @@ class MainActivity : ComponentActivity() {
                     AppLog.i("export.pick", if (uri == null) "cancelled" else "picked")
                     if (uri != null) viewModel.export(uri)
                 }
+                val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+                    AppLog.i("backup.pick", if (uri == null) "cancelled" else "picked")
+                    if (uri != null) {
+                        val old = viewModel.backup.status.value.uri
+                        if (keepAccess(uri)) {
+                            if (old != null && old != uri.toString()) releaseAccess(old)
+                            viewModel.backup.enable(uri.toString())
+                        } else {
+                            Toast.makeText(this, R.string.backup_no_access, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
                 val historyLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted ->
                     AppLog.i("export.history", if (HISTORY_PERMISSION in granted) "granted" else "denied")
-                    launchSafely("export.pick") { exportLauncher.launch(exportFileName()) }
+                    afterHistory?.invoke()
+                    afterHistory = null
                 }
+                /** Asks for the history permission once when it is missing, then runs [then] (export, backup). */
+                fun withHistory(then: () -> Unit) {
+                    lifecycleScope.launch {
+                        if (viewModel.historyAccess() == HistoryAccess.NOT_GRANTED && !viewModel.historyAsked) {
+                            viewModel.historyAsked = true
+                            afterHistory = then
+                            launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
+                        } else {
+                            then()
+                        }
+                    }
+                }
+                val pickBackupFile = { withHistory { launchSafely("backup.pick") { backupLauncher.launch(BACKUP_FILE_NAME) } } }
                 val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     AppLog.i("import.pick", if (uri == null) "cancelled" else "picked")
                     if (uri != null) viewModel.onImportFile(uri)
@@ -72,6 +104,7 @@ class MainActivity : ComponentActivity() {
 
                 MainScreen(
                     state = state,
+                    backup = backupStatus,
                     versionName = BuildConfig.VERSION_NAME,
                     snackbar = snackbar,
                     actions = MainActions(
@@ -95,16 +128,13 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
                             }
                         },
-                        onExport = {
-                            lifecycleScope.launch {
-                                val history = viewModel.historyAccess()
-                                if (history == HistoryAccess.NOT_GRANTED && !viewModel.historyAsked) {
-                                    viewModel.historyAsked = true
-                                    launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
-                                } else {
-                                    launchSafely("export.pick") { exportLauncher.launch(exportFileName()) }
-                                }
-                            }
+                        onExport = { withHistory { launchSafely("export.pick") { exportLauncher.launch(exportFileName()) } } },
+                        onBackupEnable = pickBackupFile,
+                        onBackupChangeFile = pickBackupFile,
+                        onBackupNow = { viewModel.backup.request("manual") },
+                        onBackupDisable = {
+                            viewModel.backup.status.value.uri?.let { releaseAccess(it) }
+                            viewModel.backup.disable()
                         },
                         onConfirmImport = viewModel::confirmImport,
                         onDismissImport = viewModel::dismissImport,
@@ -149,6 +179,7 @@ class MainActivity : ComponentActivity() {
 
     private companion object {
         /** Text tables; some file managers label CSV files as octet-stream. */
+        const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
         val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/octet-stream")
         const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }

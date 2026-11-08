@@ -1,7 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
 import android.app.Application
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
@@ -22,8 +21,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import fi.jukkakot.terveyslappu.history.CsvExport
-import fi.jukkakot.terveyslappu.history.ExportRow
+import fi.jukkakot.terveyslappu.TerveysApp
+import fi.jukkakot.terveyslappu.backup.appLabel
+import fi.jukkakot.terveyslappu.backup.writeExport
 import fi.jukkakot.terveyslappu.history.HistoryParser
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.history.HistoryWriter
@@ -55,6 +55,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val weights = HealthConnectWeights(app)
 
+    /** The app-wide backup (weight-backup); its status is shown on the main screen. */
+    val backup = (app as TerveysApp).backup
+
     private val _state = MutableStateFlow(MainUiState())
     val state: StateFlow<MainUiState> = _state
 
@@ -83,7 +86,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (access != _state.value.access) AppLog.i("hc.access", access.name, "status" to status.name)
             _state.update { it.copy(access = access) }
-            if (access == Access.GRANTED) load()
+            if (access == Access.GRANTED) {
+                load()
+                backup.requestIfDue()
+            }
         }
     }
 
@@ -113,6 +119,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     _state.update { it.copy(weightText = "", pickedTime = null, saving = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_saved, listOf(formatKg(input.kg))))
                     load()
+                    backup.request("save")
                 }
                 .onFailure { error ->
                     AppLog.e("weight.save", error, "failed", "kg" to input.kg, "ms" to msSince(started))
@@ -130,6 +137,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     AppLog.i("weight.delete", "ok", "id" to entry.id, "ms" to msSince(started))
                     _messages.tryEmit(UiMessage(R.string.delete_done))
                     load()
+                    backup.request("delete")
                 }
                 .onFailure {
                     AppLog.e("weight.delete", it, "failed", "id" to entry.id)
@@ -193,6 +201,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     _state.update { it.copy(import = null) }
                     _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
                     load()
+                    backup.request("import")
                 }
                 is WriteResult.Failed -> {
                     AppLog.e("import.write", result.error, "failed", "saved" to result.saved, "total" to parsed.weights.size, "ms" to msSince(started))
@@ -214,20 +223,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val started = System.nanoTime()
             val history = historyAccess()
-            val result = runCatching {
-                val entries = weights.all(Instant.now())
-                val labels = HashMap<String, String>()
-                val ownLabel = getApplication<Application>().getString(R.string.recent_this_app)
-                val rows = entries.map {
-                    ExportRow(it.time, it.zoneOffset, it.kg, if (it.own) ownLabel else labels.getOrPut(it.sourcePackage) { labelOf(it.sourcePackage) })
-                }
-                val text = CsvExport.write(rows, ZoneId.systemDefault())
-                withContext(Dispatchers.IO) {
-                    getApplication<Application>().contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
-                        ?: error("no output stream")
-                }
-                rows.size
-            }
+            val result = runCatching { writeExport(getApplication(), weights, uri) }
             result.onSuccess { count ->
                 AppLog.i("export.write", "ok", "count" to count, "history" to history.name, "ms" to msSince(started))
                 val text = if (history == HistoryAccess.GRANTED) R.string.export_done else R.string.export_done_recent
@@ -265,12 +261,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000
 
-    private fun labelOf(packageName: String): String {
-        val pm = getApplication<Application>().packageManager
-        return try {
-            pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
-        } catch (_: PackageManager.NameNotFoundException) {
-            packageName
-        }
-    }
+    private fun labelOf(packageName: String): String = getApplication<Application>().appLabel(packageName)
 }

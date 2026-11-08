@@ -18,7 +18,7 @@ import java.time.Instant
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "w411dp-h891dp")
 class MainScreenTest {
     @get:Rule
     val compose = createComposeRule()

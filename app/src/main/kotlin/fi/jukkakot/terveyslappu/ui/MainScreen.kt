@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import fi.jukkakot.terveyslappu.weight.WeightInput
 import fi.jukkakot.terveyslappu.weight.isInFuture
@@ -80,6 +81,10 @@ class MainActions(
     val onWeighIn: () -> Unit = {},
     val onImportHistory: () -> Unit = {},
     val onExport: () -> Unit = {},
+    val onBackupEnable: () -> Unit = {},
+    val onBackupNow: () -> Unit = {},
+    val onBackupChangeFile: () -> Unit = {},
+    val onBackupDisable: () -> Unit = {},
     val onConfirmImport: () -> Unit = {},
     val onDismissImport: () -> Unit = {},
 )
@@ -91,12 +96,13 @@ fun MainScreen(
     versionName: String,
     actions: MainActions,
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
+    backup: BackupStatus = BackupStatus(),
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
-                actions = { AppMenu(versionName, actions.onShareLog, actions.onImportHistory.takeIf { state.access == Access.GRANTED }, actions.onExport.takeIf { state.access == Access.GRANTED }) },
+                actions = { AppMenu(versionName, actions, granted = state.access == Access.GRANTED, backupOn = backup.enabled) },
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -108,7 +114,7 @@ fun MainScreen(
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> WeightContent(state, actions)
+                Access.GRANTED -> WeightContent(state, actions, backup)
             }
         }
         state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
@@ -116,7 +122,10 @@ fun MainScreen(
 }
 
 @Composable
-private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -> Unit)?, onExport: (() -> Unit)?) {
+private fun AppMenu(versionName: String, actions: MainActions, granted: Boolean, backupOn: Boolean) {
+    val onShareLog = actions.onShareLog
+    val onImport = actions.onImportHistory.takeIf { granted }
+    val onExport = actions.onExport.takeIf { granted }
     var open by remember { mutableStateOf(false) }
     Box {
         val menuLabel = stringResource(R.string.menu)
@@ -141,6 +150,11 @@ private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -
                     onClick = { open = false; onExport() },
                     modifier = Modifier.testTag("menuExport"),
                 )
+            }
+            if (granted && backupOn) {
+                DropdownMenuItem(text = { Text(stringResource(R.string.menu_backup_now)) }, onClick = { open = false; actions.onBackupNow() })
+                DropdownMenuItem(text = { Text(stringResource(R.string.menu_backup_change)) }, onClick = { open = false; actions.onBackupChangeFile() })
+                DropdownMenuItem(text = { Text(stringResource(R.string.menu_backup_off)) }, onClick = { open = false; actions.onBackupDisable() })
             }
             HorizontalDivider()
             DropdownMenuItem(
@@ -168,9 +182,10 @@ private fun Notice(text: String, button: String? = null, onClick: () -> Unit = {
 }
 
 @Composable
-private fun WeightContent(state: MainUiState, actions: MainActions) {
+private fun WeightContent(state: MainUiState, actions: MainActions, backup: BackupStatus) {
     var toDelete by remember { mutableStateOf<WeightEntry?>(null) }
     Column(Modifier.fillMaxSize()) {
+        BackupCard(backup, Instant.now(), actions.onBackupEnable, actions.onBackupNow)
         Text(
             stringResource(R.string.recent_title),
             style = MaterialTheme.typography.titleSmall,

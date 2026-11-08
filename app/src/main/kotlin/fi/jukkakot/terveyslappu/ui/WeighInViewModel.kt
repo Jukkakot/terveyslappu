@@ -6,6 +6,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.WeightRecord
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.ScaleScanner
 import fi.jukkakot.terveyslappu.scale.WeighIn
@@ -23,7 +24,10 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
 
     private val weighIn = WeighIn(
         source = ScaleScanner(app),
-        save = { kg, time -> weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time)) },
+        save = { kg, time ->
+            weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time))
+            (app as TerveysApp).backup.request("weighin")
+        },
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )
