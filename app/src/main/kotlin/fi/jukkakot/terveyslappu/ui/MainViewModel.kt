@@ -22,7 +22,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import fi.jukkakot.terveyslappu.history.CsvExport
+import fi.jukkakot.terveyslappu.history.ExportRow
 import fi.jukkakot.terveyslappu.history.HistoryParser
+import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.history.HistoryWriter
 import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.WriteResult
@@ -195,6 +198,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     AppLog.e("import.write", result.error, "failed", "saved" to result.saved, "total" to parsed.weights.size, "ms" to msSince(started))
                     _state.update { it.copy(import = ImportState.Failed(parsed, result.saved)) }
                 }
+            }
+        }
+    }
+
+    /** Whether the export can and may read the whole history; asked once per screen session. */
+    var historyAsked = false
+
+    suspend fun historyAccess(): HistoryAccess = runCatching { weights.historyAccess() }
+        .onFailure { AppLog.e("export.history", it) }
+        .getOrDefault(HistoryAccess.UNSUPPORTED)
+
+    /** Writes every readable weight to the picked file (weight-export). */
+    fun export(uri: Uri) {
+        viewModelScope.launch {
+            val started = System.nanoTime()
+            val history = historyAccess()
+            val result = runCatching {
+                val entries = weights.all(Instant.now())
+                val labels = HashMap<String, String>()
+                val ownLabel = getApplication<Application>().getString(R.string.recent_this_app)
+                val rows = entries.map {
+                    ExportRow(it.time, it.zoneOffset, it.kg, if (it.own) ownLabel else labels.getOrPut(it.sourcePackage) { labelOf(it.sourcePackage) })
+                }
+                val text = CsvExport.write(rows, ZoneId.systemDefault())
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                        ?: error("no output stream")
+                }
+                rows.size
+            }
+            result.onSuccess { count ->
+                AppLog.i("export.write", "ok", "count" to count, "history" to history.name, "ms" to msSince(started))
+                val text = if (history == HistoryAccess.GRANTED) R.string.export_done else R.string.export_done_recent
+                _messages.tryEmit(UiMessage(text, listOf(count)))
+            }.onFailure { error ->
+                AppLog.e("export.write", error, "failed", "history" to history.name, "ms" to msSince(started))
+                _messages.tryEmit(UiMessage(R.string.export_failed))
             }
         }
     }

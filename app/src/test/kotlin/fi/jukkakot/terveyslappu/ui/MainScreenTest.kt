@@ -50,6 +50,9 @@ class MainScreenTest {
         }
         compose.onNodeWithTag("save").assertIsEnabled()
         compose.onNodeWithTag("weighIn").assertExists()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("menuImport").assertExists()
+        compose.onNodeWithTag("menuExport").assertExists()
         compose.onNodeWithText("Garmin Connect").assertExists()
         // Title bar and the own row's source.
         compose.onAllNodesWithText("Terveyslappu").assertCountEquals(2)

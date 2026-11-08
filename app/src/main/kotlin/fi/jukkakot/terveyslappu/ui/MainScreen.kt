@@ -79,6 +79,7 @@ class MainActions(
     val onShareLog: () -> Unit = {},
     val onWeighIn: () -> Unit = {},
     val onImportHistory: () -> Unit = {},
+    val onExport: () -> Unit = {},
     val onConfirmImport: () -> Unit = {},
     val onDismissImport: () -> Unit = {},
 )
@@ -95,7 +96,7 @@ fun MainScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
-                actions = { AppMenu(versionName, actions.onShareLog, actions.onImportHistory.takeIf { state.access == Access.GRANTED }) },
+                actions = { AppMenu(versionName, actions.onShareLog, actions.onImportHistory.takeIf { state.access == Access.GRANTED }, actions.onExport.takeIf { state.access == Access.GRANTED }) },
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -115,7 +116,7 @@ fun MainScreen(
 }
 
 @Composable
-private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -> Unit)?) {
+private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -> Unit)?, onExport: (() -> Unit)?) {
     var open by remember { mutableStateOf(false) }
     Box {
         val menuLabel = stringResource(R.string.menu)
@@ -132,6 +133,13 @@ private fun AppMenu(versionName: String, onShareLog: () -> Unit, onImport: (() -
                     text = { Text(stringResource(R.string.menu_import)) },
                     onClick = { open = false; onImport() },
                     modifier = Modifier.testTag("menuImport"),
+                )
+            }
+            if (onExport != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_export)) },
+                    onClick = { open = false; onExport() },
+                    modifier = Modifier.testTag("menuExport"),
                 )
             }
             HorizontalDivider()

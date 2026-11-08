@@ -19,5 +19,6 @@ Phases in order; one OpenSpec change each unless noted.
 
 - Own weight view in the app (only if Samsung Health turns out awkward).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
-- Readable CSV export of the app's weights.
+- ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
+  it back, so it also works as a manual move to a new phone until phase 4 is decided).
 - Body composition from impedance (the scale sends it; needs height, age, sex).

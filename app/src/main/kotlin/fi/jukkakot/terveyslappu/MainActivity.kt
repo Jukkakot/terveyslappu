@@ -8,6 +8,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import fi.jukkakot.terveyslappu.weight.HISTORY_PERMISSION
+import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -40,6 +45,16 @@ class MainActivity : ComponentActivity() {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
+                val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+                    AppLog.i("export.pick", if (uri == null) "cancelled" else "picked")
+                    if (uri != null) viewModel.export(uri)
+                }
+                val historyLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                ) { granted ->
+                    AppLog.i("export.history", if (HISTORY_PERMISSION in granted) "granted" else "denied")
+                    launchSafely("export.pick") { exportLauncher.launch(exportFileName()) }
+                }
                 val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     AppLog.i("import.pick", if (uri == null) "cancelled" else "picked")
                     if (uri != null) viewModel.onImportFile(uri)
@@ -80,6 +95,17 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
                             }
                         },
+                        onExport = {
+                            lifecycleScope.launch {
+                                val history = viewModel.historyAccess()
+                                if (history == HistoryAccess.NOT_GRANTED && !viewModel.historyAsked) {
+                                    viewModel.historyAsked = true
+                                    launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
+                                } else {
+                                    launchSafely("export.pick") { exportLauncher.launch(exportFileName()) }
+                                }
+                            }
+                        },
                         onConfirmImport = viewModel::confirmImport,
                         onDismissImport = viewModel::dismissImport,
                     ),
@@ -99,6 +125,18 @@ class MainActivity : ComponentActivity() {
             open(shareLogIntent(this, files))
         }
     }
+
+    /** Starts a picker or permission screen; a missing one is logged and shown (NFR-9). */
+    private fun launchSafely(event: String, launch: () -> Unit) {
+        try {
+            launch()
+        } catch (e: ActivityNotFoundException) {
+            AppLog.e(event, e, "no activity")
+            Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun exportFileName() = "terveyslappu-painot-${LocalDate.now()}.csv"
 
     private fun open(intent: Intent) {
         try {
