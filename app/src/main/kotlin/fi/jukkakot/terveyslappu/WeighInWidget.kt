@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
 import fi.jukkakot.terveyslappu.ui.formatDay
@@ -25,22 +26,27 @@ class WeighInWidget : AppWidgetProvider() {
             if (ids.isNotEmpty()) manager.updateAppWidget(ids, views(context))
         }
 
-        private fun views(context: Context): RemoteViews {
+        /** The launcher picks the layout by the widget's current size (widget-sizes). */
+        private fun views(context: Context): RemoteViews = RemoteViews(
+            mapOf(
+                SizeF(40f, 40f) to layout(context, R.layout.widget_weigh_in_small, withDay = false),
+                SizeF(40f, 100f) to layout(context, R.layout.widget_weigh_in, withDay = true),
+            ),
+        )
+
+        private fun layout(context: Context, layoutId: Int, withDay: Boolean): RemoteViews {
             val pending = PendingIntent.getActivity(
                 context, 1, WeighInActivity.intent(context, "widget"),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-            return RemoteViews(context.packageName, R.layout.widget_weigh_in).apply {
+            return RemoteViews(context.packageName, layoutId).apply {
                 setOnClickPendingIntent(R.id.widget_root, pending)
                 val last = LastWeight.load(context)
-                if (last == null) {
-                    setViewVisibility(R.id.widget_weight, View.GONE)
-                    setViewVisibility(R.id.widget_day, View.GONE)
-                } else {
-                    setViewVisibility(R.id.widget_weight, View.VISIBLE)
-                    setViewVisibility(R.id.widget_day, View.VISIBLE)
+                setViewVisibility(R.id.widget_weight, if (last == null) View.GONE else View.VISIBLE)
+                if (withDay) setViewVisibility(R.id.widget_day, if (last == null) View.GONE else View.VISIBLE)
+                if (last != null) {
                     setTextViewText(R.id.widget_weight, context.getString(R.string.widget_weight, formatKg(last.first)))
-                    setTextViewText(R.id.widget_day, formatDay(last.second, LocalDate.now()).replaceFirstChar { it.uppercase() })
+                    if (withDay) setTextViewText(R.id.widget_day, formatDay(last.second, LocalDate.now()).replaceFirstChar { it.uppercase() })
                 }
             }
         }
