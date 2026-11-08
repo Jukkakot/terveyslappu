@@ -2,9 +2,9 @@
 
 ## 1. Scale protocol core (pure Kotlin)
 
-- [ ] 1.1 `scale/ScalePacket`: recognise a Yoda/nameless advertisement with a 0xC0 company id and decode weight, stable flag, decimals, unit (kg, jin, lb, st:lb) and impedance; JVM tests for each unit, short data and other devices pass
-- [ ] 1.2 `scale/StableWeight`: the stability rule (two equal stable packets, or one stable and 2 s quiet; reset on a different reading; 20–300 kg); JVM tests for the spec scenarios pass
-- [ ] 1.3 `scale/PacketLog`: format a packet as the `scale.packet` log fields and parse log lines back; replay test from a made-up log reaches the same weight
+- [x] 1.1 `scale/ScalePacket`: recognise a Yoda/nameless advertisement with a 0xC0 company id and decode weight, stable flag, decimals, unit (kg, jin, lb, st:lb) and impedance; JVM tests for each unit, short data and other devices pass
+- [x] 1.2 `scale/StableWeight`: the stability rule (two equal stable packets, or one stable and 2 s quiet; reset on a different reading; 20–300 kg); JVM tests for the spec scenarios pass
+- [x] 1.3 `scale/PacketLog`: format a packet as the `scale.packet` log fields and parse log lines back; replay test from a made-up log reaches the same weight
 
 ## 2. Saving and scanning
 
