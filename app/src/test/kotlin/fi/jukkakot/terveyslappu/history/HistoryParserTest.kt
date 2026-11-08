@@ -43,6 +43,13 @@ class HistoryParserTest {
     }
 
     @Test
+    fun `jin headers are halved, gongjin is kilograms`() {
+        assertEquals(82.5, parse("date,weight(jin)\n2024-03-01,165.0\n").weights.single().kg)
+        assertEquals(82.5, parse("日期,体重(斤)\n2024-03-01,165.0\n").weights.single().kg)
+        assertEquals(82.5, parse("日期,体重(公斤)\n2024-03-01,82.5\n").weights.single().kg)
+    }
+
+    @Test
     fun `chinese header and slash dates`() {
         val result = parse("测量时间,体重(kg)\n13/02/2024 07:00,80.5\n14/02/2024 07:00,80.3\n")
         assertEquals(2, result.weights.size)

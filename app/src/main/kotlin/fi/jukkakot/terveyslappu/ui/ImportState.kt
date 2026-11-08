@@ -27,6 +27,7 @@ fun logParsed(parsed: ParsedHistory, bytes: Int, ms: Long) {
         "timeCol" to layout?.timeCol,
         "weightCol" to layout?.weightCol,
         "pounds" to layout?.pounds,
+        "jin" to layout?.jin,
         "dayFirst" to layout?.dayFirst,
         "ambiguous" to layout?.ambiguousOrder,
         "ok" to parsed.weights.size,

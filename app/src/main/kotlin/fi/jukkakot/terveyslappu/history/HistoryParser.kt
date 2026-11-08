@@ -21,6 +21,8 @@ data class Layout(
     val timeCol: Int?,
     val weightCol: Int,
     val pounds: Boolean,
+    /** Weights in jin (斤, half a kilogram), halved on reading. */
+    val jin: Boolean,
     val dayFirst: Boolean,
     val ambiguousOrder: Boolean,
 )
@@ -41,7 +43,7 @@ object HistoryParser {
     private const val LB_IN_KG = 0.45359237
 
     private val weightWords = listOf("weight", "paino", "体重", "gewicht", "poids")
-    private val unitOnly = Regex("""^\(?(kg|lbs?)\)?$""")
+    private val unitOnly = Regex("""^\(?(kg|lbs?|jin|斤|公斤)\)?$""")
     private val dateWords = listOf("date", "päiv", "pvm", "日期", "timestamp", "time stamp", "测量时间", "datum")
     private val timeWords = listOf("time", "aika", "时间", "klo")
     private val number = Regex("""^-?\d+(\.\d+)?$""")
@@ -76,8 +78,9 @@ object HistoryParser {
             ?: return unreadable(data)
         val pounds = header?.getOrNull(weightCol)?.lowercase()?.let { "lb" in it || "pound" in it } == true ||
             sample.count { it.getOrElse(weightCol) { "" }.lowercase().contains("lb") } * 2 > sample.size
+        val jin = header?.getOrNull(weightCol)?.lowercase()?.let { "jin" in it || ("斤" in it && "公斤" !in it) } == true
         val (dayFirst, ambiguous) = DateParsing.dayOrder(data.map { it.third.getOrElse(dateCol) { "" } })
-        val layout = Layout(sep, header?.let { rows[headerIndex].second }, dateCol, timeCol, weightCol, pounds, dayFirst, ambiguous)
+        val layout = Layout(sep, header?.let { rows[headerIndex].second }, dateCol, timeCol, weightCol, pounds, jin, dayFirst, ambiguous)
 
         val skipped = mutableListOf<SkippedRow>()
         val bySecond = LinkedHashMap<Long, ImportedWeight>()
@@ -92,7 +95,13 @@ object HistoryParser {
                 skipped += SkippedRow(line, SkipReason.UNREADABLE_WEIGHT, raw)
                 continue
             }
-            val kg = round2(if (pounds) value * LB_IN_KG else value)
+            val kg = round2(
+                when {
+                    pounds -> value * LB_IN_KG
+                    jin -> value / 2
+                    else -> value
+                },
+            )
             when {
                 kg !in MIN_KG..MAX_KG -> skipped += SkippedRow(line, SkipReason.OUT_OF_RANGE, raw)
                 time.isAfter(now) -> skipped += SkippedRow(line, SkipReason.FUTURE, raw)
