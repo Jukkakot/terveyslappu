@@ -5,7 +5,8 @@ Android app for effortless weight logging into Health Connect. Product decisions
 `openspec/context/roadmap.md`; open questions: `openspec/context/questions.md`.
 General domain knowledge (weight data, charts, data files) with sources:
 `openspec/context/knowledge.md`; never read it whole: find the topic in its index, read that
-section before researching, add what new research taught and keep the index in step.
+section before researching, add what new research taught and keep the index in step. Topics
+that hold in any project (charts, data files) are in the global bank `~/.claude/knowledge.md`.
 
 ## Never commit health data
 
