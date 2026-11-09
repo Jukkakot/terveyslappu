@@ -12,7 +12,8 @@ read: CSV and JSON.
 - Asetukset: "Vie painot" / "Tuo painot" become **Vie tiedot** / **Tuo tiedot** under the section
   title **Tiedot**.
 - **Vie tiedot** asks for the format in a small dialog, **CSV** or **JSON**, then saves
-  `terveyslappu-<date>.csv` or `.json` with the system picker.
+  `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>.csv` or `.json` (millisecond
+  timestamp, so names never collide) with the system picker.
 - **Tuo tiedot** reads both formats (recognised from the content), plus the OKOK `.xls` and other
   history tables as before.
 - One data model with a section (CSV) or key (JSON) per data kind; today the only kind is the

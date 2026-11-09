@@ -2,12 +2,17 @@
 
 ### Requirement: Export to a chosen file
 Asetukset SHALL offer "Vie tiedot", which first asks for the format, CSV or JSON, then asks where to
-save a file named `terveyslappu-<date>.csv` or `terveyslappu-<date>.json` with the system picker and
-writes the app's data file there in that format.
+save a file named `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>.csv` (or `.json`; local time to the
+millisecond, so two exports never get the same name) with the system picker and writes the app's
+data file there in that format.
 
 #### Scenario: Export
 - **WHEN** the user taps Vie tiedot, picks CSV and a folder
 - **THEN** the CSV file is written and the app says how many weights it holds
+
+#### Scenario: File name
+- **WHEN** the export starts on 9 November 2026 at 07:12:05.123
+- **THEN** the suggested name is `terveyslappu-export-20261109-071205-123.csv`
 
 #### Scenario: Export as JSON
 - **WHEN** the user picks JSON instead

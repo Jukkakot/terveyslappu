@@ -14,7 +14,8 @@
 
 ## 2. Export, import and backup wiring
 
-- [ ] 2.1 Vie tiedot: format dialog (CSV / JSON), picker MIME and name follow the choice, log
+- [ ] 2.1 Vie tiedot: format dialog (CSV / JSON), picker MIME follows the choice, name
+      `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>.<ext>` (pure helper + test), log
       `format=`
 - [ ] 2.2 Tuo tiedot: detect JSON by content; preview note for unknown parts; drop the owner
       details restore and its preview text; log `format=` `unknown=`
