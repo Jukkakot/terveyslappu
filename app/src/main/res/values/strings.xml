@@ -3,7 +3,7 @@
     <string name="app_name">Terveyslappu</string>
 
     <string name="menu">Valikko</string>
-    <string name="menu_version">Versio %1$s</string>
+    <string name="menu_version">Terveyslappu v%1$s</string>
     <string name="menu_share_log">Jaa loki</string>
     <string name="log_share_chooser">Jaa loki</string>
     <string name="log_empty">Lokia ei löytynyt</string>

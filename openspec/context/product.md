@@ -48,6 +48,9 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   the widget is a plain 1x1 Punnitse button and the tile has no subtitle. The dialog shows the
   result ~10 s (a tap keeps it open) with "Punnitse uudelleen", which deletes it at once and
   scans again, with Kumoa instead of a confirmation.
+- **Version `MAJOR.MINOR.BUILD`** (user 2026-11-09, app-version-numbers): SemVer-style name with a
+  never-resetting build number instead of PATCH, because every green push is a release; the
+  Android version code stays the total commit count so updates always install.
 - **No body composition** (user 2026-11-09): weight only; the impedance stays in the log.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that
   deletes the previous result; see roadmap.

@@ -44,6 +44,7 @@ class TerveysApp : Application() {
         AppLog.i(
             "app.start", "",
             "version" to BuildConfig.VERSION_NAME,
+            "commit" to BuildConfig.GIT_SHA,
             "device" to "${Build.MANUFACTURER} ${Build.MODEL}",
             "android" to Build.VERSION.RELEASE,
         )

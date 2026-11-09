@@ -48,8 +48,11 @@ archive); a `UserPromptSubmit` hook repeats this.
   cloud containers; claude-config's `install.sh` routes Gradle and Robolectric (build property
   `robolectricRepoUrl`) through Google's mirror.
 - Release: every green code push to `main` replaces the GitHub release `latest-build` with
-  `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `0.1.<commit count>-<sha>`, shown in
-  the app menu and the log's `app.start` line.
+  `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `MAJOR.MINOR.BUILD` (e.g. 1.0.24):
+  MAJOR.MINOR = `appVersion` in `gradle.properties`, BUILD = commits outside the CI-ignored paths
+  (never resets), version code = all commits. Bump MINOR in the last task of a change the user
+  notices, MAJOR when an update breaks something; fixes only raise BUILD. Menu shows `v1.0.24`,
+  `app.start` logs `version=` and `commit=`.
 - Signing (NFR-4): secret `RELEASE_KEYSTORE_BASE64` = a dedicated PKCS12 key made in a cloud
   session (2026-11-08, alias `androiddebugkey`, passwords `android`, the CI defaults, so one secret
   is enough; SHA-256 `04:01:E0:47:...:FB:6B:B5:8A`). The user keeps the base64 text as the backup;

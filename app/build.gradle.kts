@@ -15,13 +15,19 @@ val gitSha: String = providers.environmentVariable("GITHUB_SHA").map { it.take(7
     )
     .get()
 
-// The build number is the number of commits, so every pushed build installs over the previous one.
-val commitCount: Int = providers.exec {
-    commandLine("git", "rev-list", "--count", "HEAD")
+fun gitCount(vararg paths: String): Int = providers.exec {
+    commandLine("git", "rev-list", "--count", "HEAD", "--", *paths)
     isIgnoreExitValue = true
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }.get()
 
-val appVersionName = "0.1.$commitCount-$gitSha"
+// The version code is the number of all commits, so every pushed build installs over the previous one.
+val commitCount: Int = gitCount()
+
+// The build number counts only commits that build something: CI ignores these same paths (ci.yml).
+val buildNumber: Int = gitCount(".", ":!openspec", ":!.claude", ":!*.md")
+
+// MAJOR.MINOR from gradle.properties, then the build number, e.g. 1.0.24 (app-version-numbers).
+val appVersionName = "${providers.gradleProperty("appVersion").get()}.$buildNumber"
 
 /**
  * Release signing: keystore.properties next to the project (never committed) or, in CI, the
@@ -57,6 +63,7 @@ android {
         targetSdk = 37
         versionCode = commitCount
         versionName = appVersionName
+        buildConfigField("String", "GIT_SHA", "\"$gitSha\"")
     }
 
     androidResources {
@@ -138,6 +145,6 @@ dependencies {
 
 // CI reads the version for the release title.
 tasks.register("printVersionName") {
-    val name = appVersionName
+    val name = "v$appVersionName ($gitSha)"
     doLast { println(name) }
 }
