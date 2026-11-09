@@ -61,6 +61,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**chart-dots**~~: done 2026-11-09 (weights as dots on both charts when they fit).
 - ~~Trend line~~ and ~~goal weight and forecast~~: dropped (user 2026-11-09: not wanted).
 - **Next: derived values** (BMI and others from weight + owner details; user 2026-11-09).
+- **Then: history-list-groups** (Historia list grouped by year/month/week/day; user 2026-11-09).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
