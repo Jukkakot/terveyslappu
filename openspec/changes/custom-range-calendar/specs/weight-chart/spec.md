@@ -57,3 +57,19 @@ month of the current Oma range's end, or on this month.
 #### Scenario: Older month
 - **WHEN** the user swipes to October 2024
 - **THEN** that month's days with weights show them, as far as the app may read them
+
+### Requirement: Calendar explains missing old weights
+When the app may not read weights older than 30 days (Health Connect's history permission not
+granted), the Oma calendar SHALL say so under the month ("Yli 30 päivää vanhat painot näkyvät vasta
+luvalla") with a button that asks for the permission, so empty older days are not mistaken for days
+without weighing. With the permission granted, nothing about it SHALL be shown.
+
+#### Scenario: Without history access
+- **GIVEN** the history permission is not granted
+- **WHEN** the user opens Oma
+- **THEN** the calendar shows the text and an Anna lupa button that asks Health Connect for access
+
+#### Scenario: With history access
+- **GIVEN** the history permission is granted
+- **WHEN** the user opens Oma
+- **THEN** no text about access is shown

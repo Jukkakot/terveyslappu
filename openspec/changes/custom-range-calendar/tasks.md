@@ -17,6 +17,9 @@
   tapping two days and OK gives the `Period.Custom`; LargeTextTest at 200 % keeps OK visible; one
   screenshot in light and dark judged, kept out of the repo.
 
+- [ ] 2.2 History notice in the calendar when history access is not granted (reuse `history_needed`
+  text and the grant action). Verify: smoke test that the notice shows without access and not with it.
+
 ## 3. Context
 
 - [ ] 3.1 product.md: calendar decision (day's latest weight, all days selectable, library, why not M3); CLAUDE.md
