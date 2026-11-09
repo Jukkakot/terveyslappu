@@ -43,7 +43,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   equal packet or 2 s quiet.
 - **Interim phone-move answer: visible backup file** (autopilot 2026-11-08, weight-backup):
   the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
-  and daily on opening, and the main screen shows last success or failure. Chosen because the
+  and daily on opening, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
   user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
   Tuo historia.
 - **No weight before weighing; redo from the result** (user 2026-11-09, weigh-in-button-redo):
@@ -59,6 +59,14 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   data. Kept in app storage (`raw/RawArchive`, JSON lines keyed by the weight's second) and in
   the export/backup's `raw` column, since Health Connect has no record for it. Changes
   scale-reading-archive and okok-xls-import.
+- **Simple home, Historia and Asetukset** (user 2026-11-09, main-screen-refresh, mockup B): the
+  home screen shows only the latest weight card (change, 30-day sparkline), the three latest
+  weights and Punnitse vaa'alla; the card opens Historia (chart, stats, list, + for manual entry,
+  which is nowhere else), the gear opens Asetukset (theme, import/export, backup, log). No ⋮ menu;
+  the backup shows on home only as a notice when it failed or is stale. No bottom navigation.
+- **Theme** (user 2026-11-09): the phone's own palette (Material You) in light and dark, following
+  the system by default; Asetukset → Teema forces Vaalea or Tumma. Choices are filter chips like
+  the period chips (a segmented button broke "Järjestelmä" mid-word on a 360 dp phone).
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

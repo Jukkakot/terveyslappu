@@ -42,8 +42,16 @@ import java.time.ZoneId
 
 enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIED, GRANTED }
 
+/** The main activity's three screens (home-screen); back from Historia or Asetukset returns Home. */
+enum class Screen { HOME, HISTORY, SETTINGS }
+
 data class MainUiState(
     val access: Access = Access.CHECKING,
+    val screen: Screen = Screen.HOME,
+    /** The manual entry dialog (Lisää paino käsin) is open. */
+    val entryOpen: Boolean = false,
+    /** The last manual save failed; the dialog says so until the weight is edited. */
+    val saveFailed: Boolean = false,
     val weightText: String = "",
     /** Chosen date and time; null means "now" at the moment of saving. */
     val pickedTime: LocalDateTime? = null,
@@ -123,7 +131,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         refreshAccess()
     }
 
-    fun onWeightText(text: String) = _state.update { it.copy(weightText = text) }
+    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen) }
+
+    fun openEntry() = _state.update { it.copy(entryOpen = true, saveFailed = false) }
+
+    /** Cancel: the dialog closes and forgets the typed weight; ignored while saving. */
+    fun closeEntry() = _state.update {
+        if (it.saving) it else it.copy(entryOpen = false, weightText = "", pickedTime = null, saveFailed = false)
+    }
+
+    fun onWeightText(text: String) = _state.update { it.copy(weightText = text, saveFailed = false) }
 
     fun onPickedTime(time: LocalDateTime?) = _state.update { it.copy(pickedTime = time) }
 
@@ -134,21 +151,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val now = Instant.now()
         val time = current.pickedTime?.atZone(zone)?.toInstant() ?: now
         if (isInFuture(time, now)) return
-        _state.update { it.copy(saving = true) }
+        _state.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
             val started = System.nanoTime()
             runCatching { weights.write(input.kg, time, zone.rules.getOffset(time)) }
                 .onSuccess { clientId ->
                     AppLog.i("weight.save", "ok", "kg" to input.kg, "time" to time, "clientId" to clientId, "ms" to msSince(started))
-                    _state.update { it.copy(weightText = "", pickedTime = null, saving = false) }
+                    _state.update { it.copy(weightText = "", pickedTime = null, saving = false, entryOpen = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_saved, listOf(formatKg(input.kg))))
                     load()
                     backup.request("save")
                 }
                 .onFailure { error ->
                     AppLog.e("weight.save", error, "failed", "kg" to input.kg, "ms" to msSince(started))
-                    _state.update { it.copy(saving = false) }
-                    _messages.tryEmit(UiMessage(R.string.weight_save_failed))
+                    _state.update { it.copy(saving = false, saveFailed = true) }
                 }
         }
     }

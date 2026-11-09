@@ -27,7 +27,8 @@ a calm, consistent look in both themes.
    button (+, "Lisää paino käsin") in the top bar opens the manual-entry dialog, reusing today's form
    state and validation in `MainViewModel`.
 4. **Asetukset** is a plain scrolling list of grouped sections (mockup `Asetukset`); the theme is a
-   three-way segmented button. Backup actions move here from the menu and the card.
+   choice of three filter chips like the period chips (implementation: a segmented button broke
+   "Järjestelmä" mid-word at 360 dp). Backup actions move here from the menu and the card.
 5. **Theme preference** in SharedPreferences (`appearance`), exposed as a flow read by `TerveysTheme`
    so a change applies at once; `WeighInActivity` reads the same value. Dynamic colours kept (ui rule:
    platform base theme first; the phone's palette is the project's theme).

@@ -37,8 +37,8 @@ archive); a `UserPromptSubmit` hook repeats this.
   BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
   parser: separator, columns, date order; batch writer; CSV export format; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `chart/` (periods, period stats, chart axes; pure except `PeriodPrefs`), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
-  write; the singleton lives in `TerveysApp`), `ui/` (main screen, weigh-in
-  dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
+  write; the singleton lives in `TerveysApp`), `ui/` (`MainScreen` switches Home/Historia/Asetukset by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in
+  dialog, view models, theme + `AppearancePrefs` (singleton in `TerveysApp`), formats; `chart/HomeSummary` is the home card's pure data), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
 - Replay a shared weigh-in log: copy its `scale.packet` lines into
@@ -52,18 +52,18 @@ archive); a `UserPromptSubmit` hook repeats this.
   `terveyslappu.apk` and keeps the five newest (`.github/workflows/ci.yml`); Obtainium shows the tag. Version `MAJOR.MINOR.BUILD` (e.g. 1.0.24):
   MAJOR.MINOR = `appVersion` in `gradle.properties`, BUILD = commits outside the CI-ignored paths
   (never resets), version code = all commits. Bump MINOR in the last task of a change the user
-  notices, MAJOR when an update breaks something; fixes only raise BUILD. Menu shows `v1.0.24`,
+  notices, MAJOR when an update breaks something; fixes only raise BUILD. Asetukset shows `v1.0.24`,
   `app.start` logs `version=` and `commit=`.
 - Signing (NFR-4): secret `RELEASE_KEYSTORE_BASE64` = a dedicated PKCS12 key made in a cloud
   session (2026-11-08, alias `androiddebugkey`, passwords `android`, the CI defaults, so one secret
   is enough; SHA-256 `04:01:E0:47:...:FB:6B:B5:8A`). The user keeps the base64 text as the backup;
   losing it means one uninstall. Without the secret CI builds but publishes nothing.
 - Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
-- Logs: in the app, menu ⋮ → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
+- Logs: in the app, Asetukset (gear) → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
   `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),
   `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.redo ok|failed`, `weighin.undo`, `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|xls`, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick`, `export.history granted|denied`,
   `export.write ok count= history= ms=`; backup: `backup.enable|disable|pick`,
-  `backup.run reason= ok count= ms=` / `backup.run failed`; chart: `chart.period`, `weight.read ok count= history=`.
+  `backup.run reason= ok count= ms=` / `backup.run failed`; chart: `chart.period`, `weight.read ok count= history=`; theme: `theme.set`.

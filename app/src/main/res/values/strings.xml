@@ -2,8 +2,32 @@
 <resources>
     <string name="app_name">Terveyslappu</string>
 
-    <string name="menu">Valikko</string>
-    <string name="menu_version">Terveyslappu v%1$s</string>
+    <string name="back">Takaisin</string>
+    <string name="home_latest">Viimeisin · %1$s</string>
+    <string name="home_open_history">Avaa historia</string>
+    <string name="home_empty">Ei vielä painoja</string>
+    <string name="home_empty_hint">Punnitse vaa\'alla, niin paino näkyy tässä.</string>
+    <string name="home_change">Muutos edellisestä %1$s kg</string>
+    <string name="home_spark">Painon kehitys 30 päivää, %1$s → %2$s kg</string>
+    <string name="home_spark_days">30 päivää</string>
+    <string name="home_backup_failed">Varmuuskopio epäonnistui</string>
+    <string name="home_backup_stale">Varmuuskopio on vanha</string>
+    <string name="kg_value">%1$s kg</string>
+
+    <string name="history_title">Historia</string>
+    <string name="entry_title">Lisää paino käsin</string>
+    <string name="entry_failed">Tallennus epäonnistui. Syy on lokissa.</string>
+
+    <string name="settings_title">Asetukset</string>
+    <string name="settings_appearance">Ulkoasu</string>
+    <string name="settings_theme">Teema</string>
+    <string name="theme_system">Järjestelmä</string>
+    <string name="theme_light">Vaalea</string>
+    <string name="theme_dark">Tumma</string>
+    <string name="settings_weights">Painot</string>
+    <string name="settings_backup">Varmuuskopio</string>
+    <string name="settings_support">Tuki</string>
+    <string name="settings_version">v%1$s</string>
     <string name="menu_share_log">Jaa loki</string>
     <string name="log_share_chooser">Jaa loki</string>
     <string name="log_empty">Lokia ei löytynyt</string>
@@ -23,7 +47,6 @@
     <string name="weight_future">Aika ei voi olla tulevaisuudessa</string>
     <string name="weight_save">Tallenna</string>
     <string name="weight_saved">Tallennettu %1$s kg</string>
-    <string name="weight_save_failed">Tallennus epäonnistui</string>
 
     <string name="period_week">1 vk</string>
     <string name="period_month">1 kk</string>
@@ -35,14 +58,12 @@
     <string name="history_needed">Yli 30 päivää vanhat painot näkyvät vasta luvalla.</string>
     <string name="history_grant">Anna lupa</string>
     <string name="chart_description">Painokaavio, %1$d painoa</string>
-    <string name="stats_latest">Viimeisin %1$s kg</string>
-    <string name="stats_change">muutos %1$s kg</string>
-    <string name="stats_rate">%1$s kg/vko</string>
-    <string name="stats_spread">ka %1$s · alin %2$s · ylin %3$s</string>
-    <plurals name="stats_count">
-        <item quantity="one">%d paino</item>
-        <item quantity="other">%d painoa</item>
-    </plurals>
+    <string name="stats_change">Muutos</string>
+    <string name="stats_rate">Viikossa</string>
+    <string name="stats_average">Keskiarvo</string>
+    <string name="stats_min">Alin</string>
+    <string name="stats_max">Ylin</string>
+    <string name="stats_count">Painoja</string>
     <string name="recent_failed">Painojen lukeminen epäonnistui</string>
     <string name="recent_this_app">Terveyslappu</string>
 
@@ -84,18 +105,19 @@
 
     <string name="menu_import">Tuo historia</string>
     <string name="menu_export">Vie painot</string>
-    <string name="menu_backup_now">Varmuuskopioi nyt</string>
-    <string name="menu_backup_change">Vaihda varmuuskopiotiedosto</string>
-    <string name="menu_backup_off">Lopeta varmuuskopio</string>
-    <string name="backup_off">Varmuuskopio ei ole käytössä</string>
+    <string name="backup_off">Ei käytössä</string>
+    <string name="backup_off_hint">Kaikki painot kirjoitetaan valitsemaasi CSV-tiedostoon jokaisen muutoksen jälkeen.</string>
+    <string name="backup_on">Käytössä</string>
     <string name="backup_enable">Ota käyttöön</string>
     <string name="backup_running">Varmuuskopioidaan…</string>
-    <string name="backup_failed">Varmuuskopio epäonnistui %1$s</string>
+    <string name="backup_failed">Epäonnistui %1$s</string>
     <string name="backup_retry">Yritä uudelleen</string>
-    <string name="backup_never">Varmuuskopiota ei ole vielä tehty</string>
-    <string name="backup_now">Nyt</string>
-    <string name="backup_ok">Varmuuskopioitu %1$s, %2$d painoa</string>
-    <string name="backup_stale">Varmuuskopio on vanha: %1$s, %2$d painoa</string>
+    <string name="backup_never">Ei vielä tehty</string>
+    <string name="backup_now">Varmuuskopioi nyt</string>
+    <string name="backup_ok">Viimeksi %1$s · %2$d painoa</string>
+    <string name="backup_stale">Vanha: viimeksi %1$s · %2$d painoa</string>
+    <string name="backup_change">Vaihda tiedosto</string>
+    <string name="backup_disable">Lopeta varmuuskopio</string>
     <string name="backup_no_access">Tiedostoon ei saatu pysyvää kirjoitusoikeutta. Valitse toinen paikka.</string>
     <string name="export_done">Viety %1$d painoa</string>
     <string name="export_done_recent">Viety %1$d painoa. Yli 30 päivää vanhat puuttuvat, koska historialupaa ei ole.</string>

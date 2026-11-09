@@ -30,6 +30,9 @@ data class BackupStatus(
     /** The last success is old enough to warn about. */
     fun isStale(now: Instant): Boolean = enabled && lastOkAt != null && Duration.between(lastOkAt, now) >= STALE_AFTER
 
+    /** On and failed or stale: the home screen shows its notice. */
+    fun needsAttention(now: Instant): Boolean = enabled && (failed || isStale(now))
+
     companion object {
         val DUE_AFTER: Duration = Duration.ofHours(24)
         val STALE_AFTER: Duration = Duration.ofDays(3)

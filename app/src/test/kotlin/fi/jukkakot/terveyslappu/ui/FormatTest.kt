@@ -32,4 +32,10 @@ class FormatTest {
         assertEquals("tänään", formatDay(Instant.parse("2026-11-07T22:01:00Z"), today, zone))
         assertEquals(true, formatDay(Instant.parse("2026-11-03T05:00:00Z"), today, zone).endsWith("3.11."))
     }
+
+    @Test
+    fun `card time is lower case, a row starts with a capital`() {
+        assertEquals("tänään 7.05", formatDayTime(Instant.parse("2026-11-08T05:05:00Z"), today, zone))
+        assertEquals("Eilen 7.12", formatRowTime(Instant.parse("2026-11-07T05:12:00Z"), today, zone))
+    }
 }

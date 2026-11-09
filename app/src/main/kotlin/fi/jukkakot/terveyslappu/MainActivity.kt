@@ -49,6 +49,8 @@ class MainActivity : ComponentActivity() {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 val backupStatus by viewModel.backup.status.collectAsStateWithLifecycle()
+                val appearance = (application as TerveysApp).appearance
+                val themeMode by appearance.mode.collectAsStateWithLifecycle()
                 val snackbar = remember { SnackbarHostState() }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -114,7 +116,15 @@ class MainActivity : ComponentActivity() {
                     backup = backupStatus,
                     versionName = BuildConfig.VERSION_NAME,
                     snackbar = snackbar,
+                    themeMode = themeMode,
                     actions = MainActions(
+                        onScreen = viewModel::onScreen,
+                        onOpenEntry = viewModel::openEntry,
+                        onCloseEntry = viewModel::closeEntry,
+                        onTheme = { mode ->
+                            AppLog.i("theme.set", mode.name)
+                            appearance.set(mode)
+                        },
                         onWeightText = viewModel::onWeightText,
                         onPickedTime = viewModel::onPickedTime,
                         onSave = viewModel::save,

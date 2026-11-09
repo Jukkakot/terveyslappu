@@ -39,6 +39,14 @@ class WeightBackupTest {
     }
 
     @Test
+    fun `home notice on failure or a stale success, never when off`() {
+        assertTrue(BackupStatus(uri = "u", lastOkAt = t0, lastFailedAt = t0.plusSeconds(5)).needsAttention(t0.plusSeconds(10)))
+        assertTrue(BackupStatus(uri = "u", lastOkAt = t0).needsAttention(t0.plus(Duration.ofDays(4))))
+        assertFalse(BackupStatus(uri = "u", lastOkAt = t0).needsAttention(t0.plus(Duration.ofDays(1))))
+        assertFalse(BackupStatus(lastFailedAt = t0).needsAttention(t0))
+    }
+
+    @Test
     fun `enable writes at once and persists the result`() = runTest {
         val store = MemoryStore()
         val backup = WeightBackup(store, { 42 }, { t0 }, backgroundScope)

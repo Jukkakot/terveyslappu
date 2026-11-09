@@ -44,7 +44,15 @@ fun formatDay(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefau
     }
 }
 
-private val shortDayFormat = DateTimeFormatter.ofPattern("d.M.", finnish)
+/** "tänään 7.05", "eilen 7.12", "ma 6.11. 7.02" (the home card's time). */
+fun formatDayTime(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefault()): String =
+    "${formatDay(time, today, zone)} ${timeFormat.format(time.atZone(zone))}"
+
+/** A list row's time: "Tänään 7.05", "Ma 6.11. 7.02". */
+fun formatRowTime(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefault()): String =
+    formatDayTime(time, today, zone).replaceFirstChar { it.titlecase(finnish) }
+
+private val shortDayFormat =DateTimeFormatter.ofPattern("d.M.", finnish)
 private val pointFormat = DateTimeFormatter.ofPattern("d.M. H.mm", finnish)
 
 /** "8.11." */

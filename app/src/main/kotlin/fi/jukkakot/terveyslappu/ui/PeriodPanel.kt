@@ -3,7 +3,6 @@ package fi.jukkakot.terveyslappu.ui
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,13 +24,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
 import fi.jukkakot.terveyslappu.chart.Period
-import fi.jukkakot.terveyslappu.chart.PeriodStats
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -123,21 +120,5 @@ fun ChartArea(data: ChartData?) {
         }
     } else {
         WeightChart(data, stringResource(R.string.chart_description, data.entries.size))
-    }
-}
-
-/** Two compact lines: latest and change, then average, lowest, highest and count. */
-@Composable
-fun StatsRow(stats: PeriodStats) {
-    val first = buildList {
-        add(stringResource(R.string.stats_latest, formatKg(stats.latest)))
-        stats.change?.let { add(stringResource(R.string.stats_change, formatChange(it))) }
-        stats.perWeek?.let { add(stringResource(R.string.stats_rate, formatRate(it))) }
-    }.joinToString(" · ")
-    val second = stringResource(R.string.stats_spread, formatKg(stats.average), formatKg(stats.min), formatKg(stats.max)) +
-        " · " + pluralStringResource(R.plurals.stats_count, stats.count, stats.count)
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).testTag("stats")) {
-        Text(first, style = MaterialTheme.typography.bodyMedium)
-        Text(second, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

@@ -47,6 +47,8 @@ Phases in order; one OpenSpec change each unless noted.
   profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
   from the raw data.
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
+- ~~**main-screen-refresh**~~: done 2026-11-09 (simple home per mockup B, Historia and Asetukset
+  screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).
 - **Goal weight and forecast** on the chart (user 2026-11-09: later).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
