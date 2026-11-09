@@ -19,6 +19,9 @@ rows. **Non-Goals:** averages per group, remembering open groups, grouping on th
   split at month borders), DAY. A group with one child is replaced by that child (applied bottom
   up, so a lone weight rises as far as it can). Gap rows go between neighbours whose last/first
   weights are more than 30 days apart, at the level where they are siblings.
+- **Short lists stay flat** (found while implementing): with at most 14 weights only the day level
+  is used, because the 1 vk period is a rolling week that the Monday cut would split into a group
+  and a lone row (`ListGroups.FLAT_MAX`).
 - **Per-weight change stops at gaps**: `changesFromPrevious` gets the 30-day limit (shared
   constant with `ChartData.MAX_GAP_DAYS`).
 - **Flattening in the UI**: open set = group keys in `rememberSaveable(period)`; default = the path

@@ -115,6 +115,13 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   owner details shows the reason, which opens Omat tiedot; under 18 the adult classes and the
   equation are left out. Nothing derived goes to Health Connect or the export: it is calculated,
   not measured, and recomputed whenever shown. No library: each formula is one line.
+- **Grouped Historia list** (user 2026-11-09, history-list-groups): Kaikki holds 300+ weights, too
+  many rows to scan, so the list groups by year → month → week (cut at months) → day, each group
+  with first → last weight, change and count, tapping opens it. A level with a single child is
+  skipped and a list of up to 14 weights stays flat, so short periods look as before. The newest
+  path opens by default and nothing is remembered. A pause over 30 days shows as a thin
+  "Ei punnituksia" row, and no change is computed across it (the chart's line-break rule). A level
+  picker as in other weight apps was rejected: one more control.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

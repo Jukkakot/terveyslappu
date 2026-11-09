@@ -36,7 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
-import fi.jukkakot.terveyslappu.chart.changesFromPrevious
+import fi.jukkakot.terveyslappu.chart.ListGroups
+import fi.jukkakot.terveyslappu.chart.ListNode
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import fi.jukkakot.terveyslappu.chart.PeriodStats
 import fi.jukkakot.terveyslappu.chart.filter
 import fi.jukkakot.terveyslappu.chart.needsHistory
@@ -94,7 +98,10 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val now = remember(all, state.period) { Instant.now() }
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
-    val changes = remember(shown) { changesFromPrevious(shown) }
+    val tree = remember(shown) { ListGroups.build(shown, zone) }
+    // Newest path open; reset with the period, forgotten when Historia is left (weight-entry "Open by default").
+    var open by remember(state.period) { mutableStateOf(ListGroups.defaultOpen(tree)) }
+    val rows = remember(tree, open) { ListGroups.flatten(tree, open) }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
     val pager = rememberPagerState { Quantity.entries.size }
     val scope = rememberCoroutineScope()
@@ -125,9 +132,15 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
                 QuantityPage(Quantity.entries[page], state.period, shown, now, zone, profile, actions.onOpenProfile)
             }
         }
-        items(shown, key = { it.id }) { entry ->
+        items(rows, key = { it.node.key }) { row ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            WeightRowItem(entry, changes[entry.id], today, onDelete = { actions.onDelete(entry) })
+            when (val node = row.node) {
+                is ListNode.Weight -> WeightRowItem(node.entry, node.change, today, row.depth, onDelete = { actions.onDelete(node.entry) })
+                is ListNode.Group -> GroupRowItem(node, node.key in open, today, row.depth) {
+                    open = if (node.key in open) open - node.key else open + node.key
+                }
+                is ListNode.Gap -> GapRowItem(node, today, row.depth)
+            }
         }
     }
 }
@@ -237,13 +250,13 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate, onDelete: () -> Unit) {
+private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate, depth: Int, onDelete: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = {}, onLongClick = onDelete)
             .heightIn(min = 48.dp)
-            .padding(start = 20.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            .padding(start = indent(depth), end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(formatRowTime(entry.time, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

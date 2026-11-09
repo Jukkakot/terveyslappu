@@ -18,6 +18,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
@@ -248,5 +249,19 @@ class MainScreenTest {
         compose.onNodeWithTag("quantityReason").assertExists()
         compose.onNodeWithTag("openProfile").performClick()
         compose.onNodeWithTag("shareLog").assertExists()
+    }
+
+    @Test
+    fun `a long period groups the list by year and a closed year opens on tap`() {
+        val zone = java.time.ZoneId.systemDefault()
+        val many = (2023..2025).flatMap { y ->
+            (1..12).map { m -> weightEntry("$y-$m", java.time.LocalDate.of(y, m, 10).atTime(7, 5).atZone(zone).toInstant(), null, 85.0 + m / 10.0, "me", "me") }
+        }
+        show(MainUiState(access = Access.GRANTED, weights = many.reversed(), period = Period.All, screen = Screen.HISTORY))
+        compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-y2023"))
+        compose.onNodeWithTag("delete-2023-6").assertDoesNotExist()
+        compose.onNodeWithTag("group-y2023").performClick()
+        compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("delete-2023-6"))
+        compose.onNodeWithTag("delete-2023-6").assertExists()
     }
 }

@@ -4,7 +4,9 @@
 Historia's list SHALL group the period's weights by year, month, week and day, newest first on
 every level, with the single weights under their day. Weeks run Monday to Sunday and SHALL be cut
 at month borders. A group that would hold only one child SHALL NOT be shown as its own level: its
-child takes its place, and a day with one weight is a plain weight row.
+child takes its place, and a day with one weight is a plain weight row. A period with at most 14
+weights SHALL stay a flat list in which only days with several weights are grouped (a rolling week
+would otherwise split at its Monday; decided while implementing, 2026-11-09).
 
 #### Scenario: A week, one weight a day
 - **GIVEN** the period 1 vk holds one weight on each of seven days

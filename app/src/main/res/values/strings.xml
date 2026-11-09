@@ -76,6 +76,10 @@
     <string name="stats_max">Ylin</string>
     <string name="stats_count">Painoja</string>
     <string name="stats_latest">Viimeisin</string>
+    <string name="group_open">Avaa %1$s</string>
+    <string name="group_close">Sulje %1$s</string>
+    <string name="group_values">%1$s → %2$s kg · %3$d painoa</string>
+    <string name="group_gap">Ei punnituksia %1$s–%2$s</string>
 
     <string name="quantity_weight">Paino</string>
     <string name="quantity_bmi">BMI</string>

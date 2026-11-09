@@ -63,7 +63,9 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**derived-values**~~: done 2026-11-09 (BMI with class, normal-weight range and basal metabolic
   rate on the home row and as Historia tabs Paino / BMI / Perusaineenvaihdunta; plot flush with the
   y-axis).
-- **Next: history-list-groups** (Historia list grouped by year/month/week/day; user 2026-11-09).
+- ~~**history-list-groups**~~: done 2026-11-09 (Historia list grouped year → month → week → day,
+  single-child levels skipped, lists of up to 14 weights flat, newest path open, gap rows over 30
+  days; no change across a gap).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
