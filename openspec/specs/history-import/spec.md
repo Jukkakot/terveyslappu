@@ -7,8 +7,8 @@ with its original dates, after showing the user what will be imported.
 ## Requirements
 
 ### Requirement: Pick a history file
-The main screen menu SHALL offer "Tuo historia", which opens the system file picker for a text file
-or an old binary Excel file (`.xls`) and reads the chosen file without any other permission.
+Asetukset SHALL offer "Tuo historia", which opens the system file picker for a text file or an old
+binary Excel file (`.xls`) and reads the chosen file without any other permission.
 
 #### Scenario: Pick a file
 - **WHEN** the user taps Tuo historia and picks a CSV file

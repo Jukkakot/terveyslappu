@@ -6,13 +6,13 @@ Chart, periods and statistics of the weights this app wrote, shown on the main s
 ## Requirements
 
 ### Requirement: Weight chart
-The main screen SHALL show, above the weight list, a chart of the weights this app wrote (scale,
-manual and imported) in the chosen period: each weight as a dot, joined by a line in time order.
-Weights written by other apps SHALL NOT be shown.
+Historia SHALL show, above the weight list, a chart of the weights this app wrote (scale, manual and
+imported) in the chosen period: each weight as a dot, joined by a line in time order. Weights written
+by other apps SHALL NOT be shown.
 
 #### Scenario: A week of weigh-ins
 - **GIVEN** the app wrote seven weights in the last seven days
-- **WHEN** the main screen is shown with period 1 vk
+- **WHEN** Historia is shown with period 1 vk
 - **THEN** the chart shows seven dots joined by a line, with day labels
 
 #### Scenario: Other app's weight

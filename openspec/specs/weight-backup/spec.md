@@ -7,11 +7,12 @@ automatically, with its state always visible so a broken backup is noticed.
 ## Requirements
 
 ### Requirement: Turn the backup on
-The main screen SHALL offer to turn the backup on; the user picks or creates one CSV file with the
-system picker and the app keeps write access to it across restarts.
+Asetukset SHALL offer to turn the backup on; the user picks or creates one CSV file with the system
+picker and the app keeps write access to it across restarts.
 
 #### Scenario: First backup
-- **WHEN** the user taps Ota käyttöön and creates `terveyslappu-varmuuskopio.csv` in Google Drive
+- **WHEN** the user taps Ota käyttöön in Asetukset and creates `terveyslappu-varmuuskopio.csv` in
+  Google Drive
 - **THEN** the app writes all weights there at once and the status shows the time and count
 
 #### Scenario: Picker cancelled
@@ -20,7 +21,7 @@ system picker and the app keeps write access to it across restarts.
 
 ### Requirement: Automatic updates
 While the backup is on, the app SHALL rewrite the file with all weights in the export format after
-each weight it saves, imports or deletes, and when the main screen opens and the last successful
+each weight it saves, imports or deletes, and when the home screen opens and the last successful
 backup is older than 24 hours.
 
 #### Scenario: After a weigh-in
@@ -28,7 +29,7 @@ backup is older than 24 hours.
 - **THEN** the backup file is rewritten and holds the new weight
 
 #### Scenario: Daily
-- **WHEN** the main screen opens 25 hours after the last backup
+- **WHEN** the home screen opens 25 hours after the last backup
 - **THEN** a backup runs
 
 #### Scenario: Off
@@ -36,20 +37,22 @@ backup is older than 24 hours.
 - **THEN** no file is written
 
 ### Requirement: Visible status
-The main screen SHALL show the backup state: off with a button to turn it on, running, the last
-success with its time and weight count, or the last failure with a retry button. A last success
-older than three days SHALL be shown as a warning.
+Asetukset SHALL show the backup state: off with a button to turn it on, running, the last success
+with its time and weight count, or the last failure with a retry button. A last success older than
+three days SHALL be shown as a warning there and as a notice on the home screen; a failure SHALL also
+show that notice.
 
 #### Scenario: Failure
 - **WHEN** writing the file fails (for example the file was deleted)
-- **THEN** the status shows the failure time and Yritä uudelleen, and the cause is in the log
+- **THEN** Asetukset shows the failure time and Yritä uudelleen, the home screen shows a notice that
+  opens Asetukset, and the cause is in the log
 
 #### Scenario: Stale
 - **WHEN** the last success is four days old
-- **THEN** the status is shown in the warning colour
+- **THEN** the status is shown in the warning colour and the home screen shows the notice
 
 ### Requirement: Manage the backup
-The menu SHALL offer, while the backup is on, to back up now, to change the file and to turn the
+Asetukset SHALL offer, while the backup is on, to back up now, to change the file and to turn the
 backup off; turning it off SHALL release the file access and keep the file as it is.
 
 #### Scenario: Turn off

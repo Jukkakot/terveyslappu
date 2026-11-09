@@ -28,8 +28,8 @@ deletes and every error with its cause. The file SHALL keep at most the latest 1
 - **THEN** the oldest lines are dropped and the newest kept
 
 ### Requirement: Share the log
-The app SHALL offer "Jaa loki" in the main screen menu, which opens the Android share sheet with
-the log file attached.
+The app SHALL offer "Jaa loki" in Asetukset, which opens the Android share sheet with the log file
+attached.
 
 #### Scenario: Share with Quick Share
 - **WHEN** the user taps Jaa loki and picks Quick Share

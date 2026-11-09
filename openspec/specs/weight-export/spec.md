@@ -7,7 +7,7 @@ can import again on another phone.
 ## Requirements
 
 ### Requirement: Export to a chosen file
-The main screen menu SHALL offer "Vie painot", which asks where to save a file named
+Asetukset SHALL offer "Vie painot", which asks where to save a file named
 `terveyslappu-painot-<date>.csv` with the system picker and writes the export there.
 
 #### Scenario: Export
