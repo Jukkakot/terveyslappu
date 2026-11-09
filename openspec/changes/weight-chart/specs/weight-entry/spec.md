@@ -35,3 +35,7 @@ without a confirmation, and SHALL offer to undo the deletion.
 - **WHEN** the user taps Kumoa
 - **THEN** the same weight is written back at the same time, marked as from the scale when it was
   a scale weight, and appears in the list again
+
+#### Scenario: Other app's weight
+- **GIVEN** another app wrote a weight
+- **THEN** it is not listed, so the app offers no way to delete it
