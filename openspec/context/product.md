@@ -164,6 +164,10 @@ The user's earlier Android app, read through for mistakes worth not repeating:
 
 ## Findings (2026-11-08)
 
+- **Samsung Health keeps its own copy** (user test 2026-11-09, Q1): a weight written by
+  terveyslappu shows in Samsung Health, and deleting it in terveyslappu does not remove it there.
+  So Samsung Health (and Samsung Cloud) holds the weights it has seen, and a weight deleted or
+  discarded here after Samsung Health read it must also be deleted in Samsung Health by hand.
 - **Scale:** Prego P814B advertises as `Yoda1` and broadcasts the weight in BLE manufacturer
   data (company id low byte `0xC0`), no connection needed. Decoding matches openScale
   `OkOkHandler` (C0 path): payload bytes 0-1 weight big-endian, byte 6 attributes (bit 0 stable,
