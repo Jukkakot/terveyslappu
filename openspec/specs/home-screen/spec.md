@@ -43,7 +43,7 @@ weights with delete and undo, and an add button in its top bar that opens the ma
 - **THEN** it shows the chosen period's chips, chart, statistics and weights, newest first
 
 ### Requirement: Asetukset screen
-Asetukset SHALL group, with section titles: Ulkoasu (theme), Painot (Tuo historia, Vie painot),
+Asetukset SHALL group, with section titles: Ulkoasu (theme), Painot (Tuo painot, Vie painot),
 Varmuuskopio (state and its actions) and Tuki (Jaa loki, the version).
 
 #### Scenario: Asetukset contents

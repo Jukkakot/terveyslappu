@@ -10,7 +10,7 @@ Phases in order; one OpenSpec change each unless noted.
    weigh-in from a widget or Quick Settings tile without opening the app. Log every received
    packet raw with the scan's timings (NFR-7, NFR-8), and turn shared failing logs into replay
    tests.
-3. **history-import** (done 2026-11-08 in autopilot, archived; menu ⋮ → Tuo historia; the real
+3. **history-import** (done 2026-11-08 in autopilot, archived; menu ⋮ → Tuo painot; the real
    OKOK file still to try): import the OKOK export into Health Connect with the original timestamps.
 4. **Moving to a new phone**: interim answer done and archived 2026-11-08 (weight-backup, autopilot): an
    opt-in backup file in the user's own cloud, rewritten after every change and shown on the
@@ -42,7 +42,7 @@ Phases in order; one OpenSpec change each unless noted.
   bytes 4-12 are zeros on this scale, so the address is only in `addr=`.
 - ~~**scale-reading-archive**~~: done 2026-11-09 (raw packet fields per weigh-in in app storage and
   in the export/backup `raw` column).
-- ~~**okok-xls-import**~~: done 2026-11-09 (Tuo historia reads the OKOK `.xls`); the real file
+- ~~**okok-xls-import**~~: done 2026-11-09 (Tuo painot reads the OKOK `.xls`); the real file
   still to try on the phone.
 - ~~**weigh-in-discard**~~: done 2026-11-09 (Poista on the result, Punnitse uudelleen dropped,
   the scale's lingering broadcast ignored). From the 2026-11-09 log: `name=Yoda1` is in every

@@ -34,7 +34,7 @@ the writing app's name and a `raw` column holding the raw data the phone keeps f
   `source=scale|packet=0339...|key=12c0|weight_raw=825|decimals=1|unit=kg|stable=1|impedance=5123|...`
 
 #### Scenario: Read back
-- **WHEN** an exported file is imported with Tuo historia
+- **WHEN** an exported file is imported with Tuo painot
 - **THEN** the same weights and times are found, and their raw data is kept on the phone again
 
 #### Scenario: Older export

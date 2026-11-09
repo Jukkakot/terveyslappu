@@ -63,5 +63,5 @@ backup off; turning it off SHALL release the file access and keep the file as it
 The backup file SHALL be readable by the history import, so a new phone gets the weights back.
 
 #### Scenario: New phone
-- **WHEN** the backup file is imported with Tuo historia on another phone
+- **WHEN** the backup file is imported with Tuo painot on another phone
 - **THEN** the weights and times in it are found

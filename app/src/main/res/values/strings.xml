@@ -102,7 +102,7 @@
     <string name="weighin_change">%1$s kg edellisestä (%2$s)</string>
     <string name="widget_description">Punnitse yhdellä napautuksella</string>
 
-    <string name="menu_import">Tuo historia</string>
+    <string name="menu_import">Tuo painot</string>
     <string name="menu_export">Vie painot</string>
     <string name="backup_off">Ei käytössä</string>
     <string name="backup_off_hint">Kaikki painot kirjoitetaan valitsemaasi CSV-tiedostoon jokaisen muutoksen jälkeen.</string>
@@ -121,7 +121,7 @@
     <string name="export_done">Viety %1$d painoa</string>
     <string name="export_done_recent">Viety %1$d painoa. Yli 30 päivää vanhat puuttuvat, koska historialupaa ei ole.</string>
     <string name="export_failed">Vienti epäonnistui. Syy on lokissa.</string>
-    <string name="import_title">Tuo painohistoria</string>
+    <string name="import_title">Tuo painot</string>
     <string name="import_reading">Luetaan tiedostoa…</string>
     <string name="import_read_failed">Tiedostoa ei voitu lukea. Syy on lokissa.</string>
     <string name="import_none">Tiedostosta ei löytynyt painoja. Jaa loki, niin tiedoston muoto voidaan lisätä.</string>

@@ -49,7 +49,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
   and daily on opening, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
   user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
-  Tuo historia.
+  Tuo painot.
 - **No weight before weighing; Poista or Valmis on the result** (user 2026-11-09,
   weigh-in-button-redo, weigh-in-discard): the widget is a plain 1x1 Punnitse button and the tile
   has no subtitle. The dialog shows the result ~10 s (a tap keeps it open) with only Poista and
