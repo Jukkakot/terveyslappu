@@ -2,35 +2,41 @@
 
 ## Why
 
-The manual weight form takes the bottom third of the main screen although the user will hardly
-ever use it (user 2026-11-09): weighing happens with the scale. The screen also looks like a plain
-list of default widgets; the user wants it modern, clean and pleasant, in line with how common
-weight and health apps present the same data, and a usual light/dark theme choice.
+The main screen shows too much information and text at once (user 2026-11-09), and the manual
+weight form takes its bottom third although the user will hardly ever use it. The user wants a simple
+home screen from which other places open when wanted, a modern and clean look in line with common
+weight and health apps, and a usual light/dark theme choice in a settings screen.
 
 ## What Changes
 
-- The manual form leaves the main screen. Menu ⋮ gets **Lisää paino käsin**, which opens a dialog
-  with the same fields and rules as today (weight, date, time, Tallenna).
-- Bottom of the main screen: only the primary action **Punnitse vaa'alla** (one filled button,
-  thumb reach).
-- Menu ⋮ gets **Teema**: Järjestelmä (default), Vaalea, Tumma. Colours stay the phone's own
-  (Material You); the choice is remembered.
-- A design pass on the main screen (mockups first, 2-3 alternatives): a summary of the latest
-  weight and its change on top, then period chips, chart, stats and the list, with consistent
-  spacing, type scale and surface tones in both themes. Menu items get icons and are grouped
-  (daily, data, backup, about).
+- **Home screen** (mockup B, chosen 2026-11-09): one card with the latest weight, its time, the change
+  from the previous weight and a small 30-day line; the three latest weights; Punnitse vaa'alla as the
+  only filled action at the bottom; a settings button in the top bar. The ⋮ menu and the backup card
+  leave the home screen; a notice appears only when the backup failed or is stale.
+- **Historia** (opened from the card): period chips, chart, statistics and the weight list with
+  delete and undo, as today; an add button in its top bar opens **Lisää paino käsin**, a dialog with
+  today's form (weight, date, time, Tallenna). The form is nowhere else.
+- **Asetukset** (opened from the settings button): Ulkoasu (Teema: Järjestelmä default, Vaalea,
+  Tumma; colours stay the phone's own), Painot (Tuo historia, Vie painot), Varmuuskopio (state and
+  actions), Tuki (Jaa loki, version).
+- Consistent spacing, type scale and surface tones in both themes (mockup canvas "Terveyslappu
+  etusivu").
 - Nothing changes in Health Connect, the scale, the widget or the tile.
 
 ## Capabilities
 
 ### New Capabilities
-- `app-appearance`: theme choice (system, light, dark), remembered.
+- `home-screen`: the simple home screen, Historia and Asetukset screens and how they open.
+- `app-appearance`: theme choice, remembered.
 
 ### Modified Capabilities
-- `weight-entry`: manual entry moves into a dialog opened from the menu.
-- `weight-chart`: a latest-weight summary at the top of the main screen.
+- `weight-entry`: manual entry becomes a dialog from Historia; the list lives on Historia; version in
+  Asetukset.
+- `weight-chart`: the chart lives on Historia.
+- `weight-backup`: turn on, status and actions in Asetukset; home only shows a notice on trouble.
+- `history-import`, `weight-export`, `app-log`: their entries move from the menu to Asetukset.
 
 ## Impact
 
-App screens only: main screen, menu, a new manual-entry dialog, theme setting (local preference).
-No Health Connect, scale, widget or build/CI changes.
+App screens only: home, two new screens, a manual-entry dialog, theme preference (local). No Health
+Connect, scale, widget or build/CI changes.

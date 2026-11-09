@@ -4,39 +4,36 @@
 
 Main screen today (`ui/MainScreen.kt`): top bar with ⋮ (text glyph), optional backup card, a
 LazyColumn (period chips, chart, stats row, list rows with a delete icon), and a bottom surface with
-Punnitse vaa'alla plus the whole manual form. Theme: Material 3 dynamic colours following the
-system (`ui/Theme.kt`). Weigh-in dialog is a separate activity using the same theme.
+Punnitse vaa'alla plus the whole manual form. Theme: Material 3 dynamic colours following the system
+(`ui/Theme.kt`). The weigh-in dialog is a separate activity using the same theme.
 
 ## Goals / Non-Goals
 
-**Goals:** manual form out of sight but findable; one primary action; a calm, modern overview in
-both themes; theme choice.
+**Goals:** a simple home screen; everything else one tap away on Historia or Asetukset; theme choice;
+a calm, consistent look in both themes.
 **Non-Goals:** new data or statistics, goal weight (backlog), widget/tile look, bottom navigation
-(one screen is enough).
+(mockup C rejected 2026-11-09).
 
 ## Decisions
 
-1. **Manual entry = dialog from the menu**, reusing today's form state in `MainViewModel` (same
-   validation, pickers). A dialog, not a new screen: one short task, keyboard friendly.
-2. **Theme preference** in SharedPreferences (`appearance`), read by `TerveysTheme` through a small
-   flow so a change applies at once; `WeighInActivity` reads the same value. Dynamic colours kept
-   (ui rule: platform base theme first; the phone's palette is the project's theme).
-3. **Patterns borrowed (look not copied):** Withings Health Mate / Google Fit style overview: a large
-   latest number with a small change line on top, period chips over a full-width line chart, compact
-   stat tiles, then a dense dated list. Material 3 surface tones for depth, no shadows except the
-   bottom action.
-4. **Menu with icons, grouped by dividers:** Lisää paino käsin; Tuo historia, Vie painot; backup
-   items; Teema; Jaa loki; version. Material Symbols drawables (no icon library dependency).
-5. **Mockups before code:** 2-3 alternatives at 360×780 in light and dark with made-up data, as an
-   HTML page; the user picks, then the spec scenarios are finalised.
+1. **Three screens in `MainActivity`, no navigation library:** a `Screen` state (Home, Historia,
+   Asetukset) in `MainViewModel`, `BackHandler` returns to Home. Three fixed screens do not need
+   Navigation Compose; state survives rotation through the view model.
+2. **Home = mockup B** (canvas https://claude.ai/artifact/8Xy4472ukqBcVeMko9k3L7, `KorttiB`): card
+   (latest, time, change chip with an arrow icon, 30-day sparkline drawn with a Compose `Canvas`, no
+   axes), three latest rows, filled Punnitse vaa'alla at the bottom, gear button top right. The
+   sparkline uses the last 30 days of own weights whatever period Historia has.
+3. **Historia** keeps today's chips, Vico chart, stats and list; stats shown as compact tiles; add
+   button (+, "Lisää paino käsin") in the top bar opens the manual-entry dialog, reusing today's form
+   state and validation in `MainViewModel`.
+4. **Asetukset** is a plain scrolling list of grouped sections (mockup `Asetukset`); the theme is a
+   three-way segmented button. Backup actions move here from the menu and the card.
+5. **Theme preference** in SharedPreferences (`appearance`), exposed as a flow read by `TerveysTheme`
+   so a change applies at once; `WeighInActivity` reads the same value. Dynamic colours kept (ui rule:
+   platform base theme first; the phone's palette is the project's theme).
+6. **Icons:** Material Symbols vector drawables in `res/drawable` (no icon library dependency).
 
 ## Risks / Trade-offs
 
-- Users of the manual form lose one tap → accepted by the user (rarely used).
-- Theme override in a Compose-only app is simple; the system splash/window background still follows
-  the system for a moment on start (acceptable).
-
-## Open Questions
-
-- Which mockup alternative (decided with pictures before task 2).
-- Where the theme choice sits: a submenu in ⋮ or a small dialog with three radio buttons.
+- Import, export and log sharing take one more tap (via Asetukset) → rare actions, accepted.
+- The system splash still follows the system theme for a moment on start (acceptable).

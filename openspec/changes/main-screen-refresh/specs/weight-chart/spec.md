@@ -1,15 +1,20 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Latest weight summary
-The main screen SHALL show at its top the latest weight this app wrote, large, with its date and time
-and the change from the weight before it (kg, with a direction sign and not by colour alone). Below
-the list the only main-screen action SHALL be Punnitse vaa'alla.
+### Requirement: Weight chart
+Historia SHALL show, above the weight list, a chart of the weights this app wrote (scale, manual and
+imported) in the chosen period: each weight as a dot, joined by a line in time order. Weights written
+by other apps SHALL NOT be shown.
 
-#### Scenario: Latest with change
-- **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
-- **WHEN** the main screen is shown
-- **THEN** the top shows 82,4 kg, "tänään 7.05" and −0,5 kg
+#### Scenario: A week of weigh-ins
+- **GIVEN** the app wrote seven weights in the last seven days
+- **WHEN** Historia is shown with period 1 vk
+- **THEN** the chart shows seven dots joined by a line, with day labels
 
-#### Scenario: No weights yet
-- **WHEN** the app has written no weights
-- **THEN** the top invites to weigh with the scale instead of showing a number
+#### Scenario: Other app's weight
+- **GIVEN** another app wrote a weight yesterday
+- **WHEN** the chart is shown
+- **THEN** that weight is not in the chart
+
+#### Scenario: No weights in the period
+- **WHEN** the chosen period has no weights of this app
+- **THEN** the chart area says there are no weights in the period
