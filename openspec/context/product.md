@@ -107,6 +107,14 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Theme** (user 2026-11-09): the phone's own palette (Material You) in light and dark, following
   the system by default; Asetukset → Teema forces Vaalea or Tumma. Choices are filter chips like
   the period chips (a segmented button broke "Järjestelmä" mid-word on a 360 dp phone).
+- **Derived values** (user 2026-11-09, derived-values): BMI (WHO adult classes as a word in a
+  traffic-light tone: green normal, yellow 17–18.5 and 25–30, red beyond), the normal-weight range
+  for the height and the basal metabolic rate (Mifflin-St Jeor, age = weight's year − birth year)
+  show in a row under the home card and as Historia tabs (swipe or tap; opens on Paino; BMI chart
+  has faint class bands). Old weights use today's height (adult height is stable). A value missing
+  owner details shows the reason, which opens Omat tiedot; under 18 the adult classes and the
+  equation are left out. Nothing derived goes to Health Connect or the export: it is calculated,
+  not measured, and recomputed whenever shown. No library: each formula is one line.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

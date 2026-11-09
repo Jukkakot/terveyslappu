@@ -29,6 +29,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,7 +65,10 @@ internal fun SettingsScreen(
     versionName: String,
     actions: MainActions,
     snackbar: SnackbarHostState,
+    profileFocus: Boolean = false,
 ) {
+    val profileView = remember { BringIntoViewRequester() }
+    LaunchedEffect(profileFocus) { if (profileFocus) profileView.bringIntoView() }
     Scaffold(
         topBar = { SubScreenBar(stringResource(R.string.settings_title), onBack = { actions.onScreen(Screen.HOME) }) },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -83,7 +89,9 @@ internal fun SettingsScreen(
                     ThemeChoice(themeMode, actions.onTheme)
                 }
             }
-            Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
+            Column(Modifier.bringIntoViewRequester(profileView)) {
+                Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
+            }
             if (granted) {
                 var choosingFormat by remember { mutableStateOf(false) }
                 Section(R.string.settings_data) {

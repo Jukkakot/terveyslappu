@@ -70,6 +70,8 @@ data class MainUiState(
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
     val import: ImportState? = null,
+    /** Asetukset was opened from a derived value's reason: show Omat tiedot. */
+    val profileFocus: Boolean = false,
 )
 
 /** A snackbar action, e.g. Kumoa. */
@@ -148,7 +150,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         refreshAccess()
     }
 
-    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen) }
+    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen, profileFocus = false) }
+
+    /** A derived value's reason: Asetukset at Omat tiedot (derived-values). */
+    fun openProfile() = _state.update { it.copy(screen = Screen.SETTINGS, profileFocus = true) }
 
     fun openEntry() = _state.update { it.copy(entryOpen = true, saveFailed = false) }
 

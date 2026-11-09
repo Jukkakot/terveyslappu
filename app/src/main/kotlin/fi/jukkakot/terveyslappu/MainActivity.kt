@@ -131,6 +131,7 @@ class MainActivity : ComponentActivity() {
                     heightInHealthConnect = heightInHc,
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
+                        onOpenProfile = viewModel::openProfile,
                         onOpenEntry = viewModel::openEntry,
                         onCloseEntry = viewModel::closeEntry,
                         onProfile = { new ->

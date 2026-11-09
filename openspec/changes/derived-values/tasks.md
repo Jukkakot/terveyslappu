@@ -2,7 +2,7 @@
 
 ## 1. Formulas and classes (pure)
 
-- [ ] 1.1 `derived/`: BMI from kg and height cm; WHO class with word and tone (yellow 17–18.5 and
+- [x] 1.1 `derived/`: BMI from kg and height cm; WHO class with word and tone (yellow 17–18.5 and
   25–30, red under 17 and from 30, green between); normal-weight range for a height rounded to
   whole kg; Mifflin-St Jeor rounded to 10 kcal with age = weight's year − birth year; adult check
   (≥ 18 in the weight's year) hides class, range and BMR. `Quantity` (WEIGHT, BMI, BMR) with the
@@ -12,20 +12,20 @@
 
 ## 2. Chart, stats and scale for any quantity (pure)
 
-- [ ] 2.1 `ChartData` and `periodStats` take the quantity's values instead of `kg`; derived
+- [x] 2.1 `ChartData` and `periodStats` take the quantity's values instead of `kg`; derived
   quantities have no per-week rate. Verify: existing chart and stats tests unchanged and green;
   new tests for BMI stats (latest, change −0,3) and a BMR series.
-- [ ] 2.2 The scale rule with "kg worth" (`perKg`, rounding step): weight unchanged, BMI by 1/h²
+- [x] 2.2 The scale rule with "kg worth" (`perKg`, rounding step): weight unchanged, BMI by 1/h²
   rounded to whole units, BMR by 10 kcal/kg rounded to tens. Verify: existing `WeightScaleTest`
   green; tests for the steady BMI (span ≥ 1,2) and steady BMR (span ≥ 40 kcal) scenarios.
 
-- [ ] 2.3 Plot flush with the y-axis on every chart (full-width layout, no extreme-label padding).
+- [x] 2.3 Plot flush with the y-axis on every chart (full-width layout, no extreme-label padding).
   Verify: a Robolectric screenshot of a made-up multi-year chart shows the first point on the axis;
   the screenshot stays out of the repo.
 
 ## 3. Home row
 
-- [ ] 3.1 Derived values of the latest weight in the home summary, recomputed when the weights or
+- [x] 3.1 Derived values of the latest weight in the home summary, recomputed when the weights or
   the owner details change; row under the card with BMI + class word in its tone, normal range,
   kcal/vrk; in place of a value that cannot be computed, its reason naming the missing details,
   opening Asetukset scrolled to Omat tiedot; nothing without weights. Tone colours in the theme for
@@ -35,7 +35,7 @@
 
 ## 4. Historia tabs and swipe
 
-- [ ] 4.1 Tabs Paino / BMI / Perusaineenvaihdunta bound to a pager around chart + stats (list
+- [x] 4.1 Tabs Paino / BMI / Perusaineenvaihdunta bound to a pager around chart + stats (list
   outside), always all three, an uncomputable quantity shows its reason and a button to Omat
   tiedot, opens on Paino; axis labels and
   point details per quantity (`kg`, bare BMI under a "BMI" title, `kcal`); BMI class bands behind
@@ -44,7 +44,7 @@
 
 ## 5. Context
 
-- [ ] 5.1 product.md: derived values decision (what is shown, where, traffic-light classes, current
+- [x] 5.1 product.md: derived values decision (what is shown, where, traffic-light classes, current
   height for old weights, not in Health Connect or export, why); roadmap: "derived values" done;
   CLAUDE.md map gains `derived/`; bump `appVersion` to 1.12. Verify: `./gradlew test lint
   assembleDebug` passes.

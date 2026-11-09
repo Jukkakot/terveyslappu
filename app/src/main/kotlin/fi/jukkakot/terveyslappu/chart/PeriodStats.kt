@@ -18,22 +18,26 @@ data class PeriodStats(
 
 private const val DAY_SECONDS = 86_400.0
 
-/** Stats of [entries] in any order, or null when there are none. */
-fun periodStats(entries: List<WeightEntry>): PeriodStats? {
-    if (entries.isEmpty()) return null
-    val sorted = entries.sortedBy { it.time }
-    val first = sorted.first()
-    val latest = sorted.last()
-    val change = if (sorted.size > 1) latest.kg - first.kg else null
-    val days = Duration.between(first.time, latest.time).seconds / DAY_SECONDS
-    val perWeek = if (change != null && days >= 1.0) change / days * 7 else null
+/**
+ * Stats of [entries] in any order, or null when none has a value. [value] gives the shown quantity
+ * (kg by default; null leaves the entry out); [rate] false leaves out the per-week rate.
+ */
+fun periodStats(entries: List<WeightEntry>, value: (WeightEntry) -> Double? = { it.kg }, rate: Boolean = true): PeriodStats? {
+    val points = entries.sortedBy { it.time }.mapNotNull { e -> value(e)?.let { e.time to it } }
+    if (points.isEmpty()) return null
+    val (firstTime, first) = points.first()
+    val (latestTime, latest) = points.last()
+    val values = points.map { it.second }
+    val change = if (points.size > 1) latest - first else null
+    val days = Duration.between(firstTime, latestTime).seconds / DAY_SECONDS
+    val perWeek = if (rate && change != null && days >= 1.0) change / days * 7 else null
     return PeriodStats(
-        latest = latest.kg,
+        latest = latest,
         change = change,
         perWeek = perWeek,
-        average = sorted.map { it.kg }.average(),
-        min = sorted.minOf { it.kg },
-        max = sorted.maxOf { it.kg },
-        count = sorted.size,
+        average = values.average(),
+        min = values.min(),
+        max = values.max(),
+        count = points.size,
     )
 }

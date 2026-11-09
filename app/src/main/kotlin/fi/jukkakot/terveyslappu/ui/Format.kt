@@ -65,10 +65,28 @@ fun formatShortDay(day: LocalDate): String = shortDayFormat.format(day)
 fun formatMonthYear(day: LocalDate): String = monthYearFormat.format(day)
 
 /** A chart dot: "8.11. 7.05 82,6 kg", with the year when not from [today]'s year: "15.9.2024 8.33 97,6 kg". */
-fun formatPoint(time: Instant, kg: Double, zone: ZoneId = ZoneId.systemDefault(), today: LocalDate = LocalDate.now(zone)): String {
+fun formatPoint(time: Instant, kg: Double, zone: ZoneId = ZoneId.systemDefault(), today: LocalDate = LocalDate.now(zone)): String =
+    formatPoint(time, "${formatKg(kg)} kg", zone, today)
+
+/** A chart dot with its value already formatted: "8.11. 7.05 BMI 25,3". */
+fun formatPoint(time: Instant, value: String, zone: ZoneId = ZoneId.systemDefault(), today: LocalDate = LocalDate.now(zone)): String {
     val at = time.atZone(zone)
     val format = if (at.year == today.year) pointFormat else pointYearFormat
-    return "${format.format(at)} ${formatKg(kg)} kg"
+    return "${format.format(at)} $value"
+}
+
+/** Whole kcal in tens with a thousands space: 1772.4 → "1 770". */
+fun formatKcal(kcal: Double): String = String.format(finnish, "%,d", Math.round(kcal / 10) * 10)
+
+/** A kcal change in tens: −10 / +20 / ±0. */
+fun formatKcalChange(delta: Double): String {
+    val tens = Math.round(delta / 10) * 10
+    val abs = String.format(finnish, "%,d", kotlin.math.abs(tens))
+    return when {
+        tens < 0 -> "−$abs"
+        tens > 0 -> "+$abs"
+        else -> "±$abs"
+    }
 }
 
 /** Direction of a change as shown with [decimals] decimals: −1 down, 1 up, 0 when it shows as ±0. */

@@ -64,6 +64,8 @@ import fi.jukkakot.terveyslappu.chart.ChartDots
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.weight.WeightEntry
+import fi.jukkakot.terveyslappu.derived.LatestDerived
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -71,7 +73,7 @@ import java.time.ZoneId
 /** The simple home screen (mockup B): latest card, three latest weights, Punnitse vaa'alla. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, backup: BackupStatus) {
+internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, backup: BackupStatus, profile: OwnerProfile = OwnerProfile()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,14 +95,14 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup)
+                Access.GRANTED -> HomeContent(state, actions, backup, profile)
             }
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus) {
+private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile) {
     val now = remember(state.weights) { Instant.now() }
     val summary = remember(state.weights, state.homeDays) { state.weights?.let { HomeSummary.of(it, now, state.homeDays) } }
     val today = LocalDate.now()
@@ -110,6 +112,9 @@ private fun HomeContent(state: MainUiState, actions: MainActions, backup: Backup
     ) {
         if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed) { actions.onScreen(Screen.SETTINGS) }
         LatestCard(state, summary, today, actions.onHomePeriod) { actions.onScreen(Screen.HISTORY) }
+        // Recomputed whenever the weights or the owner details change (derived-values).
+        val derived = remember(summary?.latest, profile) { summary?.let { LatestDerived.of(it.latest, profile, ZoneId.systemDefault()) } }
+        derived?.let { DerivedRow(it, actions.onOpenProfile) }
         summary?.let { RecentList(it.recent, today) }
     }
 }

@@ -44,12 +44,27 @@ import fi.jukkakot.terveyslappu.chart.periodStats
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Instant
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.derived.Availability
+import fi.jukkakot.terveyslappu.derived.Derived
+import fi.jukkakot.terveyslappu.derived.Quantity
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 
 /** Historia: period chips, chart, stats tiles and the period's weights; + opens manual entry. */
 @Composable
-internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState) {
+internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, profile: OwnerProfile = OwnerProfile()) {
     Scaffold(
         topBar = {
             SubScreenBar(stringResource(R.string.history_title), onBack = { actions.onScreen(Screen.HOME) }) {
@@ -65,7 +80,7 @@ internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: S
             when {
                 state.loadFailed && all == null -> Notice(stringResource(R.string.recent_failed))
                 all == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> PeriodList(state, all, actions)
+                else -> PeriodList(state, all, actions, profile)
             }
         }
     }
@@ -74,29 +89,42 @@ internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: S
 
 /** Chips, chart and stats scroll away above the period's weights, so the list keeps room on a small phone. */
 @Composable
-private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions) {
+private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions, profile: OwnerProfile) {
     val zone = ZoneId.systemDefault()
     val now = remember(all, state.period) { Instant.now() }
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
     val changes = remember(shown) { changesFromPrevious(shown) }
-    val data = remember(shown) { ChartData.of(state.period, shown, now, zone) }
-    val stats = remember(shown) { periodStats(shown) }
+    // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
+    val pager = rememberPagerState { Quantity.entries.size }
+    val scope = rememberCoroutineScope()
     LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
         item(key = "chips") { PeriodChips(state.period, actions.onPeriod) }
         if (state.history == HistoryAccess.NOT_GRANTED && state.period.needsHistory(now, zone)) {
             item(key = "history") { HistoryNotice(actions.onGrantHistory) }
         }
-        item(key = "chart") {
-            Box(
-                Modifier
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                    .clip(groupShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(8.dp),
-            ) { ChartArea(data) }
+        item(key = "tabs") {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = pager.currentPage,
+                edgePadding = 16.dp,
+                containerColor = Color.Transparent,
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Quantity.entries.forEachIndexed { i, quantity ->
+                    Tab(
+                        selected = pager.currentPage == i,
+                        onClick = { scope.launch { pager.animateScrollToPage(i) } },
+                        text = { Text(stringResource(quantity.title()), maxLines = 1) },
+                        modifier = Modifier.testTag("tab-${quantity.name}"),
+                    )
+                }
+            }
         }
-        stats?.let { item(key = "stats") { StatsTiles(it) } }
+        item(key = "pager") {
+            HorizontalPager(pager, verticalAlignment = Alignment.Top) { page ->
+                QuantityPage(Quantity.entries[page], state.period, shown, now, zone, profile, actions.onOpenProfile)
+            }
+        }
         items(shown, key = { it.id }) { entry ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             WeightRowItem(entry, changes[entry.id], today, onDelete = { actions.onDelete(entry) })
@@ -104,18 +132,83 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     }
 }
 
-/** One stats tile; [direction] puts an arrow on a change (0: none). */
-private data class Tile(val label: Int, val value: String, val direction: Int = 0)
+/**
+ * One quantity's chart and stats; a quantity the owner details do not allow shows the reason and a
+ * button to Omat tiedot instead (weight-chart "One quantity at a time").
+ */
+@Composable
+private fun QuantityPage(
+    quantity: Quantity,
+    period: Period,
+    shown: List<WeightEntry>,
+    now: Instant,
+    zone: ZoneId,
+    profile: OwnerProfile,
+    onOpenProfile: () -> Unit,
+) {
+    val value: (WeightEntry) -> Double? = remember(quantity, profile) { { quantity.valueOf(it, profile, zone) } }
+    val data = remember(shown, quantity, profile) { ChartData.of(period, shown, now, zone, value, { quantity.scale(it, profile) }, if (quantity == Quantity.BMR) 4 else ChartData.LABELS) }
+    val stats = remember(shown, quantity, profile) { periodStats(shown, value, rate = quantity.hasRate) }
+    // Nothing to show although there are weights: a missing detail, or under 18 for the whole period.
+    val state = quantity.availability(profile, now.atZone(zone).year).let {
+        if (it == Availability.Ok && data == null && shown.isNotEmpty()) Availability.Minor else it
+    }
+    Column(Modifier.fillMaxWidth().testTag("page-${quantity.name}")) {
+        Box(
+            Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                .clip(groupShape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(8.dp),
+        ) {
+            if (state != Availability.Ok) {
+                Column(
+                    Modifier.fillMaxWidth().height(180.dp).padding(16.dp).testTag("quantityReason"),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(reasonText(quantity.title(), state), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+                    TextButton(onClick = onOpenProfile, modifier = Modifier.testTag("openProfile")) { Text(stringResource(R.string.derived_open_profile)) }
+                }
+            } else if (quantity == Quantity.WEIGHT || data == null) {
+                ChartArea(data)
+            } else {
+                val description = if (quantity == Quantity.BMI) R.string.chart_description_bmi else R.string.chart_description_bmr
+                WeightChart(
+                    data,
+                    stringResource(description, data.entries.size),
+                    axisLabel = quantity::axis,
+                    pointLabel = quantity::point,
+                    bands = if (quantity == Quantity.BMI) bmiBands() else emptyList(),
+                )
+            }
+        }
+        if (state == Availability.Ok) stats?.let { StatsTiles(it, quantity, profile, shown.maxOfOrNull { e -> e.time }) }
+    }
+}
+
+/** One stats tile; [direction] puts an arrow on a change (0: none); [valueColor] tints the value. */
+private data class Tile(val label: Int, val value: String, val direction: Int = 0, val valueColor: Color = Color.Unspecified)
 
 /** Key numbers as small tiles, three per row; a number that means nothing (one weight) is left out. */
 @Composable
-private fun StatsTiles(stats: PeriodStats) {
+private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT, profile: OwnerProfile = OwnerProfile(), latestTime: Instant? = null) {
     val tiles = buildList {
-        stats.change?.let { add(Tile(R.string.stats_change, stringResource(R.string.kg_value, formatChange(it)), shownDirection(it, 1))) }
+        if (quantity != Quantity.WEIGHT) {
+            // Derived quantities have no rate; the latest takes its place, BMI with its class word in its tone.
+            val minor = latestTime != null && Derived.minor(profile, latestTime.atZone(ZoneId.systemDefault()).year)
+            if (quantity == Quantity.BMI && !minor) {
+                val word = stringResource(Derived.bmiClass(stats.latest).word())
+                add(Tile(R.string.stats_latest, "${quantity.format(stats.latest)} $word", valueColor = toneColor(Derived.tone(stats.latest))))
+            } else {
+                add(Tile(R.string.stats_latest, quantity.format(stats.latest)))
+            }
+        }
+        stats.change?.let { add(Tile(R.string.stats_change, quantity.changeText(it), quantity.direction(it))) }
         stats.perWeek?.let { add(Tile(R.string.stats_rate, stringResource(R.string.kg_value, formatRate(it)), shownDirection(it, 2))) }
-        add(Tile(R.string.stats_average, stringResource(R.string.kg_value, formatKg(stats.average))))
-        add(Tile(R.string.stats_min, stringResource(R.string.kg_value, formatKg(stats.min))))
-        add(Tile(R.string.stats_max, stringResource(R.string.kg_value, formatKg(stats.max))))
+        add(Tile(R.string.stats_average, quantity.format(stats.average)))
+        add(Tile(R.string.stats_min, quantity.format(stats.min)))
+        add(Tile(R.string.stats_max, quantity.format(stats.max)))
         add(Tile(R.string.stats_count, stats.count.toString()))
     }
     Column(
@@ -124,7 +217,7 @@ private fun StatsTiles(stats: PeriodStats) {
     ) {
         tiles.chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { (label, value, direction) ->
+                row.forEach { (label, value, direction, valueColor) ->
                     Column(
                         Modifier
                             .weight(1f)
@@ -133,7 +226,7 @@ private fun StatsTiles(stats: PeriodStats) {
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyLarge, color = valueColor, fontWeight = FontWeight.SemiBold)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }

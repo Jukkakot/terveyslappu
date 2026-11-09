@@ -61,6 +61,7 @@ class MainActions(
     val onGrantHistory: () -> Unit = {},
     val onTheme: (ThemeMode) -> Unit = {},
     val onProfile: (OwnerProfile) -> Unit = {},
+    val onOpenProfile: () -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */
@@ -80,9 +81,9 @@ fun MainScreen(
     val screen = if (state.screen == Screen.HISTORY && !granted) Screen.HOME else state.screen
     BackHandler(enabled = state.screen != Screen.HOME) { actions.onScreen(Screen.HOME) }
     when (screen) {
-        Screen.HOME -> HomeScreen(state, actions, snackbar, backup)
-        Screen.HISTORY -> HistoryScreen(state, actions, snackbar)
-        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar)
+        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile)
+        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile)
+        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, state.profileFocus)
     }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
 }

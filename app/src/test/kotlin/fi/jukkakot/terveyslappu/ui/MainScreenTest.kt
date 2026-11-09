@@ -21,6 +21,8 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.profile.Gender
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import fi.jukkakot.terveyslappu.weight.weightEntry
@@ -50,6 +52,7 @@ class MainScreenTest {
         backup: BackupStatus = BackupStatus(),
         onDelete: (WeightEntry) -> Unit = {},
         onGrantHistory: () -> Unit = {},
+        profile: OwnerProfile = OwnerProfile(),
     ) {
         compose.setContent {
             var state by remember { mutableStateOf(start) }
@@ -64,8 +67,10 @@ class MainScreenTest {
                         onWeightText = { state = state.copy(weightText = it) },
                         onDelete = onDelete,
                         onGrantHistory = onGrantHistory,
+                        onOpenProfile = { state = state.copy(screen = Screen.SETTINGS, profileFocus = true) },
                     ),
                     backup = backup,
+                    profile = profile,
                 )
             }
         }
@@ -208,5 +213,40 @@ class MainScreenTest {
         compose.onNodeWithTag("entryFailed").assertExists()
         compose.onNodeWithTag("save").assertIsEnabled().performClick()
         assertTrue(saved)
+    }
+
+    @Test
+    fun `home row shows the derived values and a reason opens Asetukset`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(birthYear = 1990, heightCm = 180))
+        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("derivedReason").performClick()
+        compose.onNodeWithTag("shareLog").assertExists()
+    }
+
+    @Test
+    fun `no weights shows no derived row`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), profile = OwnerProfile(heightCm = 180))
+        compose.onNodeWithTag("derived").assertDoesNotExist()
+    }
+
+    @Test
+    fun `BMI tab switches the chart and stats, opening on Paino`() {
+        val man = OwnerProfile(birthYear = 1990, heightCm = 180, gender = Gender.MALE)
+        show(MainUiState(access = Access.GRANTED, weights = weights, period = Period.MONTH, screen = Screen.HISTORY), profile = man)
+        compose.onNodeWithTag("page-WEIGHT").assertExists()
+        compose.onNodeWithTag("tab-BMI").performClick()
+        compose.onNodeWithTag("page-BMI").assertExists()
+        compose.onNode(hasText("Viimeisin") and hasAnyAncestor(hasTestTag("stats"))).assertExists()
+        compose.onNodeWithTag("chart").assertExists()
+        compose.onNodeWithTag("delete-3").assertExists()
+    }
+
+    @Test
+    fun `BMI tab without a height shows the reason and opens Omat tiedot`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY))
+        compose.onNodeWithTag("tab-BMI").performClick()
+        compose.onNodeWithTag("quantityReason").assertExists()
+        compose.onNodeWithTag("openProfile").performClick()
+        compose.onNodeWithTag("shareLog").assertExists()
     }
 }

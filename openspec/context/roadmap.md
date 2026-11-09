@@ -44,7 +44,7 @@ Phases in order; one OpenSpec change each unless noted.
   packet; the company id changes per weighing, so a background scan filters by name or address.
 - ~~**owner-profile**~~: done 2026-11-09 (Asetukset → Omat tiedot: birth year, height, gender; height
   also to Health Connect; carried in the export/backup `#profile;` line and restored by Tuo painot).
-  BMI and other derived values: see "Next: derived values".
+  BMI and other derived values: done in derived-values.
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
 - ~~**main-screen-refresh**~~: done 2026-11-09 (simple home per mockup B, Historia and Asetukset
   screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).
@@ -60,8 +60,10 @@ Phases in order; one OpenSpec change each unless noted.
   label under it, remembered).
 - ~~**chart-dots**~~: done 2026-11-09 (weights as dots on both charts when they fit).
 - ~~Trend line~~ and ~~goal weight and forecast~~: dropped (user 2026-11-09: not wanted).
-- **Next: derived values** (BMI and others from weight + owner details; user 2026-11-09).
-- **Then: history-list-groups** (Historia list grouped by year/month/week/day; user 2026-11-09).
+- ~~**derived-values**~~: done 2026-11-09 (BMI with class, normal-weight range and basal metabolic
+  rate on the home row and as Historia tabs Paino / BMI / Perusaineenvaihdunta; plot flush with the
+  y-axis).
+- **Next: history-list-groups** (Historia list grouped by year/month/week/day; user 2026-11-09).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
