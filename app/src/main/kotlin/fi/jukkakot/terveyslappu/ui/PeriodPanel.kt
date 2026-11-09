@@ -8,14 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,9 +25,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
 import fi.jukkakot.terveyslappu.chart.Period
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 internal fun Period.label(): Int = when (this) {
     Period.WEEK -> R.string.period_week
@@ -47,10 +41,18 @@ private fun Period.tag(): String = when (this) {
     is Period.Custom -> "period-custom"
 }
 
-/** The period chips; Oma opens a date-range picker and then shows the picked dates. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The period chips; Oma opens the calendar with each weighed day's latest weight ([dayWeights]) and
+ * then shows the picked dates. [historyMissing] explains in the calendar why old days are empty.
+ */
 @Composable
-fun PeriodChips(period: Period, onPeriod: (Period) -> Unit) {
+fun PeriodChips(
+    period: Period,
+    onPeriod: (Period) -> Unit,
+    dayWeights: Map<LocalDate, Double> = emptyMap(),
+    historyMissing: Boolean = false,
+    onGrantHistory: () -> Unit = {},
+) {
     var pickRange by remember { mutableStateOf(false) }
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -73,27 +75,17 @@ fun PeriodChips(period: Period, onPeriod: (Period) -> Unit) {
         )
     }
     if (pickRange) {
-        val custom = period as? Period.Custom
-        fun LocalDate.millis() = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        fun Long.date() = Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
-        val state = rememberDateRangePickerState(
-            initialSelectedStartDateMillis = custom?.from?.millis(),
-            initialSelectedEndDateMillis = custom?.to?.millis(),
-        )
-        DatePickerDialog(
-            onDismissRequest = { pickRange = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val from = state.selectedStartDateMillis?.date()
-                        if (from != null) onPeriod(Period.Custom(from, state.selectedEndDateMillis?.date() ?: from))
-                        pickRange = false
-                    },
-                    enabled = state.selectedStartDateMillis != null,
-                ) { Text(stringResource(R.string.ok)) }
+        RangeCalendarDialog(
+            initial = period as? Period.Custom,
+            dayWeights = dayWeights,
+            historyMissing = historyMissing,
+            onGrantHistory = onGrantHistory,
+            onPick = {
+                pickRange = false
+                onPeriod(it)
             },
-            dismissButton = { TextButton(onClick = { pickRange = false }) { Text(stringResource(R.string.cancel)) } },
-        ) { DateRangePicker(state = state, modifier = Modifier.weight(1f)) }
+            onDismiss = { pickRange = false },
+        )
     }
 }
 

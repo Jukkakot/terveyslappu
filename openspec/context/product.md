@@ -125,6 +125,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   within one year; a list of up to 14 weights stays flat. Every group starts closed and nothing is
   remembered. A pause over 30 days shows as a thin "Ei punnituksia" row, and no change is computed
   across it (the chart's line-break rule). A level picker as in other weight apps was rejected.
+- **Oma calendar** (user 2026-11-09, custom-range-calendar): picking an own range shows each
+  weighed day's latest weight under its number ("82,4", no unit), so a range is not picked blind.
+  Every past day stays selectable (greying out empty days was rejected); future days are not. The
+  Material 3 range picker cannot draw on a day, so it was replaced by the Calendar library
+  (kizitonwose) with our own day cells and selection (earlier tap after the start = new start, as
+  Android's own picker). Without the history permission the calendar says why old days are empty.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

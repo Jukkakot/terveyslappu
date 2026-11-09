@@ -43,7 +43,7 @@ archive); a `UserPromptSubmit` hook repeats this.
   `Quantity` for Historia's tabs, the home row's `LatestDerived`; pure), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `profile/` (owner details: rules, `#profile;` export line (pure), `ProfilePrefs` singleton in
   `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
-  write; the singleton lives in `TerveysApp`), `ui/` (`MainScreen` switches Home/Historia/Asetukset by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in
+  write; the singleton lives in `TerveysApp`), `ui/` (`RangeCalendarDialog` is Historia's Oma calendar, `MainScreen` switches Home/Historia/Asetukset by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in
   dialog, view models, theme + `AppearancePrefs` (singleton in `TerveysApp`), formats; `chart/HomeSummary` is the home card's pure data, `chart/WeightScale` the shared y-scale), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).

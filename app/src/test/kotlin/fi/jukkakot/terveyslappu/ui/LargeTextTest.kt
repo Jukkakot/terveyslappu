@@ -60,4 +60,15 @@ class LargeTextTest {
         compose.onNodeWithTag("backupEnable").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("shareLog").performScrollTo().assertIsDisplayed()
     }
+
+    @Test
+    fun `the Oma calendar keeps OK and the history notice reachable`() {
+        val days = mapOf(java.time.LocalDate.of(2026, 11, 3) to 100.0)
+        compose.setContent {
+            TerveysTheme { RangeCalendarContent(null, days, true, {}, {}, {}, java.time.LocalDate.of(2026, 11, 9)) }
+        }
+        compose.onNodeWithTag("dayKg-2026-11-03", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("calendarOk").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("historyGrant").assertIsDisplayed()
+    }
 }

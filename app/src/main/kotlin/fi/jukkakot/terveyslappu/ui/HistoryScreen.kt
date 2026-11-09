@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
 import fi.jukkakot.terveyslappu.chart.ListGroups
+import fi.jukkakot.terveyslappu.chart.RangePick
 import fi.jukkakot.terveyslappu.chart.ListNode
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -99,6 +100,7 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
     val tree = remember(shown) { ListGroups.build(shown, zone) }
+    val dayWeights = remember(all) { RangePick.dayWeights(all, zone) }
     // Every group starts closed; reset with the period, forgotten when Historia is left (weight-entry "Open by default").
     var open by remember(state.period) { mutableStateOf(emptySet<String>()) }
     val rows = remember(tree, open) { ListGroups.flatten(tree, open) }
@@ -106,7 +108,15 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val pager = rememberPagerState { Quantity.entries.size }
     val scope = rememberCoroutineScope()
     LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
-        item(key = "chips") { PeriodChips(state.period, actions.onPeriod) }
+        item(key = "chips") {
+            PeriodChips(
+                state.period,
+                actions.onPeriod,
+                dayWeights = dayWeights,
+                historyMissing = state.history == HistoryAccess.NOT_GRANTED,
+                onGrantHistory = actions.onGrantHistory,
+            )
+        }
         if (state.history == HistoryAccess.NOT_GRANTED && state.period.needsHistory(now, zone)) {
             item(key = "history") { HistoryNotice(actions.onGrantHistory) }
         }
