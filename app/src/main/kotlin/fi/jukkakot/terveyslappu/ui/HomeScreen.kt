@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.chart.ChartDots
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.weight.WeightEntry
@@ -269,6 +270,11 @@ private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
                 if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
             }
             drawPath(path, color, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+        // Every weight as a small dot when they fit (weight-chart "Dots when they fit"); the latest always.
+        if (ChartDots.fit(points.size, width.toDp().value)) {
+            val small = 2.5.dp.toPx()
+            points.dropLast(1).forEach { drawCircle(color, radius = small, center = at(it)) }
         }
         drawCircle(color, radius = dot, center = at(points.last()))
     }

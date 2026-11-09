@@ -95,6 +95,11 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   line shows 1 vk, 1 kk or 3 kk, picked from a small label under it (its tap does not open
   Historia), remembered and separate from Historia's period. A week was the user's wish from the
   start; the main-screen refresh had given the card a fixed 30 days.
+- **Dots when they fit** (user 2026-11-09, chart-dots): both charts draw each weight as a dot
+  when there is at least 10 dp of width per weight, else only the line (lone weights between gaps
+  and the home line's latest keep theirs). Chart guides agree on markers for sparse points and none
+  on dense daily series but give no number; the rule is by room, so on a phone 1 vk and a month of
+  daily weighing get dots, 3 kk and longer do not.
 - **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
   small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
   list shows each weight's change from the one before it, gains and losses in two palette tones

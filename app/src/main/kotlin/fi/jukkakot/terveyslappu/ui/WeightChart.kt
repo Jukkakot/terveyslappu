@@ -40,9 +40,11 @@ import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import fi.jukkakot.terveyslappu.chart.ChartData
+import fi.jukkakot.terveyslappu.chart.ChartDots
+import androidx.compose.ui.platform.LocalConfiguration
 
-/** Above this many weights the dots are left out and only the line is drawn (dense "Kaikki"). */
-private const val MAX_DOTS = 120
+/** Screen padding, chart padding and the kg axis labels: the plot is about this much narrower than the screen. */
+private const val CHART_INSET_DP = 80
 
 /** The period's weights as dots joined by a line; a tap shows a dot's date, time and weight. */
 @Composable
@@ -55,8 +57,9 @@ fun WeightChart(data: ChartData, description: String, modifier: Modifier = Modif
         val dotted = LineCartesianLayer.rememberLine(fill = fill, pointProvider = dots)
         val plain = LineCartesianLayer.rememberLine(fill = fill, pointProvider = null)
         // One series per segment; a lone weight between gaps keeps its dot even in a dense chart.
-        val lines = remember(data, dotted, plain) {
-            val dense = data.xs.size > MAX_DOTS
+        val widthDp = LocalConfiguration.current.screenWidthDp - CHART_INSET_DP
+        val lines = remember(data, dotted, plain, widthDp) {
+            val dense = !ChartDots.fit(data.xs.size, widthDp.toFloat())
             data.segments.map { if (!dense || it.first == it.last) dotted else plain }
         }
         val layer = rememberLineCartesianLayer(
