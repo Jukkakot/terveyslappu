@@ -20,6 +20,13 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- **Priority 1: plain weigh-in button widget + result with redo** (user 2026-11-09). The current
+  widget shows the previous result right away, which the user does not want there. Either the
+  widget stops showing it or a second widget variant is added: a 1x1 button that only starts the
+  weigh-in, with no previous result. After a weigh-in the result is shown (open: in the dialog,
+  or for a while in the widget itself) and from there the user can delete it, i.e. start the
+  weigh-in again. Same change family as the redo in the next item; do this first.
+
 - **Next: weigh-in without any tap + redo** (user 2026-11-09: wanted). A background Bluetooth
   scan with a filter saves the weight when the user just steps on the scale (the tap starts
   stay). Plus an easy way to start a weigh-in again and delete the previous result when needed
