@@ -20,7 +20,8 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **Priority 1: plain weigh-in button widget + result with redo** (user 2026-11-09). The current
+- ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
+  (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current
   widget shows the previous result right away, which the user does not want there. Either the
   widget stops showing it or a second widget variant is added: a 1x1 button that only starts the
   weigh-in, with no previous result. After a weigh-in the result is shown (open: in the dialog,
@@ -30,7 +31,8 @@ Phases in order; one OpenSpec change each unless noted.
 - **Next: weigh-in without any tap + redo** (user 2026-11-09: wanted). A background Bluetooth
   scan with a filter saves the weight when the user just steps on the scale (the tap starts
   stay). Plus an easy way to start a weigh-in again and delete the previous result when needed
-  (e.g. a "Punnitse uudelleen" action on the saved result that removes it and scans again).
+  (the dialog's "Punnitse uudelleen" from weigh-in-button-redo can be reused, e.g. from a
+  notification).
   Needs from the first weigh-in log: whether `name=Yoda1` is in the advertisement itself and
   whether the company id (`key=`) is stable, since background scans must be filtered.
 

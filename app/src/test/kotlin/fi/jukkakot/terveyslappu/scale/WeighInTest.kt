@@ -123,6 +123,96 @@ class WeighInTest {
         assertEquals(WeighInState.ScanFailed(2), w.state.value)
     }
 
+    /** Made-up store: saves upsert by time, deletes remove; packets come per scan from [scans]. */
+    private class Store {
+        val weights = mutableMapOf<Instant, Double>()
+        var failDelete = false
+    }
+
+    private fun TestScope.redoWeighIn(store: Store, vararg scans: PacketSource): WeighIn {
+        var scan = 0
+        return WeighIn(
+            source = PacketSource { scans[scan++].packets() },
+            save = { kg, t -> store.weights[t] = kg },
+            elapsedMs = { testScheduler.currentTime },
+            now = { wallStart.plusMillis(testScheduler.currentTime) },
+            delete = { _, t ->
+                if (store.failDelete) throw IOException("made-up failure")
+                store.weights.remove(t)
+            },
+        )
+    }
+
+    private fun stable(raw: Int) = source(Triple(100, raw, true), Triple(200, raw, true))
+
+    @Test
+    fun `weigh again deletes the saved weight and scans, offering undo`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        val first = wallStart.plusMillis(100)
+        assertEquals(mapOf(first to 82.5), store.weights)
+        w.redo(backgroundScope)
+        runCurrent()
+        assertEquals(emptyMap(), store.weights)
+        assertEquals(WeighInState.Scanning, w.state.value)
+        assertEquals(82.5 to first, w.removed.value)
+    }
+
+    @Test
+    fun `undo writes the deleted weight back and shows it saved`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        w.redo(backgroundScope)
+        runCurrent()
+        w.undo(backgroundScope)
+        runCurrent()
+        assertEquals(mapOf(wallStart.plusMillis(100) to 82.5), store.weights)
+        assertEquals(WeighInState.Saved(82.5), w.state.value)
+        assertEquals(null, w.removed.value)
+    }
+
+    @Test
+    fun `new weight after weighing again ends the undo`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), stable(821))
+        w.start(backgroundScope)
+        settle()
+        w.redo(backgroundScope)
+        settle()
+        assertEquals(listOf(82.1), store.weights.values.toList())
+        assertEquals(WeighInState.Saved(82.1), w.state.value)
+        assertEquals(null, w.removed.value)
+    }
+
+    @Test
+    fun `undo is still offered after the new scan finds nothing`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        w.redo(backgroundScope)
+        settle()
+        assertEquals(WeighInState.NotFound(heard = false), w.state.value)
+        assertEquals(82.5, w.removed.value?.first)
+    }
+
+    @Test
+    fun `failed delete stays on the saved weight`() = runTest {
+        val store = Store().apply { failDelete = true }
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        w.redo(backgroundScope)
+        runCurrent()
+        assertEquals(WeighInState.Saved(82.5, deleteFailed = true), w.state.value)
+        assertEquals(1, store.weights.size)
+        assertEquals(null, w.removed.value)
+    }
+
     @Test
     fun `stopping before a result saves nothing`() = runTest {
         val w = weighIn(source(Triple(100, 825, true), Triple(5_000, 825, true))) { _, _ -> error("must not save") }

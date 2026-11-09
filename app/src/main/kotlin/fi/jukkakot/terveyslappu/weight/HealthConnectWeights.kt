@@ -159,6 +159,11 @@ class HealthConnectWeights(private val context: Context) {
         fromScale = metadata.device?.type == Device.TYPE_SCALE,
     )
 
+    /** Deletes the scale weight this app wrote for the reading at [time] (weigh again). */
+    suspend fun deleteScale(time: Instant) {
+        client.deleteRecords(WeightRecord::class, recordIdsList = emptyList(), clientRecordIdsList = listOf(scaleClientId(time)))
+    }
+
     /** Deletes one of this app's own records; others' records are never touched. */
     suspend fun delete(entry: WeightEntry) {
         require(entry.own) { "only own records can be deleted" }

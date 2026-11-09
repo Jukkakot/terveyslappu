@@ -44,11 +44,18 @@ class WeighInActions(
     val onOpenAppSettings: () -> Unit = {},
     val onEnableBluetooth: () -> Unit = {},
     val onOpenApp: () -> Unit = {},
+    /** A tap on the card: the saved result stays open instead of closing by itself. */
+    val onKeepOpen: () -> Unit = {},
+    val onRedo: () -> Unit = {},
+    val onUndo: () -> Unit = {},
 )
 
-/** The weigh-in card over a dimmed background; tapping outside closes it. */
+/**
+ * The weigh-in card over a dimmed background; tapping outside closes it. [canUndo]: a weight
+ * deleted by "Punnitse uudelleen" can still be written back.
+ */
 @Composable
-fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
+fun WeighInDialog(state: WeighInState, actions: WeighInActions, canUndo: Boolean = false) {
     Box(
         Modifier
             .fillMaxSize()
@@ -64,8 +71,8 @@ fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
                 .padding(24.dp)
                 .widthIn(max = 420.dp)
                 .fillMaxWidth()
-                // Taps on the card itself must not close it.
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+                // Taps on the card itself must not close it; they keep the result open.
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = actions.onKeepOpen),
         ) {
             Column(
                 Modifier.padding(24.dp),
@@ -74,6 +81,7 @@ fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
             ) {
                 Text(stringResource(R.string.weighin_title), style = MaterialTheme.typography.titleLarge)
                 Content(state, actions)
+                if (canUndo && state !is WeighInState.Saved && state !is WeighInState.Saving) Removed(actions)
             }
         }
     }
@@ -110,6 +118,11 @@ private fun Content(state: WeighInState, actions: WeighInActions) {
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("saved"),
             )
+            if (state.deleteFailed) Message(stringResource(R.string.weighin_delete_failed))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = actions.onRedo) { Text(stringResource(R.string.weighin_redo)) }
+                Button(onClick = actions.onClose) { Text(stringResource(R.string.weighin_done)) }
+            }
         }
         is WeighInState.SaveFailed -> {
             BigWeight(state.kg)
@@ -158,6 +171,19 @@ private fun Progress(text: String) {
 @Composable
 private fun Message(text: String) {
     Text(text, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+}
+
+/** "Edellinen poistettu · Kumoa" while the weight deleted for weighing again can be written back. */
+@Composable
+private fun Removed(actions: WeighInActions) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.weighin_removed),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = actions.onUndo, modifier = Modifier.testTag("undo")) { Text(stringResource(R.string.undo)) }
+    }
 }
 
 @Composable

@@ -6,7 +6,6 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.WeightRecord
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import fi.jukkakot.terveyslappu.LastWeight
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.ScaleScanner
@@ -27,15 +26,25 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
         source = ScaleScanner(app),
         save = { kg, time ->
             weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time))
-            LastWeight.offer(app, kg, time)
             (app as TerveysApp).backup.request("weighin")
         },
         previous = { before -> weights.latestBefore(before) },
+        delete = { _, time ->
+            weights.deleteScale(time)
+            (app as TerveysApp).backup.request("weighin")
+        },
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )
 
     val state: StateFlow<WeighInState> = weighIn.state
+
+    /** A weight deleted by "Punnitse uudelleen" that Kumoa can still write back. */
+    val removed: StateFlow<Pair<Double, Instant>?> = weighIn.removed
+
+    fun redo() = weighIn.redo(viewModelScope)
+
+    fun undo() = weighIn.undo(viewModelScope)
 
     /** True when Health Connect is available and this app may write weight. */
     suspend fun hasHealthAccess(): Boolean {

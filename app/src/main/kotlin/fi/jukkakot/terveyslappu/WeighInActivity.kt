@@ -15,6 +15,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -55,8 +58,10 @@ class WeighInActivity : ComponentActivity() {
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                LaunchedEffect(state) {
-                    if (state is WeighInState.Saved) {
+                val removed by viewModel.removed.collectAsStateWithLifecycle()
+                var keepOpen by rememberSaveable { mutableStateOf(false) }
+                LaunchedEffect(state, keepOpen) {
+                    if (state is WeighInState.Saved && !keepOpen) {
                         delay(CLOSE_AFTER_SAVED_MS)
                         finish()
                     }
@@ -65,6 +70,9 @@ class WeighInActivity : ComponentActivity() {
                     state,
                     WeighInActions(
                         onClose = ::finish,
+                        onKeepOpen = { if (state is WeighInState.Saved) keepOpen = true },
+                        onRedo = { keepOpen = false; viewModel.redo() },
+                        onUndo = viewModel::undo,
                         onRetryScan = ::prepare,
                         onRetrySave = viewModel::retrySave,
                         onOpenAppSettings = {
@@ -76,6 +84,7 @@ class WeighInActivity : ComponentActivity() {
                             finish()
                         },
                     ),
+                    canUndo = removed != null,
                 )
             }
         }
@@ -138,7 +147,7 @@ class WeighInActivity : ComponentActivity() {
     companion object {
         /** Which start opened the dialog, for the log: tile, widget, shortcut, main. */
         const val EXTRA_FROM = "from"
-        private const val CLOSE_AFTER_SAVED_MS = 3_000L
+        private const val CLOSE_AFTER_SAVED_MS = 10_000L
         private val NEARBY_PERMISSIONS = arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
 
         fun intent(context: android.content.Context, from: String): Intent =

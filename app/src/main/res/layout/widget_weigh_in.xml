@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One-tap weigh-in widget: icon, action and the latest weight with its day. -->
+<!-- One-tap weigh-in widget: icon and action only, sized for one home-screen cell. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
+    android:contentDescription="@string/weighin_action"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="4dp">
 
     <ImageView
         android:layout_width="28dp"
@@ -20,25 +21,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        android:maxLines="1"
         android:text="@string/weighin_action"
         android:textColor="@color/widget_text"
-        android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/widget_weight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="@color/widget_text"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/widget_day"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/widget_text"
-        android:textSize="12sp"
-        android:visibility="gone" />
+        android:textSize="12sp" />
 </LinearLayout>

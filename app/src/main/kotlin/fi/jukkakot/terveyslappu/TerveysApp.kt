@@ -39,6 +39,8 @@ class TerveysApp : Application() {
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(Thread.getDefaultUncaughtExceptionHandler()))
         val weights = HealthConnectWeights(this)
         backup = WeightBackup(PrefsBackupStore(this), { uri -> writeExport(this, weights, uri.toUri()) }, Instant::now, appScope)
+        // The widget and tile no longer show the latest weight; drop the old cache (weigh-in-button-redo).
+        deleteSharedPreferences("last_weight")
         AppLog.i(
             "app.start", "",
             "version" to BuildConfig.VERSION_NAME,
