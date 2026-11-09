@@ -43,7 +43,7 @@ Phases in order; one OpenSpec change each unless noted.
   in the export/backup `raw` column).
 - ~~**okok-xls-import**~~: done 2026-11-09 (Tuo historia reads the OKOK `.xls`); the real file
   still to try on the phone.
-- **Phone owner's details** (user 2026-11-09, later, not first priority): one user per phone, no
+- **Phone owner's details** (user 2026-11-09: next change after weigh-in-discard): one user per phone, no
   profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
   from the raw data.
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
