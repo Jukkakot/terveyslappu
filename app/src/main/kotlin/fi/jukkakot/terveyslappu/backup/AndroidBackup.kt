@@ -8,8 +8,9 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.TerveysApp
-import fi.jukkakot.terveyslappu.history.CsvExport
-import fi.jukkakot.terveyslappu.history.ExportRow
+import fi.jukkakot.terveyslappu.data.DataFormat
+import fi.jukkakot.terveyslappu.data.DataSet
+import fi.jukkakot.terveyslappu.data.ExportRow
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.weight.HealthConnectWeights
 import kotlinx.coroutines.Dispatchers
@@ -64,11 +65,10 @@ suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<Ex
     }
 }
 
-/** Writes all weights as the export CSV to [uri] (rewrites the whole file); returns the count. */
-suspend fun writeExport(context: Context, weights: HealthConnectWeights, uri: Uri): Int {
+/** Writes the data file in [format] to [uri] (rewrites the whole file); returns the weight count. */
+suspend fun writeExport(context: Context, weights: HealthConnectWeights, uri: Uri, format: DataFormat = DataFormat.CSV): Int {
     val rows = exportRows(context, weights)
-    val profile = (context.applicationContext as TerveysApp).profile.profile.value
-    val text = CsvExport.write(rows, ZoneId.systemDefault(), profile)
+    val text = format.write(DataSet(rows), ZoneId.systemDefault())
     withContext(Dispatchers.IO) {
         context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             ?: error("no output stream")

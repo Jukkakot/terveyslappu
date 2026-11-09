@@ -57,6 +57,8 @@ Phases in order; one OpenSpec change each unless noted.
   over a year, year in old weights' point detail and list rows).
 - ~~**history-list-delta**~~: done 2026-11-09 (change from the previous weight on every Historia
   row, arrows on every change number, gain/loss in two neutral palette tones).
+- ~~**generic-data-transfer**~~: done 2026-11-09 (Vie tiedot / Tuo tiedot in CSV or JSON, one
+  part per data kind, owner details no longer carried, backup on the first open of each day).
 - **Goal weight and forecast** on the chart (user 2026-11-09: later).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads

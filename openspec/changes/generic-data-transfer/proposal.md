@@ -45,6 +45,6 @@ read: CSV and JSON.
 - App screens: Asetukset (names, format dialog), import preview (unknown parts note).
 - Code: new pure `data/` package (data model, CSV and JSON writer/reader); `history/CsvExport` and
   the `#profile;` handling in `HistoryParser` move behind it; `profile/ProfileLine` removed;
-  `backup/` uses the new writer; strings. JSON via `org.json` (in Android; Robolectric covers it in
-  unit tests), no new dependency.
+  `backup/` uses the new writer; strings. JSON via kotlinx.serialization (already used by the raw archive),
+  no new dependency.
 - Health Connect: unchanged. Scale, widget, build/CI: untouched.

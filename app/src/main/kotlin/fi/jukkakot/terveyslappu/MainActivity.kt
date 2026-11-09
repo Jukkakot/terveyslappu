@@ -11,7 +11,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import fi.jukkakot.terveyslappu.data.DataFile
+import fi.jukkakot.terveyslappu.data.DataFormat
+import java.time.LocalDateTime
 import fi.jukkakot.terveyslappu.backup.keepAccess
 import fi.jukkakot.terveyslappu.backup.releaseAccess
 import fi.jukkakot.terveyslappu.weight.HISTORY_PERMISSION
@@ -61,9 +63,11 @@ class MainActivity : ComponentActivity() {
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
-                val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
-                    AppLog.i("export.pick", if (uri == null) "cancelled" else "picked")
-                    if (uri != null) viewModel.export(uri)
+                val exportLaunchers = DataFormat.entries.associateWith { format ->
+                    rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(format.mimeType)) { uri ->
+                        AppLog.i("export.pick", if (uri == null) "cancelled" else "picked", "format" to format.extension)
+                        if (uri != null) viewModel.export(uri, format)
+                    }
                 }
                 val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
                     AppLog.i("backup.pick", if (uri == null) "cancelled" else "picked")
@@ -164,7 +168,11 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
                             }
                         },
-                        onExport = { withHistory { launchSafely("export.pick") { exportLauncher.launch(exportFileName()) } } },
+                        onExport = { format ->
+                            withHistory {
+                                launchSafely("export.pick") { exportLaunchers.getValue(format).launch(DataFile.exportName(format, LocalDateTime.now())) }
+                            }
+                        },
                         onBackupEnable = pickBackupFile,
                         onBackupChangeFile = pickBackupFile,
                         onBackupNow = { viewModel.backup.request("manual") },
@@ -207,8 +215,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun exportFileName() = "terveyslappu-painot-${LocalDate.now()}.csv"
-
     private fun open(intent: Intent) {
         try {
             startActivity(intent)
@@ -221,7 +227,7 @@ class MainActivity : ComponentActivity() {
     private companion object {
         /** Text tables; some file managers label CSV files as octet-stream. */
         const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
-        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/octet-stream")
+        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/json", "application/octet-stream")
         const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }
 }

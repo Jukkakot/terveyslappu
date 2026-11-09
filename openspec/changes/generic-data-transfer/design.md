@@ -19,11 +19,11 @@ background (WorkManager) backups.
 ## Decisions
 
 1. **Data model** (pure, new `data/` package): `DataSet(weights: List<ExportRow>, …)` — one field
-   per data kind; `ExportRow` moves here from `history/`. Reading gives `DataRead(set, skipped,
-   layout, unknownKinds)` for the preview.
+   per data kind; `ExportRow` moves here from `history/`. Reading gives the existing `ParsedHistory` (weights, skipped,
+   layout) plus `unknownKinds` for the preview.
 2. **Two codecs over the model**: `CsvData` (version line, `#table;<kind>` sections; the weight
    rows keep today's columns so the existing table reader and older files stay one path) and
-   `JsonData` (`org.json`, one array per kind, `raw` as an object). Import picks JSON when the
+   `JsonData` (kotlinx.serialization, already used by the raw archive; one array per kind, `raw` as an object). Import picks JSON when the
    first non-blank character is `{`, else CSV/XLS as today.
 3. **CSV reading**: version line present → split into sections, the `weights` section goes through
    `HistoryParser` as a table, unknown kinds collected; absent → today's path, with a leading

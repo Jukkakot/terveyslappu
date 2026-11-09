@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.ui
 
+import fi.jukkakot.terveyslappu.data.DataFormat
+
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +49,7 @@ class MainActions(
     val onShareLog: () -> Unit = {},
     val onWeighIn: () -> Unit = {},
     val onImportHistory: () -> Unit = {},
-    val onExport: () -> Unit = {},
+    val onExport: (DataFormat) -> Unit = {},
     val onBackupEnable: () -> Unit = {},
     val onBackupNow: () -> Unit = {},
     val onBackupChangeFile: () -> Unit = {},

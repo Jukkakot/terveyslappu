@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -26,7 +27,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.data.DataFormat
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 
@@ -78,9 +85,19 @@ internal fun SettingsScreen(
             }
             Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
             if (granted) {
-                Section(R.string.settings_weights) {
+                var choosingFormat by remember { mutableStateOf(false) }
+                Section(R.string.settings_data) {
                     SettingsRow(R.drawable.ic_import, stringResource(R.string.menu_import), actions.onImportHistory, "import")
-                    SettingsRow(R.drawable.ic_export, stringResource(R.string.menu_export), actions.onExport, "export")
+                    SettingsRow(R.drawable.ic_export, stringResource(R.string.menu_export), { choosingFormat = true }, "export")
+                }
+                if (choosingFormat) {
+                    ExportFormatDialog(
+                        onPick = {
+                            choosingFormat = false
+                            actions.onExport(it)
+                        },
+                        onDismiss = { choosingFormat = false },
+                    )
                 }
                 Section(R.string.settings_backup) { BackupGroup(backup, Instant.now(), actions) }
             }
@@ -137,6 +154,23 @@ private fun ThemeChoice(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
             )
         }
     }
+}
+
+/** Vie tiedot's format choice (weight-export "Export to a chosen file"). */
+@Composable
+private fun ExportFormatDialog(onPick: (DataFormat) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.export_format_title)) },
+        text = {
+            Column {
+                SettingsRow(R.drawable.ic_export, stringResource(R.string.export_format_csv), { onPick(DataFormat.CSV) }, "format-CSV")
+                SettingsRow(R.drawable.ic_export, stringResource(R.string.export_format_json), { onPick(DataFormat.JSON) }, "format-JSON")
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 /** A tappable row: icon, label, optional trailing text; quiet rows use the secondary text colour. */

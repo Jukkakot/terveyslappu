@@ -32,8 +32,17 @@ class ImportDialogTest {
     @Test
     fun `empty result offers no import`() {
         val parsed = HistoryParser.parse("nothing here\n", ZoneId.of("Europe/Helsinki"), Instant.now())
-        compose.setContent { TerveysTheme { ImportDialog(ImportState.Preview(parsed, fillsProfile = true), {}, {}) } }
-        compose.onNodeWithTag("importProfile").assertExists()
+        compose.setContent { TerveysTheme { ImportDialog(ImportState.Preview(parsed), {}, {}) } }
         compose.onNodeWithTag("importConfirm").assertDoesNotExist()
+    }
+
+    @Test
+    fun `unknown parts are mentioned`() {
+        val text = "#terveyslappu;version=3\n#table;steps\ndate;steps\n2024-03-01;9000\n" +
+            "#table;weights\ndate;time;weight_kg;source;raw\n2024-03-01;07:12:00;82,4;Testi;\n"
+        val parsed = HistoryParser.parse(text, ZoneId.of("Europe/Helsinki"), Instant.now())
+        compose.setContent { TerveysTheme { ImportDialog(ImportState.Preview(parsed), {}, {}) } }
+        compose.onNodeWithTag("importUnknown").assertExists()
+        compose.onNodeWithTag("importConfirm").assertExists()
     }
 }

@@ -47,9 +47,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   equal packet or 2 s quiet.
 - **Interim phone-move answer: visible backup file** (autopilot 2026-11-08, weight-backup):
   the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
-  and daily on opening, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
-  user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
-  Tuo painot.
+  and on the first opening of each day, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
+  user prefers an active, visible sync; no server (NFR-2). Same CSV as Vie tiedot and read by
+  Tuo tiedot. No background job: the write is a cheap local file write, and Samsung's battery
+  rules make background jobs unreliable (user 2026-11-09, generic-data-transfer).
 - **No weight before weighing; Poista or Valmis on the result** (user 2026-11-09,
   weigh-in-button-redo, weigh-in-discard): the widget is a plain 1x1 Punnitse button and the tile
   has no subtitle. The dialog shows the result ~10 s (a tap keeps it open) with only Poista and
@@ -75,9 +76,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Owner details** (user 2026-11-09, owner-profile): one user per phone, no profiles. Birth year
   (not a full date) gives the age; height in whole cm; gender Mies/Nainen/Ei valittu; all optional.
   Kept in app preferences; the height also goes to Health Connect (its only record of the three, own
-  permission asked on the first save, the app keeps the height when denied). The export/backup's
-  first line `#profile;...` carries them so a new phone gets them back; import fills only empty
-  fields. Not now: BMI, filling from an OKOK file's title rows.
+  permission asked on the first save, the app keeps the height when denied). Not carried in the
+  export/backup since generic-data-transfer: static, quickly typed again. Not now: BMI, filling
+  from an OKOK file's title rows.
+- **One data file, CSV or JSON** (user 2026-11-09, generic-data-transfer): Vie tiedot / Tuo tiedot
+  move the measured raw data between apps and phones; the user picks CSV or JSON on export, import
+  detects the format. One part per data kind (`#table;<kind>` in CSV, a key in JSON), today only
+  weights; a new kind gets its own part and travels through export, import and backup with no
+  new buttons. Settings and owner details are not carried. File name
+  `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>` so names never collide.
 - **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
   small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
   list shows each weight's change from the one before it, gains and losses in two palette tones

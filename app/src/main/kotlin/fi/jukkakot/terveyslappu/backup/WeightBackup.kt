@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
 
 /** The backup's persisted state (weight-backup spec). [uri] null = the backup is off. */
 data class BackupStatus(
@@ -24,8 +25,9 @@ data class BackupStatus(
     /** The latest attempt failed. */
     val failed: Boolean get() = lastFailedAt != null && (lastOkAt == null || lastFailedAt.isAfter(lastOkAt))
 
-    /** A backup should run: on, and no success within [DUE_AFTER]. */
-    fun isDue(now: Instant): Boolean = enabled && (lastOkAt == null || Duration.between(lastOkAt, now) >= DUE_AFTER)
+    /** A backup should run on app open: on, and no success yet on [now]'s calendar day in [zone]. */
+    fun isDue(now: Instant, zone: ZoneId): Boolean =
+        enabled && (lastOkAt == null || lastOkAt.atZone(zone).toLocalDate() != now.atZone(zone).toLocalDate())
 
     /** The last success is old enough to warn about. */
     fun isStale(now: Instant): Boolean = enabled && lastOkAt != null && Duration.between(lastOkAt, now) >= STALE_AFTER
@@ -34,7 +36,6 @@ data class BackupStatus(
     fun needsAttention(now: Instant): Boolean = enabled && (failed || isStale(now))
 
     companion object {
-        val DUE_AFTER: Duration = Duration.ofHours(24)
         val STALE_AFTER: Duration = Duration.ofDays(3)
     }
 }
@@ -82,7 +83,7 @@ class WeightBackup(
     }
 
     fun requestIfDue() {
-        if (_status.value.isDue(now())) request("due")
+        if (_status.value.isDue(now(), ZoneId.systemDefault())) request("due")
     }
 
     suspend fun run(reason: String) {

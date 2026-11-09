@@ -14,6 +14,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.data.DataFormat
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import androidx.compose.ui.test.performImeAction
@@ -71,11 +72,13 @@ class SettingsScreenTest {
     @Test
     fun `groups import, export, backup and log with the version`() {
         var imported = false
-        var exported = false
-        show(actions = MainActions(onImportHistory = { imported = true }, onExport = { exported = true }))
+        var exported: DataFormat? = null
+        show(actions = MainActions(onImportHistory = { imported = true }, onExport = { exported = it }))
         compose.onNodeWithTag("import").performClick()
         compose.onNodeWithTag("export").performClick()
-        assertTrue(imported && exported)
+        compose.onNodeWithTag("format-JSON").performClick()
+        assertTrue(imported)
+        assertEquals(DataFormat.JSON, exported)
         compose.onNodeWithTag("shareLog").performScrollTo()
         compose.onNodeWithText("v0.1.1-test").assertExists()
     }

@@ -27,6 +27,8 @@ import fi.jukkakot.terveyslappu.chart.PeriodPrefs
 import fi.jukkakot.terveyslappu.chart.encode
 import fi.jukkakot.terveyslappu.weight.newestFirst
 import fi.jukkakot.terveyslappu.backup.writeExport
+import fi.jukkakot.terveyslappu.data.DataFormat
+import fi.jukkakot.terveyslappu.data.JsonData
 import fi.jukkakot.terveyslappu.history.HistoryParser
 import fi.jukkakot.terveyslappu.history.OkokLayout
 import fi.jukkakot.terveyslappu.history.SheetText
@@ -244,27 +246,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update { it.copy(import = ImportState.ReadFailed) }
             }.onSuccess { bytes ->
                 val parsed = withContext(Dispatchers.Default) { readHistory(bytes) }
-                logParsed(parsed.first, bytes.size, msSince(started), parsed.second)
-                val fills = parsed.first.profile?.let { profile.profile.value.fillEmptyFrom(it) != profile.profile.value } == true
-                _state.update { it.copy(import = ImportState.Preview(parsed.first, fills)) }
+                logParsed(parsed.first, bytes.size, msSince(started), parsed.second, parsed.third)
+                _state.update { it.copy(import = ImportState.Preview(parsed.first)) }
             }
         }
     }
 
     /**
-     * Parses a history file: a compound document as `.xls` (its first sheet, OKOK layout when found),
-     * anything else as text. A damaged `.xls` gives an empty result, logged with the reason.
+     * Parses a picked file: a compound document as `.xls` (its first sheet, OKOK layout when found),
+     * text starting with `{` as the JSON data file, anything else as a CSV data file or history
+     * table. A damaged `.xls` gives an empty result, logged with the reason. Also returns the format name for the log.
      */
-    private fun readHistory(bytes: ByteArray): Pair<ParsedHistory, SheetText?> {
+    private fun readHistory(bytes: ByteArray): Triple<ParsedHistory, SheetText?, String> {
         val zone = ZoneId.systemDefault()
-        if (!XlsTable.isXls(bytes)) return HistoryParser.parse(HistoryParser.decode(bytes), zone, Instant.now()) to null
+        if (!XlsTable.isXls(bytes)) {
+            val text = HistoryParser.decode(bytes)
+            return when (DataFormat.detect(text)) {
+                DataFormat.JSON -> Triple(JsonData.read(text, Instant.now()), null, "json")
+                DataFormat.CSV -> Triple(HistoryParser.parse(text, zone, Instant.now()), null, "text")
+            }
+        }
         val sheet = try {
             OkokLayout.toText(XlsTable.read(bytes))
         } catch (e: Exception) {
             AppLog.e("import.read", e, "xls unreadable", "format" to "xls")
-            return ParsedHistory(emptyList(), emptyList(), null) to null
+            return Triple(ParsedHistory(emptyList(), emptyList(), null), null, "xls")
         }
-        return HistoryParser.parse(sheet.text, zone, Instant.now()) to sheet
+        return Triple(HistoryParser.parse(sheet.text, zone, Instant.now()), sheet, "xls")
     }
 
     fun confirmImport() {
@@ -292,7 +300,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             when (result) {
                 is WriteResult.Done -> {
                     AppLog.i("import.write", "ok", "count" to result.count, "from" to from, "ms" to msSince(started))
-                    parsed.profile?.let { profile.set(profile.profile.value.fillEmptyFrom(it), "profile.import") }
                     _state.update { it.copy(import = null) }
                     _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
                     load()
@@ -345,14 +352,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .onFailure { AppLog.e("export.history", it) }
         .getOrDefault(HistoryAccess.UNSUPPORTED)
 
-    /** Writes every readable weight to the picked file (weight-export). */
-    fun export(uri: Uri) {
+    /** Writes the data file in [format] to the picked file (weight-export). */
+    fun export(uri: Uri, format: DataFormat) {
         viewModelScope.launch {
             val started = System.nanoTime()
             val history = historyAccess()
-            val result = runCatching { writeExport(getApplication(), weights, uri) }
+            val result = runCatching { writeExport(getApplication(), weights, uri, format) }
             result.onSuccess { count ->
-                AppLog.i("export.write", "ok", "count" to count, "history" to history.name, "ms" to msSince(started))
+                AppLog.i("export.write", "ok", "format" to format.extension, "count" to count, "history" to history.name, "ms" to msSince(started))
                 val text = if (history == HistoryAccess.GRANTED) R.string.export_done else R.string.export_done_recent
                 _messages.tryEmit(UiMessage(text, listOf(count)))
             }.onFailure { error ->

@@ -8,8 +8,7 @@ import fi.jukkakot.terveyslappu.log.AppLog
 /** The history import dialog's state (history-import spec); null in [MainUiState] = no dialog. */
 sealed interface ImportState {
     data object Reading : ImportState
-    /** [fillsProfile]: the file's owner details will fill empty ones on the phone. */
-    data class Preview(val parsed: ParsedHistory, val fillsProfile: Boolean = false) : ImportState
+    data class Preview(val parsed: ParsedHistory) : ImportState
     data class Writing(val parsed: ParsedHistory, val saved: Int) : ImportState
     data class Failed(val parsed: ParsedHistory, val saved: Int) : ImportState
     /** The file could not be opened or read at all. */
@@ -17,11 +16,12 @@ sealed interface ImportState {
 }
 
 /** Logs what the parser decided, so a file it cannot read can be supported from a shared log. */
-fun logParsed(parsed: ParsedHistory, bytes: Int, ms: Long, sheet: SheetText? = null) {
+fun logParsed(parsed: ParsedHistory, bytes: Int, ms: Long, sheet: SheetText? = null, format: String = if (sheet == null) "text" else "xls") {
     val layout = parsed.layout
     AppLog.i(
-        "import.read", if (layout == null) "no columns" else "ok",
-        "format" to if (sheet == null) "text" else "xls",
+        "import.read", if (layout == null && format != "json") "no columns" else "ok",
+        "format" to format,
+        "unknown" to parsed.unknownKinds.joinToString(",").ifEmpty { null },
         "okok" to sheet?.okok,
         "keptColumns" to sheet?.keptColumns,
         "profileCells" to sheet?.profileCells,

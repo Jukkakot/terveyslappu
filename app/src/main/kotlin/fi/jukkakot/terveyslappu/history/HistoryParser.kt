@@ -1,7 +1,7 @@
 package fi.jukkakot.terveyslappu.history
 
-import fi.jukkakot.terveyslappu.profile.OwnerProfile
-import fi.jukkakot.terveyslappu.profile.ProfileLine
+import fi.jukkakot.terveyslappu.data.CsvData
+import fi.jukkakot.terveyslappu.data.DataFile
 import fi.jukkakot.terveyslappu.raw.RawEntry
 import fi.jukkakot.terveyslappu.raw.RawFormat
 import fi.jukkakot.terveyslappu.weight.MAX_KG
@@ -31,13 +31,15 @@ data class Layout(
     val ambiguousOrder: Boolean,
 )
 
-/** [weights] oldest first; [layout] is null when no date and weight columns were found. */
-/** [profile]: owner details from an export's `#profile;` line, when the file starts with one. */
+/**
+ * [weights] oldest first; [layout] is null when no date and weight columns were found (and for
+ * JSON); [unknownKinds]: data kinds in the file this app version does not read (data-file "Unknown parts").
+ */
 data class ParsedHistory(
     val weights: List<ImportedWeight>,
     val skipped: List<SkippedRow>,
     val layout: Layout?,
-    val profile: OwnerProfile? = null,
+    val unknownKinds: List<String> = emptyList(),
 ) {
     fun skippedCounts(): Map<SkipReason, Int> = skipped.groupingBy { it.reason }.eachCount()
 }
@@ -52,6 +54,7 @@ object HistoryParser {
     private const val ENOUGH = 0.6
     private const val LB_IN_KG = 0.45359237
     private const val RAW_HEADER = "raw"
+    private const val OLD_PROFILE = "#profile;"
 
     private val weightWords = listOf("weight", "paino", "体重", "gewicht", "poids")
     private val unitOnly = Regex("""^\(?(kg|lbs?|jin|斤|公斤)\)?$""")
@@ -59,13 +62,33 @@ object HistoryParser {
     private val timeWords = listOf("time", "aika", "时间", "klo")
     private val number = Regex("""^-?\d+(\.\d+)?$""")
 
+    /**
+     * Reads the app's CSV data file (version line, `#table;<kind>` sections; only the weights
+     * table is read, other kinds are reported) or, without a version line, any history table; an
+     * older export's leading `#profile;` line is ignored (data-file "Older files"). Lines outside
+     * the weights are blanked so line numbers stay true to the file.
+     */
     fun parse(text: String, zone: ZoneId, now: Instant): ParsedHistory {
         val lines = text.removePrefix(BOM).lines().toMutableList()
-        // An export's owner-details line is not a row (history-import "Restore owner details").
         val first = lines.indexOfFirst { it.isNotBlank() }
-        val profile = if (first >= 0) ProfileLine.decode(lines[first], now.atZone(zone).year) else null
-        if (profile != null) lines[first] = ""
-        return parseLines(lines, zone, now).copy(profile = profile)
+        if (first < 0) return parseLines(lines, zone, now)
+        if (!lines[first].trim().startsWith("#${DataFile.APP};")) {
+            if (lines[first].trim().startsWith(OLD_PROFILE)) lines[first] = ""
+            return parseLines(lines, zone, now)
+        }
+        val unknown = mutableListOf<String>()
+        var kind: String? = null
+        for (i in lines.indices) {
+            val line = lines[i].trim()
+            if (line.startsWith("#")) {
+                kind = line.takeIf { it.startsWith(CsvData.TABLE_PREFIX) }?.removePrefix(CsvData.TABLE_PREFIX)?.trim()
+                if (kind != null && kind != DataFile.WEIGHTS && kind !in unknown) unknown += kind
+                lines[i] = ""
+            } else if (kind != DataFile.WEIGHTS) {
+                lines[i] = ""
+            }
+        }
+        return parseLines(lines, zone, now).copy(unknownKinds = unknown)
     }
 
     private fun parseLines(lines: List<String>, zone: ZoneId, now: Instant): ParsedHistory {
@@ -102,17 +125,16 @@ object HistoryParser {
         val rawCol = header?.indexOfFirst { it.trim().lowercase() == RAW_HEADER }?.takeIf { it >= 0 }
         val layout = Layout(sep, header?.let { rows[headerIndex].second }, dateCol, timeCol, weightCol, pounds, jin, dayFirst, ambiguous)
 
-        val skipped = mutableListOf<SkippedRow>()
-        val bySecond = LinkedHashMap<Long, ImportedWeight>()
+        val collector = WeightCollector(now)
         for ((line, raw, fields) in data) {
             val time = DateParsing.parse(fields.getOrElse(dateCol) { "" }, timeCol?.let { fields.getOrNull(it) }, dayFirst, zone)
             if (time == null) {
-                skipped += SkippedRow(line, SkipReason.UNREADABLE_DATE, raw)
+                collector.skip(line, SkipReason.UNREADABLE_DATE, raw)
                 continue
             }
             val value = parseNumber(fields.getOrElse(weightCol) { "" })
             if (value == null) {
-                skipped += SkippedRow(line, SkipReason.UNREADABLE_WEIGHT, raw)
+                collector.skip(line, SkipReason.UNREADABLE_WEIGHT, raw)
                 continue
             }
             val kg = round2(
@@ -122,18 +144,9 @@ object HistoryParser {
                     else -> value
                 },
             )
-            when {
-                kg !in MIN_KG..MAX_KG -> skipped += SkippedRow(line, SkipReason.OUT_OF_RANGE, raw)
-                time.isAfter(now) -> skipped += SkippedRow(line, SkipReason.FUTURE, raw)
-                else -> {
-                    val second = time.epochSecond
-                    bySecond.remove(second)?.let { skipped += SkippedRow(it.line, SkipReason.DUPLICATE, lines[it.line - 1]) }
-                    val raw = rawCol?.let { fields.getOrNull(it) }?.let { RawFormat.decode(it, second) }
-                    bySecond[second] = ImportedWeight(time, kg, line, raw)
-                }
-            }
+            collector.add(line, raw, time, kg) { second -> rawCol?.let { fields.getOrNull(it) }?.let { RawFormat.decode(it, second) } }
         }
-        return ParsedHistory(bySecond.values.sortedBy { it.time }, skipped.sortedBy { it.line }, layout)
+        return collector.result(layout)
     }
 
     /** File bytes to text: UTF-16 when it starts with a UTF-16 byte order mark (Excel "Unicode text"), else UTF-8. */

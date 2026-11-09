@@ -23,13 +23,17 @@ class WeightBackupTest {
     }
 
     @Test
-    fun `due after a day, stale after three`() {
-        val s = BackupStatus(uri = "content://x", lastOkAt = t0)
-        assertFalse(s.isDue(t0.plus(Duration.ofHours(23))))
-        assertTrue(s.isDue(t0.plus(Duration.ofHours(25))))
+    fun `due on the first open of a new day, stale after three days`() {
+        val zone = java.time.ZoneId.of("Europe/Helsinki")
+        // Last success yesterday 23:00 local (21:00Z); same-day opens are not due, next morning is.
+        val s = BackupStatus(uri = "content://x", lastOkAt = Instant.parse("2026-11-08T21:00:00Z"))
+        assertFalse(s.isDue(Instant.parse("2026-11-08T21:50:00Z"), zone))
+        assertTrue(s.isDue(Instant.parse("2026-11-09T05:00:00Z"), zone))
+        val today = BackupStatus(uri = "content://x", lastOkAt = Instant.parse("2026-11-09T05:00:00Z"))
+        assertFalse(today.isDue(Instant.parse("2026-11-09T10:00:00Z"), zone))
         assertFalse(s.isStale(t0.plus(Duration.ofDays(2))))
         assertTrue(s.isStale(t0.plus(Duration.ofDays(4))))
-        assertFalse(BackupStatus().isDue(t0))
+        assertFalse(BackupStatus().isDue(t0, zone))
     }
 
     @Test
