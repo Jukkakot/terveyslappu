@@ -34,5 +34,4 @@ shows only its own (user 2026-11-09).
 ## Impact
 
 Main screen (new chart and stats above the list, list filter) and Health Connect reads (the app's
-own weights, history permission for long periods). No new dependency: the chart is drawn with
-Compose. No build/CI change; the widget and weigh-in are untouched.
+own weights, history permission for long periods). New dependency: the Vico chart library. No build/CI change; the widget and weigh-in are untouched.

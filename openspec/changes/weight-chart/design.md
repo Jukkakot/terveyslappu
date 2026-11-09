@@ -15,8 +15,10 @@ apps' weights anywhere on screen (export and backup keep them).
 
 ## Decisions
 
-- **Draw the chart with Compose Canvas, no chart library.** Dots, one polyline, a few axis labels
-  and a tap target are little code; a library (e.g. Vico) adds a dependency and its own look.
+- **Chart library Vico** (`com.patrykandpatrick.vico:compose-m3`, Apache 2.0, maintained, Compose
+  and Material 3 native) rather than hand-drawn Canvas (user 2026-11-09: libraries first). It gives
+  line and point layers, axes, markers on tap, scrolling and zoom for later; themed from the app's
+  Material colours. Check the latest stable version when adding it.
 - **Raw weights, no trend** (user 2026-11-09). Rate per week = (latest − first) / days between them
   × 7; no rate when the period's weights span less than a day.
 - **Load own weights once, filter in memory.** Read all of this app's weights (data-origin filter,
@@ -31,5 +33,5 @@ apps' weights anywhere on screen (export and backup keep them).
 
 - Without the history permission "Kaikki" shows only 30 days: the chart says so and offers the same
   grant flow as the export.
-- A very long "Kaikki" with thousands of points: dots are drawn only when at least a few pixels
-  apart; the line always.
+- A very long "Kaikki" with thousands of points: check Vico's rendering speed with a made-up
+  four-year series; hide point markers above a density threshold if needed.

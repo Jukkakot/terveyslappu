@@ -23,7 +23,7 @@ The app SHALL read the OKOK International Excel export: skip the title rows befo
 find the date, time and weight columns from the header (`Date`, `Time`, `Weight(Kg)`), read values
 stored as text, and give each `MM-DD` date its year from the range line
 (`YYYY-MM-DD ~ YYYY-MM-DD(nDay)`): the newest row is in the end year, and the year drops by one
-whenever the month-day goes up from one row to the next. Other columns SHALL be ignored.
+whenever the month-day goes up from one row to the next.
 
 #### Scenario: Rows across a new year
 - **GIVEN** the range line `2024-11-20 ~ 2025-01-05(47Day)` and rows `01-05`, `01-02`, `12-30`, `11-20`
@@ -41,3 +41,13 @@ whenever the month-day goes up from one row to the next. Other columns SHALL be 
 #### Scenario: Unreadable Excel file
 - **WHEN** the binary Excel file is damaged or has no weight column
 - **THEN** the preview says no weights were found and the log records why
+
+### Requirement: Keep all OKOK columns
+Every other column of an OKOK row and the profile from the title rows (gender, age, height) SHALL be
+kept with that weight in the phone's raw-data archive exactly as written, under the file's own names,
+without any calculation; only the weight SHALL be shown.
+
+#### Scenario: All columns kept
+- **WHEN** a row has `BMI` `24.10` and `Body Fat Percentage` `18.50` next to its weight
+- **THEN** the archive keeps `BMI=24.10` and `Body Fat Percentage=18.50` and the file's gender, age
+  and height with that weight, and the app shows only the weight

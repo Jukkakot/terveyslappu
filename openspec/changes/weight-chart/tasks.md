@@ -15,8 +15,8 @@
 
 ## 3. Screen
 
-- [ ] 3.1 Chips row with Oma date-range picker, Canvas chart (dots, line, day/value labels, thinned
-  dots), tap shows point details, stats row, empty-period text, history-access notice with the
+- [ ] 3.1 Chips row with Oma date-range picker, Vico chart (points, line, day/value axes), tap
+  marker shows point details, stats row, empty-period text, history-access notice with the
   export's grant flow. Verify: main screen smoke test (chart and stats shown with made-up weights;
   tapping 1 kk changes the period); LargeTextTest still passes at 200 % text.
 
