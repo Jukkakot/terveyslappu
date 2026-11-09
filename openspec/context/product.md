@@ -72,6 +72,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   weights and Punnitse vaa'alla; the card opens Historia (chart, stats, list, + for manual entry,
   which is nowhere else), the gear opens Asetukset (theme, import/export, backup, log). No ⋮ menu;
   the backup shows on home only as a notice when it failed or is stale. No bottom navigation.
+- **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
+  small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
+  list shows each weight's change from the one before it, gains and losses in two palette tones
+  (tertiary / primary), never red and green, since neither direction is "good"; zero is neutral.
 - **Theme** (user 2026-11-09): the phone's own palette (Material You) in light and dark, following
   the system by default; Asetukset → Teema forces Vaalea or Tumma. Choices are filter chips like
   the period chips (a segmented button broke "Järjestelmä" mid-word on a 360 dp phone).

@@ -55,6 +55,8 @@ Phases in order; one OpenSpec change each unless noted.
   screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).
 - ~~**chart-gaps-and-years**~~: done 2026-11-09 (line breaks at gaps over 30 days, "9/2022" labels
   over a year, year in old weights' point detail and list rows).
+- ~~**history-list-delta**~~: done 2026-11-09 (change from the previous weight on every Historia
+  row, arrows on every change number, gain/loss in two neutral palette tones).
 - **Goal weight and forecast** on the chart (user 2026-11-09: later).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads

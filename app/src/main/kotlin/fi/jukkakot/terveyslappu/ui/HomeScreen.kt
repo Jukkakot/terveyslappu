@@ -60,7 +60,6 @@ import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlin.math.roundToLong
 
 /** The simple home screen (mockup B): latest card, three latest weights, Punnitse vaa'alla. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,7 +165,7 @@ private fun LatestValues(summary: HomeSummary) {
         summary.sparkChange?.let { change ->
             Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
                 Text(stringResource(R.string.home_spark_days), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                Text(stringResource(R.string.kg_value, formatChange(change)), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
         }
     }
@@ -175,21 +174,18 @@ private fun LatestValues(summary: HomeSummary) {
 /** Change from the weight before: arrow and signed number, never colour alone. */
 @Composable
 private fun ChangeChip(change: Double, modifier: Modifier = Modifier) {
-    val tenths = (change * 10).roundToLong()
     val label = stringResource(R.string.home_change, formatChange(change))
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = modifier.testTag("change").clearAndSetSemantics { contentDescription = label },
     ) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (tenths != 0L) {
-                val icon = if (tenths < 0) R.drawable.ic_arrow_down else R.drawable.ic_arrow_up
-                Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(4.dp))
-            }
-            Text(stringResource(R.string.kg_value, formatChange(change)), style = MaterialTheme.typography.labelLarge)
-        }
+        ChangeLabel(
+            stringResource(R.string.kg_value, formatChange(change)),
+            shownDirection(change, 1),
+            Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
     }
 }
 

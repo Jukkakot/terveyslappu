@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
+import fi.jukkakot.terveyslappu.chart.changesFromPrevious
 import fi.jukkakot.terveyslappu.chart.PeriodStats
 import fi.jukkakot.terveyslappu.chart.filter
 import fi.jukkakot.terveyslappu.chart.needsHistory
@@ -78,6 +79,7 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val now = remember(all, state.period) { Instant.now() }
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
+    val changes = remember(shown) { changesFromPrevious(shown) }
     val data = remember(shown) { ChartData.of(state.period, shown, now, zone) }
     val stats = remember(shown) { periodStats(shown) }
     LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
@@ -97,21 +99,24 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
         stats?.let { item(key = "stats") { StatsTiles(it) } }
         items(shown, key = { it.id }) { entry ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            WeightRowItem(entry, today, onDelete = { actions.onDelete(entry) })
+            WeightRowItem(entry, changes[entry.id], today, onDelete = { actions.onDelete(entry) })
         }
     }
 }
+
+/** One stats tile; [direction] puts an arrow on a change (0: none). */
+private data class Tile(val label: Int, val value: String, val direction: Int = 0)
 
 /** Key numbers as small tiles, three per row; a number that means nothing (one weight) is left out. */
 @Composable
 private fun StatsTiles(stats: PeriodStats) {
     val tiles = buildList {
-        stats.change?.let { add(R.string.stats_change to stringResource(R.string.kg_value, formatChange(it))) }
-        stats.perWeek?.let { add(R.string.stats_rate to stringResource(R.string.kg_value, formatRate(it))) }
-        add(R.string.stats_average to formatKg(stats.average))
-        add(R.string.stats_min to formatKg(stats.min))
-        add(R.string.stats_max to formatKg(stats.max))
-        add(R.string.stats_count to stats.count.toString())
+        stats.change?.let { add(Tile(R.string.stats_change, stringResource(R.string.kg_value, formatChange(it)), shownDirection(it, 1))) }
+        stats.perWeek?.let { add(Tile(R.string.stats_rate, stringResource(R.string.kg_value, formatRate(it)), shownDirection(it, 2))) }
+        add(Tile(R.string.stats_average, formatKg(stats.average)))
+        add(Tile(R.string.stats_min, formatKg(stats.min)))
+        add(Tile(R.string.stats_max, formatKg(stats.max)))
+        add(Tile(R.string.stats_count, stats.count.toString()))
     }
     Column(
         Modifier.fillMaxWidth().padding(16.dp).testTag("stats"),
@@ -119,7 +124,7 @@ private fun StatsTiles(stats: PeriodStats) {
     ) {
         tiles.chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { (label, value) ->
+                row.forEach { (label, value, direction) ->
                     Column(
                         Modifier
                             .weight(1f)
@@ -128,7 +133,7 @@ private fun StatsTiles(stats: PeriodStats) {
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
                         Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -139,7 +144,7 @@ private fun StatsTiles(stats: PeriodStats) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WeightRowItem(entry: WeightEntry, today: LocalDate, onDelete: () -> Unit) {
+private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate, onDelete: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -149,6 +154,16 @@ private fun WeightRowItem(entry: WeightEntry, today: LocalDate, onDelete: () -> 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(formatRowTime(entry.time, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        change?.let {
+            val direction = shownDirection(it, 1)
+            ChangeLabel(
+                formatChange(it),
+                direction,
+                Modifier.padding(end = 12.dp).testTag("rowChange-${entry.id}"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = changeColor(direction),
+            )
+        }
         Text(stringResource(R.string.kg_value, formatKg(entry.kg)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
         // Visible alternative to the long-press (ui rule: no gesture without one).
         val label = stringResource(R.string.delete_weight, formatKg(entry.kg))

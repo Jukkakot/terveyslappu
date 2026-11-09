@@ -128,6 +128,10 @@ class MainScreenTest {
         compose.onNodeWithTag("stats").assertExists()
         compose.onNodeWithTag("delete-2").assertExists()
         compose.onNodeWithTag("delete-3").assertDoesNotExist()
+        // Two weights in the week: the newer row shows its change, the older none; Muutos and Tahti get an arrow down.
+        compose.onNodeWithTag("rowChange-1", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("rowChange-2", useUnmergedTree = true).assertDoesNotExist()
+        assertEquals(2, compose.onAllNodes(hasTestTag("arrowDown") and hasAnyAncestor(hasTestTag("stats")), useUnmergedTree = true).fetchSemanticsNodes().size)
         compose.onNodeWithTag("period-30").performClick()
         compose.onNodeWithTag("period-30").assertIsSelected()
         compose.onNodeWithTag("delete-3").assertExists()
