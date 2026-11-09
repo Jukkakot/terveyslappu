@@ -10,8 +10,12 @@ app keeps only raw data. The phone has one user, so one set of details in Asetuk
 - Asetukset gets an "Omat tiedot" section: syntymävuosi (shown with the age it gives), pituus (cm)
   and sukupuoli (Mies / Nainen / Ei valittu). All optional; nothing else in the app requires them.
 - The details are kept in the app's own storage on the phone, one set per phone, no profiles.
+- The export and the automatic backup (same format) carry the details in one `#profile;` line
+  before the header; Tuo painot fills the phone's empty details from it, so a new phone gets them
+  back with the weights (user 2026-11-09).
 - Logged as `profile.set` with which field changed, never the value (NFR-1).
-- Nothing uses the details yet; BMI or other derived values are later changes.
+- Decided not to do now (user 2026-11-09): BMI or other derived values, writing height to Health
+  Connect, filling the details from an OKOK file's title rows.
 
 ## Capabilities
 
@@ -20,8 +24,12 @@ app keeps only raw data. The phone has one user, so one set of details in Asetuk
   validated and kept.
 
 ### Modified Capabilities
+- `weight-export`: "File content" gains the optional `#profile;` line (the backup uses the same
+  format, so `weight-backup` needs no own delta).
+- `history-import`: new requirement to restore owner details from that line.
 
 ## Impact
 
-App screens: Asetukset only. No Health Connect, scale, widget or CI change. New pure validation
-logic and a small preferences store next to `AppearancePrefs`; singleton in `TerveysApp`.
+App screens: Asetukset and the import preview. No Health Connect, scale, widget or CI change. New
+pure validation logic, a small preferences store next to `AppearancePrefs` (singleton in
+`TerveysApp`), the CSV export writer and the history parser.
