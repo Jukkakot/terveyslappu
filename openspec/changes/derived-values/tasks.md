@@ -19,22 +19,28 @@
   rounded to whole units, BMR by 10 kcal/kg rounded to tens. Verify: existing `WeightScaleTest`
   green; tests for the steady BMI (span ≥ 1,2) and steady BMR (span ≥ 40 kcal) scenarios.
 
+- [ ] 2.3 Plot flush with the y-axis on every chart (full-width layout, no extreme-label padding).
+  Verify: a Robolectric screenshot of a made-up multi-year chart shows the first point on the axis;
+  the screenshot stays out of the repo.
+
 ## 3. Home row
 
 - [ ] 3.1 Derived values of the latest weight in the home summary, recomputed when the weights or
   the owner details change; row under the card with BMI + class word in its tone, normal range,
-  kcal/vrk; hint opening Asetukset scrolled to Omat tiedot when something is missing; nothing
-  without weights. Tone colours in the theme for light and dark. Verify: home summary unit tests
-  (all set, gender missing, no details); one MainScreen smoke test that the row shows with a
-  made-up profile and the hint opens Asetukset.
+  kcal/vrk; in place of a value that cannot be computed, its reason naming the missing details,
+  opening Asetukset scrolled to Omat tiedot; nothing without weights. Tone colours in the theme for
+  light and dark. Verify: reason tests in 1.1's style (gender missing, several missing, under 18);
+  home summary unit tests (all set, gender missing, no details); one MainScreen smoke test that
+  the row shows with a made-up profile and a reason opens Asetukset.
 
 ## 4. Historia tabs and swipe
 
 - [ ] 4.1 Tabs Paino / BMI / Perusaineenvaihdunta bound to a pager around chart + stats (list
-  outside), only available quantities, no tabs with weight only, opens on Paino; axis labels and
+  outside), always all three, an uncomputable quantity shows its reason and a button to Omat
+  tiedot, opens on Paino; axis labels and
   point details per quantity (`kg`, bare BMI under a "BMI" title, `kcal`); BMI class bands behind
   the line. Verify: smoke test that tapping the BMI tab switches the chart title/stats with a
-  made-up height, and that no tabs show without a height; LargeTextTest still passes at 200 %.
+  made-up height, and that without a height the BMI tab shows the reason; LargeTextTest still passes at 200 %.
 
 ## 5. Context
 

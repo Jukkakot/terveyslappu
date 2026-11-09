@@ -3,7 +3,7 @@
 ### Requirement: BMI
 The app SHALL compute the BMI of a weight as the weight in kg divided by the square of the owner's
 height in metres, shown with one decimal. It SHALL use the current height for every weight, old ones
-too. Without a height no BMI SHALL be shown.
+too. Without a height no BMI SHALL be computed.
 
 #### Scenario: BMI from height
 - **GIVEN** the height is 180 cm
@@ -12,7 +12,7 @@ too. Without a height no BMI SHALL be shown.
 
 #### Scenario: No height
 - **GIVEN** the owner has not set a height
-- **THEN** no BMI is shown anywhere
+- **THEN** no BMI is computed, and where it would be shown the reason is shown instead
 
 ### Requirement: BMI category with tone
 Each BMI SHALL be shown with its category by the WHO adult classes, as a word and a tone: alipaino
@@ -67,7 +67,22 @@ least 18 in the weight's year. It SHALL NOT be written to Health Connect.
 
 #### Scenario: Gender not chosen
 - **GIVEN** height and birth year set, gender Ei valittu
-- **THEN** no basal metabolic rate is shown, BMI is
+- **THEN** no basal metabolic rate is computed (its reason is shown); the BMI is
+
+### Requirement: Reason when a value cannot be computed
+Wherever a derived value would be shown but cannot be computed, the app SHALL show a short text
+naming the missing owner details instead ("BMI vaatii pituuden", "Perusaineenvaihdunta vaatii
+sukupuolen", "... syntymävuoden", several joined), and tapping it SHALL open Asetukset at Omat
+tiedot. When the owner was under 18, the text SHALL say that the adult classes do not apply.
+
+#### Scenario: Gender missing
+- **GIVEN** height and birth year set, gender Ei valittu
+- **THEN** in place of the basal metabolic rate the text reads "Perusaineenvaihdunta vaatii
+  sukupuolen"
+
+#### Scenario: Several missing
+- **GIVEN** only the height is set
+- **THEN** the text for the basal metabolic rate names both the birth year and the gender
 
 ### Requirement: Derived values stay in the app
 Derived values SHALL NOT be written to Health Connect nor carried in the export or the backup; they

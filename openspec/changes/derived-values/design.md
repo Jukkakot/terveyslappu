@@ -30,16 +30,25 @@ full birth date (only the year is known).
   1/h² for BMI, 10 for kcal) and a rounding step (1, 1, 10). Room 0.5 kg and least span 4 kg stay
   the meaning, so a change looks as large on every tab.
 - **Swipe with Compose's `HorizontalPager`** over chart + stats, `TabRow` above it bound to the
-  pager state; the list stays outside the pager. The pager's page count is the available
-  quantities. Historia opens on page 0 (Paino); nothing is remembered.
+  pager state; the list stays outside the pager. Always three pages; a page whose quantity
+  cannot be computed shows the reason and a button to Omat tiedot. Historia opens on page 0
+  (Paino); nothing is remembered.
+- **Reasons from one place**: `derived/` returns for each quantity either a value or the missing
+  fields (height, birth year, gender, or "under 18"); the UI turns them into one Finnish text, so
+  home and Historia say the same.
 - **BMI bands with Vico's `HorizontalBox` decorations**, one per class range clipped to the scale,
   in the tone colour at low alpha so the line and dots stay readable.
 - **Tone colours in the theme**: one green, yellow and red per light and dark theme, tuned for text
   contrast on the card; the bands use the same hue faded. The class word is always next to the
   tone (no colour-only meaning).
 - **Home row** is computed in `HomeSummary` (or beside it) from the latest weight and the profile;
-  the hint navigates to Asetukset and scrolls to Omat tiedot (a focus flag on the Settings screen
+  each reason text navigates to Asetukset and scrolls to Omat tiedot (a focus flag on the Settings screen
   state in `MainViewModel`).
+- **Plot flush with the y-axis** (bug): the x range is already 0..maxX from the period start, so
+  the gap is Vico's layout: the default segmented horizontal layout pads half an x-step at each
+  end, and the axis item placer may add padding for the first and last labels. Use the full-width
+  horizontal layout and no extreme-label padding; check with a Robolectric screenshot of a
+  made-up Kaikki chart that the first point touches the axis.
 - **Recompute on change**: the view model combines the weights flow with the profile flow, so a new
   height redraws home and Historia at once.
 

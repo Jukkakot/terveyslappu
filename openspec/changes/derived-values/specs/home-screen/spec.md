@@ -13,10 +13,9 @@ loss next to the number, and no arrow when the shown value is zero. Tapping the 
 Historia; the settings button SHALL open Asetukset. The home screen SHALL have no ⋮ menu.
 
 The derived-values row SHALL show, of the latest weight, the BMI with its category word and tone,
-the normal-weight range and the basal metabolic rate, each only when it can be computed. When the
-owner details leave any of them out, the row SHALL end with one short hint that opens Asetukset at
-Omat tiedot; when none can be computed, the hint alone SHALL be shown. Without weights the row SHALL
-NOT be shown.
+the normal-weight range and the basal metabolic rate; a value that cannot be computed SHALL be
+replaced by its short reason naming the missing owner details, which opens Asetukset at Omat
+tiedot. Without weights the row SHALL NOT be shown.
 
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
@@ -61,15 +60,16 @@ NOT be shown.
 - **GIVEN** height 180 cm, birth year 1990, gender Mies and the latest weight 82.0 kg in 2026
 - **WHEN** the home screen is shown
 - **THEN** the row shows BMI 25,3 "ylipaino" in the yellow tone, normaalipaino 60–81 kg and
-  1 770 kcal/vrk, and no hint
+  1 770 kcal/vrk, and no reason text
 
 #### Scenario: Gender missing
 - **GIVEN** height and birth year set, gender Ei valittu
 - **WHEN** the home screen is shown
-- **THEN** the row shows the BMI and the normal-weight range and a hint; tapping the hint opens
-  Asetukset at Omat tiedot
+- **THEN** the row shows the BMI, the normal-weight range and "Perusaineenvaihdunta vaatii
+  sukupuolen"; tapping that text opens Asetukset at Omat tiedot
 
 #### Scenario: No details
 - **GIVEN** no owner details are set
 - **WHEN** the home screen is shown
-- **THEN** only the hint is shown under the card
+- **THEN** the row shows only the reasons, naming the height (BMI, range) and the height, birth
+  year and gender (basal metabolic rate)
