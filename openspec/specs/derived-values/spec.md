@@ -1,7 +1,9 @@
 # derived-values Specification
 
 ## Purpose
-TBD - created by archiving change derived-values. Update Purpose after archive.
+Values computed from a weight and the owner details (BMI with its WHO class and tone, the
+normal-weight range, the basal metabolic rate), when each can be shown and why not; shown on the
+home screen and Historia, never stored.
 
 ## Requirements
 
