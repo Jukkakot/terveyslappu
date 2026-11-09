@@ -58,9 +58,9 @@ class WeighInActivity : ComponentActivity() {
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                val removed by viewModel.removed.collectAsStateWithLifecycle()
                 var keepOpen by rememberSaveable { mutableStateOf(false) }
                 LaunchedEffect(state, keepOpen) {
+                    if (state is WeighInState.Discarded) finish()
                     if (state is WeighInState.Saved && !keepOpen) {
                         delay(CLOSE_AFTER_SAVED_MS)
                         finish()
@@ -71,8 +71,7 @@ class WeighInActivity : ComponentActivity() {
                     WeighInActions(
                         onClose = ::finish,
                         onKeepOpen = { if (state is WeighInState.Saved) keepOpen = true },
-                        onRedo = { keepOpen = false; viewModel.redo() },
-                        onUndo = viewModel::undo,
+                        onDiscard = viewModel::discard,
                         onRetryScan = ::prepare,
                         onRetrySave = viewModel::retrySave,
                         onOpenAppSettings = {
@@ -84,7 +83,6 @@ class WeighInActivity : ComponentActivity() {
                             finish()
                         },
                     ),
-                    canUndo = removed != null,
                 )
             }
         }

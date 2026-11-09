@@ -45,8 +45,8 @@ scale's address and any further bytes), and SHALL drop them together with the we
   `impedance=5123`, `product_id=abcd`, `attrib=01`, `mac=AA:BB:CC:DD:EE:FF` and `extra=99` (the bytes
   after the 13th)
 
-#### Scenario: Discarded
-- **WHEN** the user taps Poista
+#### Scenario: Weigh again
+- **WHEN** the user taps Poista to weigh again
 - **THEN** the raw data is removed with the weight
 
 #### Scenario: No impedance

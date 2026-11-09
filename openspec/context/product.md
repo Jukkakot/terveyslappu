@@ -50,10 +50,14 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   and daily on opening, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
   user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
   Tuo historia.
-- **No weight before weighing; redo from the result** (user 2026-11-09, weigh-in-button-redo):
-  the widget is a plain 1x1 Punnitse button and the tile has no subtitle. The dialog shows the
-  result ~10 s (a tap keeps it open) with "Punnitse uudelleen", which deletes it at once and
-  scans again, with Kumoa instead of a confirmation.
+- **No weight before weighing; Poista or Valmis on the result** (user 2026-11-09,
+  weigh-in-button-redo, weigh-in-discard): the widget is a plain 1x1 Punnitse button and the tile
+  has no subtitle. The dialog shows the result ~10 s (a tap keeps it open) with only Poista and
+  Valmis: saving is the default, Poista deletes a test weigh-in at once and closes, no Kumoa.
+  Weighing again = Poista and open the widget again ("Punnitse uudelleen" dropped: two buttons are
+  clearer). The scale repeats its last stable packet for 10+ s and its company id is a
+  per-weighing counter (5fc0, 60c0, 61c0 seen), so a weigh-in ignores the previous weigh-in's id
+  for two minutes.
 - **Version `MAJOR.MINOR.BUILD`** (user 2026-11-09, app-version-numbers): SemVer-style name with a
   never-resetting build number instead of PATCH, because every green push is a release; the
   Android version code stays the total commit count so updates always install.
@@ -103,6 +107,8 @@ The user's earlier Android app, read through for mistakes worth not repeating:
   bytes 7-12 the scale's own Bluetooth address (openScale filtered on it). The company id's high
   byte is not fixed: openScale registered a scan filter for every `00C0`-`FFC0`, so a background
   scan filter should match the low byte `C0` and the address, not a fixed `key`.
+  Log 2026-11-09: this scale sends zeros in bytes 4-12 (no product id, no address in the data);
+  the address is only in `addr=`, and the high byte counts weighings (5f, 60, 61).
 - **Samsung Health reads weight from Health Connect** written by another app (Garmin Connect, and
   terveyslappu's own entry within about two minutes of saving, 2026-11-08), shown with its source. Whether it stores such weights in its own data and syncs them to Samsung
   Cloud is unverified: its personal-data CSV export had no Health Connect sourced rows yet.

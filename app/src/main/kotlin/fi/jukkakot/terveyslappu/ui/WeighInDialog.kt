@@ -46,16 +46,12 @@ class WeighInActions(
     val onOpenApp: () -> Unit = {},
     /** A tap on the card: the saved result stays open instead of closing by itself. */
     val onKeepOpen: () -> Unit = {},
-    val onRedo: () -> Unit = {},
-    val onUndo: () -> Unit = {},
+    val onDiscard: () -> Unit = {},
 )
 
-/**
- * The weigh-in card over a dimmed background; tapping outside closes it. [canUndo]: a weight
- * deleted by "Punnitse uudelleen" can still be written back.
- */
+/** The weigh-in card over a dimmed background; tapping outside closes it. */
 @Composable
-fun WeighInDialog(state: WeighInState, actions: WeighInActions, canUndo: Boolean = false) {
+fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
     Box(
         Modifier
             .fillMaxSize()
@@ -81,7 +77,6 @@ fun WeighInDialog(state: WeighInState, actions: WeighInActions, canUndo: Boolean
             ) {
                 Text(stringResource(R.string.weighin_title), style = MaterialTheme.typography.titleLarge)
                 Content(state, actions)
-                if (canUndo && state !is WeighInState.Saved && state !is WeighInState.Saving) Removed(actions)
             }
         }
     }
@@ -120,7 +115,7 @@ private fun Content(state: WeighInState, actions: WeighInActions) {
             )
             if (state.deleteFailed) Message(stringResource(R.string.weighin_delete_failed))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = actions.onRedo) { Text(stringResource(R.string.weighin_redo)) }
+                TextButton(onClick = actions.onDiscard) { Text(stringResource(R.string.weighin_discard)) }
                 Button(onClick = actions.onClose) { Text(stringResource(R.string.weighin_done)) }
             }
         }
@@ -144,6 +139,7 @@ private fun Content(state: WeighInState, actions: WeighInActions) {
             stringResource(R.string.weighin_bluetooth_off),
             stringResource(R.string.weighin_enable_bluetooth), actions.onEnableBluetooth, actions,
         )
+        WeighInState.Discarded -> Unit
         WeighInState.NoHealthAccess -> Choice(
             stringResource(R.string.weighin_no_health_access),
             stringResource(R.string.weighin_open_app), actions.onOpenApp, actions,
@@ -171,19 +167,6 @@ private fun Progress(text: String) {
 @Composable
 private fun Message(text: String) {
     Text(text, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-}
-
-/** "Edellinen poistettu · Kumoa" while the weight deleted for weighing again can be written back. */
-@Composable
-private fun Removed(actions: WeighInActions) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            stringResource(R.string.weighin_removed),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        TextButton(onClick = actions.onUndo, modifier = Modifier.testTag("undo")) { Text(stringResource(R.string.undo)) }
-    }
 }
 
 @Composable

@@ -29,12 +29,14 @@ sealed interface WeighInState {
     data object Scanning : WeighInState
     data class Live(val kg: Double, val stable: Boolean) : WeighInState
     data class Saving(val kg: Double) : WeighInState
-    /** [deleteFailed]: "Punnitse uudelleen" could not delete this weight. */
+    /** [deleteFailed]: Poista could not delete this weight. */
     data class Saved(val kg: Double, val change: WeightChange? = null, val deleteFailed: Boolean = false) : WeighInState
     data class SaveFailed(val kg: Double) : WeighInState
     /** Nothing decided within the time limit; [heard] tells whether any scale packet arrived. */
     data class NotFound(val heard: Boolean) : WeighInState
     data class ScanFailed(val code: Int) : WeighInState
+    /** Poista deleted the saved weight; the dialog closes. */
+    data object Discarded : WeighInState
 }
 
 /**
@@ -45,8 +47,9 @@ sealed interface WeighInState {
  * @param now wall clock, for the time stamped on the saved weight
  * @param save writes kg at a time to Health Connect
  * @param previous the latest weight before a time (kg, time), for the change shown after saving
- * @param delete removes the weight saved at a time (weigh again); writing it back uses [save]
- * @param archive keeps the deciding packet's raw fields with the saved weight (dropped and restored with it)
+ * @param delete removes the weight saved at a time (Poista)
+ * @param archive keeps the deciding packet's raw fields with the saved weight (dropped with it)
+ * @param last the previous weigh-in's company id, whose lingering broadcast is ignored for [IGNORE_MS]
  */
 class WeighIn(
     private val source: PacketSource,
@@ -58,6 +61,7 @@ class WeighIn(
     private val previous: suspend (before: Instant) -> Pair<Double, Instant>? = { null },
     private val delete: suspend (kg: Double, time: Instant) -> Unit = { _, _ -> },
     private val archive: RawStore = MemoryRawStore(),
+    private val last: LastWeighInStore = MemoryLastWeighIn(),
 ) {
     private val openedMs = elapsedMs()
     private val _state = MutableStateFlow<WeighInState>(WeighInState.Preparing)
@@ -66,13 +70,8 @@ class WeighIn(
     private var job: Job? = null
     private var decided: Pair<Double, Instant>? = null
     private var decidedRaw: RawEntry? = null
-    private var removedRaw: RawEntry? = null
+    private var decidedKey: Int? = null
     private var saved: WeighInState.Saved? = null
-
-    private val _removed = MutableStateFlow<Pair<Double, Instant>?>(null)
-
-    /** The weight deleted by [redo] that [undo] can still write back; null once a new one is saved. */
-    val removed: StateFlow<Pair<Double, Instant>?> = _removed
 
     fun show(state: WeighInState) {
         _state.value = state
@@ -84,8 +83,8 @@ class WeighIn(
         job = scope.launch { scan() }
     }
 
-    /** Deletes the saved weight and scans again (weigh again); a failed delete stays on the result. */
-    fun redo(scope: CoroutineScope) {
+    /** Deletes the saved weight and its raw data (Poista); a failed delete stays on the result. */
+    fun discard(scope: CoroutineScope) {
         val result = saved ?: return
         val weight = decided ?: return
         job?.cancel()
@@ -95,31 +94,41 @@ class WeighIn(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AppLog.e("weighin.redo", e, "failed", "kg" to weight.first)
+                AppLog.e("weighin.discard", e, "failed", "kg" to weight.first)
                 _state.value = result.copy(deleteFailed = true)
                 return@launch
             }
-            AppLog.i("weighin.redo", "ok", "kg" to weight.first, "time" to weight.second)
+            AppLog.i("weighin.discard", "ok", "kg" to weight.first, "time" to weight.second)
             saved = null
-            _removed.value = weight
-            removedRaw = keepRaw("remove") { archive.remove(weight.second.epochSecond) }
-            scan()
+            keepRaw("remove") { archive.remove(weight.second.epochSecond) }
+            remember()
+            _state.value = WeighInState.Discarded
         }
     }
 
-    /** Stops the new scan and writes the deleted weight back, showing it as saved again. */
-    fun undo(scope: CoroutineScope) {
-        val weight = _removed.value ?: return
-        job?.cancel()
-        AppLog.i("weighin.undo", "", "kg" to weight.first, "time" to weight.second)
-        decided = weight
-        decidedRaw = removedRaw
-        job = scope.launch { saveDecided() }
+    /** Records the decided weigh-in's company id so its lingering broadcast is not saved again. */
+    private fun remember() {
+        val key = decidedKey ?: return
+        try {
+            last.save(key, now())
+        } catch (e: Exception) {
+            AppLog.e("weighin.last", e, "save")
+        }
+    }
+
+    /** The previous weigh-in's company id while its broadcast may still linger, else null. */
+    private fun ignoredKey(): Int? = try {
+        last.load()?.takeIf { (_, at) -> at.plusMillis(IGNORE_MS).isAfter(now()) }?.first
+    } catch (e: Exception) {
+        AppLog.e("weighin.last", e, "load")
+        null
     }
 
     private suspend fun scan() {
         decided = null
         decidedRaw = null
+        decidedKey = null
+        val ignored = ignoredKey()
         run {
             val scanStartMs = elapsedMs()
             val scanStartWall = now()
@@ -127,7 +136,7 @@ class WeighIn(
             _state.value = WeighInState.Scanning
             val result = try {
                 withTimeoutOrNull(timeoutMs) {
-                    decide(scanStartMs) { reading ->
+                    decide(scanStartMs, ignored) { reading ->
                         heard = true
                         _state.value = WeighInState.Live(reading.kg, reading.stable)
                     }
@@ -145,6 +154,7 @@ class WeighIn(
             AppLog.i("scale.stable", "", "kg" to result.kg, "t" to result.atMs)
             val time = scanStartWall.plusMillis(result.atMs)
             decided = result.kg to time
+            decidedKey = result.packet?.companyId
             decidedRaw = result.packet?.let { RawEntry(time.epochSecond, SOURCE, ScalePacket.rawFields(it.companyId, it.data)) }
             saveDecided()
         }
@@ -178,8 +188,7 @@ class WeighIn(
                 AppLog.e("weighin.previous", e, "failed")
                 null
             }
-            _removed.value = null
-            removedRaw = null
+            remember()
             saved = WeighInState.Saved(kg, change).also { _state.value = it }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -189,7 +198,8 @@ class WeighIn(
         }
     }
 
-    private suspend fun decide(scanStartMs: Long, onReading: (ScaleReading) -> Unit): StableResult = coroutineScope {
+    private suspend fun decide(scanStartMs: Long, ignored: Int?, onReading: (ScaleReading) -> Unit): StableResult = coroutineScope {
+        var ignoreLogged = false
         val decision = StableWeight()
         val done = CompletableDeferred<StableResult>()
         val ticker = launch {
@@ -201,6 +211,11 @@ class WeighIn(
         val collector = launch {
             source.packets().collect { packet ->
                 if (!ScalePacket.isScale(packet.name, packet.companyId)) return@collect
+                if (packet.companyId == ignored) {
+                    if (!ignoreLogged) AppLog.i("scale.ignore", "", "key" to "%04x".format(packet.companyId and 0xFFFF))
+                    ignoreLogged = true
+                    return@collect
+                }
                 val reading = ScalePacket.decode(packet.data) ?: return@collect
                 onReading(reading)
                 decision.onReading(reading, packet.atMs, packet)?.let { done.complete(it) }
@@ -227,5 +242,7 @@ class WeighIn(
         const val SOURCE = "scale"
         const val TIMEOUT_MS = 60_000L
         const val TICK_MS = 250L
+        /** The scale repeats its last stable packet for at least ten seconds after a weighing. */
+        const val IGNORE_MS = 120_000L
     }
 }

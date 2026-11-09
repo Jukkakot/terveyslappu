@@ -33,25 +33,15 @@ class WeighInDialogTest {
     }
 
     @Test
-    fun `saved weight offers weighing again and done`() {
-        var redo = false
+    fun `saved weight offers discard and done`() {
+        var discarded = false
         var closed = false
         compose.setContent {
-            TerveysTheme { WeighInDialog(WeighInState.Saved(82.5), WeighInActions(onRedo = { redo = true }, onClose = { closed = true })) }
+            TerveysTheme { WeighInDialog(WeighInState.Saved(82.5), WeighInActions(onDiscard = { discarded = true }, onClose = { closed = true })) }
         }
-        compose.onNodeWithText("Punnitse uudelleen").performClick()
+        compose.onNodeWithText("Poista").performClick()
         compose.onNodeWithText("Valmis").performClick()
-        assertTrue(redo && closed)
-    }
-
-    @Test
-    fun `undo is offered while scanning after weighing again`() {
-        var undone = false
-        compose.setContent {
-            TerveysTheme { WeighInDialog(WeighInState.Scanning, WeighInActions(onUndo = { undone = true }), canUndo = true) }
-        }
-        compose.onNodeWithTag("undo").performClick()
-        assertTrue(undone)
+        assertTrue(discarded && closed)
     }
 
     @Test

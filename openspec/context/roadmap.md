@@ -38,11 +38,15 @@ Phases in order; one OpenSpec change each unless noted.
 
 - ~~**Before scale-reading-archive: decode the unknown scale bytes**~~: done 2026-11-09 from
   openScale's decoders (bytes 4-5 product id, 7-12 the scale's address; see product.md). Still to
-  confirm from the next shared weigh-in log (`addr=` against bytes 7-12).
+  confirm from the next shared weigh-in log (`addr=` against bytes 7-12). Log 2026-11-09:
+  bytes 4-12 are zeros on this scale, so the address is only in `addr=`.
 - ~~**scale-reading-archive**~~: done 2026-11-09 (raw packet fields per weigh-in in app storage and
   in the export/backup `raw` column).
 - ~~**okok-xls-import**~~: done 2026-11-09 (Tuo historia reads the OKOK `.xls`); the real file
   still to try on the phone.
+- ~~**weigh-in-discard**~~: done 2026-11-09 (Poista on the result, Punnitse uudelleen dropped,
+  the scale's lingering broadcast ignored). From the 2026-11-09 log: `name=Yoda1` is in every
+  packet; the company id changes per weighing, so a background scan filters by name or address.
 - **Phone owner's details** (user 2026-11-09: next change after weigh-in-discard): one user per phone, no
   profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
   from the raw data.

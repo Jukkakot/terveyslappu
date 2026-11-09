@@ -63,7 +63,7 @@ archive); a `UserPromptSubmit` hook repeats this.
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
   `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),
-  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.redo ok|failed`, `weighin.undo`, `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|xls`, `okok=`, detected layout and
+  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.discard ok|failed`, `scale.ignore key=` (previous weigh-in's lingering broadcast), `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|xls`, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick`, `export.history granted|denied`,
   `export.write ok count= history= ms=`; backup: `backup.enable|disable|pick`,
   `backup.run reason= ok count= ms=` / `backup.run failed`; chart: `chart.period`, `weight.read ok count= history=`; theme: `theme.set`.

@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.log.AppLog
+import fi.jukkakot.terveyslappu.scale.LastWeighInPrefs
 import fi.jukkakot.terveyslappu.scale.ScaleScanner
 import fi.jukkakot.terveyslappu.scale.WeighIn
 import fi.jukkakot.terveyslappu.scale.WeighInState
@@ -34,18 +35,14 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
             (app as TerveysApp).backup.request("weighin")
         },
         archive = (app as TerveysApp).rawArchive,
+        last = LastWeighInPrefs(app),
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )
 
     val state: StateFlow<WeighInState> = weighIn.state
 
-    /** A weight deleted by "Punnitse uudelleen" that Kumoa can still write back. */
-    val removed: StateFlow<Pair<Double, Instant>?> = weighIn.removed
-
-    fun redo() = weighIn.redo(viewModelScope)
-
-    fun undo() = weighIn.undo(viewModelScope)
+    fun discard() = weighIn.discard(viewModelScope)
 
     /** True when Health Connect is available and this app may write weight. */
     suspend fun hasHealthAccess(): Boolean {

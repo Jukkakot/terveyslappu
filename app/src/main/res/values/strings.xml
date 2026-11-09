@@ -96,9 +96,8 @@
     <string name="weighin_enable_bluetooth">Laita päälle</string>
     <string name="weighin_no_health_access">Painon tallentaminen tarvitsee Health Connect -luvan. Anna lupa sovelluksessa.</string>
     <string name="weighin_open_app">Avaa sovellus</string>
-    <string name="weighin_redo">Punnitse uudelleen</string>
+    <string name="weighin_discard">Poista</string>
     <string name="weighin_done">Valmis</string>
-    <string name="weighin_removed">Edellinen poistettu</string>
     <string name="weighin_delete_failed">Poisto epäonnistui. Syy on lokissa.</string>
     <string name="weighin_change">%1$s kg edellisestä (%2$s)</string>
     <string name="widget_description">Punnitse yhdellä napautuksella</string>
