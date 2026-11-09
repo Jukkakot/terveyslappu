@@ -192,7 +192,7 @@ class MainActivity : ComponentActivity() {
     private companion object {
         /** Text tables; some file managers label CSV files as octet-stream. */
         const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
-        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/octet-stream")
+        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/octet-stream")
         const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }
 }

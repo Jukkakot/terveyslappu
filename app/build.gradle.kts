@@ -126,6 +126,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.poi)
     implementation(libs.health.connect)
 
     implementation(platform(libs.compose.bom))

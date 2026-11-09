@@ -28,6 +28,9 @@ import fi.jukkakot.terveyslappu.chart.encode
 import fi.jukkakot.terveyslappu.weight.newestFirst
 import fi.jukkakot.terveyslappu.backup.writeExport
 import fi.jukkakot.terveyslappu.history.HistoryParser
+import fi.jukkakot.terveyslappu.history.OkokLayout
+import fi.jukkakot.terveyslappu.history.SheetText
+import fi.jukkakot.terveyslappu.history.XlsTable
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.history.HistoryWriter
 import fi.jukkakot.terveyslappu.history.ParsedHistory
@@ -206,24 +209,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(import = ImportState.Reading) }
         viewModelScope.launch {
             val started = System.nanoTime()
-            val text = withContext(Dispatchers.IO) {
+            val file = withContext(Dispatchers.IO) {
                 runCatching {
                     getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
                         val bytes = input.readNBytes(MAX_IMPORT_BYTES + 1)
                         require(bytes.size <= MAX_IMPORT_BYTES) { "file larger than $MAX_IMPORT_BYTES bytes" }
-                        HistoryParser.decode(bytes)
+                        bytes
                     } ?: error("no input stream")
                 }
             }
-            text.onFailure { error ->
+            file.onFailure { error ->
                 AppLog.e("import.read", error, "failed")
                 _state.update { it.copy(import = ImportState.ReadFailed) }
-            }.onSuccess { content ->
-                val parsed = withContext(Dispatchers.Default) { HistoryParser.parse(content, ZoneId.systemDefault(), Instant.now()) }
-                logParsed(parsed, content.length, msSince(started))
-                _state.update { it.copy(import = ImportState.Preview(parsed)) }
+            }.onSuccess { bytes ->
+                val parsed = withContext(Dispatchers.Default) { readHistory(bytes) }
+                logParsed(parsed.first, bytes.size, msSince(started), parsed.second)
+                _state.update { it.copy(import = ImportState.Preview(parsed.first)) }
             }
         }
+    }
+
+    /**
+     * Parses a history file: a compound document as `.xls` (its first sheet, OKOK layout when found),
+     * anything else as text. A damaged `.xls` gives an empty result, logged with the reason.
+     */
+    private fun readHistory(bytes: ByteArray): Pair<ParsedHistory, SheetText?> {
+        val zone = ZoneId.systemDefault()
+        if (!XlsTable.isXls(bytes)) return HistoryParser.parse(HistoryParser.decode(bytes), zone, Instant.now()) to null
+        val sheet = try {
+            OkokLayout.toText(XlsTable.read(bytes))
+        } catch (e: Exception) {
+            AppLog.e("import.read", e, "xls unreadable", "format" to "xls")
+            return ParsedHistory(emptyList(), emptyList(), null) to null
+        }
+        return HistoryParser.parse(sheet.text, zone, Instant.now()) to sheet
     }
 
     fun confirmImport() {

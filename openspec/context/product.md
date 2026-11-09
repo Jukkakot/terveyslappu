@@ -98,5 +98,10 @@ The user's earlier Android app, read through for mistakes worth not repeating:
   the write permission on. **Garmin Connect** does write weight, with some delay.
 - **Health Connect** has scheduled export (daily, weekly, monthly) to a cloud storage app and an
   import from that file.
-- **History:** the user has an export of about four years of OKOK weights (format to be checked)
-  and Garmin step history in Garmin Connect.
+- **History:** the user has an export of about four years of OKOK weights and Garmin step history
+  in Garmin Connect. OKOK International exports a binary Excel file (`.xls`, BIFF8; Q2 closed
+  2026-11-09): title rows (name; profile; the covered range `YYYY-MM-DD ~ YYYY-MM-DD(nDay)`), then a
+  header `Date;Time;Weight(Kg);BMI;...` (about 19 more columns of OKOK's own calculations, no
+  impedance) and rows newest first with year-less `MM-DD` dates, all values as text. Read by
+  `history/XlsTable` (Apache POI HSSF) and `history/OkokLayout` (years from the range line, other
+  columns and title cells to the raw archive as source `okok`).

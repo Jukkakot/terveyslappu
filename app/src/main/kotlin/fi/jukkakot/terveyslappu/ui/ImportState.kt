@@ -1,6 +1,7 @@
 package fi.jukkakot.terveyslappu.ui
 
 import fi.jukkakot.terveyslappu.history.ParsedHistory
+import fi.jukkakot.terveyslappu.history.SheetText
 import fi.jukkakot.terveyslappu.history.SkipReason
 import fi.jukkakot.terveyslappu.log.AppLog
 
@@ -15,10 +16,14 @@ sealed interface ImportState {
 }
 
 /** Logs what the parser decided, so a file it cannot read can be supported from a shared log. */
-fun logParsed(parsed: ParsedHistory, bytes: Int, ms: Long) {
+fun logParsed(parsed: ParsedHistory, bytes: Int, ms: Long, sheet: SheetText? = null) {
     val layout = parsed.layout
     AppLog.i(
         "import.read", if (layout == null) "no columns" else "ok",
+        "format" to if (sheet == null) "text" else "xls",
+        "okok" to sheet?.okok,
+        "keptColumns" to sheet?.keptColumns,
+        "profileCells" to sheet?.profileCells,
         "bytes" to bytes,
         "ms" to ms,
         "header" to (layout?.header?.replace(' ', '_') ?: "-"),

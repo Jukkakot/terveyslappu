@@ -35,7 +35,7 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
   read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
   BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
-  parser: separator, columns, date order; batch writer; CSV export format; all pure), `chart/` (periods, period stats, chart axes; pure except `PeriodPrefs`), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
+  parser: separator, columns, date order; batch writer; CSV export format; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `chart/` (periods, period stats, chart axes; pure except `PeriodPrefs`), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
   write; the singleton lives in `TerveysApp`), `ui/` (main screen, weigh-in
   dialog, view models, theme, formats), `log/` (file log, crash handler, share intent),
@@ -63,7 +63,7 @@ archive); a `UserPromptSubmit` hook repeats this.
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
   `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),
-  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.redo ok|failed`, `weighin.undo`, `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (detected layout and
+  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.redo ok|failed`, `weighin.undo`, `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|xls`, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick`, `export.history granted|denied`,
   `export.write ok count= history= ms=`; backup: `backup.enable|disable|pick`,
   `backup.run reason= ok count= ms=` / `backup.run failed`; chart: `chart.period`, `weight.read ok count= history=`.
