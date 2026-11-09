@@ -85,6 +85,10 @@ The user's earlier Android app, read through for mistakes worth not repeating:
   data (company id low byte `0xC0`), no connection needed. Decoding matches openScale
   `OkOkHandler` (C0 path): payload bytes 0-1 weight big-endian, byte 6 attributes (bit 0 stable,
   bits 1-2 decimals, bits 3-4 unit), bytes 2-3 impedance /10. Verified against one capture.
+  The rest of the 13 bytes (openScale's older `BluetoothOKOK2`, 2026-11-09): bytes 4-5 product id,
+  bytes 7-12 the scale's own Bluetooth address (openScale filtered on it). The company id's high
+  byte is not fixed: openScale registered a scan filter for every `00C0`-`FFC0`, so a background
+  scan filter should match the low byte `C0` and the address, not a fixed `key`.
 - **Samsung Health reads weight from Health Connect** written by another app (Garmin Connect, and
   terveyslappu's own entry within about two minutes of saving, 2026-11-08), shown with its source. Whether it stores such weights in its own data and syncs them to Samsung
   Cloud is unverified: its personal-data CSV export had no Health Connect sourced rows yet.

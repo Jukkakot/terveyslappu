@@ -13,7 +13,7 @@ the writing app's name and a `raw` column holding the raw data the phone keeps f
 #### Scenario: Scale row
 - **GIVEN** an 82.5 kg scale weigh-in with raw data kept
 - **THEN** its `raw` column holds the packet hex and the scale's fields, e.g.
-  `packet=2033...|weight_raw=825|decimals=1|unit=kg|stable=1|impedance=5123`
+  `source=scale|packet=0339...|key=12c0|weight_raw=825|decimals=1|unit=kg|stable=1|impedance=5123|...`
 
 #### Scenario: Read back
 - **WHEN** an exported file is imported with Tuo historia
