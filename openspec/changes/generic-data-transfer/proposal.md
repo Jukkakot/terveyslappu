@@ -2,50 +2,48 @@
 
 ## Why
 
-Asetukset offers "Vie painot" and "Tuo painot", but the file already carries more than weights
-(raw scale data, owner details) and the app will keep more kinds of data later (goal weight,
-settings, steps…). Each new kind should travel through the same export, import and backup without
-new buttons or a new file, so the user always moves *all* app data in one go.
+Asetukset offers "Vie painot" and "Tuo painot", built around weights only. The app will keep more
+kinds of measured data later (steps, goal weight…), and the user wants to move that raw data
+between apps and phones through the same export, import and backup, in the formats other apps
+read: CSV and JSON.
 
 ## What Changes
 
 - Asetukset: "Vie painot" / "Tuo painot" become **Vie tiedot** / **Tuo tiedot** under the section
-  title **Tiedot**; the exported file is named `terveyslappu-<date>.csv`.
-- One extensible file format (still a semicolon CSV a spreadsheet opens): a version line, then one
-  section per data kind. A kind is either a `#<kind>;name=value|…` line (single values, like the
-  owner details) or a `#table;<kind>` line followed by its own header and rows (lists, like the
-  weights). New kinds are added in the app as new sections; the buttons, file and backup stay the
-  same.
-- Data kinds carried now: weights with their raw data (as today), owner details (as today, the
-  `#profile;` line), and the app settings that belong to the user (theme, chart period).
-  Device-bound state (backup file access, the last weigh-in, the log) is not carried.
-- Import reads every known section, ignores unknown ones (a newer app's file still imports what
-  this app knows, and says so), and the preview lists what the file holds before anything is
-  written. Old files (plain weight table, optional `#profile;` line) and OKOK files import as
-  before.
-- The automatic backup writes the same file, so it carries every data kind too.
+  title **Tiedot**.
+- **Vie tiedot** asks for the format in a small dialog, **CSV** or **JSON**, then saves
+  `terveyslappu-<date>.csv` or `.json` with the system picker.
+- **Tuo tiedot** reads both formats (recognised from the content), plus the OKOK `.xls` and other
+  history tables as before.
+- One data model with a section (CSV) or key (JSON) per data kind; today the only kind is the
+  weights with their raw data. A kind added later gets its own section/key and travels through
+  export, import and backup without new buttons. Unknown kinds in a file from a newer version are
+  skipped and the preview says so.
+- **BREAKING (small):** owner details (birth year, height, gender) and app settings are no longer
+  carried: they are static and quickly re-entered. An old file's `#profile;` line is ignored.
+- Backup: keeps writing CSV (the existing backup file stays valid), now through the same writer,
+  so new kinds are backed up too. It runs after every change to the carried data, and whenever the
+  app opens and no backup has succeeded yet today (instead of "older than 24 hours"). No
+  background job.
 
 ## Capabilities
 
 ### New Capabilities
-- `data-file`: the app's own data file: version line, sections per data kind, which kinds are
-  carried and how unknown sections and older files are handled.
+- `data-file`: the app's data file in CSV and JSON: data kinds, the two layouts, unknown kinds and
+  older files.
 
 ### Modified Capabilities
-- `weight-export`: becomes "Vie tiedot"; the file is the `data-file` with every data kind, file
-  name changes.
-- `history-import`: entry becomes "Tuo tiedot"; reads `data-file` sections and shows them in the
-  preview; restores settings next to the owner details.
-- `weight-backup`: the backup file holds every data kind, not only weights.
+- `weight-export`: becomes "Vie tiedot" with a CSV/JSON choice; owner details line dropped.
+- `history-import`: entry becomes "Tuo tiedot"; reads both formats; preview notes unknown parts;
+  owner details no longer restored.
+- `weight-backup`: same writer (CSV); daily check by calendar day on app open.
 - `home-screen`: Asetukset section "Painot" renamed "Tiedot" with the new button names.
 
 ## Impact
 
-- App screens: Asetukset (names, section title), import preview (lists the data kinds).
-- Code: `history/CsvExport` and `history/HistoryParser` split into a section-based writer/reader,
-  `profile/ProfileLine` becomes one section, new settings section over `AppearancePrefs` and
-  `PeriodPrefs`; `backup/` uses the new writer; strings.
-- Health Connect: unchanged (weights read and written as today).
-- Scale, widget, build/CI: untouched.
-- Compatibility: older app versions read the new file's weights (the weight table keeps its
-  header) but ignore the new section lines; this app reads every older file.
+- App screens: Asetukset (names, format dialog), import preview (unknown parts note).
+- Code: new pure `data/` package (data model, CSV and JSON writer/reader); `history/CsvExport` and
+  the `#profile;` handling in `HistoryParser` move behind it; `profile/ProfileLine` removed;
+  `backup/` uses the new writer; strings. JSON via `org.json` (in Android; Robolectric covers it in
+  unit tests), no new dependency.
+- Health Connect: unchanged. Scale, widget, build/CI: untouched.

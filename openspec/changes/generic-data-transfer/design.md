@@ -3,53 +3,47 @@
 ## Context
 
 Export (`history/CsvExport`), backup (`backup/AndroidBackup.writeExport`) and import
-(`history/HistoryParser`, `ui/MainViewModel` import flow) are written around weights; the owner
-details ride along as a special first line (`profile/ProfileLine`). Adding the next data kind the
-same way means touching all three paths again. Settings live in `AppearancePrefs` (theme) and
-`PeriodPrefs` (chart period).
+(`history/HistoryParser`, the import flow in `ui/MainViewModel`) are written around weights; the
+owner details ride along as a `#profile;` first line (`profile/ProfileLine`). The backup runs after
+each save/import/delete and when the home screen opens with the last success over 24 hours old
+(`backup/WeightBackup`).
 
 ## Goals / Non-Goals
 
-**Goals:** one file format where a data kind is a section; adding a kind = one new section
-definition plus registering it; older files and OKOK still import; the backup follows for free.
+**Goals:** one data model, two formats (CSV, JSON); adding a data kind = one new part in the model
+and in both codecs; older files and OKOK still import; backup reuses the same writer.
 
-**Non-goals:** choosing per kind what to import (all known kinds are restored); JSON or zip
-formats; carrying device-bound state; merging settings (the file's values win).
+**Non-goals:** other formats; carrying owner details or settings; per-kind import choice;
+background (WorkManager) backups.
 
 ## Decisions
 
-1. **Keep a semicolon CSV with `#` section lines** rather than JSON. The user keeps the export
-   readable in a spreadsheet (product decision "Readable CSV export"), the weight table stays as it
-   is, and older app versions still find the weights (their parser skips the `#` lines it does not
-   know only partly; acceptable, old versions are not in use). JSON was the alternative: more
-   generic, but unreadable in a spreadsheet and a second weight format to keep.
-2. **Two section shapes**: value section `#<kind>;a=1|b=2` (one line) and table section
-   `#table;<kind>` + header + rows. Covers single values (profile, settings, later goal weight) and
-   lists (weights, later steps). A version line `#terveyslappu;version=2` marks the new format.
-3. **Section codec per kind** (pure, in a new `data/` package): an interface with `kind`, `encode`
-   (to lines) and `decode` (from a value map or a table's lines) returning a typed value; the
-   `DataFile` writer/reader iterates over a registered list. Weights keep their existing row
-   writer and the existing `HistoryParser` table reader, so OKOK and other histories keep one
-   parser. `ProfileLine` becomes the `profile` codec.
-4. **Reading**: if the first non-blank line is the version line, split the file into sections;
-   unknown kinds are collected into `unknownKinds`; else fall back to today's path (optional
-   `#profile;` line + history table). The result is a `DataBundle` (weights parse result, profile,
-   settings, unknown kinds) that the preview and the import use.
-5. **Restoring**: profile keeps "fill only empty" (owner-profile decision); settings overwrite,
-   since they always have a value and the user chose the file. Done after the weights are written,
-   so a cancelled import changes nothing.
-6. **Backup triggers** gain `profile` and `settings` reasons (debounced by the existing request).
-7. **Names**: "Vie tiedot", "Tuo tiedot", section "Tiedot", file `terveyslappu-<date>.csv`. Log
-   events stay (`import.*`, `export.*`), with `kinds=` listing the sections written/read and
-   `unknown=` for ignored ones.
+1. **Data model** (pure, new `data/` package): `DataSet(weights: List<ExportRow>, …)` — one field
+   per data kind; `ExportRow` moves here from `history/`. Reading gives `DataRead(set, skipped,
+   layout, unknownKinds)` for the preview.
+2. **Two codecs over the model**: `CsvData` (version line, `#table;<kind>` sections; the weight
+   rows keep today's columns so the existing table reader and older files stay one path) and
+   `JsonData` (`org.json`, one array per kind, `raw` as an object). Import picks JSON when the
+   first non-blank character is `{`, else CSV/XLS as today.
+3. **CSV reading**: version line present → split into sections, the `weights` section goes through
+   `HistoryParser` as a table, unknown kinds collected; absent → today's path, with a leading
+   `#profile;` line dropped. `ProfileLine` and the profile restore in the import are removed.
+4. **JSON weights** run through the same plausibility rules as table rows (range, future, duplicate)
+   so the preview's counts mean the same for both formats.
+5. **Export format choice**: a small dialog (CSV / JSON) before the save picker; the picker's MIME
+   type and suggested name follow the choice.
+6. **Backup stays CSV** (the user left it to us): the existing backup file stays valid with no
+   migration, and it remains readable in a spreadsheet. Writer shared with export.
+7. **Backup timing**: event-driven after changes to carried data (unchanged triggers) + on app open
+   when no success yet today (local calendar day) instead of "over 24 hours". The write is a local
+   file write through the chosen document provider; cheap enough to run on every change. No
+   background job: Samsung's battery rules make those unreliable and the daily check plus the
+   stale/failed notice already cover a missed write.
+8. **Names and logs**: "Vie tiedot", "Tuo tiedot", section "Tiedot"; `export.write` gains
+   `format=`, `import.read` gains `format=json` and `unknown=`.
 
 ## Risks / Trade-offs
 
-- A settings value restored from an old file can surprise (e.g. theme flips) → the preview lists
-  "Asetukset" as restored.
-- An older app version reading a new file sees the `#` lines as unreadable rows and skips them;
+- Owner details no longer move to a new phone → three fields to type again; accepted by the user.
+- An older app version reading a new CSV sees the `#` lines as unreadable rows and skips them;
   harmless.
-
-## Open Questions
-
-None blocking; see the proposal's questions to the user (settings carried, settings overwrite).

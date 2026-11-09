@@ -1,12 +1,16 @@
 ## MODIFIED Requirements
 
 ### Requirement: Pick a history file
-Asetukset SHALL offer "Tuo tiedot", which opens the system file picker for a text file or an old
-binary Excel file (`.xls`) and reads the chosen file without any other permission. The app's own
-data file and other apps' weight histories SHALL both be accepted.
+Asetukset SHALL offer "Tuo tiedot", which opens the system file picker for a text file (CSV or
+JSON) or an old binary Excel file (`.xls`) and reads the chosen file without any other permission.
+The format SHALL be recognised from the content, not the file name.
 
 #### Scenario: Pick a file
 - **WHEN** the user taps Tuo tiedot and picks a CSV file
+- **THEN** the app reads it and shows the preview
+
+#### Scenario: Pick a JSON file
+- **WHEN** the user picks a JSON file exported by this app
 - **THEN** the app reads it and shows the preview
 
 #### Scenario: Pick an Excel file
@@ -19,40 +23,25 @@ data file and other apps' weight histories SHALL both be accepted.
 
 ### Requirement: Preview before import
 The app SHALL show, before writing anything, the number of weights, the first and last date, the
-first and last three rows, the skipped count with reasons, the other data kinds the file holds that
-will be restored (owner details, settings), and the parts of the file this app version cannot use;
-it SHALL import only after confirmation. A file holding no weights but other known data SHALL still
-be importable.
+first and last three rows, the skipped count with reasons and, when the file has parts this app
+version does not know, that they will not be used; it SHALL import only after confirmation.
 
 #### Scenario: Confirm
 - **WHEN** the user taps Tuo in the preview
-- **THEN** the weights are written to Health Connect and the other data kinds are restored
+- **THEN** the weights are written to Health Connect
 
 #### Scenario: Cancel
 - **WHEN** the user taps Peruuta
-- **THEN** nothing is written or changed
+- **THEN** nothing is written
 
 #### Scenario: Unknown parts
-- **WHEN** the file has a section this app does not know
+- **WHEN** the file has a data kind this app does not know
 - **THEN** the preview says part of the file is from a newer app version and is not used, and the
-  rest imports as usual
+  weights import as usual
 
-#### Scenario: Only settings
-- **WHEN** the file has owner details and settings but no weights
-- **THEN** the preview offers to restore them
+## REMOVED Requirements
 
-## ADDED Requirements
-
-### Requirement: Restore settings
-When an imported data file holds a `#settings;` line, the app SHALL, on confirming the import, set
-the theme and the chart period from it; values the app does not know SHALL be ignored and leave
-that setting as it is.
-
-#### Scenario: New phone
-- **GIVEN** the phone's theme is Järjestelmä
-- **WHEN** the user imports a file with `#settings;theme=dark` and confirms
-- **THEN** the app turns dark
-
-#### Scenario: Unknown value
-- **WHEN** the line has `theme=purple`
-- **THEN** the theme stays as it was
+### Requirement: Restore owner details
+**Reason**: Owner details are static and no longer carried in the data file (generic-data-transfer).
+**Migration**: An older file's `#profile;` line is ignored (data-file "Older files"); the user
+enters the details in Asetukset → Omat tiedot.
