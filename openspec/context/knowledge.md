@@ -5,6 +5,21 @@ change with our code. Our own choices live in `product.md`, facts about the code
 Read the section a task touches before researching it again; add what a new search taught, with
 the source. No configuration, versions or other things that go stale.
 
+**Never read this whole file.** Find the topic in the index, then read only that section
+(`grep -n '^## '` gives the line numbers). Keep the index in step when adding a section.
+
+## Index
+
+| Section | What is there |
+|---|---|
+| Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
+| Charts | y-axis start and minimum span, one scale rule, time axis, dots by density, units, direction without colour |
+| Data files | CSV/JSON, versioned extensible files, unique export names |
+| Android | background work on Samsung |
+
+Sections marked *(generic)* hold no project facts and are waiting to move to the global
+knowledge in claude-config.
+
 ## Body weight data
 
 - **Daily weight is noisy.** A healthy adult's weight moves about 0.5–2 kg from day to day, mostly
@@ -18,7 +33,7 @@ the source. No configuration, versions or other things that go stale.
   before food) to cut the noise.
 - **Rate of change** is best shown per week (kg/vko), the unit diet advice uses.
 
-## Charts
+## Charts *(generic)*
 
 - **Line charts may start above zero.** Unlike bars (length = value), a line encodes change, so
   the y-axis can cover just the data with some margin.
@@ -40,7 +55,7 @@ the source. No configuration, versions or other things that go stale.
 - **Direction not by colour alone:** arrows or signs next to changes (accessibility, colour
   blindness); gain/loss colours stay neutral when the "good" direction depends on the user.
 
-## Data files
+## Data files *(generic)*
 
 - **CSV and JSON** are what other apps import and export; CSV for spreadsheets, JSON for
   structured data (nested raw values). Recognise the format from the content, not the file name.
