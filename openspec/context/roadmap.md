@@ -28,13 +28,8 @@ Phases in order; one OpenSpec change each unless noted.
   or for a while in the widget itself) and from there the user can delete it, i.e. start the
   weigh-in again. Same change family as the redo in the next item; do this first.
 
-- **Next: weigh-in without any tap + redo** (user 2026-11-09: wanted). A background Bluetooth
-  scan with a filter saves the weight when the user just steps on the scale (the tap starts
-  stay). Plus an easy way to start a weigh-in again and delete the previous result when needed
-  (the dialog's "Punnitse uudelleen" from weigh-in-button-redo can be reused, e.g. from a
-  notification).
-  Needs from the first weigh-in log: whether `name=Yoda1` is in the advertisement itself and
-  whether the company id (`key=`) is stable, since background scans must be filtered.
+- ~~**Weigh-in without any tap**~~: dropped (user 2026-11-09: a background scan costs battery;
+  not worth it).
 
 - ~~**Before scale-reading-archive: decode the unknown scale bytes**~~: done 2026-11-09 from
   openScale's decoders (bytes 4-5 product id, 7-12 the scale's address; see product.md). Still to
@@ -49,7 +44,7 @@ Phases in order; one OpenSpec change each unless noted.
   packet; the company id changes per weighing, so a background scan filters by name or address.
 - ~~**owner-profile**~~: done 2026-11-09 (Asetukset → Omat tiedot: birth year, height, gender; height
   also to Health Connect; carried in the export/backup `#profile;` line and restored by Tuo painot).
-  BMI and other derived values: a later change.
+  BMI and other derived values: see "Next: derived values".
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
 - ~~**main-screen-refresh**~~: done 2026-11-09 (simple home per mockup B, Historia and Asetukset
   screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).
@@ -64,9 +59,8 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**home-period**~~: done 2026-11-09 (home card line 1 vk by default, 1 kk / 3 kk from a
   label under it, remembered).
 - ~~**chart-dots**~~: done 2026-11-09 (weights as dots on both charts when they fit).
-- **Trend line** (idea 2026-11-09, not asked yet): a smoothed line (e.g. 7-day moving average) over
-  the daily dots, the usual way weight apps separate the trend from water-weight noise.
-- **Goal weight and forecast** on the chart (user 2026-11-09: later).
+- ~~Trend line~~ and ~~goal weight and forecast~~: dropped (user 2026-11-09: not wanted).
+- **Next: derived values** (BMI and others from weight + owner details; user 2026-11-09).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
