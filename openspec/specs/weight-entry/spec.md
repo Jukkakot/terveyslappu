@@ -51,8 +51,9 @@ SHALL NOT save anything else.
 
 ### Requirement: Recent weights from Health Connect
 The app SHALL show on Historia the weights this app wrote in the period chosen for the chart, read
-from Health Connect, newest first, each with its date, time and value. Weights written by other apps
-SHALL NOT be listed (user 2026-11-09: they are inaccurate hand entries).
+from Health Connect, newest first, each with its date, time and value; the date SHALL include the
+year when the weight is not from the current year. Weights written by other apps SHALL NOT be listed
+(user 2026-11-09: they are inaccurate hand entries).
 
 #### Scenario: Weights from several apps
 - **GIVEN** Health Connect holds weights written by this app and by another app
@@ -62,6 +63,10 @@ SHALL NOT be listed (user 2026-11-09: they are inaccurate hand entries).
 #### Scenario: List follows the period
 - **WHEN** the user chooses the period 1 kk
 - **THEN** the list shows this app's weights of the last 30 days
+
+#### Scenario: Old weight
+- **WHEN** the list shows a weight from 15.9.2024 at 8.33
+- **THEN** its row reads "Su 15.9.2024 8.33"
 
 #### Scenario: Refresh after saving
 - **WHEN** a weight is saved
