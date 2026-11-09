@@ -7,17 +7,17 @@ so a restored URI would only show a failing backup; cloud backup requires end-to
 
 ## 1. Backup rules
 
-- [ ] 1.1 Manifest: `allowBackup="true"`; keep `dataExtractionRules`
-- [ ] 1.2 `data_extraction_rules.xml`: `cloud-backup` with `disableIfNoEncryptionCapabilities="true"`
+- [x] 1.1 Manifest: `allowBackup="true"`; keep `dataExtractionRules`
+- [x] 1.2 `data_extraction_rules.xml`: `cloud-backup` with `disableIfNoEncryptionCapabilities="true"`
       and `device-transfer`, each including only the shared prefs `profile`, `appearance`, `chart`
       and the file `raw-archive.jsonl`; comment why `backup`, `weighin` and `logs` are left out
-- [ ] 1.3 Update the "not backed up" comment in `PrefsBackupStore`
-- [ ] 1.4 Unit test reading the rules file: both sections include exactly the allow-list and never
+- [x] 1.3 Update the "not backed up" comment in `PrefsBackupStore`
+- [x] 1.4 Unit test reading the rules file: both sections include exactly the allow-list and never
       `logs`, `backup` or `weighin` (guards against the log or the backup URI slipping in)
-- [ ] 1.5 `./gradlew test lint assembleDebug`
+- [x] 1.5 `./gradlew test lint assembleDebug`
 
 ## 2. Docs
 
-- [ ] 2.1 product.md: decision under "Decisions and reasons" (Android carries app data, the backup
+- [x] 2.1 product.md: decision under "Decisions and reasons" (Android carries app data, the backup
       file carries weights); questions.md: fold Q3 if the user has decided; roadmap phase 4 note
-- [ ] 2.2 Bump MINOR in `gradle.properties`
+- [x] 2.2 Bump MINOR in `gradle.properties`

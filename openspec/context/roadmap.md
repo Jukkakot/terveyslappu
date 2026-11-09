@@ -13,8 +13,8 @@ Phases in order; one OpenSpec change each unless noted.
 3. **history-import** (done 2026-11-08 in autopilot, archived; the history is imported, closed): import the OKOK export into Health Connect with the original timestamps.
 4. **Moving to a new phone**: interim answer done and archived 2026-11-08 (weight-backup, autopilot): an
    opt-in backup file in the user's own cloud, rewritten after every change and shown on the
-   main screen; the history import restores it. Still open: whether to keep this or rely on
-   Samsung Cloud / Health Connect export. Original note: decide from phase 1 findings (Samsung Cloud, Health Connect export
+   main screen; the history import restores it. Decided 2026-11-09 (Q3): keep it, and let
+   Android's backup and Smart Switch carry the app's own data (app-data-transfer). Original note: decide from phase 1 findings (Samsung Cloud, Health Connect export
    or an app-managed cloud file with visible sync status).
 
 ## Backlog

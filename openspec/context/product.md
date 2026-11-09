@@ -31,6 +31,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 
 ## Decisions and reasons
 
+- **Moving to a new phone** (user 2026-11-09, Q3): the backup file in the user's own cloud
+  carries the weights (Tuo tiedot restores it); Android's own backup (encrypted Google cloud
+  backup and Smart Switch transfer) carries the app's own data: owner details, theme, periods,
+  raw-data archive. The backup file setting, the log and the weigh-in state stay behind
+  (app-data-transfer). Samsung Cloud is not relied on.
+
 - **Rejected: automation on top of the OKOK app** (accessibility robot): the ad timers cannot be
   skipped.
 - **Dropped: sending weights to the OKOK cloud** (imitating its private API): fragile, and the

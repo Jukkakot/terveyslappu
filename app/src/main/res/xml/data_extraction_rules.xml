@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nothing of the app is backed up: weights live in Health Connect, the log stays on the phone. -->
+<!--
+    Android backup (encrypted cloud) and phone-to-phone transfer carry an allow-list of app data:
+    owner details, appearance, chart periods and the raw-data archive. Left out on purpose:
+    "backup" (the backup file's URI; its permission does not move, so it would only show a
+    failing backup), "weighin" (the previous weigh-in's lingering-broadcast state) and logs/.
+    Weights live in Health Connect and move with the backup file. DataTransferRulesTest guards
+    the list.
+-->
 <data-extraction-rules>
-    <cloud-backup>
-        <exclude domain="root" />
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="sharedpref" path="profile.xml" />
+        <include domain="sharedpref" path="appearance.xml" />
+        <include domain="sharedpref" path="chart.xml" />
+        <include domain="file" path="raw-archive.jsonl" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="root" />
+        <include domain="sharedpref" path="profile.xml" />
+        <include domain="sharedpref" path="appearance.xml" />
+        <include domain="sharedpref" path="chart.xml" />
+        <include domain="file" path="raw-archive.jsonl" />
     </device-transfer>
 </data-extraction-rules>

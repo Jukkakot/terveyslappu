@@ -18,7 +18,7 @@ import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 
-/** Backup status in SharedPreferences (app-private, not backed up: allowBackup=false). */
+/** Backup status in SharedPreferences (app-private; left out of Android backup and transfer: the file permission does not move). */
 class PrefsBackupStore(context: Context) : BackupStore {
     private val prefs = context.getSharedPreferences("backup", Context.MODE_PRIVATE)
 
