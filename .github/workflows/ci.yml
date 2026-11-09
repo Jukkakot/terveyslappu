@@ -14,8 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # One job tests, lints and builds the release APK once; on main it also replaces the rolling
-  # release `latest-build`, which Obtainium follows (.claude/CLAUDE.md → Build, release, logs).
+  # One job tests, lints and builds the release APK once; on main it also publishes it as release
+  # `v<version>` (the tag is what Obtainium shows) and keeps the five newest releases
+  # (.claude/CLAUDE.md → Build, release, logs).
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -58,13 +59,18 @@ jobs:
           name: reports
           path: app/build/reports
           retention-days: 7
-      - name: Replace the rolling release
+      - name: Publish the release
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.key.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/release/app-release.apk terveyslappu.apk
           git log -1 --format=%s > "$RUNNER_TEMP/notes.md"
-          gh release delete latest-build --cleanup-tag --yes || true
-          gh release create latest-build terveyslappu.apk --target "$GITHUB_SHA" --latest \
+          tag="${VERSION_NAME%% *}" # "v1.0.24 (abc1234)" -> v1.0.24
+          gh release delete latest-build --cleanup-tag --yes || true # the old rolling release
+          gh release delete "$tag" --cleanup-tag --yes || true # a rerun of the same build
+          gh release create "$tag" terveyslappu.apk --target "$GITHUB_SHA" --latest \
             --title "Terveyslappu $VERSION_NAME" --notes-file "$RUNNER_TEMP/notes.md"
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[5:] | .[].tagName' |
+            xargs -r -I{} gh release delete {} --cleanup-tag --yes

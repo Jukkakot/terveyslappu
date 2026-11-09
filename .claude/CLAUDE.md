@@ -47,8 +47,8 @@ archive); a `UserPromptSubmit` hook repeats this.
   the Android SDK to `~/android-sdk` and writes `local.properties`. Maven Central answers 429 in
   cloud containers; claude-config's `install.sh` routes Gradle and Robolectric (build property
   `robolectricRepoUrl`) through Google's mirror.
-- Release: every green code push to `main` replaces the GitHub release `latest-build` with
-  `terveyslappu.apk` (`.github/workflows/ci.yml`). Version `MAJOR.MINOR.BUILD` (e.g. 1.0.24):
+- Release: every green code push to `main` publishes GitHub release `v<version>` with
+  `terveyslappu.apk` and keeps the five newest (`.github/workflows/ci.yml`); Obtainium shows the tag. Version `MAJOR.MINOR.BUILD` (e.g. 1.0.24):
   MAJOR.MINOR = `appVersion` in `gradle.properties`, BUILD = commits outside the CI-ignored paths
   (never resets), version code = all commits. Bump MINOR in the last task of a change the user
   notices, MAJOR when an update breaks something; fixes only raise BUILD. Menu shows `v1.0.24`,
