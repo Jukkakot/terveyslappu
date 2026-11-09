@@ -39,6 +39,10 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**Before scale-reading-archive: decode the unknown scale bytes**~~: done 2026-11-09 from
   openScale's decoders (bytes 4-5 product id, 7-12 the scale's address; see product.md). Still to
   confirm from the next shared weigh-in log (`addr=` against bytes 7-12).
+- ~~**scale-reading-archive**~~: done 2026-11-09 (raw packet fields per weigh-in in app storage and
+  in the export/backup `raw` column).
+- **okok-xls-import**: implemented 2026-11-09 (Tuo historia reads the OKOK `.xls`); the real file
+  still to try on the phone.
 - **Phone owner's details** (user 2026-11-09, later, not first priority): one user per phone, no
   profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
   from the raw data.
