@@ -7,9 +7,13 @@ user can share it from the app, since there is no cable or debugger in this proj
 ## Requirements
 
 ### Requirement: Log file
-The app SHALL write a log file on the phone with timestamped lines for app start (with version),
-Health Connect availability and permission results, saves, reads, deletes and every error with its
-cause. The file SHALL keep at most the latest 1 MB of lines.
+The app SHALL write a log file on the phone with timestamped lines for app start (with version and
+the commit it was built from), Health Connect availability and permission results, saves, reads,
+deletes and every error with its cause. The file SHALL keep at most the latest 1 MB of lines.
+
+#### Scenario: Start is logged
+- **WHEN** the app starts
+- **THEN** the log gets a start line with the version (e.g. 1.0.24) and the commit
 
 #### Scenario: Save is logged
 - **WHEN** a weight is saved
