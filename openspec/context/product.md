@@ -56,7 +56,9 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Keep all raw data, show only the weight** (user 2026-11-09, replaces "no body composition"):
   everything the scale sends and every column of imported history is kept as received, without
   calculations; derived values (BMI, body fat ...) may be computed later in the app from the raw
-  data. Changes scale-reading-archive and okok-xls-import.
+  data. Kept in app storage (`raw/RawArchive`, JSON lines keyed by the weight's second) and in
+  the export/backup's `raw` column, since Health Connect has no record for it. Changes
+  scale-reading-archive and okok-xls-import.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

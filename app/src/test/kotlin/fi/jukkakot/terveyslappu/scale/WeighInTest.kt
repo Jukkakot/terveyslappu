@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.scale
 
+import fi.jukkakot.terveyslappu.raw.MemoryRawStore
 import fi.jukkakot.terveyslappu.scale.ScalePacketTest.Companion.packet
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
@@ -126,6 +127,7 @@ class WeighInTest {
     /** Made-up store: saves upsert by time, deletes remove; packets come per scan from [scans]. */
     private class Store {
         val weights = mutableMapOf<Instant, Double>()
+        val raw = MemoryRawStore()
         var failDelete = false
     }
 
@@ -140,6 +142,7 @@ class WeighInTest {
                 if (store.failDelete) throw IOException("made-up failure")
                 store.weights.remove(t)
             },
+            archive = store.raw,
         )
     }
 
@@ -198,6 +201,45 @@ class WeighInTest {
         settle()
         assertEquals(WeighInState.NotFound(heard = false), w.state.value)
         assertEquals(82.5, w.removed.value?.first)
+    }
+
+    @Test
+    fun `saved weigh-in keeps the deciding packet raw`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        val entry = store.raw.get(wallStart.plusMillis(100).epochSecond)!!
+        assertEquals(WeighIn.SOURCE, entry.source)
+        assertEquals("825", entry.fields["weight_raw"])
+        assertEquals("12c0", entry.fields["key"])
+        assertEquals("0", entry.fields["impedance"])
+    }
+
+    @Test
+    fun `weigh again drops the raw data and undo brings it back`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), source())
+        w.start(backgroundScope)
+        settle()
+        val kept = store.raw.all()
+        w.redo(backgroundScope)
+        runCurrent()
+        assertEquals(emptyList(), store.raw.all())
+        w.undo(backgroundScope)
+        runCurrent()
+        assertEquals(kept, store.raw.all())
+    }
+
+    @Test
+    fun `new weight after weighing again keeps only its own raw data`() = runTest {
+        val store = Store()
+        val w = redoWeighIn(store, stable(825), stable(821))
+        w.start(backgroundScope)
+        settle()
+        w.redo(backgroundScope)
+        settle()
+        assertEquals(listOf("821"), store.raw.all().map { it.fields["weight_raw"] })
     }
 
     @Test

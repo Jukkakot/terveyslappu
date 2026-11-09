@@ -33,6 +33,7 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
             weights.deleteScale(time)
             (app as TerveysApp).backup.request("weighin")
         },
+        archive = (app as TerveysApp).rawArchive,
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )

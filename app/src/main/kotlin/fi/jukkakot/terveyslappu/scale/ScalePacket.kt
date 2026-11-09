@@ -8,7 +8,8 @@ enum class ScaleUnit { KG, JIN, LB, ST_LB }
  * One decoded reading of the Prego P814B (`Yoda1`, OKOK "C0" layout): weight in [kg] (converted
  * from the unit the scale shows), the scale's own [stable] flag and [impedanceOhm] (0 = none).
  * Layout from openspec/context/product.md: bytes 0-1 weight big-endian, 2-3 impedance /10,
- * byte 6 attributes (bit 0 stable, bits 1-2 decimals, bits 3-4 unit).
+ * byte 6 attributes (bit 0 stable, bits 1-2 decimals, bits 3-4 unit). [ScalePacket.rawFields]
+ * names every byte as sent.
  */
 data class ScaleReading(val kg: Double, val stable: Boolean, val unit: ScaleUnit, val impedanceOhm: Double)
 
@@ -41,6 +42,37 @@ object ScalePacket {
             ScaleUnit.ST_LB -> (data[0].toInt() and 0xFF) * STONE_IN_KG + (data[1].toInt() and 0xFF) / divider * LB_IN_KG
         }
         return ScaleReading(round2(kg), stable, unit, u16(data[2], data[3]) / 10.0)
+    }
+
+    /**
+     * The packet's fields as the scale sent them, for the raw archive (openScale `OkOkHandler` C0
+     * layout): bytes 0-1 raw weight, 2-3 impedance (tenths of an ohm), 4-5 product id, 6 attributes,
+     * 7-12 the scale's Bluetooth address, `extra` for anything after. A packet shorter than 13
+     * bytes keeps only `packet` and `key`.
+     */
+    fun rawFields(companyId: Int, data: ByteArray): LinkedHashMap<String, String> {
+        val fields = linkedMapOf("packet" to data.toHex(), "key" to "%04x".format(companyId and 0xFFFF))
+        if (data.size < MIN_LENGTH) return fields
+        val attrib = data[IDX_ATTRIB].toInt() and 0xFF
+        fields["weight_raw"] = u16(data[0], data[1]).toString()
+        fields["decimals"] = when ((attrib shr 1) and 0x3) {
+            1 -> "0"
+            2 -> "2"
+            else -> "1"
+        }
+        fields["unit"] = when (ScaleUnit.entries[(attrib shr 3) and 0x3]) {
+            ScaleUnit.KG -> "kg"
+            ScaleUnit.JIN -> "jin"
+            ScaleUnit.LB -> "lb"
+            ScaleUnit.ST_LB -> "st_lb"
+        }
+        fields["stable"] = (attrib and 0x01).toString()
+        fields["impedance"] = u16(data[2], data[3]).toString()
+        fields["product_id"] = data.copyOfRange(4, 6).toHex()
+        fields["attrib"] = "%02x".format(attrib)
+        fields["mac"] = data.copyOfRange(7, MIN_LENGTH).joinToString(":") { "%02X".format(it.toInt() and 0xFF) }
+        if (data.size > MIN_LENGTH) fields["extra"] = data.copyOfRange(MIN_LENGTH, data.size).toHex()
+        return fields
     }
 
     private fun u16(msb: Byte, lsb: Byte): Int = ((msb.toInt() and 0xFF) shl 8) or (lsb.toInt() and 0xFF)

@@ -26,6 +26,42 @@ class ScalePacketTest {
     }
 
     @Test
+    fun `raw fields name the whole packet as sent`() {
+        val data = "033a1403abcd01aabbccddeeff99".hexToBytes()
+        assertEquals(
+            linkedMapOf(
+                "packet" to "033a1403abcd01aabbccddeeff99",
+                "key" to "12c0",
+                "weight_raw" to "826",
+                "decimals" to "1",
+                "unit" to "kg",
+                "stable" to "1",
+                "impedance" to "5123",
+                "product_id" to "abcd",
+                "attrib" to "01",
+                "mac" to "AA:BB:CC:DD:EE:FF",
+                "extra" to "99",
+            ),
+            ScalePacket.rawFields(0x12C0, data),
+        )
+    }
+
+    @Test
+    fun `raw fields of a 13-byte packet in pounds have no extra`() {
+        val fields = ScalePacket.rawFields(0x00C0, packet(raw = 1819, attrib = 0b1_0100, impedance = 0))
+        assertEquals("lb", fields["unit"])
+        assertEquals("2", fields["decimals"])
+        assertEquals("0", fields["stable"])
+        assertEquals("0", fields["impedance"])
+        assertEquals(null, fields["extra"])
+    }
+
+    @Test
+    fun `short packet keeps only its bytes and key`() {
+        assertEquals(linkedMapOf("packet" to "0339", "key" to "12c0"), ScalePacket.rawFields(0x12C0, "0339".hexToBytes()))
+    }
+
+    @Test
     fun `two decimals`() {
         // bits 1-2 = 2 -> divide by 100
         assertEquals(82.45, ScalePacket.decode(packet(raw = 8245, attrib = 0b0_0101))!!.kg)

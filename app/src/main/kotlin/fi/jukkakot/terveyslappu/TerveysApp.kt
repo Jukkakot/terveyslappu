@@ -13,6 +13,7 @@ import androidx.core.net.toUri
 import fi.jukkakot.terveyslappu.backup.PrefsBackupStore
 import fi.jukkakot.terveyslappu.backup.WeightBackup
 import fi.jukkakot.terveyslappu.backup.writeExport
+import fi.jukkakot.terveyslappu.raw.RawArchive
 import fi.jukkakot.terveyslappu.weight.HealthConnectWeights
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,9 @@ class TerveysApp : Application() {
 
     lateinit var backup: WeightBackup
         private set
+
+    /** Raw data behind the weights (scale packets, imported fields), in app storage. */
+    val rawArchive: RawArchive by lazy { RawArchive(File(filesDir, "raw-archive.jsonl")) }
 
     override fun onCreate() {
         super.onCreate()

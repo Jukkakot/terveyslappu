@@ -50,7 +50,7 @@ class ScaleScanner(private val context: Context) : PacketSource {
                         if (!looksLikeScale) continue
                         matched = true
                         scalePackets++
-                        val packet = RawPacket(atMs, companyId, data.valueAt(i), result.rssi, name)
+                        val packet = RawPacket(atMs, companyId, data.valueAt(i), result.rssi, name, result.device.address)
                         AppLog.d(PacketLog.EVENT, "", *PacketLog.fields(packet))
                         trySend(packet)
                     }

@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.history.CsvExport
 import fi.jukkakot.terveyslappu.history.ExportRow
 import fi.jukkakot.terveyslappu.log.AppLog
@@ -53,8 +54,13 @@ fun Context.appLabel(packageName: String): String = try {
 suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<ExportRow> {
     val ownLabel = context.getString(R.string.recent_this_app)
     val labels = HashMap<String, String>()
+    val archive = (context.applicationContext as TerveysApp).rawArchive
     return weights.all(Instant.now()).map {
-        ExportRow(it.time, it.zoneOffset, it.kg, if (it.own) ownLabel else labels.getOrPut(it.sourcePackage) { context.appLabel(it.sourcePackage) })
+        ExportRow(
+            it.time, it.zoneOffset, it.kg,
+            if (it.own) ownLabel else labels.getOrPut(it.sourcePackage) { context.appLabel(it.sourcePackage) },
+            raw = if (it.own) archive.get(it.time.epochSecond) else null,
+        )
     }
 }
 

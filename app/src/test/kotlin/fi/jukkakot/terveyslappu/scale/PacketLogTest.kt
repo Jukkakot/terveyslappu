@@ -16,8 +16,15 @@ class PacketLogTest {
 
     @Test
     fun `a packet survives the log line`() {
-        val p = RawPacket(412, 0x12C0, packet(0x0339, 1), -61, "Yoda1")
+        val p = RawPacket(412, 0x12C0, packet(0x0339, 1), -61, "Yoda1", "AA:BB:CC:DD:EE:FF")
         assertEquals(p, PacketLog.parse(line(p)))
+    }
+
+    @Test
+    fun `older lines without addr still read`() {
+        val p = PacketLog.parse("2026-11-08T07:00:00.500+02:00 D scale.packet t=500 key=12c0 data=0339138b00000100000000000000 rssi=-59 name=Yoda1")!!
+        assertEquals(null, p.address)
+        assertEquals(500, p.atMs)
     }
 
     @Test
@@ -42,6 +49,9 @@ class PacketLogTest {
             "2026-11-08T07:00:00.500+02:00 D scale.packet t=500 key=12c0 data=0339138b00000100000000000000 rssi=-59 name=Yoda1",
             "2026-11-08T07:00:00.700+02:00 D scale.packet t=700 key=12c0 data=0339138b00000100000000000000 rssi=-59 name=Yoda1",
         )
-        assertEquals(StableResult(82.5, 500), PacketLog.replay(lines))
+        val result = PacketLog.replay(lines)!!
+        assertEquals(82.5 to 500L, result.kg to result.atMs)
+        // The second stable packet decides; it is the one kept raw.
+        assertEquals(700L, result.packet!!.atMs)
     }
 }

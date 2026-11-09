@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.history
 
+import fi.jukkakot.terveyslappu.raw.RawEntry
+import fi.jukkakot.terveyslappu.raw.RawFormat
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Instant
@@ -7,15 +9,15 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-/** One exported weight: when (with the record's own offset when known), kg and the writing app. */
-data class ExportRow(val time: Instant, val zoneOffset: ZoneOffset?, val kg: Double, val source: String)
+/** One exported weight: when (with the record's own offset when known), kg, the writing app and its kept raw data. */
+data class ExportRow(val time: Instant, val zoneOffset: ZoneOffset?, val kg: Double, val source: String, val raw: RawEntry? = null)
 
 /**
- * The weight-export CSV: `date;time;weight_kg;source`, oldest first, comma decimals (Finnish
- * spreadsheets), in the layout [HistoryParser] reads back.
+ * The weight-export CSV: `date;time;weight_kg;source;raw`, oldest first, comma decimals (Finnish
+ * spreadsheets), `raw` in [RawFormat] (empty when none), in the layout [HistoryParser] reads back.
  */
 object CsvExport {
-    const val HEADER = "date;time;weight_kg;source"
+    const val HEADER = "date;time;weight_kg;source;raw"
     private val date = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val time = DateTimeFormatter.ofPattern("HH:mm:ss")
 
@@ -26,7 +28,8 @@ object CsvExport {
             append(date.format(local)).append(';')
             append(time.format(local)).append(';')
             append(kg(row.kg)).append(';')
-            append(quote(row.source)).append('\n')
+            append(quote(row.source)).append(';')
+            append(row.raw?.let { quote(RawFormat.encode(it)) } ?: "").append('\n')
         }
     }
 

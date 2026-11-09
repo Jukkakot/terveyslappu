@@ -32,6 +32,7 @@ import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.history.HistoryWriter
 import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.WriteResult
+import fi.jukkakot.terveyslappu.raw.RawEntry
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -149,13 +150,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Undo of a delete: writes the weight back (delete-undo). */
-    fun restore(entry: WeightEntry) {
+    private val rawArchive get() = getApplication<TerveysApp>().rawArchive
+
+    /** Undo of a delete: writes the weight back with its raw data (delete-undo). */
+    fun restore(entry: WeightEntry, raw: RawEntry? = null) {
         viewModelScope.launch {
             val started = System.nanoTime()
             runCatching { weights.restore(entry) }
                 .onSuccess {
                     AppLog.i("weight.restore", "ok", "kg" to entry.kg, "time" to entry.time, "ms" to msSince(started))
+                    raw?.let { keepRaw("restore") { rawArchive.add(it) } }
                     load()
                     backup.request("restore")
                 }
@@ -172,7 +176,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { weights.delete(entry) }
                 .onSuccess {
                     AppLog.i("weight.delete", "ok", "id" to entry.id, "ms" to msSince(started))
-                    _messages.tryEmit(UiMessage(R.string.delete_done, action = UiAction(R.string.undo) { restore(entry) }))
+                    val raw = keepRaw("delete") { rawArchive.remove(entry.time.epochSecond) }
+                    _messages.tryEmit(UiMessage(R.string.delete_done, action = UiAction(R.string.undo) { restore(entry, raw) }))
                     load()
                     backup.request("delete")
                 }
@@ -183,7 +188,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val historyWriter = HistoryWriter({ batch -> weights.writeImported(batch, ZoneId.systemDefault()) })
+    private val historyWriter = HistoryWriter({ batch ->
+        weights.writeImported(batch, ZoneId.systemDefault())
+        keepRaw("import") { withContext(Dispatchers.IO) { rawArchive.addAll(batch.mapNotNull { it.raw }) } }
+    })
+
+    /** Archive trouble is logged and never fails the weight action itself. */
+    private inline fun <T> keepRaw(action: String, block: () -> T): T? = try {
+        block()
+    } catch (e: Exception) {
+        AppLog.e("raw.archive", e, action)
+        null
+    }
 
     /** Reads and parses the picked history file, then shows the preview (history-import). */
     fun onImportFile(uri: Uri) {

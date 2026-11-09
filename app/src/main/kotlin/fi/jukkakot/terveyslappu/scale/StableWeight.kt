@@ -3,8 +3,11 @@ package fi.jukkakot.terveyslappu.scale
 import fi.jukkakot.terveyslappu.weight.MAX_KG
 import fi.jukkakot.terveyslappu.weight.MIN_KG
 
-/** The weight a weigh-in settled on, and when (ms since the scan started) it first read stable. */
-data class StableResult(val kg: Double, val atMs: Long)
+/**
+ * The weight a weigh-in settled on, when (ms since the scan started) it first read stable, and the
+ * deciding [packet]: the latest stable packet of that weight (kept raw, scale-weigh-in).
+ */
+data class StableResult(val kg: Double, val atMs: Long, val packet: RawPacket? = null)
 
 /**
  * Decides the weight of one weigh-in from the scale's readings (scale-weigh-in spec, "Decide the
@@ -21,14 +24,15 @@ class StableWeight(private val quietMs: Long = DEFAULT_QUIET_MS) {
         private set
 
     /** Feeds one reading received at [atMs]; returns the result once decided. */
-    fun onReading(reading: ScaleReading, atMs: Long): StableResult? {
+    fun onReading(reading: ScaleReading, atMs: Long, packet: RawPacket? = null): StableResult? {
         result?.let { return it }
         val current = candidate
         if (current != null && current.kg == reading.kg) {
             // Same weight again: a second stable reading confirms it, an unstable one only counts as quiet.
-            return if (reading.stable || atMs - current.atMs >= quietMs) decide(current) else null
+            if (reading.stable) return decide(current.copy(packet = packet ?: current.packet))
+            return if (atMs - current.atMs >= quietMs) decide(current) else null
         }
-        candidate = if (reading.stable && reading.kg in MIN_KG..MAX_KG) StableResult(reading.kg, atMs) else null
+        candidate = if (reading.stable && reading.kg in MIN_KG..MAX_KG) StableResult(reading.kg, atMs, packet) else null
         return null
     }
 

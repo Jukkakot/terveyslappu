@@ -1,6 +1,9 @@
 package fi.jukkakot.terveyslappu.scale
 
 import fi.jukkakot.terveyslappu.log.AppLog
+import fi.jukkakot.terveyslappu.raw.MemoryRawStore
+import fi.jukkakot.terveyslappu.raw.RawEntry
+import fi.jukkakot.terveyslappu.raw.RawStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -43,6 +46,7 @@ sealed interface WeighInState {
  * @param save writes kg at a time to Health Connect
  * @param previous the latest weight before a time (kg, time), for the change shown after saving
  * @param delete removes the weight saved at a time (weigh again); writing it back uses [save]
+ * @param archive keeps the deciding packet's raw fields with the saved weight (dropped and restored with it)
  */
 class WeighIn(
     private val source: PacketSource,
@@ -53,6 +57,7 @@ class WeighIn(
     private val tickMs: Long = TICK_MS,
     private val previous: suspend (before: Instant) -> Pair<Double, Instant>? = { null },
     private val delete: suspend (kg: Double, time: Instant) -> Unit = { _, _ -> },
+    private val archive: RawStore = MemoryRawStore(),
 ) {
     private val openedMs = elapsedMs()
     private val _state = MutableStateFlow<WeighInState>(WeighInState.Preparing)
@@ -60,6 +65,8 @@ class WeighIn(
 
     private var job: Job? = null
     private var decided: Pair<Double, Instant>? = null
+    private var decidedRaw: RawEntry? = null
+    private var removedRaw: RawEntry? = null
     private var saved: WeighInState.Saved? = null
 
     private val _removed = MutableStateFlow<Pair<Double, Instant>?>(null)
@@ -95,6 +102,7 @@ class WeighIn(
             AppLog.i("weighin.redo", "ok", "kg" to weight.first, "time" to weight.second)
             saved = null
             _removed.value = weight
+            removedRaw = keepRaw("remove") { archive.remove(weight.second.epochSecond) }
             scan()
         }
     }
@@ -105,11 +113,13 @@ class WeighIn(
         job?.cancel()
         AppLog.i("weighin.undo", "", "kg" to weight.first, "time" to weight.second)
         decided = weight
+        decidedRaw = removedRaw
         job = scope.launch { saveDecided() }
     }
 
     private suspend fun scan() {
         decided = null
+        decidedRaw = null
         run {
             val scanStartMs = elapsedMs()
             val scanStartWall = now()
@@ -133,7 +143,9 @@ class WeighIn(
                 return
             }
             AppLog.i("scale.stable", "", "kg" to result.kg, "t" to result.atMs)
-            decided = result.kg to scanStartWall.plusMillis(result.atMs)
+            val time = scanStartWall.plusMillis(result.atMs)
+            decided = result.kg to time
+            decidedRaw = result.packet?.let { RawEntry(time.epochSecond, SOURCE, ScalePacket.rawFields(it.companyId, it.data)) }
             saveDecided()
         }
     }
@@ -157,6 +169,7 @@ class WeighIn(
             save(kg, time)
             AppLog.i("weighin.save", "ok", "kg" to kg, "time" to time, "ms" to elapsedMs() - started)
             AppLog.i("weighin.total", "", "ms" to elapsedMs() - openedMs)
+            decidedRaw?.let { raw -> keepRaw("add") { archive.add(raw) } }
             val change = try {
                 previous(time)?.let { (prevKg, prevTime) -> WeightChange(kg - prevKg, prevTime) }
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -166,6 +179,7 @@ class WeighIn(
                 null
             }
             _removed.value = null
+            removedRaw = null
             saved = WeighInState.Saved(kg, change).also { _state.value = it }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -189,7 +203,7 @@ class WeighIn(
                 if (!ScalePacket.isScale(packet.name, packet.companyId)) return@collect
                 val reading = ScalePacket.decode(packet.data) ?: return@collect
                 onReading(reading)
-                decision.onReading(reading, packet.atMs)?.let { done.complete(it) }
+                decision.onReading(reading, packet.atMs, packet)?.let { done.complete(it) }
             }
         }
         // A scan error fails the collector, which cancels this scope and surfaces at once (no timeout wait).
@@ -201,7 +215,16 @@ class WeighIn(
         }
     }
 
+    /** Archive trouble is logged and never fails the weigh-in: the weight in Health Connect is what counts. */
+    private fun <T> keepRaw(action: String, block: () -> T): T? = try {
+        block()
+    } catch (e: Exception) {
+        AppLog.e("weighin.raw", e, action)
+        null
+    }
+
     companion object {
+        const val SOURCE = "scale"
         const val TIMEOUT_MS = 60_000L
         const val TICK_MS = 250L
     }

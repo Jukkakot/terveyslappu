@@ -1,13 +1,15 @@
 package fi.jukkakot.terveyslappu.history
 
+import fi.jukkakot.terveyslappu.raw.RawEntry
+import fi.jukkakot.terveyslappu.raw.RawFormat
 import fi.jukkakot.terveyslappu.weight.MAX_KG
 import fi.jukkakot.terveyslappu.weight.MIN_KG
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
-/** One weight read from a history file; [line] is 1-based in the file. */
-data class ImportedWeight(val time: Instant, val kg: Double, val line: Int)
+/** One weight read from a history file; [line] is 1-based in the file; [raw] from the export's `raw` column. */
+data class ImportedWeight(val time: Instant, val kg: Double, val line: Int, val raw: RawEntry? = null)
 
 enum class SkipReason { UNREADABLE_DATE, UNREADABLE_WEIGHT, OUT_OF_RANGE, FUTURE, DUPLICATE }
 
@@ -41,6 +43,7 @@ object HistoryParser {
     private const val BOM = "\uFEFF"
     private const val ENOUGH = 0.6
     private const val LB_IN_KG = 0.45359237
+    private const val RAW_HEADER = "raw"
 
     private val weightWords = listOf("weight", "paino", "体重", "gewicht", "poids")
     private val unitOnly = Regex("""^\(?(kg|lbs?|jin|斤|公斤)\)?$""")
@@ -80,6 +83,7 @@ object HistoryParser {
             sample.count { it.getOrElse(weightCol) { "" }.lowercase().contains("lb") } * 2 > sample.size
         val jin = header?.getOrNull(weightCol)?.lowercase()?.let { "jin" in it || ("斤" in it && "公斤" !in it) } == true
         val (dayFirst, ambiguous) = DateParsing.dayOrder(data.map { it.third.getOrElse(dateCol) { "" } })
+        val rawCol = header?.indexOfFirst { it.trim().lowercase() == RAW_HEADER }?.takeIf { it >= 0 }
         val layout = Layout(sep, header?.let { rows[headerIndex].second }, dateCol, timeCol, weightCol, pounds, jin, dayFirst, ambiguous)
 
         val skipped = mutableListOf<SkippedRow>()
@@ -108,7 +112,8 @@ object HistoryParser {
                 else -> {
                     val second = time.epochSecond
                     bySecond.remove(second)?.let { skipped += SkippedRow(it.line, SkipReason.DUPLICATE, lines[it.line - 1]) }
-                    bySecond[second] = ImportedWeight(time, kg, line)
+                    val raw = rawCol?.let { fields.getOrNull(it) }?.let { RawFormat.decode(it, second) }
+                    bySecond[second] = ImportedWeight(time, kg, line, raw)
                 }
             }
         }
