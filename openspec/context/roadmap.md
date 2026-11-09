@@ -36,7 +36,13 @@ Phases in order; one OpenSpec change each unless noted.
   Needs from the first weigh-in log: whether `name=Yoda1` is in the advertisement itself and
   whether the company id (`key=`) is stable, since background scans must be filtered.
 
-- Own weight view in the app (only if Samsung Health turns out awkward).
+- **Before scale-reading-archive: decode the unknown scale bytes** (user 2026-11-09). Packet bytes
+  4-5 and 7-12 are not understood yet; check openScale's `OkOkHandler` and similar decoders and the
+  shared packet logs, so the archive stores named fields where known (the raw hex is kept anyway).
+- **Phone owner's details** (user 2026-11-09, later, not first priority): one user per phone, no
+  profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
+  from the raw data.
+- Own weight view in the app: planned as weight-chart (2026-11-09).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
