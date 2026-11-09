@@ -6,7 +6,8 @@ from Health Connect, newest first, each with its date, time and value; the date 
 year when the weight is not from the current year. Weights written by other apps SHALL NOT be listed
 (user 2026-11-09: they are inaccurate hand entries). Each row SHALL also show the change from the
 listed weight just before it in time, signed with one decimal (`+0,3`, `−0,5`, `±0,0`); the oldest
-row of the period SHALL show no change. Gains and losses SHALL have different colours taken from the
+row of the period SHALL show no change. The change SHALL have a small arrow up for a gain and down
+for a loss, none when it is zero. Gains and losses SHALL have different colours taken from the
 phone's palette that are not red and green, and a zero change SHALL use the neutral text colour.
 
 #### Scenario: Weights from several apps
