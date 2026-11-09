@@ -99,8 +99,8 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
     val tree = remember(shown) { ListGroups.build(shown, zone) }
-    // Newest path open; reset with the period, forgotten when Historia is left (weight-entry "Open by default").
-    var open by remember(state.period) { mutableStateOf(ListGroups.defaultOpen(tree)) }
+    // Every group starts closed; reset with the period, forgotten when Historia is left (weight-entry "Open by default").
+    var open by remember(state.period) { mutableStateOf(emptySet<String>()) }
     val rows = remember(tree, open) { ListGroups.flatten(tree, open) }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
     val pager = rememberPagerState { Quantity.entries.size }
@@ -159,13 +159,10 @@ private fun QuantityPage(
     profile: OwnerProfile,
     onOpenProfile: () -> Unit,
 ) {
-    val value: (WeightEntry) -> Double? = remember(quantity, profile) { { quantity.valueOf(it, profile, zone) } }
-    val data = remember(shown, quantity, profile) { ChartData.of(period, shown, now, zone, value, { quantity.scale(it, profile) }, if (quantity == Quantity.BMR) 4 else ChartData.LABELS) }
+    val value: (WeightEntry) -> Double? = remember(quantity, profile) { { quantity.valueOf(it, profile) } }
+    val data = remember(shown, quantity, profile) { ChartData.of(period, shown, now, zone, value) { quantity.scale(it, profile) } }
     val stats = remember(shown, quantity, profile) { periodStats(shown, value, rate = quantity.hasRate) }
-    // Nothing to show although there are weights: a missing detail, or under 18 for the whole period.
-    val state = quantity.availability(profile, now.atZone(zone).year).let {
-        if (it == Availability.Ok && data == null && shown.isNotEmpty()) Availability.Minor else it
-    }
+    val state = quantity.availability(profile)
     Column(Modifier.fillMaxWidth().testTag("page-${quantity.name}")) {
         Box(
             Modifier
@@ -186,13 +183,12 @@ private fun QuantityPage(
             } else if (quantity == Quantity.WEIGHT || data == null) {
                 ChartArea(data)
             } else {
-                val description = if (quantity == Quantity.BMI) R.string.chart_description_bmi else R.string.chart_description_bmr
-                WeightChart(
+                                WeightChart(
                     data,
-                    stringResource(description, data.entries.size),
+                    stringResource(R.string.chart_description_bmi, data.entries.size),
                     axisLabel = quantity::axis,
                     pointLabel = quantity::point,
-                    bands = if (quantity == Quantity.BMI) bmiBands() else emptyList(),
+                    bands = bmiBands(),
                 )
             }
         }
@@ -217,7 +213,7 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
                 add(Tile(R.string.stats_latest, quantity.format(stats.latest)))
             }
         }
-        stats.change?.let { add(Tile(R.string.stats_change, quantity.changeText(it), quantity.direction(it))) }
+        stats.change?.let { add(Tile(R.string.stats_change, quantity.changeText(it), shownDirection(it, 1))) }
         stats.perWeek?.let { add(Tile(R.string.stats_rate, stringResource(R.string.kg_value, formatRate(it)), shownDirection(it, 2))) }
         add(Tile(R.string.stats_average, quantity.format(stats.average)))
         add(Tile(R.string.stats_min, quantity.format(stats.min)))

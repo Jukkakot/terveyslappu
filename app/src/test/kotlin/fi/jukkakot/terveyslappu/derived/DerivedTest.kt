@@ -1,8 +1,6 @@
 package fi.jukkakot.terveyslappu.derived
 
-import fi.jukkakot.terveyslappu.chart.ChartData
 import fi.jukkakot.terveyslappu.chart.KgRange
-import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.chart.periodStats
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
@@ -24,14 +22,19 @@ class DerivedTest {
     @Test
     fun `bmi from height`() {
         assertEquals(25.3, Derived.shownBmi(Derived.bmi(82.0, 180)))
-        assertEquals(25.3, Quantity.BMI.valueOf(at(0, 82.0), man, zone)!!, 0.05)
+        assertEquals(25.3, Quantity.BMI.valueOf(at(0, 82.0), man)!!, 0.05)
     }
 
     @Test
     fun `no height gives no bmi and names the height`() {
         val profile = OwnerProfile(birthYear = 1990)
-        assertNull(Quantity.BMI.valueOf(at(0, 82.0), profile, zone))
-        assertEquals(Availability.Missing(listOf(Field.HEIGHT)), Quantity.BMI.availability(profile, 2026))
+        assertNull(Quantity.BMI.valueOf(at(0, 82.0), profile))
+        assertEquals(Availability.Missing(listOf(Field.HEIGHT)), Quantity.BMI.availability(profile))
+    }
+
+    @Test
+    fun `gender is not needed`() {
+        assertEquals(Availability.Ok, Quantity.BMI.availability(man.copy(gender = null)))
     }
 
     @Test
@@ -56,47 +59,14 @@ class DerivedTest {
     }
 
     @Test
-    fun `bmr for a man and a woman`() {
-        assertEquals(1770, Derived.shownBmr(Quantity.BMR.valueOf(at(0, 82.0), man, zone)!!))
-        val woman = OwnerProfile(birthYear = 1990, heightCm = 165, gender = Gender.FEMALE)
-        assertEquals(1290, Derived.shownBmr(Quantity.BMR.valueOf(at(0, 60.0), woman, zone)!!))
-    }
-
-    @Test
-    fun `bmr uses the age in the weight's year`() {
-        val old = at(365 * 2, 82.0) // 2024: age 34, 10 kcal more than in 2026
-        assertEquals(1780, Derived.shownBmr(Quantity.BMR.valueOf(old, man, zone)!!))
-    }
-
-    @Test
-    fun `gender not chosen leaves out bmr but not bmi`() {
-        val profile = man.copy(gender = null)
-        assertNull(Quantity.BMR.valueOf(at(0, 82.0), profile, zone))
-        assertEquals(Availability.Missing(listOf(Field.GENDER)), Quantity.BMR.availability(profile, 2026))
-        assertEquals(Availability.Ok, Quantity.BMI.availability(profile, 2026))
-    }
-
-    @Test
-    fun `several missing are all named`() {
-        val profile = OwnerProfile(heightCm = 180)
-        assertEquals(Availability.Missing(listOf(Field.BIRTH_YEAR, Field.GENDER)), Quantity.BMR.availability(profile, 2026))
-        assertEquals(
-            Availability.Missing(listOf(Field.HEIGHT, Field.BIRTH_YEAR, Field.GENDER)),
-            Quantity.BMR.availability(OwnerProfile(), 2026),
-        )
-    }
-
-    @Test
-    fun `under 18 keeps the bmi number but no class, range or bmr`() {
-        val teen = OwnerProfile(birthYear = 2012, heightCm = 160, gender = Gender.FEMALE)
+    fun `under 18 keeps the bmi number but no class or range`() {
+        val teen = OwnerProfile(birthYear = 2012, heightCm = 160)
         val row = LatestDerived.of(at(0, 50.0), teen, zone)
         assertTrue(row.bmi != null)
         assertNull(row.bmiClass)
         assertNull(row.tone)
         assertNull(row.normalRange)
         assertEquals(Availability.Minor, row.rangeState)
-        assertNull(row.bmr)
-        assertEquals(Availability.Minor, row.bmrState)
     }
 
     @Test
@@ -106,34 +76,23 @@ class DerivedTest {
         assertEquals(BmiClass.OVERWEIGHT, row.bmiClass)
         assertEquals(Tone.YELLOW, row.tone)
         assertEquals(60..81, row.normalRange)
-        assertEquals(1770, row.bmr)
     }
 
     @Test
-    fun `home row without details names what is missing`() {
+    fun `home row without details names the height`() {
         val row = LatestDerived.of(at(0, 82.0), OwnerProfile(), zone)
         assertNull(row.bmi)
         assertEquals(Availability.Missing(listOf(Field.HEIGHT)), row.bmiState)
         assertEquals(Availability.Missing(listOf(Field.HEIGHT)), row.rangeState)
-        assertEquals(Availability.Missing(listOf(Field.HEIGHT, Field.BIRTH_YEAR, Field.GENDER)), row.bmrState)
     }
 
     @Test
     fun `bmi stats have a change but no rate`() {
         val entries = listOf(at(28, 83.0), at(0, 82.0))
-        val stats = periodStats(entries, { Quantity.BMI.valueOf(it, man, zone) }, rate = false)!!
+        val stats = periodStats(entries, { Quantity.BMI.valueOf(it, man) }, rate = false)!!
         assertEquals(25.3, Derived.shownBmi(stats.latest))
         assertEquals(-0.3, Math.round(stats.change!! * 10) / 10.0)
         assertNull(stats.perWeek)
-    }
-
-    @Test
-    fun `bmr series in the chart`() {
-        val entries = listOf(at(2, 82.0), at(1, 82.5), at(0, 82.0))
-        val data = ChartData.of(Period.WEEK, entries, now, zone, { Quantity.BMR.valueOf(it, man, zone) }, { Quantity.BMR.scale(it, man) })!!
-        assertEquals(listOf(1770.0, 1775.0, 1770.0), data.ys.map { Math.round(it).toDouble() })
-        assertEquals(0.0, data.minY % 10)
-        assertTrue(data.maxY - data.minY >= 40)
     }
 
     @Test
@@ -141,10 +100,5 @@ class DerivedTest {
         val range = Quantity.BMI.scale(listOf(25.2, 25.3), man)
         assertTrue(range.span >= 1.2)
         assertEquals(KgRange(24.0, 26.0), range)
-    }
-
-    @Test
-    fun `steady bmr scale spans at least 40 kcal in tens`() {
-        assertEquals(KgRange(1750.0, 1800.0), Quantity.BMR.scale(listOf(1770.0, 1780.0), man))
     }
 }

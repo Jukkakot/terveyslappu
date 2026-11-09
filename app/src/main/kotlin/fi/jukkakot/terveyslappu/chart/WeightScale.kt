@@ -3,7 +3,7 @@ package fi.jukkakot.terveyslappu.chart
 import kotlin.math.ceil
 import kotlin.math.floor
 
-/** A chart's y range in the shown quantity's unit (kg, BMI or kcal). */
+/** A chart's y range in the shown quantity's unit (kg or BMI). */
 data class KgRange(val min: Double, val max: Double) {
     val span: Double get() = max - min
 }
@@ -19,10 +19,10 @@ object WeightScale {
     const val MIN_SPAN = 4.0
 
     /**
-     * [perKg]: how many units of the shown quantity one kg is worth (1 for weight, 1/h² for BMI,
-     * 10 for kcal), so room and least span mean the same change on every chart; [step]: rounding.
+     * [perKg]: how many units of the shown quantity one kg is worth (1 for weight, 1/h² for BMI),
+     * so room and least span mean the same change on every chart.
      */
-    fun of(values: Collection<Double>, perKg: Double = 1.0, step: Double = 1.0): KgRange {
+    fun of(values: Collection<Double>, perKg: Double = 1.0): KgRange {
         require(values.isNotEmpty())
         var lo = values.min() - ROOM * perKg
         var hi = values.max() + ROOM * perKg
@@ -31,7 +31,7 @@ object WeightScale {
             lo -= missing / 2
             hi += missing / 2
         }
-        return KgRange(floor(lo / step + EPS) * step, ceil(hi / step - EPS) * step)
+        return KgRange(floor(lo + EPS), ceil(hi - EPS))
     }
 
     /** Float noise must not push an exact whole kilo to the next one. */

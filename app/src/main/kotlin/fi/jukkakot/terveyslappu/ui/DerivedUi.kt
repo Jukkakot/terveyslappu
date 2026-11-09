@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
@@ -61,60 +63,44 @@ fun BmiClass.word(): Int = when (this) {
 fun Quantity.title(): Int = when (this) {
     Quantity.WEIGHT -> R.string.quantity_weight
     Quantity.BMI -> R.string.quantity_bmi
-    Quantity.BMR -> R.string.quantity_bmr
 }
 
-/** A value of this quantity as shown in stats and dots: "82,0 kg", "25,3", "1 770 kcal". */
+/** A value of this quantity as shown in stats and dots: "82,0 kg", "25,3". */
 fun Quantity.format(value: Double): String = when (this) {
     Quantity.WEIGHT -> "${formatKg(value)} kg"
     Quantity.BMI -> formatKg(value)
-    Quantity.BMR -> "${formatKcal(value)} kcal"
 }
 
-/** A change: "−1,0 kg", "−0,3", "−10 kcal". */
+/** A change: "−1,0 kg", "−0,3". */
 fun Quantity.changeText(delta: Double): String = when (this) {
     Quantity.WEIGHT -> "${formatChange(delta)} kg"
     Quantity.BMI -> formatChange(delta)
-    Quantity.BMR -> "${formatKcalChange(delta)} kcal"
 }
 
-/** Direction of a change as shown (−1, 0, 1). */
-fun Quantity.direction(delta: Double): Int =
-    if (this == Quantity.BMR) java.lang.Long.signum(Math.round(delta / 10)) else shownDirection(delta, 1)
-
-/** A y-axis label: "98 kg", "25", "1 760 kcal". */
+/** A y-axis label: "98 kg", "25". */
 fun Quantity.axis(value: Double): String = when (this) {
     Quantity.WEIGHT -> "%.0f kg".format(value)
     Quantity.BMI -> "%.0f".format(value)
-    Quantity.BMR -> "${formatKcal(value)} kcal"
 }
 
-/** A dot's value: "82,6 kg", "BMI 25,3", "1 770 kcal". */
+/** A dot's value: "82,6 kg", "BMI 25,3". */
 fun Quantity.point(value: Double): String = if (this == Quantity.BMI) "BMI ${formatKg(value)}" else format(value)
 
-/** Why [what] cannot be shown: "Perusaineenvaihdunta vaatii syntymävuoden ja sukupuolen". */
+/** Why [what] cannot be shown: "BMI vaatii pituuden", or the under-18 text. */
 @Composable
 fun reasonText(what: Int, state: Availability): String = when (state) {
     Availability.Ok -> ""
     Availability.Minor -> stringResource(R.string.derived_minor)
     is Availability.Missing -> {
-        val names = state.fields.map {
-            stringResource(
-                when (it) {
-                    Field.HEIGHT -> R.string.derived_field_height
-                    Field.BIRTH_YEAR -> R.string.derived_field_birth_year
-                    Field.GENDER -> R.string.derived_field_gender
-                },
-            )
-        }
-        val joined = if (names.size == 1) names[0] else names.dropLast(1).joinToString(", ") + " ${stringResource(R.string.derived_and)} " + names.last()
-        stringResource(R.string.derived_needs, stringResource(what), joined)
+        val names = state.fields.map { field -> stringResource(when (field) { Field.HEIGHT -> R.string.derived_field_height }) }
+        stringResource(R.string.derived_needs, stringResource(what), names.joinToString(", "))
     }
 }
 
 /**
- * The home row under the card (home-screen "Simple home screen"): BMI with its class word in its
- * tone, the normal range and the basal metabolic rate, or for each the reason that opens Omat tiedot.
+ * The home row under the card (home-screen "Simple home screen"): the BMI number in its tone, no
+ * class word on screen (it stays in the screen reader text), and the normal range; or the reason
+ * that opens Omat tiedot.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -123,36 +109,29 @@ internal fun DerivedRow(row: LatestDerived, onOpenProfile: () -> Unit) {
     val reasons = buildList {
         if (row.bmiState != Availability.Ok) add(reasonText(R.string.quantity_bmi, row.bmiState))
         if (row.rangeState != Availability.Ok && row.rangeState != row.bmiState) add(reasonText(R.string.quantity_range, row.rangeState))
-        if (row.bmrState != Availability.Ok) add(reasonText(R.string.quantity_bmr, row.bmrState))
     }.distinct()
     Column(
         Modifier.fillMaxWidth().clip(groupShape).background(colors.surfaceContainer).padding(vertical = 4.dp).testTag("derived"),
     ) {
-        val values = row.bmi != null || row.normalRange != null || row.bmr != null
-        if (values) {
+        if (row.bmi != null || row.normalRange != null) {
             FlowRow(
                 Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 row.bmi?.let { bmi ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("derivedBmi")) {
-                        Text(stringResource(R.string.derived_bmi, formatKg(bmi)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                        row.bmiClass?.let { cls ->
-                            Text(
-                                " " + stringResource(cls.word()),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = toneColor(row.tone!!),
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
+                    val text = stringResource(R.string.derived_bmi, formatKg(bmi))
+                    val described = row.bmiClass?.let { "$text, ${stringResource(it.word())}" } ?: text
+                    Text(
+                        text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = row.tone?.let { toneColor(it) } ?: Color.Unspecified,
+                        modifier = Modifier.testTag("derivedBmi").semantics { contentDescription = described },
+                    )
                 }
                 row.normalRange?.let {
                     Text(stringResource(R.string.derived_range, it.first, it.last), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
-                }
-                row.bmr?.let {
-                    Text(stringResource(R.string.derived_bmr, formatKcal(it.toDouble())), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
                 }
             }
         }

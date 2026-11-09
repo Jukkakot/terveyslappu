@@ -30,8 +30,6 @@ import java.util.Locale
 
 private val finnish = Locale.forLanguageTag("fi")
 private val monthName = DateTimeFormatter.ofPattern("LLLL", finnish)
-private val dayName = DateTimeFormatter.ofPattern("EEE d.M.", finnish)
-private val dayYearName = DateTimeFormatter.ofPattern("EEE d.M.yyyy", finnish)
 
 /** Rows step in by level so the hierarchy reads without lines. */
 internal fun indent(depth: Int): Dp = 20.dp + 12.dp * depth
@@ -43,14 +41,13 @@ internal fun formatDayRange(from: LocalDate, to: LocalDate, today: LocalDate): S
     return "$start–${formatShortDay(to)}$year"
 }
 
-/** "2024", "Marraskuu 2025", "Vk 45 · 3.–9.11.", "Ti 4.11.". */
+/** "2024", "Marraskuu 2025", "Vk 45 · 3.–9.11.". */
 internal fun groupName(group: ListNode.Group, today: LocalDate): String {
     val year = if (group.from.year == today.year) "" else " ${group.from.year}"
     return when (group.level) {
         GroupLevel.YEAR -> "${group.from.year}"
         GroupLevel.MONTH -> monthName.format(group.from).replaceFirstChar { it.titlecase(finnish) } + year
         GroupLevel.WEEK -> "Vk ${group.week} · ${formatDayRange(group.from, group.to, today)}"
-        GroupLevel.DAY -> (if (year.isEmpty()) dayName else dayYearName).format(group.from).replaceFirstChar { it.titlecase(finnish) }
     }
 }
 
@@ -72,13 +69,16 @@ internal fun GroupRowItem(group: ListNode.Group, open: Boolean, today: LocalDate
         Column(Modifier.weight(1f)) {
             Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             Text(
-                stringResource(R.string.group_values, formatKg(group.first.kg), formatKg(group.last.kg), group.count),
+                if (group.count == 1) stringResource(R.string.group_value_single, formatKg(group.last.kg))
+                else stringResource(R.string.group_values, formatKg(group.first.kg), formatKg(group.last.kg), group.count),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant,
             )
         }
-        val direction = shownDirection(group.change, 1)
-        ChangeLabel(formatChange(group.change), direction, style = MaterialTheme.typography.bodyMedium, color = changeColor(direction))
+        if (group.count > 1) {
+            val direction = shownDirection(group.change, 1)
+            ChangeLabel(formatChange(group.change), direction, style = MaterialTheme.typography.bodyMedium, color = changeColor(direction))
+        }
         Icon(
             painterResource(R.drawable.ic_chevron_right),
             contentDescription = null,

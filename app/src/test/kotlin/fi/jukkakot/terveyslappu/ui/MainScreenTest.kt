@@ -16,6 +16,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
@@ -218,8 +219,8 @@ class MainScreenTest {
 
     @Test
     fun `home row shows the derived values and a reason opens Asetukset`() {
-        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(birthYear = 1990, heightCm = 180))
-        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertExists()
+        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(birthYear = 1990))
+        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("derivedReason").performClick()
         compose.onNodeWithTag("shareLog").assertExists()
     }
@@ -252,7 +253,7 @@ class MainScreenTest {
     }
 
     @Test
-    fun `a long period groups the list by year and a closed year opens on tap`() {
+    fun `a long period starts with closed years and a year opens on tap`() {
         val zone = java.time.ZoneId.systemDefault()
         val many = (2023..2025).flatMap { y ->
             (1..12).map { m -> weightEntry("$y-$m", java.time.LocalDate.of(y, m, 10).atTime(7, 5).atZone(zone).toInstant(), null, 85.0 + m / 10.0, "me", "me") }
@@ -260,8 +261,18 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = many.reversed(), period = Period.All, screen = Screen.HISTORY))
         compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-y2023"))
         compose.onNodeWithTag("delete-2023-6").assertDoesNotExist()
+        compose.onNodeWithTag("group-m2023-06").assertDoesNotExist()
         compose.onNodeWithTag("group-y2023").performClick()
-        compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("delete-2023-6"))
-        compose.onNodeWithTag("delete-2023-6").assertExists()
+        compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-m2023-06"))
+        compose.onNodeWithTag("group-m2023-06").assertExists()
+    }
+
+    @Test
+    fun `home BMI shows its number without the class word, which stays for screen readers`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(heightCm = 180))
+        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertExists()
+        compose.onNode(hasText("ylipaino", substring = true), useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithContentDescription("BMI 25,4, ylipaino", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("derivedReason").assertDoesNotExist()
     }
 }

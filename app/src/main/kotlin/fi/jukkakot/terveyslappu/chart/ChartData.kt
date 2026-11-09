@@ -41,7 +41,7 @@ class ChartData(
 
     companion object {
         /** About this many labels fit under the chart on a phone. */
-        const val LABELS = 5
+        private const val LABELS = 5
 
         /** Consecutive weights further apart than this many days are not joined by the line. */
         const val MAX_GAP_DAYS = 30.0
@@ -72,7 +72,6 @@ class ChartData(
             zone: ZoneId,
             value: (WeightEntry) -> Double? = { it.kg },
             scale: (Collection<Double>) -> KgRange = { WeightScale.of(it) },
-            labels: Int = LABELS,
         ): ChartData? {
             val valued = periodEntries.sortedBy { it.time }.mapNotNull { e -> value(e)?.let { e to it } }
             if (valued.isEmpty()) return null
@@ -94,7 +93,7 @@ class ChartData(
                 maxX = maxX,
                 minY = range.min,
                 maxY = range.max,
-                labelSpacing = max(1, ceil(maxX / labels).toInt()),
+                labelSpacing = max(1, ceil(maxX / LABELS).toInt()),
                 segments = segments(xs),
                 overYear = origin.plusDays(maxX.toLong()) > origin.plusYears(1),
             )

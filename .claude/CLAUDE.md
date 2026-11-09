@@ -39,9 +39,8 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
   read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
   BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
-  parser: separator, columns, date order, CSV data-file sections; batch writer; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `data/` (the data file of Vie/Tuo tiedot and the backup: `DataSet` with one field per data kind, `CsvData`, `JsonData`, export file name; pure), `chart/` (periods, period stats, chart axes, Historia list tree `ListGroups`; pure except `PeriodPrefs`), `derived/` (BMI, class
-  and tone, normal range, basal metabolic rate, `Quantity` for Historia's tabs, the home row's
-  `LatestDerived`; pure), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
+  parser: separator, columns, date order, CSV data-file sections; batch writer; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `data/` (the data file of Vie/Tuo tiedot and the backup: `DataSet` with one field per data kind, `CsvData`, `JsonData`, export file name; pure), `chart/` (periods, period stats, chart axes, Historia list tree `ListGroups`; pure except `PeriodPrefs`), `derived/` (BMI, class and tone, normal range,
+  `Quantity` for Historia's tabs, the home row's `LatestDerived`; pure), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `profile/` (owner details: rules, `#profile;` export line (pure), `ProfilePrefs` singleton in
   `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
   write; the singleton lives in `TerveysApp`), `ui/` (`MainScreen` switches Home/Historia/Asetukset by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in

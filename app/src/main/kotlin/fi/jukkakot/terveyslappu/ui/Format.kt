@@ -75,20 +75,6 @@ fun formatPoint(time: Instant, value: String, zone: ZoneId = ZoneId.systemDefaul
     return "${format.format(at)} $value"
 }
 
-/** Whole kcal in tens with a thousands space: 1772.4 → "1 770". */
-fun formatKcal(kcal: Double): String = String.format(finnish, "%,d", Math.round(kcal / 10) * 10)
-
-/** A kcal change in tens: −10 / +20 / ±0. */
-fun formatKcalChange(delta: Double): String {
-    val tens = Math.round(delta / 10) * 10
-    val abs = String.format(finnish, "%,d", kotlin.math.abs(tens))
-    return when {
-        tens < 0 -> "−$abs"
-        tens > 0 -> "+$abs"
-        else -> "±$abs"
-    }
-}
-
 /** Direction of a change as shown with [decimals] decimals: −1 down, 1 up, 0 when it shows as ±0. */
 fun shownDirection(value: Double, decimals: Int): Int {
     var scale = 1.0

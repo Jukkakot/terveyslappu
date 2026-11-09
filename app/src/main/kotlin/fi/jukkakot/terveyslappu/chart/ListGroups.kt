@@ -9,14 +9,14 @@ import java.time.temporal.IsoFields
 import java.time.temporal.TemporalAdjusters
 
 /** Levels of Historia's grouped list (weight-entry "Grouped list"), widest first. */
-enum class GroupLevel { YEAR, MONTH, WEEK, DAY }
+enum class GroupLevel { YEAR, MONTH, WEEK }
 
 /** A row of the grouped list: a group, a single weight or a pause without weights. */
 sealed interface ListNode {
     val key: String
 
     /**
-     * A time span holding more than one child. [from]..[to] are its days (a week cut at the month
+     * A year, month or week holding at least one weight. [from]..[to] are its days (a week cut at the month
      * border); [first] and [last] are its oldest and newest weight; [count] counts all its weights.
      */
     data class Group(
@@ -50,38 +50,26 @@ sealed interface ListNode {
 data class ListRow(val node: ListNode, val depth: Int)
 
 /**
- * Builds Historia's list tree: year → month → week (cut at months) → day → weight, newest first on
- * every level. A group with a single child is replaced by that child, bottom up, and the top level
- * too, so short periods stay flat. Gap rows go between siblings more than [MAX_GAP_DAYS] apart.
+ * Builds Historia's list tree: year → month → week (cut at months) → weight rows, newest first on
+ * every level, every group shown even with one weight (one systematic rule, user 2026-11-09). The
+ * year level is left out when all weights are in one year; short lists stay flat. Gap rows go
+ * between siblings more than [MAX_GAP_DAYS] apart.
  */
 object ListGroups {
     const val MAX_GAP_DAYS = ChartData.MAX_GAP_DAYS
 
     /**
-     * Up to this many weights stay a flat list (only days with several weights group): a rolling
-     * week would otherwise split at its Monday, and a short list needs no overview.
+     * Up to this many weights stay a flat list: a rolling week would otherwise split at its Monday,
+     * and a short list needs no overview.
      */
     const val FLAT_MAX = 14
 
     fun build(entries: List<WeightEntry>, zone: ZoneId, flatMax: Int = FLAT_MAX): List<ListNode> {
         val newest = entries.sortedByDescending { it.time }
         val changes = changesFromPrevious(newest)
-        val top = if (newest.size <= flatMax) GroupLevel.DAY else GroupLevel.YEAR
-        var nodes = level(newest, top, zone, changes)
-        while (nodes.size == 1 && nodes[0] is ListNode.Group) nodes = (nodes[0] as ListNode.Group).children
-        return nodes
-    }
-
-    /** Keys of the groups open by default: the newest group on each level, down the newest path. */
-    fun defaultOpen(nodes: List<ListNode>): Set<String> {
-        val open = mutableSetOf<String>()
-        var level = nodes
-        while (true) {
-            val group = level.firstOrNull { it is ListNode.Group } as? ListNode.Group ?: break
-            open += group.key
-            level = group.children
-        }
-        return open
+        if (newest.size <= flatMax) return withGaps(newest.map { ListNode.Weight(it, changes[it.id]) }, zone)
+        val oneYear = newest.map { it.time.atZone(zone).year }.distinct().size == 1
+        return level(newest, if (oneYear) GroupLevel.MONTH else GroupLevel.YEAR, zone, changes)
     }
 
     /** The rows to draw: every node whose parents are all in [open]. */
@@ -97,23 +85,18 @@ object ListGroups {
         val groups = newest.groupBy { key(level, it.time.atZone(zone).toLocalDate()) }
         val nodes = groups.values.map { members ->
             val day = members.first().time.atZone(zone).toLocalDate()
-            val children = level(members, GroupLevel.entries.getOrNull(level.ordinal + 1), zone, changes)
-            if (children.size == 1) {
-                children[0]
-            } else {
-                val (from, to) = span(level, day)
-                ListNode.Group(
-                    level = level,
-                    key = key(level, day),
-                    from = from,
-                    to = to,
-                    week = weekMonday(day).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR),
-                    first = members.last(),
-                    last = members.first(),
-                    count = members.size,
-                    children = children,
-                )
-            }
+            val (from, to) = span(level, day)
+            ListNode.Group(
+                level = level,
+                key = key(level, day),
+                from = from,
+                to = to,
+                week = weekMonday(day).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR),
+                first = members.last(),
+                last = members.first(),
+                count = members.size,
+                children = level(members, GroupLevel.entries.getOrNull(level.ordinal + 1), zone, changes),
+            )
         }
         return withGaps(nodes, zone)
     }
@@ -151,7 +134,6 @@ object ListGroups {
         GroupLevel.MONTH -> "m${day.year}-%02d".format(day.monthValue)
         // Month + week, so a week split by a month border is two groups.
         GroupLevel.WEEK -> "w${day.year}-%02d-%02d".format(day.monthValue, weekMonday(day).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR))
-        GroupLevel.DAY -> "d$day"
     }
 
     private fun span(level: GroupLevel, day: LocalDate): Pair<LocalDate, LocalDate> = when (level) {
@@ -161,6 +143,5 @@ object ListGroups {
             val monday = weekMonday(day)
             maxOf(monday, day.withDayOfMonth(1)) to minOf(monday.plusDays(6), day.with(TemporalAdjusters.lastDayOfMonth()))
         }
-        GroupLevel.DAY -> day to day
     }
 }

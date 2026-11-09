@@ -78,25 +78,20 @@
     <string name="stats_latest">Viimeisin</string>
     <string name="group_open">Avaa %1$s</string>
     <string name="group_close">Sulje %1$s</string>
+    <string name="group_value_single">%1$s kg · 1 paino</string>
     <string name="group_values">%1$s → %2$s kg · %3$d painoa</string>
     <string name="group_gap">Ei punnituksia %1$s–%2$s</string>
 
     <string name="quantity_weight">Paino</string>
     <string name="quantity_bmi">BMI</string>
-    <string name="quantity_bmr">Perusaineenvaihdunta</string>
     <string name="quantity_range">Normaalipaino</string>
     <string name="chart_description_bmi">BMI-kaavio, %1$d arvoa</string>
-    <string name="chart_description_bmr">Perusaineenvaihdunnan kaavio, %1$d arvoa</string>
     <string name="derived_needs">%1$s vaatii %2$s</string>
     <string name="derived_field_height">pituuden</string>
-    <string name="derived_field_birth_year">syntymävuoden</string>
-    <string name="derived_field_gender">sukupuolen</string>
-    <string name="derived_and">ja</string>
     <string name="derived_minor">Aikuisten luokat eivät koske alle 18-vuotiasta</string>
     <string name="derived_open_profile">Omat tiedot</string>
     <string name="derived_bmi">BMI %1$s</string>
     <string name="derived_range">Normaalipaino %1$d–%2$d kg</string>
-    <string name="derived_bmr">%1$s kcal/vrk</string>
     <string name="bmi_underweight">alipaino</string>
     <string name="bmi_normal">normaalipaino</string>
     <string name="bmi_overweight">ylipaino</string>

@@ -107,21 +107,24 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Theme** (user 2026-11-09): the phone's own palette (Material You) in light and dark, following
   the system by default; Asetukset → Teema forces Vaalea or Tumma. Choices are filter chips like
   the period chips (a segmented button broke "Järjestelmä" mid-word on a 360 dp phone).
-- **Derived values** (user 2026-11-09, derived-values): BMI (WHO adult classes as a word in a
-  traffic-light tone: green normal, yellow 17–18.5 and 25–30, red beyond), the normal-weight range
-  for the height and the basal metabolic rate (Mifflin-St Jeor, age = weight's year − birth year)
-  show in a row under the home card and as Historia tabs (swipe or tap; opens on Paino; BMI chart
-  has faint class bands). Old weights use today's height (adult height is stable). A value missing
-  owner details shows the reason, which opens Omat tiedot; under 18 the adult classes and the
-  equation are left out. Nothing derived goes to Health Connect or the export: it is calculated,
-  not measured, and recomputed whenever shown. No library: each formula is one line.
-- **Grouped Historia list** (user 2026-11-09, history-list-groups): Kaikki holds 300+ weights, too
-  many rows to scan, so the list groups by year → month → week (cut at months) → day, each group
-  with first → last weight, change and count, tapping opens it. A level with a single child is
-  skipped and a list of up to 14 weights stays flat, so short periods look as before. The newest
-  path opens by default and nothing is remembered. A pause over 30 days shows as a thin
-  "Ei punnituksia" row, and no change is computed across it (the chart's line-break rule). A level
-  picker as in other weight apps was rejected: one more control.
+- **Derived values** (user 2026-11-09, derived-values, simpler-derived): BMI and the normal-weight
+  range for the height, in a row under the home card and as Historia's BMI tab (swipe or tap; opens
+  on Paino; faint class bands). On the home screen the BMI number shows only in its traffic-light
+  tone (green normal, yellow 17–18.5 and 25–30, red beyond) without the class word, which read as a
+  judgement at first glance; the word stays in the screen reader text and in Historia's BMI stats.
+  Old weights use today's height (adult height is stable). A missing height shows the reason, which
+  opens Omat tiedot; under 18 the class and range are left out. Nothing derived goes to Health
+  Connect or the export: it is calculated, not measured. The basal metabolic rate and a total
+  energy expenditure were tried and dropped (user: no use for them, keep the app simple); gender
+  stays in Omat tiedot though nothing uses it now.
+- **Grouped Historia list** (user 2026-11-09, history-list-groups, simpler-derived): Kaikki holds
+  300+ weights, too many rows to scan, so the list groups by year → month → week (cut at months) →
+  weight rows, each group with first → last weight, change and count, tapping opens it. One
+  systematic rule (user): every year, month and week with a weight is its own row, even with one
+  weight; no day level (a weight row shows its day); the year level is left out when the period is
+  within one year; a list of up to 14 weights stays flat. Every group starts closed and nothing is
+  remembered. A pause over 30 days shows as a thin "Ei punnituksia" row, and no change is computed
+  across it (the chart's line-break rule). A level picker as in other weight apps was rejected.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
 - **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that

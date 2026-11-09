@@ -2,7 +2,6 @@ package fi.jukkakot.terveyslappu.derived
 
 import fi.jukkakot.terveyslappu.chart.KgRange
 import fi.jukkakot.terveyslappu.chart.WeightScale
-import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.ZoneId
@@ -24,18 +23,18 @@ enum class BmiClass(val from: Double) {
 data class ToneBand(val from: Double, val to: Double, val tone: Tone)
 
 /** Owner details a derived value needs. */
-enum class Field { HEIGHT, BIRTH_YEAR, GENDER }
+enum class Field { HEIGHT }
 
 /** Whether a derived value can be shown, and if not, why. */
 sealed interface Availability {
     data object Ok : Availability
     /** Owner details missing, in [Field] order. */
     data class Missing(val fields: List<Field>) : Availability
-    /** The owner was under 18: the adult classes and the equation do not apply. */
+    /** The owner was under 18: the adult classes do not apply. */
     data object Minor : Availability
 }
 
-/** The pure formulas behind BMI, its class, the normal range and the basal metabolic rate. */
+/** The pure formulas behind BMI, its class and the normal range. */
 object Derived {
     const val ADULT_AGE = 18
     private const val NORMAL_LOW = 18.5
@@ -74,13 +73,6 @@ object Derived {
         return (NORMAL_LOW * m2).roundToInt()..(NORMAL_HIGH * m2).roundToInt()
     }
 
-    /** Mifflin-St Jeor in kcal/day, unrounded; [age] in years. */
-    fun bmr(kg: Double, heightCm: Int, age: Int, gender: Gender): Double =
-        10 * kg + 6.25 * heightCm - 5 * age + if (gender == Gender.MALE) 5 else -161
-
-    /** Rounded to the nearest 10 kcal, as shown. */
-    fun shownBmr(kcal: Double): Int = (Math.round(kcal / 10) * 10).toInt()
-
     /** Age in [year] from the birth year only. */
     fun age(birthYear: Int, year: Int): Int = year - birthYear
 
@@ -91,59 +83,28 @@ object Derived {
 
 /** What Historia's tabs switch between (weight-chart "One quantity at a time"). */
 enum class Quantity {
-    WEIGHT, BMI, BMR;
+    WEIGHT, BMI;
 
-    /** Owner details this quantity needs. */
-    fun needs(): List<Field> = when (this) {
-        WEIGHT -> emptyList()
-        BMI -> listOf(Field.HEIGHT)
-        BMR -> listOf(Field.HEIGHT, Field.BIRTH_YEAR, Field.GENDER)
-    }
+    /** Whether the value can be shown. */
+    fun availability(profile: OwnerProfile): Availability =
+        if (this == BMI && profile.heightCm == null) Availability.Missing(listOf(Field.HEIGHT)) else Availability.Ok
 
-    /** Whether the value can be shown for a weight from [year]. */
-    fun availability(profile: OwnerProfile, year: Int): Availability {
-        val missing = needs().filter { profile.lacks(it) }
-        return when {
-            missing.isNotEmpty() -> Availability.Missing(missing)
-            this == BMR && Derived.minor(profile, year) -> Availability.Minor
-            else -> Availability.Ok
-        }
-    }
-
-    /** The value of [entry] (kg, BMI or kcal/day unrounded), or null when it cannot be computed. */
-    fun valueOf(entry: WeightEntry, profile: OwnerProfile, zone: ZoneId): Double? {
-        if (this == WEIGHT) return entry.kg
-        val year = entry.time.atZone(zone).year
-        if (availability(profile, year) != Availability.Ok) return null
-        val height = profile.heightCm!!
-        return when (this) {
-            WEIGHT -> entry.kg
-            BMI -> Derived.bmi(entry.kg, height)
-            BMR -> Derived.bmr(entry.kg, height, Derived.age(profile.birthYear!!, year), profile.gender!!)
-        }
+    /** The value of [entry] (kg or BMI), or null when it cannot be computed. */
+    fun valueOf(entry: WeightEntry, profile: OwnerProfile): Double? = when (this) {
+        WEIGHT -> entry.kg
+        BMI -> profile.heightCm?.let { Derived.bmi(entry.kg, it) }
     }
 
     /** How many units one kg is worth, so the y-scale rule means the same on every tab. */
     fun perKg(profile: OwnerProfile): Double = when (this) {
         WEIGHT -> 1.0
         BMI -> profile.heightCm?.let { 1 / (it / 100.0).let { m -> m * m } } ?: 1.0
-        BMR -> 10.0
     }
 
-    /** The scale's rounding step. */
-    val step: Double get() = if (this == BMR) 10.0 else 1.0
-
-    fun scale(values: Collection<Double>, profile: OwnerProfile): KgRange =
-        WeightScale.of(values, perKg(profile), step)
+    fun scale(values: Collection<Double>, profile: OwnerProfile): KgRange = WeightScale.of(values, perKg(profile))
 
     /** Derived quantities have no per-week rate in the stats. */
     val hasRate: Boolean get() = this == WEIGHT
-}
-
-private fun OwnerProfile.lacks(field: Field): Boolean = when (field) {
-    Field.HEIGHT -> heightCm == null
-    Field.BIRTH_YEAR -> birthYear == null
-    Field.GENDER -> gender == null
 }
 
 /** The home row (home-screen "Simple home screen"): derived values of the latest weight. */
@@ -157,19 +118,15 @@ data class LatestDerived(
     /** Normal-weight range in kg; null when [rangeState] is not Ok. */
     val normalRange: IntRange?,
     val rangeState: Availability,
-    /** Shown kcal/day; null when [bmrState] is not Ok. */
-    val bmr: Int?,
-    val bmrState: Availability,
 ) {
     companion object {
         fun of(latest: WeightEntry, profile: OwnerProfile, zone: ZoneId): LatestDerived {
             val year = latest.time.atZone(zone).year
-            val bmi = Quantity.BMI.valueOf(latest, profile, zone)
+            val bmi = Quantity.BMI.valueOf(latest, profile)
             val minor = Derived.minor(profile, year)
-            val bmiState = Quantity.BMI.availability(profile, year)
+            val bmiState = Quantity.BMI.availability(profile)
             // The range follows the height and the same under-18 rule as the class.
             val rangeState = if (bmiState == Availability.Ok && minor) Availability.Minor else bmiState
-            val bmrState = Quantity.BMR.availability(profile, year)
             return LatestDerived(
                 bmi = bmi,
                 bmiClass = bmi?.takeUnless { minor }?.let { Derived.bmiClass(it) },
@@ -177,8 +134,6 @@ data class LatestDerived(
                 bmiState = bmiState,
                 normalRange = if (rangeState == Availability.Ok) Derived.normalRange(profile.heightCm!!) else null,
                 rangeState = rangeState,
-                bmr = Quantity.BMR.valueOf(latest, profile, zone)?.let { Derived.shownBmr(it) },
-                bmrState = bmrState,
             )
         }
     }
