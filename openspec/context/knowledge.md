@@ -14,6 +14,7 @@ the source. No configuration, versions or other things that go stale.
 | Section | What is there |
 |---|---|
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
+| Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
@@ -30,6 +31,31 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   daily dots. A reading should be compared at the same time of day (morning, after the toilet,
   before food) to cut the noise.
 - **Rate of change** is best shown per week (kg/vko), the unit diet advice uses.
+
+## Derived body values
+
+- **BMI** = kg / m². Cheap and standard, but blind to body composition: read it with caution over
+  65 (a little extra weight may protect; muscle loss lowers BMI while fat rises) and with high
+  muscle mass. NICE advises **waist-to-height ratio** next to BMI for BMI under 35: 0.4–0.49
+  healthy, 0.5–0.59 increased, ≥0.6 high risk, same for both sexes ("waist under half of height";
+  needs a waist measurement).
+  ([NICE CG189 draft](https://nice.org.uk/guidance/cg189/update/cg189-update-1/documents/draft-guideline),
+  [Pulse](https://pulsetoday.co.uk/news/clinical-areas/obesity-and-nutrition/nice-urges-patients-to-seek-hcp-advice-if-waist-measures-more-than-half-of-height/),
+  [News-Medical](https://www.news-medical.net/news/20251119/BMI-is-failing-to-detect-dangerous-obesity-as-people-age.aspx))
+- **Basal metabolic rate:** Mifflin-St Jeor (weight, height, age, sex) is the most accurate common
+  equation, within ~10 % for most non-athlete adults but off by more for about one in five (one
+  in three with obesity); it ignores body composition. Harris-Benedict reads higher.
+  ([Harris–Benedict, Wikipedia](https://www.wikipedia.com/wiki/Harris-Benedict_equation),
+  [PMC5867535](https://pmc.ncbi.nlm.nih.gov/articles/PMC5867535))
+- **Body fat from a consumer scale's impedance:** weight is accurate (±0.3 kg against DXA) but
+  body composition has large individual errors; the equations are proprietary and fit group
+  averages; hydration swings the reading by several points. Good for a group, weak for one person.
+  ([PubMed 20054195](https://pubmed.ncbi.nlm.nih.gov/20054195/),
+  [PMC6452160](https://pmc.ncbi.nlm.nih.gov/articles/PMC6452160),
+  [Acibadem](https://acibademinternational.com/blog/smart-scales-and-bioimpedance-how-accurate-is-your-body-fat-reading/))
+- **Health Connect** has records for body fat %, basal metabolic rate, lean body mass (and
+  height, weight), each with its own permission; none for BMI.
+  ([records package](https://developer.android.com/reference/kotlin/androidx/health/connect/client/records/package-summary))
 
 ## Android
 
