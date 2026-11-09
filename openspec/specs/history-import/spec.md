@@ -7,15 +7,20 @@ with its original dates, after showing the user what will be imported.
 ## Requirements
 
 ### Requirement: Pick a history file
-Asetukset SHALL offer "Tuo painot", which opens the system file picker for a text file or an old
-binary Excel file (`.xls`) and reads the chosen file without any other permission.
+Asetukset SHALL offer "Tuo tiedot", which opens the system file picker for a text file (CSV or
+JSON) or an old binary Excel file (`.xls`) and reads the chosen file without any other permission.
+The format SHALL be recognised from the content, not the file name.
 
 #### Scenario: Pick a file
-- **WHEN** the user taps Tuo painot and picks a CSV file
+- **WHEN** the user taps Tuo tiedot and picks a CSV file
+- **THEN** the app reads it and shows the preview
+
+#### Scenario: Pick a JSON file
+- **WHEN** the user picks a JSON file exported by this app
 - **THEN** the app reads it and shows the preview
 
 #### Scenario: Pick an Excel file
-- **WHEN** the user taps Tuo painot and picks an `.xls` file exported by OKOK
+- **WHEN** the user taps Tuo tiedot and picks an `.xls` file exported by OKOK
 - **THEN** the app reads its first sheet and shows the preview
 
 #### Scenario: Picker cancelled
@@ -70,7 +75,8 @@ the future and repeated rows of the same moment, and SHALL count each reason.
 
 ### Requirement: Preview before import
 The app SHALL show, before writing anything, the number of weights, the first and last date, the
-first and last three rows and the skipped count with reasons, and import only after confirmation.
+first and last three rows, the skipped count with reasons and, when the file has parts this app
+version does not know, that they will not be used; it SHALL import only after confirmation.
 
 #### Scenario: Confirm
 - **WHEN** the user taps Tuo in the preview
@@ -79,6 +85,11 @@ first and last three rows and the skipped count with reasons, and import only af
 #### Scenario: Cancel
 - **WHEN** the user taps Peruuta
 - **THEN** nothing is written
+
+#### Scenario: Unknown parts
+- **WHEN** the file has a data kind this app does not know
+- **THEN** the preview says part of the file is from a newer app version and is not used, and the
+  weights import as usual
 
 ### Requirement: Write without duplicates
 The app SHALL write the weights to Health Connect with their original times in batches, show the
@@ -134,25 +145,3 @@ without any calculation; only the weight SHALL be shown.
 - **WHEN** a row has `BMI` `24.10` and `Body Fat Percentage` `18.50` next to its weight
 - **THEN** the archive keeps `BMI=24.10` and `Body Fat Percentage=18.50` and the file's gender, age
   and height with that weight, and the app shows only the weight
-
-### Requirement: Restore owner details
-When an imported file starts with a `#profile;` line, the app SHALL read the owner details from it,
-SHALL not count the line as a skipped row, and on confirming the import SHALL fill only the owner
-details that are empty on the phone; details already set SHALL stay. The preview SHALL say when the
-file holds owner details that will be filled in. Unknown or implausible values in the line SHALL be
-ignored.
-
-#### Scenario: New phone
-- **GIVEN** the phone has no owner details
-- **WHEN** the user imports a file starting with `#profile;birth_year=1990|height_cm=180`
-- **THEN** the preview says the owner details will be filled in, and after confirming Omat tiedot
-  shows birth year 1990 and height 180
-
-#### Scenario: Details already set
-- **GIVEN** the phone's height is 182
-- **WHEN** the user imports a file whose profile line has `height_cm=180`
-- **THEN** the height stays 182
-
-#### Scenario: Implausible value
-- **WHEN** the profile line has `height_cm=999`
-- **THEN** the height is not filled in and the weights import as usual
