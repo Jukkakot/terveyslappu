@@ -21,6 +21,11 @@
   goes); period change resets to closed. Verify: `ListGroupsTest` default-open test replaced; the
   MainScreen grouped-list smoke test still opens a year on tap.
 
+- [ ] 3.2 Systematic levels: year → month → week → weight rows, no day level, no single-child
+  collapse; the year level left out when all weights are in one year; at most 14 weights flat; a
+  one-weight group shows its weight and no change. Verify: `ListGroupsTest` rewritten for every
+  Grouped list scenario (month with one weight, one year, two in a day, border, gaps).
+
 ## 4. Context
 
 - [ ] 4.1 product.md: derived values decision updated (no energy figures, colour only on home, why) and the grouped list now starts closed;
