@@ -3,7 +3,8 @@
 ## Why
 
 Picking an own range (Oma) in Historia, the user cannot see which days have weights, so a range is
-picked blind. A small dot under each day with data shows it while choosing (user 2026-11-09). The
+picked blind. The day's weight under each day with data shows it while choosing (user 2026-11-09;
+first a dot, then the weight instead). The
 Material 3 date-range picker cannot draw anything on a day (it can only disable days, which the
 user does not want), so the picker is replaced.
 

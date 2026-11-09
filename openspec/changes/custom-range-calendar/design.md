@@ -10,7 +10,7 @@ disable days, which the user rejected (2026-11-09). Historia already holds every
 ## Goals / Non-Goals
 
 **Goals:** the day's latest weight on days with weights; all past days selectable; the same Period.Custom result.
-**Non-Goals:** counts or values per day, multi-month view, picking from the home screen.
+**Non-Goals:** the number of weights per day, multi-month view, picking from the home screen.
 
 ## Decisions
 
@@ -37,5 +37,5 @@ disable days, which the user rejected (2026-11-09). Historia already holds every
 ## Risks / Trade-offs
 
 - [New dependency] → small, Compose-only, Apache 2.0; pinned version; Robolectric smoke test.
-- [Weights older than 30 days need the history permission] → without it old months show no dots,
+- [Weights older than 30 days need the history permission] → without it old months show no weights,
   as the chart; the existing history notice already explains this.
