@@ -1,7 +1,7 @@
 # weight-chart Specification
 
 ## Purpose
-TBD - created by archiving change weight-chart. Update Purpose after archive.
+Chart, periods and statistics of the weights this app wrote, shown on the main screen.
 
 ## Requirements
 
