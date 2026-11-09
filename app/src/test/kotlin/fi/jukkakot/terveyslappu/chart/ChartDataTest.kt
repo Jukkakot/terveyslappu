@@ -37,6 +37,24 @@ class ChartDataTest {
     }
 
     @Test
+    fun `line breaks at gaps over 30 days`() {
+        assertEquals(listOf(0..2), ChartData.segments(listOf(0.0, 10.0, 40.0)))
+        assertEquals(listOf(0..1, 2..2), ChartData.segments(listOf(0.0, 10.0, 40.5)))
+        assertEquals(listOf(0..0, 1..1, 2..3), ChartData.segments(listOf(0.0, 100.0, 200.0, 201.0)))
+        assertEquals(emptyList(), ChartData.segments(emptyList()))
+    }
+
+    @Test
+    fun `labels carry the year only over a year`() {
+        val all = ChartData.of(Period.All, listOf(at(400, 90.0), at(0, 82.0)), now, zone)!!
+        assertEquals(true, all.overYear)
+        assertEquals(listOf(0..0, 1..1), all.segments)
+        val year = ChartData.of(Period.All, listOf(at(300, 90.0), at(0, 82.0)), now, zone)!!
+        assertEquals(false, year.overYear)
+        assertEquals(false, ChartData.of(Period.WEEK, listOf(at(1, 82.0)), now, zone)!!.overYear)
+    }
+
+    @Test
     fun `no weights draw nothing`() {
         assertNull(ChartData.of(Period.MONTH, emptyList(), now, zone))
     }

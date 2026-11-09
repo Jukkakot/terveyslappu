@@ -25,6 +25,10 @@ class ChartData(
     val maxY: Double,
     /** Days between x-axis labels. */
     val labelSpacing: Int,
+    /** Index ranges into [entries], each drawn as its own line: a gap over [MAX_GAP_DAYS] breaks the line. */
+    val segments: List<IntRange> = listOf(entries.indices),
+    /** The chart spans more than a year, so x labels show month and year. */
+    val overYear: Boolean = false,
 ) {
     /** The day an x value stands for. */
     fun dayAt(x: Double): LocalDate = origin.plusDays(x.roundToLong())
@@ -35,6 +39,24 @@ class ChartData(
     companion object {
         /** About this many labels fit under the chart on a phone. */
         private const val LABELS = 5
+
+        /** Consecutive weights further apart than this many days are not joined by the line. */
+        const val MAX_GAP_DAYS = 30.0
+
+        /** Splits sorted x values into runs whose neighbours are at most [MAX_GAP_DAYS] apart. */
+        fun segments(xs: List<Double>): List<IntRange> {
+            if (xs.isEmpty()) return emptyList()
+            val result = mutableListOf<IntRange>()
+            var start = 0
+            for (i in 1 until xs.size) {
+                if (xs[i] - xs[i - 1] > MAX_GAP_DAYS) {
+                    result += start until i
+                    start = i
+                }
+            }
+            result += start until xs.size
+            return result
+        }
 
         /** Null when there is nothing to draw. */
         fun of(period: Period, periodEntries: List<WeightEntry>, now: Instant, zone: ZoneId): ChartData? {
@@ -56,6 +78,8 @@ class ChartData(
                 minY = floor(kgs.min() - 0.5),
                 maxY = ceil(kgs.max() + 0.5),
                 labelSpacing = max(1, ceil(maxX / LABELS).toInt()),
+                segments = segments(xs),
+                overYear = origin.plusDays(maxX.toLong()) > origin.plusYears(1),
             )
         }
     }

@@ -49,6 +49,8 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
 - ~~**main-screen-refresh**~~: done 2026-11-09 (simple home per mockup B, Historia and Asetukset
   screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).
+- ~~**chart-gaps-and-years**~~: done 2026-11-09 (line breaks at gaps over 30 days, "9/2022" labels
+  over a year, year in old weights' point detail and list rows).
 - **Goal weight and forecast** on the chart (user 2026-11-09: later).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads

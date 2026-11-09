@@ -20,6 +20,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   "Samsung Health is the viewer": periods, dots joined by a line, period stats. It shows only this
   app's own weights (scale, manual, imported); other apps' weights are the user's inaccurate hand
   entries. Export and backup still hold every app's weights. Goal weight and forecast: backlog.
+  The x-axis stays a time axis (chart-gaps-and-years, user 2026-11-09): the line breaks where
+  weights are over 30 days apart, labels read "9/2022" over a year, and a single weight's time
+  carries the year when not from this year. OKOK's one-step-per-measurement axis was rejected: it
+  hides long gaps and makes the trend misleading.
 - **Moving to a new phone:** still open. Health Connect only stores data on the phone. Options:
   Samsung Health keeps a copy in Samsung Cloud (unverified, see findings), Health Connect's own
   scheduled export to a cloud file, or an app-managed cloud file whose sync status the app shows.

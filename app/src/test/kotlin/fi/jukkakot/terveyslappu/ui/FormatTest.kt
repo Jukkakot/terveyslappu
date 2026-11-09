@@ -20,7 +20,7 @@ class FormatTest {
 
     @Test
     fun `chart dot and weekly rate`() {
-        assertEquals("8.11. 7.05 82,6 kg", formatPoint(Instant.parse("2026-11-08T05:05:00Z"), 82.6, zone))
+        assertEquals("8.11. 7.05 82,6 kg", formatPoint(Instant.parse("2026-11-08T05:05:00Z"), 82.6, zone, today))
         assertEquals("−0,25", formatRate(-0.25))
         assertEquals("±0,00", formatRate(0.001))
     }
@@ -37,5 +37,16 @@ class FormatTest {
     fun `card time is lower case, a row starts with a capital`() {
         assertEquals("tänään 7.05", formatDayTime(Instant.parse("2026-11-08T05:05:00Z"), today, zone))
         assertEquals("Eilen 7.12", formatRowTime(Instant.parse("2026-11-07T05:12:00Z"), today, zone))
+    }
+
+    @Test
+    fun `a weight from an earlier year carries the year`() {
+        val old = Instant.parse("2024-09-15T05:33:00Z")
+        assertEquals("15.9.2024 8.33 97,6 kg", formatPoint(old, 97.6, zone, today))
+        assertEquals("Su 15.9.2024 8.33", formatRowTime(old, today, zone))
+        val lastYear = Instant.parse("2025-12-31T08:00:00Z")
+        assertEquals("31.12.2025 10.00 90,0 kg", formatPoint(lastYear, 90.0, zone, today))
+        assertEquals(true, formatRowTime(Instant.parse("2026-01-02T08:00:00Z"), today, zone).endsWith("2.1. 10.00"))
+        assertEquals("9/2022", formatMonthYear(LocalDate.of(2022, 9, 24)))
     }
 }

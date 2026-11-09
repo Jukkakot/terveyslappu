@@ -50,19 +50,20 @@ fun WeightChart(data: ChartData, description: String, modifier: Modifier = Modif
     val colors = MaterialTheme.colorScheme
     ProvideVicoTheme(rememberM3VicoTheme(lineColor = colors.outlineVariant, textColor = colors.onSurfaceVariant)) {
         val dot = rememberShapeComponent(fill = Fill(colors.primary), shape = CircleShape)
-        val line = LineCartesianLayer.rememberLine(
-            fill = remember(colors.primary) { LineCartesianLayer.LineFill.single(Fill(colors.primary)) },
-            pointProvider = if (data.xs.size <= MAX_DOTS) {
-                remember(dot) { LineCartesianLayer.PointProvider.single(LineCartesianLayer.Point(dot, 7.dp)) }
-            } else {
-                null
-            },
-        )
+        val fill = remember(colors.primary) { LineCartesianLayer.LineFill.single(Fill(colors.primary)) }
+        val dots = remember(dot) { LineCartesianLayer.PointProvider.single(LineCartesianLayer.Point(dot, 7.dp)) }
+        val dotted = LineCartesianLayer.rememberLine(fill = fill, pointProvider = dots)
+        val plain = LineCartesianLayer.rememberLine(fill = fill, pointProvider = null)
+        // One series per segment; a lone weight between gaps keeps its dot even in a dense chart.
+        val lines = remember(data, dotted, plain) {
+            val dense = data.xs.size > MAX_DOTS
+            data.segments.map { if (!dense || it.first == it.last) dotted else plain }
+        }
         val layer = rememberLineCartesianLayer(
-            lineProvider = remember(line) { LineCartesianLayer.LineProvider.series(line) },
+            lineProvider = remember(lines) { LineCartesianLayer.LineProvider.series(lines) },
             rangeProvider = remember(data) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = data.maxX, minY = data.minY, maxY = data.maxY) },
         )
-        val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> formatShortDay(data.dayAt(x)) } }
+        val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> if (data.overYear) formatMonthYear(data.dayAt(x)) else formatShortDay(data.dayAt(x)) } }
         val kgLabels = remember { CartesianValueFormatter { _, y, _ -> "%.0f".format(y) } }
         val markerLabel = rememberTextComponent(
             style = TextStyle(color = colors.onSurface, fontSize = 14.sp),
@@ -86,7 +87,9 @@ fun WeightChart(data: ChartData, description: String, modifier: Modifier = Modif
             getXStep = { _, _, _ -> 1.0 },
             markerController = CartesianMarkerController.rememberToggleOnTap(),
         )
-        val model = remember(data) { CartesianChartModel(LineCartesianLayerModel.build { series(data.xs, data.entries.map { it.kg }) }) }
+        val model = remember(data) { CartesianChartModel(LineCartesianLayerModel.build {
+            data.segments.forEach { seg -> series(data.xs.slice(seg), data.entries.slice(seg).map { it.kg }) }
+        }) }
         Box(modifier.fillMaxWidth().testTag("chart").semantics { contentDescription = description }) {
             CartesianChartHost(
                 chart = chart,

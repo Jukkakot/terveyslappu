@@ -22,6 +22,7 @@ fun formatDate(time: LocalDateTime): String = dateFormat.format(time)
 fun formatTime(time: LocalDateTime): String = timeFormat.format(time)
 
 private val dayFormat = DateTimeFormatter.ofPattern("EEE d.M.", finnish)
+private val dayYearFormat = DateTimeFormatter.ofPattern("EEE d.M.yyyy", finnish)
 
 /** Change between two weights: −0,3 / +0,3 / ±0,0 (one decimal, real minus sign). */
 fun formatChange(deltaKg: Double): String {
@@ -40,7 +41,7 @@ fun formatDay(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefau
     return when (day) {
         today -> "tänään"
         today.minusDays(1) -> "eilen"
-        else -> dayFormat.format(day)
+        else -> if (day.year == today.year) dayFormat.format(day) else dayYearFormat.format(day)
     }
 }
 
@@ -52,15 +53,23 @@ fun formatDayTime(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemD
 fun formatRowTime(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefault()): String =
     formatDayTime(time, today, zone).replaceFirstChar { it.titlecase(finnish) }
 
-private val shortDayFormat =DateTimeFormatter.ofPattern("d.M.", finnish)
+private val shortDayFormat = DateTimeFormatter.ofPattern("d.M.", finnish)
+private val monthYearFormat = DateTimeFormatter.ofPattern("M/yyyy", finnish)
 private val pointFormat = DateTimeFormatter.ofPattern("d.M. H.mm", finnish)
+private val pointYearFormat = DateTimeFormatter.ofPattern("d.M.yyyy H.mm", finnish)
 
 /** "8.11." */
 fun formatShortDay(day: LocalDate): String = shortDayFormat.format(day)
 
-/** A chart dot: "8.11. 7.05 82,6 kg". */
-fun formatPoint(time: Instant, kg: Double, zone: ZoneId = ZoneId.systemDefault()): String =
-    "${pointFormat.format(time.atZone(zone))} ${formatKg(kg)} kg"
+/** A long chart's x label: "9/2022". */
+fun formatMonthYear(day: LocalDate): String = monthYearFormat.format(day)
+
+/** A chart dot: "8.11. 7.05 82,6 kg", with the year when not from [today]'s year: "15.9.2024 8.33 97,6 kg". */
+fun formatPoint(time: Instant, kg: Double, zone: ZoneId = ZoneId.systemDefault(), today: LocalDate = LocalDate.now(zone)): String {
+    val at = time.atZone(zone)
+    val format = if (at.year == today.year) pointFormat else pointYearFormat
+    return "${format.format(at)} ${formatKg(kg)} kg"
+}
 
 /** Change per week with two decimals: −0,25 / +0,10 / ±0,00. */
 fun formatRate(kgPerWeek: Double): String {
