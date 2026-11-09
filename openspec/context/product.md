@@ -44,6 +44,9 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   and daily on opening, and the main screen shows last success or failure. Chosen because the
   user prefers an active, visible sync; no server (NFR-2). Same format as Vie painot and read by
   Tuo historia.
+- **No body composition** (user 2026-11-09): weight only; the impedance stays in the log.
+- **Weigh-in without any tap is wanted** (user 2026-11-09), together with an easy redo that
+  deletes the previous result; see roadmap.
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 

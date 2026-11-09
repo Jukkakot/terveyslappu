@@ -20,14 +20,15 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **Weigh-in without any tap** (idea 2026-11-08): a background Bluetooth scan with a filter
-  (Android delivers matches to the app even with the screen off) saves the weight when the user
-  just steps on the scale. Needs from the first weigh-in log: whether `name=Yoda1` is in the
-  advertisement itself and whether the company id (`key=`) is stable, since background scans
-  must be filtered. Q6.
+- **Next: weigh-in without any tap + redo** (user 2026-11-09: wanted). A background Bluetooth
+  scan with a filter saves the weight when the user just steps on the scale (the tap starts
+  stay). Plus an easy way to start a weigh-in again and delete the previous result when needed
+  (e.g. a "Punnitse uudelleen" action on the saved result that removes it and scans again).
+  Needs from the first weigh-in log: whether `name=Yoda1` is in the advertisement itself and
+  whether the company id (`key=`) is stable, since background scans must be filtered.
 
 - Own weight view in the app (only if Samsung Health turns out awkward).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
-- Body composition from impedance (the scale sends it; needs height, age, sex).
+- ~~Body composition from impedance~~: dropped (user 2026-11-09, Q4: not needed).
