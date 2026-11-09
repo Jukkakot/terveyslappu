@@ -145,12 +145,13 @@ can be matched to a build.
 - **THEN** the next build's number is the same as without that commit
 
 ### Requirement: Grouped list
-Historia's list SHALL group the period's weights by year, month, week and day, newest first on
-every level, with the single weights under their day. Weeks run Monday to Sunday and SHALL be cut
-at month borders. A group that would hold only one child SHALL NOT be shown as its own level: its
-child takes its place, and a day with one weight is a plain weight row. A period with at most 14
-weights SHALL stay a flat list in which only days with several weights are grouped (a rolling week
-would otherwise split at its Monday; decided while implementing, 2026-11-09).
+Historia's list SHALL group the period's weights by year, month and week, newest first on every
+level, with the weights as plain rows under their week (no day level: a weight row already shows its
+day). Weeks run Monday to Sunday and SHALL be cut at month borders. Every year, month and week that
+holds a weight SHALL be its own row, even with a single weight (user 2026-11-09: one systematic
+rule). When all the period's weights fall in one year, the year row SHALL be left out and the list
+SHALL start with the months. A period with at most 14 weights SHALL stay a flat list of weight rows
+without groups.
 
 #### Scenario: A week, one weight a day
 - **GIVEN** the period 1 vk holds one weight on each of seven days
@@ -158,9 +159,9 @@ would otherwise split at its Monday; decided while implementing, 2026-11-09).
 - **THEN** the list shows seven weight rows and no group rows
 
 #### Scenario: Two weights in a day
-- **GIVEN** a day holds weights at 7.05 and 21.30 among other days' single weights
-- **WHEN** Historia is shown
-- **THEN** that day is a group row "Ti 4.11." with two weights under it
+- **GIVEN** a period of over 14 weights where a day holds weights at 7.05 and 21.30
+- **WHEN** that day's week is open
+- **THEN** both weights show as weight rows under the week, with no day row
 
 #### Scenario: Several years
 - **GIVEN** the period Kaikki holds weights from 2022 to 2026
@@ -171,12 +172,20 @@ would otherwise split at its Monday; decided while implementing, 2026-11-09).
 - **GIVEN** weights on Thu 30.10. and Mon 3.11. and Tue 4.11.
 - **THEN** 30.10. sits under Lokakuu and 3.–4.11. under Marraskuu, each in its own part of the week
 
+#### Scenario: Month with one weight
+- **GIVEN** a period of over 14 weights where March 2024 holds a single weight
+- **THEN** March 2024 is a month row with a week row under it, and the weight under that week
+
+#### Scenario: One year
+- **GIVEN** the period 1 v holds 200 weights all from 2026
+- **THEN** the top level shows month rows and no year row
+
 ### Requirement: Group rows
 A group row SHALL show the group's name (a year "2024", a month with year "Marraskuu 2025", a week
-with its days "Vk 45 · 3.–9.11.", a day "Ti 4.11."; the year shown when not the current year), the
-first and the last weight of the group in time ("92,3 → 91,0 kg"), their difference with the list's
-arrow and neutral colours, the number of weights, and a sign that it opens. Tapping it SHALL open or
-close it.
+with its days "Vk 45 · 3.–9.11."; the year shown when not the current year), the first and the last
+weight of the group in time ("92,3 → 91,0 kg"), their difference with the list's arrow and neutral
+colours, the number of weights, and a sign that it opens. A group with a single weight SHALL show
+that weight and no difference. Tapping it SHALL open or close it.
 
 #### Scenario: Month row
 - **GIVEN** November 2025 holds 20 weights, the first 92,3 kg and the last 91,0 kg
@@ -184,18 +193,19 @@ close it.
 
 #### Scenario: Open and close
 - **WHEN** the user taps a closed month row
-- **THEN** its weeks (or days or weights) appear under it; tapping again hides them
+- **THEN** its weeks appear under it; tapping again hides them
 
 ### Requirement: Open by default
-When Historia is shown, the newest group on each level SHALL be open, so the newest weights show as
-rows, and every other group SHALL be closed. Open and closed groups SHALL NOT be remembered after
-leaving Historia; changing the period SHALL reset them.
+When Historia is shown, every group SHALL be closed, so the list starts as an overview of its top
+level; tapping a group opens it. Open and closed groups SHALL NOT be remembered after leaving
+Historia; changing the period SHALL reset them to closed. A list short enough to stay flat (no
+groups) shows its weights as before.
 
 #### Scenario: Kaikki opened
 - **GIVEN** the period Kaikki with weights from 2022 to today
 - **WHEN** Historia is shown
-- **THEN** this year, its newest month and that month's newest week are open, showing the newest
-  weights; 2025 and older years are closed
+- **THEN** the list shows only the closed year rows (and gap rows between them); no weight row shows
+  until a group is opened
 
 ### Requirement: Gaps in the list
 Where more than 30 days pass with no weight between two neighbours on the same level, the list SHALL

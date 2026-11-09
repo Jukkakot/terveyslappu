@@ -55,41 +55,22 @@ rule as the category.
 - **GIVEN** the height is 180 cm and the owner is an adult
 - **THEN** the normal-weight range reads 60–81 kg
 
-### Requirement: Basal metabolic rate
-The app SHALL compute the basal metabolic rate of a weight by the Mifflin-St Jeor equation
-(10 × kg + 6.25 × cm − 5 × age, plus 5 for Mies and minus 161 for Nainen), in kcal per day rounded
-to the nearest 10. The age SHALL be the weight's year minus the birth year. It SHALL be shown only
-when the height, the birth year and a gender (Mies or Nainen) are all set and the owner was at
-least 18 in the weight's year. It SHALL NOT be written to Health Connect.
-
-#### Scenario: Man
-- **GIVEN** height 180 cm, birth year 1990, gender Mies
-- **WHEN** a weight of 82.0 kg from 2026 is shown
-- **THEN** its basal metabolic rate is 1 770 kcal/vrk
-
-#### Scenario: Woman
-- **GIVEN** height 165 cm, birth year 1990, gender Nainen
-- **WHEN** a weight of 60.0 kg from 2026 is shown
-- **THEN** its basal metabolic rate is 1 290 kcal/vrk
-
-#### Scenario: Gender not chosen
-- **GIVEN** height and birth year set, gender Ei valittu
-- **THEN** no basal metabolic rate is computed (its reason is shown); the BMI is
-
 ### Requirement: Reason when a value cannot be computed
 Wherever a derived value would be shown but cannot be computed, the app SHALL show a short text
-naming the missing owner details instead ("BMI vaatii pituuden", "Perusaineenvaihdunta vaatii
-sukupuolen", "... syntymävuoden", several joined), and tapping it SHALL open Asetukset at Omat
+naming the missing owner details instead ("BMI vaatii pituuden"), and tapping it SHALL open Asetukset at Omat
 tiedot. When the owner was under 18, the text SHALL say that the adult classes do not apply.
+
+#### Scenario: Height missing
+- **GIVEN** the owner has not set a height
+- **THEN** in place of the BMI the text reads "BMI vaatii pituuden"
 
 #### Scenario: Gender missing
 - **GIVEN** height and birth year set, gender Ei valittu
-- **THEN** in place of the basal metabolic rate the text reads "Perusaineenvaihdunta vaatii
-  sukupuolen"
+- **THEN** the BMI and the normal-weight range show and no reason text is shown
 
 #### Scenario: Several missing
-- **GIVEN** only the height is set
-- **THEN** the text for the basal metabolic rate names both the birth year and the gender
+- **GIVEN** only the birth year is set
+- **THEN** one text reads "BMI vaatii pituuden"
 
 ### Requirement: Derived values stay in the app
 Derived values SHALL NOT be written to Health Connect nor carried in the export or the backup; they
@@ -97,4 +78,4 @@ are computed again from the weights and the owner details whenever shown.
 
 #### Scenario: Export
 - **WHEN** the user exports the data
-- **THEN** the file has no BMI or basal metabolic rate
+- **THEN** the file has no BMI

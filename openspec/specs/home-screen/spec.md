@@ -17,8 +17,8 @@ the change over it. Both changes on the card SHALL show a small arrow up for a g
 loss next to the number, and no arrow when the shown value is zero. Tapping the card SHALL open
 Historia; the settings button SHALL open Asetukset. The home screen SHALL have no ⋮ menu.
 
-The derived-values row SHALL show, of the latest weight, the BMI with its category word and tone,
-the normal-weight range and the basal metabolic rate; a value that cannot be computed SHALL be
+The derived-values row SHALL show, of the latest weight, the BMI number in its category tone without
+the category word (the word SHALL stay in the screen reader text), and the normal-weight range; a value that cannot be computed SHALL be
 replaced by its short reason naming the missing owner details, which opens Asetukset at Omat
 tiedot. Without weights the row SHALL NOT be shown.
 
@@ -64,20 +64,18 @@ tiedot. Without weights the row SHALL NOT be shown.
 #### Scenario: All details set
 - **GIVEN** height 180 cm, birth year 1990, gender Mies and the latest weight 82.0 kg in 2026
 - **WHEN** the home screen is shown
-- **THEN** the row shows BMI 25,3 "ylipaino" in the yellow tone, normaalipaino 60–81 kg and
-  1 770 kcal/vrk, and no reason text
-
-#### Scenario: Gender missing
-- **GIVEN** height and birth year set, gender Ei valittu
-- **WHEN** the home screen is shown
-- **THEN** the row shows the BMI, the normal-weight range and "Perusaineenvaihdunta vaatii
-  sukupuolen"; tapping that text opens Asetukset at Omat tiedot
+- **THEN** the row shows "BMI 25,3" in the yellow tone without the word "ylipaino", and
+  normaalipaino 60–81 kg, and no reason text
 
 #### Scenario: No details
 - **GIVEN** no owner details are set
 - **WHEN** the home screen is shown
-- **THEN** the row shows only the reasons, naming the height (BMI, range) and the height, birth
-  year and gender (basal metabolic rate)
+- **THEN** the row shows only "BMI vaatii pituuden", which opens Asetukset at Omat tiedot
+
+#### Scenario: Gender missing
+- **GIVEN** height and birth year set, gender Ei valittu
+- **WHEN** the home screen is shown
+- **THEN** the row shows the BMI and the normal-weight range and no reason text
 
 ### Requirement: Historia screen
 Historia SHALL hold the period chips, the chart, the period statistics and the list of this app's

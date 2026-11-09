@@ -52,8 +52,9 @@ after; this holds for every chart and quantity.
 - **THEN** the line starts right at the y-axis, with no gap between the axis and the first weight
 
 ### Requirement: Periods
-The chart SHALL offer the periods 1 vk, 1 kk, 3 kk, 1 v, Kaikki and Oma, where Oma opens a date-range
-picker. The first time 1 vk SHALL be chosen; after that the app SHALL open with the last chosen period.
+The chart SHALL offer the periods 1 vk, 1 kk, 3 kk, 1 v, Kaikki and Oma, where Oma opens a calendar
+for picking a date range. The first time 1 vk SHALL be chosen; after that the app SHALL open with the
+last chosen period.
 
 #### Scenario: Change period
 - **WHEN** the user taps 1 kk
@@ -77,9 +78,8 @@ picker. The first time 1 vk SHALL be chosen; after that the app SHALL open with 
 Under the chart the app SHALL show for the chosen period: the latest weight, the change from the
 first to the latest weight in kg, that change per week, the average, the lowest and highest weight,
 and the number of weights. The change and the change per week SHALL each show a small arrow up for
-a gain and down for a loss next to the number, and no arrow when the shown value is zero. For BMI
-and Perusaineenvaihdunta the statistics SHALL show the same values of that quantity except the
-change per week; the latest BMI SHALL also show its category word and tone.
+a gain and down for a loss next to the number, and no arrow when the shown value is zero. For BMI the
+statistics SHALL show the same values of the BMI except the change per week; the latest BMI SHALL also show its category word and tone.
 
 #### Scenario: Losing
 - **GIVEN** a 1 kk period whose first weight is 83.0 kg and latest 82.0 kg, 28 days apart
@@ -121,10 +121,9 @@ include the year when the weight is not from the current year.
 Every weight chart (Historia and the home card) SHALL use one y-scale rule: the lowest and highest
 shown weight with 0.5 kg room on each side, widened evenly to at least 4 kg when narrower, and
 rounded outwards to whole kilos. The scale SHALL grow when the weights spread more and SHALL never be
-narrower than 4 kg, so a small change looks small in every period and on both screens. The BMI and
-basal metabolic rate charts SHALL use the same rule with the room and the least span as many units
-as 0.5 kg and 4 kg give at the owner's height (BMI) or by the equation (10 kcal per kg), rounded
-outwards to whole BMI units and to tens of kcal.
+narrower than 4 kg, so a small change looks small in every period and on both screens. The BMI chart
+SHALL use the same rule with the room and the least span as many BMI units as 0.5 kg and 4 kg give
+at the owner's height, rounded outwards to whole BMI units.
 
 #### Scenario: Steady weight
 - **GIVEN** the weights in view are 97.76 and 97.84 kg
@@ -139,13 +138,12 @@ outwards to whole BMI units and to tens of kcal.
 - **THEN** the BMI y-scale spans at least 1,2 units and the line looks flat
 
 #### Scenario: Steady basal metabolic rate
-- **GIVEN** basal metabolic rates in view of 1 770 and 1 780 kcal
-- **THEN** the y-scale spans at least 40 kcal and the line looks flat
+- **WHEN** Historia is shown
+- **THEN** there is no basal metabolic rate chart, only Paino and BMI
 
 ### Requirement: Units on the chart
 The Historia chart's y-axis labels SHALL show the unit (`98 kg`), and every weight and change in
-the period statistics SHALL show `kg`. Basal metabolic rate labels and statistics SHALL show
-`kcal`; BMI has no unit and its axis labels SHALL be bare numbers under a "BMI" chart title.
+the period statistics SHALL show `kg`. BMI has no unit and its axis labels SHALL be bare numbers under a "BMI" chart title.
 
 #### Scenario: Axis labels
 - **WHEN** Historia shows a chart
@@ -156,8 +154,8 @@ the period statistics SHALL show `kg`. Basal metabolic rate labels and statistic
 - **THEN** the latest, average, lowest and highest weight read like `82,0 kg`
 
 #### Scenario: Basal metabolic rate axis
-- **WHEN** Historia shows Perusaineenvaihdunta
-- **THEN** its y-axis labels read like `1 760 kcal`, `1 800 kcal`
+- **WHEN** Historia shows any tab
+- **THEN** no axis label or statistic reads `kcal`
 
 ### Requirement: Dots when they fit
 Every weight chart (Historia and the home card's line) SHALL draw each weight as a dot on the line
@@ -176,10 +174,9 @@ SHALL keep its larger dot on the home line, however dense the chart is.
 - **THEN** only the line is drawn (plus the latest's dot on the home line)
 
 ### Requirement: One quantity at a time
-Historia's chart and period statistics SHALL show one quantity at a time: Paino, BMI or
-Perusaineenvaihdunta. Tabs with those names SHALL sit above the chart; tapping a tab or swiping the
-chart and statistics left or right SHALL switch the quantity, and the chosen period SHALL stay. All
-three tabs SHALL always be shown; a quantity that cannot be computed SHALL show, instead of its
+Historia's chart and period statistics SHALL show one quantity at a time: Paino or BMI. Tabs with those names SHALL sit above the chart; tapping a tab or swiping the
+chart and statistics left or right SHALL switch the quantity, and the chosen period SHALL stay. Both
+tabs SHALL always be shown; a quantity that cannot be computed SHALL show, instead of its
 chart and statistics, the reason naming the missing owner details and a button to Omat tiedot.
 Historia SHALL open on Paino. The weight list under the statistics
 SHALL stay the same whatever quantity is shown.
@@ -188,10 +185,6 @@ SHALL stay the same whatever quantity is shown.
 - **GIVEN** a height is set and Historia shows Paino for 1 kk
 - **WHEN** the user swipes the chart to the left
 - **THEN** the BMI tab is chosen and the chart and statistics show the BMI of the same 30 days
-
-#### Scenario: Tap a tab
-- **WHEN** the user taps Perusaineenvaihdunta
-- **THEN** the chart and statistics show the basal metabolic rate of the chosen period
 
 #### Scenario: No owner details
 - **GIVEN** no height is set
@@ -203,6 +196,10 @@ SHALL stay the same whatever quantity is shown.
 - **WHEN** Historia is opened again
 - **THEN** it shows Paino
 
+#### Scenario: Tap a tab
+- **WHEN** the user taps BMI
+- **THEN** the chart and statistics show the BMI of the chosen period
+
 ### Requirement: BMI bands
 The BMI chart SHALL show, behind the line, faint background bands in the category tones (green,
 yellow, red) for the BMI ranges that fall inside its y-scale.
@@ -211,3 +208,52 @@ yellow, red) for the BMI ranges that fall inside its y-scale.
 - **GIVEN** the BMI values in view run from 24,6 to 25,4
 - **WHEN** the BMI chart is shown
 - **THEN** the area under 25 has a faint green band and the area from 25 a faint yellow band
+
+### Requirement: Days with weights in the calendar
+The Oma calendar SHALL show one month at a time with weeks starting on Monday, the month and year on
+top, and change month by swiping or by arrows. Every day with at least one weight of this app SHALL
+show that day's latest weight under its number with one decimal and no unit ("82,4"); a day without
+weights shows only its number. Every day up to today SHALL be selectable, with or without a weight;
+days after today SHALL NOT be. The first tap SHALL set the start,
+the second the end (a day before the start becomes the new start instead), the days between SHALL be
+highlighted, and a further tap SHALL start a new range. OK SHALL apply the range, or the single
+start day when no end is set; Peruuta SHALL close without changes. The calendar SHALL open on the
+month of the current Oma range's end, or on this month.
+
+#### Scenario: Weights on the days
+- **GIVEN** weights 82,9 kg at 7.05 and 82,4 kg at 21.30 on 3.11., 82,1 kg on 5.11., none on 4.11.
+- **WHEN** the user opens Oma in November
+- **THEN** 3.11. shows 82,4, 5.11. shows 82,1 and 4.11. shows only its number
+
+#### Scenario: Empty day can be picked
+- **WHEN** the user taps 4.11. (no weight) and then 9.11.
+- **THEN** 4.–9.11. is highlighted and OK shows that range
+
+#### Scenario: End before start
+- **GIVEN** the start is 9.11.
+- **WHEN** the user taps 2.11.
+- **THEN** 2.11. becomes the start and no end is set
+
+#### Scenario: Single day
+- **WHEN** the user taps 5.11. and then OK
+- **THEN** the chart shows 5.11. only
+
+#### Scenario: Older month
+- **WHEN** the user swipes to October 2024
+- **THEN** that month's days with weights show them, as far as the app may read them
+
+### Requirement: Calendar explains missing old weights
+When the app may not read weights older than 30 days (Health Connect's history permission not
+granted), the Oma calendar SHALL say so under the month ("Yli 30 päivää vanhat painot näkyvät vasta
+luvalla") with a button that asks for the permission, so empty older days are not mistaken for days
+without weighing. With the permission granted, nothing about it SHALL be shown.
+
+#### Scenario: Without history access
+- **GIVEN** the history permission is not granted
+- **WHEN** the user opens Oma
+- **THEN** the calendar shows the text and an Anna lupa button that asks Health Connect for access
+
+#### Scenario: With history access
+- **GIVEN** the history permission is granted
+- **WHEN** the user opens Oma
+- **THEN** no text about access is shown
