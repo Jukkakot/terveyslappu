@@ -37,3 +37,18 @@ Changing a detail SHALL be logged with which field changed but never with its va
 #### Scenario: Log line
 - **WHEN** the user sets the height
 - **THEN** the log gets a profile line naming the height field and no number
+
+### Requirement: Height to Health Connect
+When the user saves a height, the app SHALL also write it to Health Connect as a height measured at
+that moment, asking for the height write permission the first time. The height SHALL stay in the app
+even when the permission is denied or the write fails, and the field SHALL then say it was not saved
+to Health Connect. Birth year and gender SHALL NOT be written to Health Connect (it has no record for
+them). Weight access SHALL not depend on the height permission.
+
+#### Scenario: Save height
+- **WHEN** the user saves height 180 and grants the permission
+- **THEN** Health Connect holds a 180 cm height written by this app at that moment
+
+#### Scenario: Permission denied
+- **WHEN** the user saves height 180 and denies the permission
+- **THEN** Omat tiedot keeps 180, says it is not in Health Connect, and weights work as before

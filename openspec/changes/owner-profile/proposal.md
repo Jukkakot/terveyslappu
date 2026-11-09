@@ -13,9 +13,11 @@ app keeps only raw data. The phone has one user, so one set of details in Asetuk
 - The export and the automatic backup (same format) carry the details in one `#profile;` line
   before the header; Tuo painot fills the phone's empty details from it, so a new phone gets them
   back with the weights (user 2026-11-09).
+- A saved height is also written to Health Connect as a height record (own permission, asked
+  when the height is first saved); Health Connect has no record for birth year or gender
+  (user 2026-11-09).
 - Logged as `profile.set` with which field changed, never the value (NFR-1).
-- Decided not to do now (user 2026-11-09): BMI or other derived values, writing height to Health
-  Connect, filling the details from an OKOK file's title rows.
+- Decided not to do now (user 2026-11-09): BMI or other derived values, filling the details from an OKOK file's title rows.
 
 ## Capabilities
 
@@ -30,6 +32,6 @@ app keeps only raw data. The phone has one user, so one set of details in Asetuk
 
 ## Impact
 
-App screens: Asetukset and the import preview. No Health Connect, scale, widget or CI change. New
+App screens: Asetukset and the import preview. Health Connect: new height write permission and record. No scale, widget or CI change. New
 pure validation logic, a small preferences store next to `AppearancePrefs` (singleton in
 `TerveysApp`), the CSV export writer and the history parser.
