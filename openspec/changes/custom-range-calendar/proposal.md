@@ -12,8 +12,8 @@ user does not want), so the picker is replaced.
 - Oma opens a new calendar dialog built on the **Calendar** library (kizitonwose, Compose,
   maintained; 2.10.1 from March 2026): one month at a time, swipe or arrows to change month, weeks
   from Monday, the month name and year on top.
-- Every day with at least one of this app's weights has a **small dot** under its number; the
-  count is not shown. Every day up to today stays selectable.
+- Every day with at least one of this app's weights shows **that day's latest weight** under its
+  number ("82,4", no unit, small text); no dot, no count. Every day up to today stays selectable.
 - Picking: the first tap sets the start, the second the end (a tap before the start makes that day
   the new start); the days between are highlighted; a third tap starts a new range. OK applies the
   range (a single day when only the start is set), Peruuta closes without change. The dialog opens
@@ -35,4 +35,4 @@ user does not want), so the picker is replaced.
 - Code: new pure range logic in `chart/` (tap → range), new `ui/RangeCalendarDialog`, `PeriodPanel`
   drops the M3 `DateRangePicker`. Dependency `com.kizitonwose.calendar:compose` 2.10.1 (library
   first, as decided in product.md; drawing a month grid by hand is what the library already does).
-- No health data leaves the phone; the dots come from the weights already read.
+- No health data leaves the phone; the day weights come from the weights already read.

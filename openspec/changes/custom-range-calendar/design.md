@@ -9,7 +9,7 @@ disable days, which the user rejected (2026-11-09). Historia already holds every
 
 ## Goals / Non-Goals
 
-**Goals:** a dot on days with weights; all past days selectable; the same Period.Custom result.
+**Goals:** the day's latest weight on days with weights; all past days selectable; the same Period.Custom result.
 **Non-Goals:** counts or values per day, multi-month view, picking from the home screen.
 
 ## Decisions
@@ -20,17 +20,19 @@ disable days, which the user rejected (2026-11-09). Historia already holds every
   M3 picker (cannot mark days). The library leaves selection to us, which keeps our rules.
 - **Pure range logic `chart/RangePick`**: `tap(state, day): state` with start/end; `contains(day)`;
   `result(): Pair<LocalDate, LocalDate>?`. Unit-tested for the spec scenarios.
-- **Days with data** = `weights.map { local date in the system zone }.toSet()`, computed once per
-  open of the dialog; passed in, so the dialog stays testable with made-up weights.
+- **Day weights** = the latest weight of each local day (system zone) as `Map<LocalDate, Double>`,
+  computed once per open of the dialog; passed in, so the dialog stays testable with made-up
+  weights. Latest, because it is the value the list and home card lead with.
 - **Month range**: from the month of the oldest loaded weight (at least 12 months back) to this
   month; opens on the current Custom end's month or this month.
 - **Look** (theme, both modes): day cell 40–48 dp; start/end a filled primary circle with onPrimary
-  text, days between a primaryContainer band, today an outline, future days in disabled alpha; dot
-  4 dp under the number in primary (onPrimary on a selected day). Header row: month name + year
+  text, days between a primaryContainer band, today an outline, future days in disabled alpha; the
+  weight under the number in a small fixed size (10 sp, not scaled further at 200 % text so
+  "100,0" fits a 1/7-width cell) in onSurfaceVariant (onPrimary on a selected day). Header row: month name + year
   (Finnish, "Marraskuu 2026") with previous/next icon buttons (accessible names); weekday initials
   ma–su. Buttons Peruuta / OK as in other dialogs.
-- **Accessibility**: each day's semantics read the date, "punnittu" when it has a dot, and the
-  selection state; buttons ≥ 44 dp.
+- **Accessibility**: each day's semantics read the date and the
+  selection state; a day with a weight reads it ("3. marraskuuta, 82,4 kg"); buttons ≥ 44 dp.
 
 ## Risks / Trade-offs
 
