@@ -113,9 +113,9 @@ private fun StatsTiles(stats: PeriodStats) {
     val tiles = buildList {
         stats.change?.let { add(Tile(R.string.stats_change, stringResource(R.string.kg_value, formatChange(it)), shownDirection(it, 1))) }
         stats.perWeek?.let { add(Tile(R.string.stats_rate, stringResource(R.string.kg_value, formatRate(it)), shownDirection(it, 2))) }
-        add(Tile(R.string.stats_average, formatKg(stats.average)))
-        add(Tile(R.string.stats_min, formatKg(stats.min)))
-        add(Tile(R.string.stats_max, formatKg(stats.max)))
+        add(Tile(R.string.stats_average, stringResource(R.string.kg_value, formatKg(stats.average))))
+        add(Tile(R.string.stats_min, stringResource(R.string.kg_value, formatKg(stats.min))))
+        add(Tile(R.string.stats_max, stringResource(R.string.kg_value, formatKg(stats.max))))
         add(Tile(R.string.stats_count, stats.count.toString()))
     }
     Column(

@@ -6,14 +6,12 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.ceil
-import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToLong
 
 /**
  * What the chart draws for a period (weight-chart): x is days since [origin] (fractional, so the
- * time of day counts), y is kg. The x range spans the whole period, the y range the weights with
- * some room, rounded to whole kilos.
+ * time of day counts), y is kg. The x range spans the whole period, the y range follows [WeightScale].
  */
 class ChartData(
     /** Oldest first. */
@@ -69,14 +67,14 @@ class ChartData(
             val xs = sorted.map { x(it.time) }
             val lastX = minOf(x(end), x(now)).coerceAtLeast(xs.last())
             val maxX = max(1.0, ceil(lastX))
-            val kgs = sorted.map { it.kg }
+            val scale = WeightScale.of(sorted.map { it.kg })
             return ChartData(
                 entries = sorted,
                 origin = origin,
                 xs = xs,
                 maxX = maxX,
-                minY = floor(kgs.min() - 0.5),
-                maxY = ceil(kgs.max() + 0.5),
+                minY = scale.min,
+                maxY = scale.max,
                 labelSpacing = max(1, ceil(maxX / LABELS).toInt()),
                 segments = segments(xs),
                 overYear = origin.plusDays(maxX.toLong()) > origin.plusYears(1),

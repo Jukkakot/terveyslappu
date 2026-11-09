@@ -157,7 +157,7 @@ class MainScreenTest {
         compose.onNodeWithTag("delete-1").performClick()
         assertEquals("1", deleted)
         deleted = null
-        compose.onNode(hasText("82,4 kg") and hasAnyAncestor(hasTestTag("weights")))
+        compose.onNode(hasText("82,4 kg") and hasAnyAncestor(hasTestTag("weights")) and !hasAnyAncestor(hasTestTag("stats")))
             .performTouchInput { longClick() }
         assertEquals("1", deleted)
     }

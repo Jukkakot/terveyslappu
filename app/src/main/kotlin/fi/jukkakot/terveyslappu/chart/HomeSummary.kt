@@ -15,6 +15,11 @@ data class HomeSummary(
     val sparkChange: Double?,
     /** The three latest weights, newest first. */
     val recent: List<WeightEntry>,
+    /** The sparkline's x range: the whole 30 days ending at [sparkTo]. */
+    val sparkFrom: Instant,
+    val sparkTo: Instant,
+    /** The sparkline's y range ([WeightScale]); null when [spark] is empty. */
+    val sparkScale: KgRange?,
 ) {
     companion object {
         val SPARK_DAYS: Duration = Duration.ofDays(30)
@@ -32,6 +37,9 @@ data class HomeSummary(
                 spark = spark,
                 sparkChange = if (spark.size > 1) spark.last().kg - spark.first().kg else null,
                 recent = newest.take(3),
+                sparkFrom = since,
+                sparkTo = maxOf(now, latest.time),
+                sparkScale = if (spark.isEmpty()) null else WeightScale.of(spark.map { it.kg }),
             )
         }
     }

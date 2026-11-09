@@ -85,6 +85,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   weights; a new kind gets its own part and travels through export, import and backup with no
   new buttons. Settings and owner details are not carried. File name
   `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>` so names never collide.
+- **One weight scale, at least 4 kg** (user 2026-11-09, chart-scale): every weight chart (home
+  card, Historia) uses the weights with 0.5 kg room, widened to at least 4 kg and rounded to whole
+  kilos. Daily weight moves 0.5–2 kg with water and glycogen, so a narrower scale makes noise look
+  like a trend (the home line once dropped steeply for a 0.08 kg difference); one rule everywhere
+  keeps a change the same size across periods. The home line spans the whole 30 days. kg is shown
+  on every number and axis; no unit choice (user: kg only).
 - **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
   small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
   list shows each weight's change from the one before it, gains and losses in two palette tones

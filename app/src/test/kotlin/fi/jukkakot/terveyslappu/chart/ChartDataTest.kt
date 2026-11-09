@@ -21,8 +21,8 @@ class ChartDataTest {
         assertEquals(7, data.xs.size)
         assertEquals(data.xs.sorted(), data.xs)
         assertEquals(8.0, data.maxX)
-        assertEquals(81.0, data.minY)
-        assertEquals(84.0, data.maxY)
+        assertEquals(80.0, data.minY)
+        assertEquals(85.0, data.maxY)
         assertEquals(2, data.labelSpacing)
         assertEquals(LocalDate.of(2026, 11, 9), data.dayAt(7.0))
     }

@@ -64,7 +64,7 @@ fun WeightChart(data: ChartData, description: String, modifier: Modifier = Modif
             rangeProvider = remember(data) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = data.maxX, minY = data.minY, maxY = data.maxY) },
         )
         val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> if (data.overYear) formatMonthYear(data.dayAt(x)) else formatShortDay(data.dayAt(x)) } }
-        val kgLabels = remember { CartesianValueFormatter { _, y, _ -> "%.0f".format(y) } }
+        val kgLabels = remember { CartesianValueFormatter { _, y, _ -> "%.0f kg".format(y) } }
         val markerLabel = rememberTextComponent(
             style = TextStyle(color = colors.onSurface, fontSize = 14.sp),
             padding = Insets(8.dp, 4.dp),

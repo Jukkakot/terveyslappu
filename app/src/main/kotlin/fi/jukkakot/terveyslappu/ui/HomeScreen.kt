@@ -161,10 +161,21 @@ private fun LatestValues(summary: HomeSummary) {
     if (summary.spark.isNotEmpty()) {
         val first = summary.spark.first()
         val description = stringResource(R.string.home_spark, formatKg(first.kg), formatKg(summary.latest.kg))
-        Sparkline(summary.spark, colors.primary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
+        Sparkline(summary, colors.primary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
+        val zone = ZoneId.systemDefault()
+        val small = MaterialTheme.typography.labelSmall
+        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+            Text(formatShortDay(summary.sparkFrom.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text(formatShortDay(summary.sparkTo.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant)
+        }
         summary.sparkChange?.let { change ->
-            Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
-                Text(stringResource(R.string.home_spark_days), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics {}) {
+                Text(
+                    stringResource(R.string.home_spark_range, formatKg(first.kg), formatKg(summary.latest.kg)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.weight(1f).testTag("sparkRange"),
+                )
                 ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
         }
@@ -191,22 +202,22 @@ private fun ChangeChip(change: Double, modifier: Modifier = Modifier) {
 
 /** The last 30 days as a line by time, no axes; the latest weight is a dot at the right end. */
 @Composable
-private fun Sparkline(points: List<WeightEntry>, color: Color, modifier: Modifier) {
+private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
+    val points = summary.spark
+    val scale = summary.sparkScale ?: return
     Canvas(modifier) {
         val dot = 4.dp.toPx()
         val left = dot
         val width = size.width - 2 * dot
         val top = dot
         val height = size.height - 2 * dot
-        val t0 = points.first().time.epochSecond
-        val span = (points.last().time.epochSecond - t0).coerceAtLeast(1)
-        val lo = points.minOf { it.kg }
-        val hi = points.maxOf { it.kg }
-        val range = (hi - lo).takeIf { it > 0.0 }
+        // The whole 30 days and the shared weight scale (home-screen, weight-chart "Weight scale").
+        val t0 = summary.sparkFrom.epochSecond
+        val span = (summary.sparkTo.epochSecond - t0).coerceAtLeast(1)
         fun at(entry: WeightEntry): Offset {
-            val x = if (points.size == 1) left + width else left + width * (entry.time.epochSecond - t0) / span
-            val y = if (range == null) top + height / 2 else top + height * ((hi - entry.kg) / range).toFloat()
-            return Offset(x.toFloat(), y)
+            val x = left + width * ((entry.time.epochSecond - t0).toFloat() / span).coerceIn(0f, 1f)
+            val y = top + height * ((scale.max - entry.kg) / scale.span).toFloat()
+            return Offset(x, y)
         }
         if (points.size > 1) {
             val path = Path()
