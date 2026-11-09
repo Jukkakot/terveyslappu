@@ -2,7 +2,7 @@
 
 Phases in order; one OpenSpec change each unless noted.
 
-1. **poc-manual-weight** (done 2026-11-08; Q1 answered 2026-11-09: Samsung Health keeps its own copy, see product.md): Android app with manual weight entry written to Health
+1. **poc-manual-weight** (done 2026-11-08; Q1 closed 2026-11-09: Samsung Health follows Health Connect, deletions too, see product.md): Android app with manual weight entry written to Health
    Connect, recent weights read back, shareable log; CI builds a signed APK for Obtainium. Used to
    test what Samsung Health does with the weight (display, delay, CSV export, Samsung Cloud).
 2. **scale-weigh-in** (done 2026-11-08 in autopilot, archived; first real weigh-in log still to
@@ -19,9 +19,6 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **Idea: deletions vs Samsung Health's copy** (2026-11-09, Q1): a weight deleted here stays in
-  Samsung Health. Option: the weigh-in writes to Health Connect only when its dialog closes, so
-  Poista never reaches Samsung Health. Waiting for the user's call.
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
   (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current
   widget shows the previous result right away, which the user does not want there. Either the
