@@ -9,12 +9,14 @@ hanging. The user wants it to give up and close by itself after 30 seconds (user
 ## What Changes
 
 - The weigh-in gives up 30 seconds after scanning started when no weight has been saved (was 60).
-- On giving up, scanning stops and the dialog closes by itself; a short toast says the weigh-in was
-  stopped because no weight came ("Punnitus lopetettu: painoa ei saatu"), so the closing is not
-  silent. Try again = tap the widget, tile or button again.
-- The 30 seconds count from the start, also while the scale already shows a changing weight (a
-  normal weigh-in settles in a few seconds).
-- A scan error (Bluetooth off etc.) keeps showing its message and actions as today.
+- The dialog shows the seconds left from the start (a ring counting down while waiting, a line under
+  the live weight), so its closing is expected (user: no message at closing, a visible count from
+  the start instead).
+- At zero, scanning stops and the dialog closes by itself. Try again = tap the widget, tile or button.
+- The count runs from the start, also while the scale already shows a changing weight (a normal
+  weigh-in settles in a few seconds).
+- Bluetooth off: the dialog keeps guiding the user to turn it on first; the count starts only with
+  scanning.
 
 ## Capabilities
 
@@ -22,10 +24,10 @@ hanging. The user wants it to give up and close by itself after 30 seconds (user
 - (none)
 
 ### Modified Capabilities
-- `scale-weigh-in`: "Weigh-in dialog" — 30 s limit, closes by itself with a toast instead of a
+- `scale-weigh-in`: "Weigh-in dialog" — 30 s visible countdown, closes by itself instead of a
   "not found" view.
 
 ## Impact
 
-- Code: `scale/WeighIn.TIMEOUT_MS` 30 s; `WeighInActivity` closes on `NotFound` with a toast;
-  the NotFound view in `ui/WeighInDialog` goes. Log keeps `weighin.timeout heard= ms=`.
+- Code: `scale/WeighIn` (30 s, `secondsLeft`), `WeighInViewModel`, `WeighInActivity` closes on
+  `NotFound`, `ui/WeighInDialog` countdown; the NotFound view goes. Log keeps `weighin.timeout heard= ms=`.

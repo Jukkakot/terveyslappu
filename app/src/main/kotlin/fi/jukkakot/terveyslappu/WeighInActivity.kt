@@ -58,9 +58,11 @@ class WeighInActivity : ComponentActivity() {
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
+                val secondsLeft by viewModel.secondsLeft.collectAsStateWithLifecycle()
                 var keepOpen by rememberSaveable { mutableStateOf(false) }
                 LaunchedEffect(state, keepOpen) {
-                    if (state is WeighInState.Discarded) finish()
+                    // Discarded, or no weight within the time limit: the countdown said it would close.
+                    if (state is WeighInState.Discarded || state is WeighInState.NotFound) finish()
                     if (state is WeighInState.Saved && !keepOpen) {
                         delay(CLOSE_AFTER_SAVED_MS)
                         finish()
@@ -68,7 +70,8 @@ class WeighInActivity : ComponentActivity() {
                 }
                 WeighInDialog(
                     state,
-                    WeighInActions(
+                    secondsLeft = secondsLeft,
+                    actions = WeighInActions(
                         onClose = ::finish,
                         onKeepOpen = { if (state is WeighInState.Saved) keepOpen = true },
                         onDiscard = viewModel::discard,

@@ -30,6 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import fi.jukkakot.terveyslappu.scale.WeighIn
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +56,7 @@ class WeighInActions(
 
 /** The weigh-in card over a dimmed background; tapping outside closes it. */
 @Composable
-fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
+fun WeighInDialog(state: WeighInState, actions: WeighInActions, secondsLeft: Int? = null) {
     Box(
         Modifier
             .fillMaxSize()
@@ -76,20 +81,24 @@ fun WeighInDialog(state: WeighInState, actions: WeighInActions) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(R.string.weighin_title), style = MaterialTheme.typography.titleLarge)
-                Content(state, actions)
+                Content(state, actions, secondsLeft)
             }
         }
     }
 }
 
 @Composable
-private fun Content(state: WeighInState, actions: WeighInActions) {
+private fun Content(state: WeighInState, actions: WeighInActions, secondsLeft: Int?) {
     when (state) {
         WeighInState.Preparing -> Progress(stringResource(R.string.weighin_preparing))
-        WeighInState.Scanning -> Progress(stringResource(R.string.weighin_step_on))
+        WeighInState.Scanning -> {
+            Countdown(secondsLeft)
+            Message(stringResource(R.string.weighin_step_on))
+        }
         is WeighInState.Live -> {
             BigWeight(state.kg, dim = !state.stable)
             Message(stringResource(R.string.weighin_settling))
+            secondsLeft?.let { CountdownLine(it) }
             Close(actions)
         }
         is WeighInState.Saving -> {
@@ -123,10 +132,8 @@ private fun Content(state: WeighInState, actions: WeighInActions) {
             BigWeight(state.kg)
             Choice(stringResource(R.string.weighin_save_failed), stringResource(R.string.weighin_retry), actions.onRetrySave, actions)
         }
-        is WeighInState.NotFound -> Choice(
-            stringResource(if (state.heard) R.string.weighin_not_stable else R.string.weighin_not_found),
-            stringResource(R.string.weighin_retry), actions.onRetryScan, actions,
-        )
+        // The activity closes the dialog when the time runs out.
+        is WeighInState.NotFound -> Unit
         is WeighInState.ScanFailed -> Choice(
             stringResource(R.string.weighin_scan_failed, state.code),
             stringResource(R.string.weighin_retry), actions.onRetryScan, actions,
@@ -155,6 +162,29 @@ private fun BigWeight(kg: Double, dim: Boolean = false) {
         fontWeight = FontWeight.SemiBold,
         color = if (dim) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.testTag("weight"),
+    )
+}
+
+/** While waiting for the scale: a ring running down with the seconds left in it. */
+@Composable
+private fun Countdown(secondsLeft: Int?) {
+    val left = secondsLeft ?: (WeighIn.TIMEOUT_MS / 1000).toInt()
+    val total = (WeighIn.TIMEOUT_MS / 1000).toFloat()
+    val label = pluralStringResource(R.plurals.weighin_closes_in, left, left)
+    Box(Modifier.size(56.dp).semantics { contentDescription = label }.testTag("countdown"), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(progress = { left / total }, modifier = Modifier.size(56.dp))
+        Text("$left", style = MaterialTheme.typography.titleMedium, modifier = Modifier.clearAndSetSemantics {})
+    }
+}
+
+/** Under a changing weight: the seconds left as a quiet line. */
+@Composable
+private fun CountdownLine(secondsLeft: Int) {
+    Text(
+        pluralStringResource(R.plurals.weighin_closes_in, secondsLeft, secondsLeft),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag("countdownLine"),
     )
 }
 

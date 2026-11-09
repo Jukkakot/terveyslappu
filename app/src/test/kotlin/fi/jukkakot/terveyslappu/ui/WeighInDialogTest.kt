@@ -1,5 +1,9 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -45,12 +49,11 @@ class WeighInDialogTest {
     }
 
     @Test
-    fun `not found offers a retry`() {
-        var retried = false
-        compose.setContent {
-            TerveysTheme { WeighInDialog(WeighInState.NotFound(heard = false), WeighInActions(onRetryScan = { retried = true })) }
-        }
-        compose.onNodeWithText("Yritä uudelleen").performClick()
-        assertTrue(retried)
+    fun `waiting shows the seconds left, also under a changing weight`() {
+        var state by mutableStateOf<WeighInState>(WeighInState.Scanning)
+        compose.setContent { TerveysTheme { WeighInDialog(state, WeighInActions(), secondsLeft = 28) } }
+        compose.onNodeWithContentDescription("Sulkeutuu 28 sekunnin kuluttua").assertExists()
+        state = WeighInState.Live(82.4, stable = false)
+        compose.onNodeWithTag("countdownLine", useUnmergedTree = true).assertExists()
     }
 }

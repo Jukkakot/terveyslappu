@@ -123,8 +123,6 @@
     <string name="weighin_saved">Tallennettu</string>
     <string name="weighin_save_failed">Tallennus epäonnistui. Syy on lokissa.</string>
     <string name="weighin_retry">Yritä uudelleen</string>
-    <string name="weighin_not_found">Vaakaa ei löytynyt minuutissa. Onko vaa\'an näyttö päällä?</string>
-    <string name="weighin_not_stable">Paino ei asettunut minuutissa.</string>
     <string name="weighin_scan_failed">Bluetooth-haku epäonnistui (koodi %1$d).</string>
     <string name="weighin_permission_denied">Vaakaa ei kuulla ilman lähellä olevien laitteiden lupaa.</string>
     <string name="weighin_open_app_settings">Avaa asetukset</string>
@@ -185,4 +183,8 @@
 
     <string name="privacy_title">Tietosuoja</string>
     <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin vaa\'alta, käsin tai tuodusta tiedostosta sekä pituutesi, jos tallennat sen Omiin tietoihin, ja lukee sieltä painot näytettäväksi ja omaan vientitiedostoosi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
+    <plurals name="weighin_closes_in">
+        <item quantity="one">Sulkeutuu %1$d sekunnin kuluttua</item>
+        <item quantity="other">Sulkeutuu %1$d sekunnin kuluttua</item>
+    </plurals>
 </resources>

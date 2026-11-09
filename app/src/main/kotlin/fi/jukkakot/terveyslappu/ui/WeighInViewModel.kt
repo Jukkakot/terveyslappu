@@ -42,6 +42,9 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
 
     val state: StateFlow<WeighInState> = weighIn.state
 
+    /** Seconds left before the weigh-in gives up (shown in the dialog). */
+    val secondsLeft: StateFlow<Int?> = weighIn.secondsLeft
+
     fun discard() = weighIn.discard(viewModelScope)
 
     /** True when Health Connect is available and this app may write weight. */

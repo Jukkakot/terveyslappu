@@ -39,7 +39,7 @@ class WeighInTest {
         now = { wallStart.plusMillis(testScheduler.currentTime) },
     )
 
-    /** Background coroutines never idle (the ticker), so move virtual time past the 60 s limit. */
+    /** Background coroutines never idle (the ticker), so move virtual time past the 30 s limit. */
     private fun TestScope.settle() {
         testScheduler.advanceTimeBy(WeighIn.TIMEOUT_MS + 5_000)
         runCurrent()
@@ -88,6 +88,17 @@ class WeighInTest {
         w.start(backgroundScope)
         settle()
         assertEquals(WeighInState.NotFound(heard = false), w.state.value)
+    }
+
+    @Test
+    fun `the countdown shows the seconds left while scanning`() = runTest {
+        val w = weighIn(source()) { _, _ -> error("must not save") }
+        w.start(backgroundScope)
+        testScheduler.advanceTimeBy(2_000)
+        runCurrent()
+        assertEquals(28, w.secondsLeft.value)
+        settle()
+        assertEquals(null, w.secondsLeft.value)
     }
 
     @Test

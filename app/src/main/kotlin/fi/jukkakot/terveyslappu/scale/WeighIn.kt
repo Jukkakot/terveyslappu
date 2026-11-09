@@ -67,6 +67,10 @@ class WeighIn(
     private val _state = MutableStateFlow<WeighInState>(WeighInState.Preparing)
     val state: StateFlow<WeighInState> = _state
 
+    /** Seconds left before the weigh-in gives up, while scanning; null otherwise (the dialog shows it). */
+    private val _secondsLeft = MutableStateFlow<Int?>(null)
+    val secondsLeft: StateFlow<Int?> = _secondsLeft
+
     private var job: Job? = null
     private var decided: Pair<Double, Instant>? = null
     private var decidedRaw: RawEntry? = null
@@ -136,16 +140,32 @@ class WeighIn(
             _state.value = WeighInState.Scanning
             val result = try {
                 withTimeoutOrNull(timeoutMs) {
-                    decide(scanStartMs, ignored) { reading ->
-                        heard = true
-                        _state.value = WeighInState.Live(reading.kg, reading.stable)
+                    coroutineScope {
+                        val ticker = launch {
+                            var left = (timeoutMs / 1000).toInt()
+                            while (left >= 0) {
+                                _secondsLeft.value = left
+                                delay(1000)
+                                left--
+                            }
+                        }
+                        try {
+                            decide(scanStartMs, ignored) { reading ->
+                                heard = true
+                                _state.value = WeighInState.Live(reading.kg, reading.stable)
+                            }
+                        } finally {
+                            ticker.cancel()
+                        }
                     }
                 }
             } catch (e: ScanFailedException) {
+                _secondsLeft.value = null
                 AppLog.e("weighin.scan", e, "failed", "code" to e.code)
                 _state.value = WeighInState.ScanFailed(e.code)
                 return
             }
+            _secondsLeft.value = null
             if (result == null) {
                 AppLog.w("weighin.timeout", "", "heard" to heard, "ms" to timeoutMs)
                 _state.value = WeighInState.NotFound(heard)
@@ -240,7 +260,7 @@ class WeighIn(
 
     companion object {
         const val SOURCE = "scale"
-        const val TIMEOUT_MS = 60_000L
+        const val TIMEOUT_MS = 30_000L
         const val TICK_MS = 250L
         /** The scale repeats its last stable packet for at least ten seconds after a weighing. */
         const val IGNORE_MS = 120_000L
