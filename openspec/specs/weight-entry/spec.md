@@ -36,29 +36,33 @@ SHALL NOT save anything else.
 - **THEN** the app does not save and says the time cannot be in the future
 
 ### Requirement: Recent weights from Health Connect
-The app SHALL show the weights of the last 30 days read from Health Connect, newest first, each
-with its date, time, value and the name of the app that wrote it.
+The app SHALL show the weights this app wrote in the period chosen for the chart, read from Health
+Connect, newest first, each with its date, time and value. Weights written by other apps SHALL NOT
+be listed (user 2026-11-09: they are inaccurate hand entries).
 
 #### Scenario: Weights from several apps
 - **GIVEN** Health Connect holds weights written by this app and by another app
 - **WHEN** the main screen is shown
-- **THEN** both appear in the list, each marked with its source app
+- **THEN** only this app's weights appear in the list
+
+#### Scenario: List follows the period
+- **WHEN** the user chooses the period 1 kk
+- **THEN** the list shows this app's weights of the last 30 days
 
 #### Scenario: Refresh after saving
 - **WHEN** a weight is saved
 - **THEN** it appears at the top of the list without leaving the screen
 
 #### Scenario: Nothing yet
-- **WHEN** Health Connect has no weights for the last 30 days
-- **THEN** the list area says that there are no weights yet
+- **WHEN** this app has no weights in the chosen period
+- **THEN** the list area says that there are no weights in the period
 
 ### Requirement: Delete own entry
-The app SHALL let the user delete a weight that this app wrote with a long-press or the row's
-delete button, without a confirmation, and SHALL offer to undo the deletion; weights written by other apps SHALL NOT be
-deletable here.
+The app SHALL let the user delete a listed weight with a long-press or the row's delete button,
+without a confirmation, and SHALL offer to undo the deletion.
 
 #### Scenario: Delete a test weight
-- **WHEN** the user long-presses a weight written by this app or taps its delete button
+- **WHEN** the user long-presses a weight or taps its delete button
 - **THEN** the weight is removed from Health Connect and from the list
 - **AND** a message "Paino poistettu" with Kumoa is shown
 
@@ -68,8 +72,8 @@ deletable here.
   a scale weight, and appears in the list again
 
 #### Scenario: Other app's weight
-- **WHEN** the user long-presses a weight written by another app
-- **THEN** nothing is offered for deletion and the row has no delete button
+- **GIVEN** another app wrote a weight
+- **THEN** it is not listed, so the app offers no way to delete it
 
 ### Requirement: Health Connect access
 The app SHALL ask for permission to read and write weight the first time it needs Health Connect,
