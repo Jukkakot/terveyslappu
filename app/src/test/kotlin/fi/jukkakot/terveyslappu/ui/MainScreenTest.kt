@@ -1,16 +1,20 @@
 package fi.jukkakot.terveyslappu.ui
 
-import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.weight.weightEntry
 import org.junit.Rule
 import org.junit.Test
@@ -26,6 +30,10 @@ class MainScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private val now = Instant.now()
+    private fun weight(id: String, daysAgo: Long, kg: Double) =
+        weightEntry(id, now.minusSeconds(daysAgo * 86_400 + 3_600), null, kg, "me", "me")
+
     @Test
     fun `without permission the screen asks for it`() {
         var asked = false
@@ -40,40 +48,65 @@ class MainScreenTest {
     }
 
     @Test
-    fun `with permission a valid weight enables saving and the list shows sources`() {
-        val time = Instant.now().minusSeconds(3_600)
-        val rows = listOf(
-            WeightRow(weightEntry("1", time, null, 82.4, "me", "me"), null),
-            WeightRow(weightEntry("2", time.minusSeconds(86_400), null, 83.1, "other", "me"), "Garmin Connect"),
-        )
+    fun `chart, stats and the period's weights are shown and a chip changes the period`() {
+        val weights = listOf(weight("1", 0, 82.4), weight("2", 3, 82.9), weight("3", 20, 83.5))
+        var period by mutableStateOf<Period>(Period.WEEK)
         compose.setContent {
             TerveysTheme {
-                MainScreen(MainUiState(access = Access.GRANTED, weightText = "82,4", rows = rows), "0.1.1-test", MainActions())
+                MainScreen(
+                    MainUiState(access = Access.GRANTED, weightText = "82,4", weights = weights, period = period),
+                    "0.1.1-test",
+                    MainActions(onPeriod = { period = it }),
+                )
             }
         }
         compose.onNodeWithTag("save").assertIsEnabled()
-        compose.onNodeWithTag("weighIn").assertExists()
+        compose.onNodeWithTag("chart").assertExists()
+        compose.onNodeWithTag("stats").assertExists()
+        compose.onNodeWithTag("delete-2").assertExists()
+        compose.onNodeWithTag("delete-3").assertDoesNotExist()
+        compose.onNodeWithTag("period-30").performClick()
+        compose.onNodeWithTag("period-30").assertIsSelected()
+        compose.onNodeWithTag("delete-3").assertExists()
         compose.onNodeWithTag("menu").performClick()
         compose.onNodeWithTag("menuImport").assertExists()
         compose.onNodeWithTag("menuExport").assertExists()
-        compose.onNodeWithText("Garmin Connect").assertExists()
-        // Title bar and the own row's source.
-        compose.onAllNodesWithText("Terveyslappu").assertCountEquals(2)
     }
 
     @Test
-    fun `long-press on an own weight deletes at once`() {
-        val own = WeightRow(weightEntry("1", Instant.now().minusSeconds(60), null, 82.4, "me", "me"), null)
+    fun `an empty period has no chart and a long one without history offers access`() {
+        var granted = false
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(
+                    MainUiState(access = Access.GRANTED, weights = emptyList(), period = Period.YEAR, history = HistoryAccess.NOT_GRANTED),
+                    "0.1.1-test",
+                    MainActions(onGrantHistory = { granted = true }),
+                )
+            }
+        }
+        compose.onNodeWithTag("chart").assertDoesNotExist()
+        compose.onNodeWithTag("stats").assertDoesNotExist()
+        compose.onNodeWithTag("historyGrant").performClick()
+        assertTrue(granted)
+    }
+
+    @Test
+    fun `long-press on a weight deletes at once`() {
         var deleted: String? = null
         compose.setContent {
             TerveysTheme {
-                MainScreen(MainUiState(access = Access.GRANTED, rows = listOf(own)), "0.1.1-test", MainActions(onDelete = { deleted = it.id }))
+                MainScreen(
+                    MainUiState(access = Access.GRANTED, weights = listOf(weight("1", 0, 82.4))),
+                    "0.1.1-test",
+                    MainActions(onDelete = { deleted = it.id }),
+                )
             }
         }
-        compose.onNodeWithText("82,4 kg").performTouchInput { longClick() }
+        compose.onNodeWithTag("delete-1").performClick()
         assertEquals("1", deleted)
         deleted = null
-        compose.onNodeWithTag("delete-1").performClick()
+        compose.onNodeWithText("82,4 kg").performTouchInput { longClick() }
         assertEquals("1", deleted)
     }
 
@@ -81,7 +114,7 @@ class MainScreenTest {
     fun `an impossible weight disables saving`() {
         compose.setContent {
             TerveysTheme {
-                MainScreen(MainUiState(access = Access.GRANTED, weightText = "7", rows = emptyList()), "0.1.1-test", MainActions())
+                MainScreen(MainUiState(access = Access.GRANTED, weightText = "7", weights = emptyList()), "0.1.1-test", MainActions())
             }
         }
         compose.onNodeWithTag("save").assertIsNotEnabled()

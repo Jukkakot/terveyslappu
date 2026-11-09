@@ -42,7 +42,8 @@ Phases in order; one OpenSpec change each unless noted.
 - **Phone owner's details** (user 2026-11-09, later, not first priority): one user per phone, no
   profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
   from the raw data.
-- Own weight view in the app: planned as weight-chart (2026-11-09).
+- ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
+- **Goal weight and forecast** on the chart (user 2026-11-09: later).
 - Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).

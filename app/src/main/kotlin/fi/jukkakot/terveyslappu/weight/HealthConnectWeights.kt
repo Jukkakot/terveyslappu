@@ -6,6 +6,7 @@ import androidx.health.connect.client.HealthConnectFeatures
 import fi.jukkakot.terveyslappu.history.ImportedWeight
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -88,19 +89,6 @@ class HealthConnectWeights(private val context: Context) {
         client.insertRecords(records)
     }
 
-    /** Weights from every app for the [days] before [now], newest first. */
-    suspend fun recent(now: Instant, days: Long = 30): List<WeightEntry> {
-        val request = ReadRecordsRequest(
-            recordType = WeightRecord::class,
-            timeRangeFilter = TimeRangeFilter.between(now.minus(Duration.ofDays(days)), now.plusSeconds(60)),
-            ascendingOrder = false,
-        )
-        val ownPackage = context.packageName
-        return client.readRecords(request).records.map {
-            it.toEntry(ownPackage)
-        }.newestFirst()
-    }
-
     /** The latest weight from any app before [time] (up to a year back), or null. */
     suspend fun latestBefore(time: Instant): Pair<Double, Instant>? {
         val response = client.readRecords(
@@ -115,7 +103,12 @@ class HealthConnectWeights(private val context: Context) {
     }
 
     /** Every weight from every app (as far as the read permissions reach), oldest first, paged. */
-    suspend fun all(now: Instant): List<WeightEntry> {
+    suspend fun all(now: Instant): List<WeightEntry> = readAll(now, origins = emptySet())
+
+    /** Every weight this app wrote (scale, manual, imported), oldest first, paged (weight-chart). */
+    suspend fun own(now: Instant): List<WeightEntry> = readAll(now, origins = setOf(DataOrigin(context.packageName)))
+
+    private suspend fun readAll(now: Instant, origins: Set<DataOrigin>): List<WeightEntry> {
         val ownPackage = context.packageName
         val entries = mutableListOf<WeightEntry>()
         var pageToken: String? = null
@@ -124,6 +117,7 @@ class HealthConnectWeights(private val context: Context) {
                 ReadRecordsRequest(
                     recordType = WeightRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(Instant.EPOCH, now.plusSeconds(60)),
+                    dataOriginFilter = origins,
                     ascendingOrder = true,
                     pageSize = PAGE_SIZE,
                     pageToken = pageToken,

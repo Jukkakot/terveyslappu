@@ -43,3 +43,24 @@ fun formatDay(time: Instant, today: LocalDate, zone: ZoneId = ZoneId.systemDefau
         else -> dayFormat.format(day)
     }
 }
+
+private val shortDayFormat = DateTimeFormatter.ofPattern("d.M.", finnish)
+private val pointFormat = DateTimeFormatter.ofPattern("d.M. H.mm", finnish)
+
+/** "8.11." */
+fun formatShortDay(day: LocalDate): String = shortDayFormat.format(day)
+
+/** A chart dot: "8.11. 7.05 82,6 kg". */
+fun formatPoint(time: Instant, kg: Double, zone: ZoneId = ZoneId.systemDefault()): String =
+    "${pointFormat.format(time.atZone(zone))} ${formatKg(kg)} kg"
+
+/** Change per week with two decimals: −0,25 / +0,10 / ±0,00. */
+fun formatRate(kgPerWeek: Double): String {
+    val hundredths = Math.round(kgPerWeek * 100)
+    val abs = String.format(finnish, "%.2f", kotlin.math.abs(hundredths) / 100.0)
+    return when {
+        hundredths < 0 -> "−$abs"
+        hundredths > 0 -> "+$abs"
+        else -> "±$abs"
+    }
+}

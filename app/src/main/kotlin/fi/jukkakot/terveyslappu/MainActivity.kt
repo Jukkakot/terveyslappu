@@ -145,6 +145,11 @@ class MainActivity : ComponentActivity() {
                         },
                         onConfirmImport = viewModel::confirmImport,
                         onDismissImport = viewModel::dismissImport,
+                        onPeriod = viewModel::onPeriod,
+                        onGrantHistory = {
+                            afterHistory = viewModel::onHistoryResult
+                            launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
+                        },
                     ),
                 )
             }

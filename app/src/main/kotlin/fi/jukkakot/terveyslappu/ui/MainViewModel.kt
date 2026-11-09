@@ -22,7 +22,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import fi.jukkakot.terveyslappu.TerveysApp
-import fi.jukkakot.terveyslappu.backup.appLabel
+import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.chart.PeriodPrefs
+import fi.jukkakot.terveyslappu.chart.encode
+import fi.jukkakot.terveyslappu.weight.newestFirst
 import fi.jukkakot.terveyslappu.backup.writeExport
 import fi.jukkakot.terveyslappu.history.HistoryParser
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
@@ -35,15 +38,16 @@ import java.time.ZoneId
 
 enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIED, GRANTED }
 
-/** A list row: the entry and the label of the app that wrote it (null when it is this app). */
-data class WeightRow(val entry: WeightEntry, val sourceLabel: String?)
-
 data class MainUiState(
     val access: Access = Access.CHECKING,
     val weightText: String = "",
     /** Chosen date and time; null means "now" at the moment of saving. */
     val pickedTime: LocalDateTime? = null,
-    val rows: List<WeightRow>? = null,
+    /** Every weight this app wrote, newest first; the period filters it for chart, stats and list. */
+    val weights: List<WeightEntry>? = null,
+    val period: Period = Period.DEFAULT,
+    /** Whether weights older than 30 days can be read; null until checked. */
+    val history: HistoryAccess? = null,
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
     val import: ImportState? = null,
@@ -61,8 +65,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** The app-wide backup (weight-backup); its status is shown on the main screen. */
     val backup = (app as TerveysApp).backup
 
-    private val _state = MutableStateFlow(MainUiState())
+    private val periodPrefs = PeriodPrefs(app)
+
+    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load()))
     val state: StateFlow<MainUiState> = _state
+
+    fun onPeriod(period: Period) {
+        AppLog.i("chart.period", period.encode())
+        periodPrefs.save(period)
+        _state.update { it.copy(period = period) }
+    }
+
+    /** The history permission screen returned (chart notice): read again with what is now allowed. */
+    fun onHistoryResult() {
+        viewModelScope.launch { load() }
+    }
 
     private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 4)
     val messages: SharedFlow<UiMessage> = _messages
@@ -257,16 +274,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun load() {
         val started = System.nanoTime()
-        runCatching { weights.recent(Instant.now()) }
+        val history = historyAccess()
+        runCatching { weights.own(Instant.now()).newestFirst() }
             .onSuccess { entries ->
-                AppLog.i(
-                    "weight.read", "ok",
-                    "ms" to msSince(started),
-                    "count" to entries.size,
-                    "sources" to entries.groupingBy { it.sourcePackage }.eachCount(),
-                )
-                val rows = entries.map { WeightRow(it, if (it.own) null else labelOf(it.sourcePackage)) }
-                _state.update { it.copy(rows = rows, loadFailed = false) }
+                AppLog.i("weight.read", "ok", "ms" to msSince(started), "count" to entries.size, "history" to history.name)
+                _state.update { it.copy(weights = entries, history = history, loadFailed = false) }
             }
             .onFailure { error ->
                 AppLog.e("weight.read", error, "failed", "ms" to msSince(started))
@@ -280,6 +292,4 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000
-
-    private fun labelOf(packageName: String): String = getApplication<Application>().appLabel(packageName)
 }

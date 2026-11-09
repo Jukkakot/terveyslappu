@@ -10,14 +10,16 @@ the habit. Long term the app may grow into a small personal health app.
 ## How the data flows (decided 2026-11-08)
 
 ```
-scale (BLE broadcast) -> terveyslappu -> Health Connect -> Samsung Health (views, trends)
+scale (BLE broadcast) -> terveyslappu -> Health Connect -> terveyslappu chart (own weights), Samsung Health
 Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 ```
 
 - **Health Connect is the interface.** It survives a phone or watch brand change: any new device
   or app writes the same kind of data there.
-- **Samsung Health is the viewer** for now; the app does not reinvent charts. If that turns out
-  awkward (delays, missing features), the app may get its own weight view later.
+- **The app has its own weight chart** (weight-chart, user 2026-11-09), replacing the earlier
+  "Samsung Health is the viewer": periods, dots joined by a line, period stats. It shows only this
+  app's own weights (scale, manual, imported); other apps' weights are the user's inaccurate hand
+  entries. Export and backup still hold every app's weights. Goal weight and forecast: backlog.
 - **Moving to a new phone:** still open. Health Connect only stores data on the phone. Options:
   Samsung Health keeps a copy in Samsung Cloud (unverified, see findings), Health Connect's own
   scheduled export to a cloud file, or an app-managed cloud file whose sync status the app shows.

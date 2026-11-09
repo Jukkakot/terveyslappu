@@ -25,8 +25,24 @@
     <string name="weight_saved">Tallennettu %1$s kg</string>
     <string name="weight_save_failed">Tallennus epäonnistui</string>
 
-    <string name="recent_title">Viimeiset 30 päivää</string>
-    <string name="recent_empty">Ei vielä painoja.</string>
+    <string name="period_week">1 vk</string>
+    <string name="period_month">1 kk</string>
+    <string name="period_quarter">3 kk</string>
+    <string name="period_year">1 v</string>
+    <string name="period_all">Kaikki</string>
+    <string name="period_custom">Oma</string>
+    <string name="period_empty">Ei painoja tällä jaksolla.</string>
+    <string name="history_needed">Yli 30 päivää vanhat painot näkyvät vasta luvalla.</string>
+    <string name="history_grant">Anna lupa</string>
+    <string name="chart_description">Painokaavio, %1$d painoa</string>
+    <string name="stats_latest">Viimeisin %1$s kg</string>
+    <string name="stats_change">muutos %1$s kg</string>
+    <string name="stats_rate">%1$s kg/vko</string>
+    <string name="stats_spread">ka %1$s · alin %2$s · ylin %3$s</string>
+    <plurals name="stats_count">
+        <item quantity="one">%d paino</item>
+        <item quantity="other">%d painoa</item>
+    </plurals>
     <string name="recent_failed">Painojen lukeminen epäonnistui</string>
     <string name="recent_this_app">Terveyslappu</string>
 

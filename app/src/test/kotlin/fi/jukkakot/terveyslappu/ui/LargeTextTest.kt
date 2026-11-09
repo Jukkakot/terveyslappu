@@ -21,13 +21,13 @@ class LargeTextTest {
 
     @Test
     fun `daily actions stay visible with large text on a small phone`() {
-        val rows = (1..15).map {
-            WeightRow(weightEntry("$it", Instant.now().minusSeconds(it * 86_400L), null, 80.0 + it / 10.0, "me", "me"), null)
+        val weights = (0..14).map {
+            weightEntry("$it", Instant.now().minusSeconds(it * 43_200L + 60), null, 80.0 + it / 10.0, "me", "me")
         }
         compose.setContent {
             TerveysTheme {
                 MainScreen(
-                    MainUiState(access = Access.GRANTED, weightText = "82,4", rows = rows),
+                    MainUiState(access = Access.GRANTED, weightText = "82,4", weights = weights),
                     "0.1.1-test",
                     MainActions(),
                     backup = BackupStatus(),

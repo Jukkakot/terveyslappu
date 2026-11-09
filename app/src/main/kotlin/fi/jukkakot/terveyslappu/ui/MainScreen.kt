@@ -60,6 +60,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.chart.ChartData
+import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.chart.filter
+import fi.jukkakot.terveyslappu.chart.needsHistory
+import fi.jukkakot.terveyslappu.chart.periodStats
+import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import fi.jukkakot.terveyslappu.weight.WeightInput
 import fi.jukkakot.terveyslappu.weight.isInFuture
@@ -90,6 +96,8 @@ class MainActions(
     val onBackupDisable: () -> Unit = {},
     val onConfirmImport: () -> Unit = {},
     val onDismissImport: () -> Unit = {},
+    val onPeriod: (Period) -> Unit = {},
+    val onGrantHistory: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,57 +196,58 @@ private fun Notice(text: String, button: String? = null, onClick: () -> Unit = {
 private fun WeightContent(state: MainUiState, actions: MainActions, backup: BackupStatus) {
     Column(Modifier.fillMaxSize()) {
         BackupCard(backup, Instant.now(), actions.onBackupEnable, actions.onBackupNow)
-        Text(
-            stringResource(R.string.recent_title),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
-        )
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            val rows = state.rows
+            val all = state.weights
             when {
-                state.loadFailed && rows == null -> Notice(stringResource(R.string.recent_failed))
-                rows == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                rows.isEmpty() -> Notice(stringResource(R.string.recent_empty))
-                else -> LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
-                    items(rows, key = { it.entry.id }) { row ->
-                        WeightRowItem(row, onLongPress = { if (row.entry.own) actions.onDelete(row.entry) })
-                        HorizontalDivider()
-                    }
-                }
+                state.loadFailed && all == null -> Notice(stringResource(R.string.recent_failed))
+                all == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                else -> PeriodList(state, all, actions)
             }
         }
         WeightForm(state, actions)
     }
 }
 
+/** Chips, chart and stats scroll away above the period's weights, so the list keeps room on a small phone. */
+@Composable
+private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions) {
+    val zone = ZoneId.systemDefault()
+    val now = remember(all, state.period) { Instant.now() }
+    val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
+    val data = remember(shown) { ChartData.of(state.period, shown, now, zone) }
+    val stats = remember(shown) { periodStats(shown) }
+    LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
+        item(key = "chips") { Box(Modifier.padding(top = 8.dp)) { PeriodChips(state.period, actions.onPeriod) } }
+        if (state.history == HistoryAccess.NOT_GRANTED && state.period.needsHistory(now, zone)) {
+            item(key = "history") { HistoryNotice(actions.onGrantHistory) }
+        }
+        item(key = "chart") { ChartArea(data) }
+        stats?.let { item(key = "stats") { StatsRow(it) } }
+        item(key = "divider") { HorizontalDivider(Modifier.padding(top = 4.dp)) }
+        items(shown, key = { it.id }) { entry ->
+            WeightRowItem(entry, onDelete = { actions.onDelete(entry) })
+            HorizontalDivider()
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WeightRowItem(row: WeightRow, onLongPress: () -> Unit) {
+private fun WeightRowItem(entry: WeightEntry, onDelete: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = {}, onLongClick = onLongPress)
+            .combinedClickable(onClick = {}, onLongClick = onDelete)
             .heightIn(min = 48.dp)
             .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(formatDateTime(row.entry.time), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                row.sourceLabel ?: stringResource(R.string.recent_this_app),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Text("${formatKg(row.entry.kg)} kg", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        if (row.entry.own) {
-            // Visible alternative to the long-press (ui rule: no gesture without one).
-            val label = stringResource(R.string.delete_weight, formatKg(row.entry.kg))
-            IconButton(onClick = onLongPress, modifier = Modifier.testTag("delete-${row.entry.id}")) {
-                Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            Spacer(Modifier.width(48.dp))
+        Text(formatDateTime(entry.time), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Text("${formatKg(entry.kg)} kg", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        // Visible alternative to the long-press (ui rule: no gesture without one).
+        val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
+        IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
