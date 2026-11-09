@@ -3,6 +3,9 @@
 Android app for effortless weight logging into Health Connect. Product decisions:
 `openspec/context/product.md`; requirements: `openspec/context/nfr.md`; plan:
 `openspec/context/roadmap.md`; open questions: `openspec/context/questions.md`.
+General domain knowledge (weight data, charts, data files) with sources:
+`openspec/context/knowledge.md`; check its section before researching a topic, add what new
+research taught.
 
 ## Never commit health data
 

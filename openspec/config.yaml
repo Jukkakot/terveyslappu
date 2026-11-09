@@ -23,6 +23,7 @@ context: |
   - openspec/context/product.md: goal, decisions with reasons, test findings
   - openspec/context/nfr.md: non-functional requirements for every change
   - openspec/context/roadmap.md: phases and backlog
+  - openspec/context/knowledge.md: general domain knowledge with sources (charts, weight data)
   An existing spec in openspec/specs wins over context/ files.
 
 rules:
