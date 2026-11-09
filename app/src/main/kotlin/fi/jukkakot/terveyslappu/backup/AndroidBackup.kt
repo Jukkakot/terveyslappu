@@ -67,7 +67,8 @@ suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<Ex
 /** Writes all weights as the export CSV to [uri] (rewrites the whole file); returns the count. */
 suspend fun writeExport(context: Context, weights: HealthConnectWeights, uri: Uri): Int {
     val rows = exportRows(context, weights)
-    val text = CsvExport.write(rows, ZoneId.systemDefault())
+    val profile = (context.applicationContext as TerveysApp).profile.profile.value
+    val text = CsvExport.write(rows, ZoneId.systemDefault(), profile)
     withContext(Dispatchers.IO) {
         context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             ?: error("no output stream")

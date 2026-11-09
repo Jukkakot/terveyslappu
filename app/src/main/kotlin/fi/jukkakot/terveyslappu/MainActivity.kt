@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu
 
+import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.health.connect.HealthConnectManager
@@ -51,6 +52,11 @@ class MainActivity : ComponentActivity() {
                 val backupStatus by viewModel.backup.status.collectAsStateWithLifecycle()
                 val appearance = (application as TerveysApp).appearance
                 val themeMode by appearance.mode.collectAsStateWithLifecycle()
+                val profile by viewModel.profile.profile.collectAsStateWithLifecycle()
+                val heightInHc by viewModel.profile.heightInHealthConnect.collectAsStateWithLifecycle()
+                val heightLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                ) { granted -> if (HEIGHT_WRITE_PERMISSION in granted) viewModel.writeHeight() else viewModel.heightDenied() }
                 val snackbar = remember { SnackbarHostState() }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -117,10 +123,23 @@ class MainActivity : ComponentActivity() {
                     versionName = BuildConfig.VERSION_NAME,
                     snackbar = snackbar,
                     themeMode = themeMode,
+                    profile = profile,
+                    heightInHealthConnect = heightInHc,
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
                         onOpenEntry = viewModel::openEntry,
                         onCloseEntry = viewModel::closeEntry,
+                        onProfile = { new ->
+                            if (viewModel.setProfile(new)) {
+                                lifecycleScope.launch {
+                                    if (viewModel.hasHeightPermission()) {
+                                        viewModel.writeHeight()
+                                    } else {
+                                        launchSafely("profile.height.hc") { heightLauncher.launch(setOf(HEIGHT_WRITE_PERMISSION)) }
+                                    }
+                                }
+                            }
+                        },
                         onTheme = { mode ->
                             AppLog.i("theme.set", mode.name)
                             appearance.set(mode)

@@ -47,9 +47,9 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**weigh-in-discard**~~: done 2026-11-09 (Poista on the result, Punnitse uudelleen dropped,
   the scale's lingering broadcast ignored). From the 2026-11-09 log: `name=Yoda1` is in every
   packet; the company id changes per weighing, so a background scan filters by name or address.
-- **Phone owner's details** (user 2026-11-09: next change after weigh-in-discard): one user per phone, no
-  profiles; a setting for gender, age and height so derived values (BMI ...) can later be computed
-  from the raw data.
+- ~~**owner-profile**~~: done 2026-11-09 (Asetukset → Omat tiedot: birth year, height, gender; height
+  also to Health Connect; carried in the export/backup `#profile;` line and restored by Tuo painot).
+  BMI and other derived values: a later change.
 - ~~Own weight view in the app~~: done 2026-11-09 (weight-chart: chart, periods, stats; own weights only).
 - ~~**main-screen-refresh**~~: done 2026-11-09 (simple home per mockup B, Historia and Asetukset
   screens, theme choice; import, export, backup and log moved from the ⋮ menu to Asetukset).

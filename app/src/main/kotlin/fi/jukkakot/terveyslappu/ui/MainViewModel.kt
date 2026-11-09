@@ -36,6 +36,8 @@ import fi.jukkakot.terveyslappu.history.HistoryWriter
 import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.WriteResult
 import fi.jukkakot.terveyslappu.raw.RawEntry
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -78,6 +80,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val backup = (app as TerveysApp).backup
 
     private val periodPrefs = PeriodPrefs(app)
+
+    /** The owner details (owner-profile). */
+    val profile = (app as TerveysApp).profile
 
     private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load()))
     val state: StateFlow<MainUiState> = _state
@@ -240,7 +245,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }.onSuccess { bytes ->
                 val parsed = withContext(Dispatchers.Default) { readHistory(bytes) }
                 logParsed(parsed.first, bytes.size, msSince(started), parsed.second)
-                _state.update { it.copy(import = ImportState.Preview(parsed.first)) }
+                val fills = parsed.first.profile?.let { profile.profile.value.fillEmptyFrom(it) != profile.profile.value } == true
+                _state.update { it.copy(import = ImportState.Preview(parsed.first, fills)) }
             }
         }
     }
@@ -286,6 +292,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             when (result) {
                 is WriteResult.Done -> {
                     AppLog.i("import.write", "ok", "count" to result.count, "from" to from, "ms" to msSince(started))
+                    parsed.profile?.let { profile.set(profile.profile.value.fillEmptyFrom(it), "profile.import") }
                     _state.update { it.copy(import = null) }
                     _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
                     load()
@@ -297,6 +304,38 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /** Keeps the edited details; true when a new height should also go to Health Connect. */
+    fun setProfile(new: OwnerProfile): Boolean {
+        val old = profile.profile.value
+        profile.set(new)
+        return new.heightCm != null && new.heightCm != old.heightCm
+    }
+
+    suspend fun hasHeightPermission(): Boolean =
+        runCatching { HEIGHT_WRITE_PERMISSION in weights.grantedPermissions() }.getOrDefault(false)
+
+    /** Writes the kept height to Health Connect now; the field notes a failure. */
+    fun writeHeight() {
+        val cm = profile.profile.value.heightCm ?: return
+        viewModelScope.launch {
+            val now = Instant.now()
+            runCatching { weights.writeHeight(cm, now, ZoneId.systemDefault().rules.getOffset(now)) }
+                .onSuccess {
+                    AppLog.i("profile.height.hc", "ok")
+                    profile.setHeightInHealthConnect(true)
+                }
+                .onFailure { error ->
+                    AppLog.e("profile.height.hc", error, "failed")
+                    profile.setHeightInHealthConnect(false)
+                }
+        }
+    }
+
+    fun heightDenied() {
+        AppLog.i("profile.height.hc", "denied")
+        profile.setHeightInHealthConnect(false)
     }
 
     /** Whether the export can and may read the whole history; asked once per screen session. */

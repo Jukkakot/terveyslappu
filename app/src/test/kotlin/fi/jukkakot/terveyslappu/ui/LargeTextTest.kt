@@ -53,9 +53,10 @@ class LargeTextTest {
     @Test
     fun `Asetukset reaches every group`() {
         compose.setContent {
-            TerveysTheme { SettingsScreen(true, ThemeMode.SYSTEM, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState()) }
+            TerveysTheme { SettingsScreen(true, ThemeMode.SYSTEM, fi.jukkakot.terveyslappu.profile.OwnerProfile(birthYear = 1990), false, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState()) }
         }
         compose.onNodeWithTag("theme-SYSTEM").assertIsDisplayed()
+        compose.onNodeWithTag("gender-NONE").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("backupEnable").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("shareLog").performScrollTo().assertIsDisplayed()
     }

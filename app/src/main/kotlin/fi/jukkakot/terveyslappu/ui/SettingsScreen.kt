@@ -38,16 +38,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 
 /**
- * Asetukset (home-screen spec): Ulkoasu, Painot, Varmuuskopio and Tuki. Painot and Varmuuskopio need
+ * Asetukset (home-screen spec): Ulkoasu, Omat tiedot (owner-profile), Painot, Varmuuskopio and Tuki. Painot and Varmuuskopio need
  * Health Connect and are shown only with access; Jaa loki is always reachable.
  */
 @Composable
 internal fun SettingsScreen(
     granted: Boolean,
     themeMode: ThemeMode,
+    profile: OwnerProfile,
+    heightInHealthConnect: Boolean,
     backup: BackupStatus,
     versionName: String,
     actions: MainActions,
@@ -73,6 +76,7 @@ internal fun SettingsScreen(
                     ThemeChoice(themeMode, actions.onTheme)
                 }
             }
+            Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
             if (granted) {
                 Section(R.string.settings_weights) {
                     SettingsRow(R.drawable.ic_import, stringResource(R.string.menu_import), actions.onImportHistory, "import")

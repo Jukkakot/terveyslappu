@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.history
 
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.raw.RawEntry
 import org.junit.Test
 import java.time.Instant
@@ -14,6 +15,12 @@ class CsvExportTest {
     fun `row format with the record offset`() {
         val row = ExportRow(Instant.parse("2024-03-01T05:12:00Z"), ZoneOffset.ofHours(2), 82.4, "Terveyslappu")
         assertEquals("${CsvExport.HEADER}\n2024-03-01;07:12:00;82,4;Terveyslappu;\n", CsvExport.write(listOf(row), zone))
+        val withProfile = CsvExport.write(listOf(row), zone, OwnerProfile(birthYear = 1990, heightCm = 180))
+        assertEquals(listOf("#profile;birth_year=1990|height_cm=180", CsvExport.HEADER), withProfile.lines().take(2))
+        val back = HistoryParser.parse(withProfile, zone, Instant.parse("2026-11-08T00:00:00Z"))
+        assertEquals(OwnerProfile(birthYear = 1990, heightCm = 180), back.profile)
+        assertEquals(1, back.weights.size)
+        assertEquals(0, back.skipped.size)
     }
 
     private val scaleRaw = RawEntry(

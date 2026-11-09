@@ -32,7 +32,8 @@ class ImportDialogTest {
     @Test
     fun `empty result offers no import`() {
         val parsed = HistoryParser.parse("nothing here\n", ZoneId.of("Europe/Helsinki"), Instant.now())
-        compose.setContent { TerveysTheme { ImportDialog(ImportState.Preview(parsed), {}, {}) } }
+        compose.setContent { TerveysTheme { ImportDialog(ImportState.Preview(parsed, fillsProfile = true), {}, {}) } }
+        compose.onNodeWithTag("importProfile").assertExists()
         compose.onNodeWithTag("importConfirm").assertDoesNotExist()
     }
 }

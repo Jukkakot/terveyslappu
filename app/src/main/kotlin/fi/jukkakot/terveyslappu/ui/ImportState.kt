@@ -8,7 +8,8 @@ import fi.jukkakot.terveyslappu.log.AppLog
 /** The history import dialog's state (history-import spec); null in [MainUiState] = no dialog. */
 sealed interface ImportState {
     data object Reading : ImportState
-    data class Preview(val parsed: ParsedHistory) : ImportState
+    /** [fillsProfile]: the file's owner details will fill empty ones on the phone. */
+    data class Preview(val parsed: ParsedHistory, val fillsProfile: Boolean = false) : ImportState
     data class Writing(val parsed: ParsedHistory, val saved: Int) : ImportState
     data class Failed(val parsed: ParsedHistory, val saved: Int) : ImportState
     /** The file could not be opened or read at all. */

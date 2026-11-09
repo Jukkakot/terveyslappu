@@ -72,6 +72,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   weights and Punnitse vaa'alla; the card opens Historia (chart, stats, list, + for manual entry,
   which is nowhere else), the gear opens Asetukset (theme, import/export, backup, log). No ⋮ menu;
   the backup shows on home only as a notice when it failed or is stale. No bottom navigation.
+- **Owner details** (user 2026-11-09, owner-profile): one user per phone, no profiles. Birth year
+  (not a full date) gives the age; height in whole cm; gender Mies/Nainen/Ei valittu; all optional.
+  Kept in app preferences; the height also goes to Health Connect (its only record of the three, own
+  permission asked on the first save, the app keeps the height when denied). The export/backup's
+  first line `#profile;...` carries them so a new phone gets them back; import fills only empty
+  fields. Not now: BMI, filling from an OKOK file's title rows.
 - **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
   small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
   list shows each weight's change from the one before it, gains and losses in two palette tones

@@ -14,6 +14,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.profile.Gender
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,10 +35,37 @@ class SettingsScreenTest {
 
     private val now = Instant.now()
 
-    private fun show(backup: BackupStatus = BackupStatus(), granted: Boolean = true, actions: MainActions = MainActions()) {
+    private fun show(
+        backup: BackupStatus = BackupStatus(),
+        granted: Boolean = true,
+        actions: MainActions = MainActions(),
+        profile: OwnerProfile = OwnerProfile(),
+        heightInHc: Boolean = true,
+    ) {
         compose.setContent {
-            TerveysTheme { SettingsScreen(granted, ThemeMode.SYSTEM, backup, "0.1.1-test", actions, SnackbarHostState()) }
+            TerveysTheme { SettingsScreen(granted, ThemeMode.SYSTEM, profile, heightInHc, backup, "0.1.1-test", actions, SnackbarHostState()) }
         }
+    }
+
+    @Test
+    fun `owner details keep a valid height and refuse an implausible one`() {
+        var kept: OwnerProfile? = null
+        show(granted = false, actions = MainActions(onProfile = { kept = it }))
+        compose.onNodeWithTag("height").performTextInput("25")
+        compose.onNodeWithTag("height").performImeAction()
+        assertEquals(null, kept)
+        compose.onNodeWithTag("height").performTextClearance()
+        compose.onNodeWithTag("height").performTextInput("180")
+        compose.onNodeWithTag("height").performImeAction()
+        assertEquals(OwnerProfile(heightCm = 180), kept)
+        compose.onNodeWithTag("gender-FEMALE").performClick()
+        assertEquals(OwnerProfile(gender = Gender.FEMALE), kept)
+    }
+
+    @Test
+    fun `a saved height that is not in Health Connect says so`() {
+        show(granted = false, profile = OwnerProfile(birthYear = 1990, heightCm = 180), heightInHc = false)
+        compose.onNodeWithText("Ei tallennettu Health Connectiin", substring = true).assertExists()
     }
 
     @Test
@@ -84,7 +116,7 @@ class SettingsScreenTest {
         compose.setContent {
             TerveysTheme {
                 background = MaterialTheme.colorScheme.background
-                SettingsScreen(true, app.appearance.mode.collectAsState().value, BackupStatus(), "0.1.1-test", MainActions(onTheme = app.appearance::set), SnackbarHostState())
+                SettingsScreen(true, app.appearance.mode.collectAsState().value, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onTheme = app.appearance::set), SnackbarHostState())
             }
         }
         compose.onNodeWithTag("theme-LIGHT").performClick()

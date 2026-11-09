@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.history
 
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.profile.ProfileLine
 import fi.jukkakot.terveyslappu.raw.RawEntry
 import fi.jukkakot.terveyslappu.raw.RawFormat
 import fi.jukkakot.terveyslappu.weight.MAX_KG
@@ -30,7 +32,13 @@ data class Layout(
 )
 
 /** [weights] oldest first; [layout] is null when no date and weight columns were found. */
-data class ParsedHistory(val weights: List<ImportedWeight>, val skipped: List<SkippedRow>, val layout: Layout?) {
+/** [profile]: owner details from an export's `#profile;` line, when the file starts with one. */
+data class ParsedHistory(
+    val weights: List<ImportedWeight>,
+    val skipped: List<SkippedRow>,
+    val layout: Layout?,
+    val profile: OwnerProfile? = null,
+) {
     fun skippedCounts(): Map<SkipReason, Int> = skipped.groupingBy { it.reason }.eachCount()
 }
 
@@ -52,7 +60,15 @@ object HistoryParser {
     private val number = Regex("""^-?\d+(\.\d+)?$""")
 
     fun parse(text: String, zone: ZoneId, now: Instant): ParsedHistory {
-        val lines = text.removePrefix(BOM).lines()
+        val lines = text.removePrefix(BOM).lines().toMutableList()
+        // An export's owner-details line is not a row (history-import "Restore owner details").
+        val first = lines.indexOfFirst { it.isNotBlank() }
+        val profile = if (first >= 0) ProfileLine.decode(lines[first], now.atZone(zone).year) else null
+        if (profile != null) lines[first] = ""
+        return parseLines(lines, zone, now).copy(profile = profile)
+    }
+
+    private fun parseLines(lines: List<String>, zone: ZoneId, now: Instant): ParsedHistory {
         val numbered = lines.mapIndexedNotNull { i, l -> if (l.isBlank()) null else (i + 1) to l }
         if (numbered.isEmpty()) return ParsedHistory(emptyList(), emptyList(), null)
         val sep = Table.detectSeparator(numbered.map { it.second })

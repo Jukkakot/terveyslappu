@@ -24,6 +24,17 @@
     <string name="theme_system">Järjestelmä</string>
     <string name="theme_light">Vaalea</string>
     <string name="theme_dark">Tumma</string>
+    <string name="profile_section">Omat tiedot</string>
+    <string name="profile_birth_year">Syntymävuosi</string>
+    <string name="profile_age">Ikä %1$d v</string>
+    <string name="profile_birth_year_range">Vuosi %1$d–%2$d</string>
+    <string name="profile_height">Pituus (cm)</string>
+    <string name="profile_height_range">%1$d–%2$d cm</string>
+    <string name="profile_height_not_hc">Ei tallennettu Health Connectiin</string>
+    <string name="profile_gender">Sukupuoli</string>
+    <string name="gender_male">Mies</string>
+    <string name="gender_female">Nainen</string>
+    <string name="gender_none">Ei valittu</string>
     <string name="settings_weights">Painot</string>
     <string name="settings_backup">Varmuuskopio</string>
     <string name="settings_support">Tuki</string>
@@ -131,6 +142,7 @@
     <string name="import_skipped">Ohitetaan %1$d riviä:</string>
     <string name="import_skip_line">%1$s: %2$d</string>
     <string name="import_ambiguous">Päivän ja kuukauden järjestys arvattiin (päivä ensin). Tarkista esimerkeistä.</string>
+    <string name="import_profile">Tiedostossa on omat tietosi; puhelimen tyhjät kentät täytetään niillä.</string>
     <string name="import_note">Sama tiedosto voidaan tuoda uudelleen ilman tuplia.</string>
     <string name="import_confirm">Tuo %1$d</string>
     <string name="import_writing">Tallennetaan %1$d / %2$d…</string>
@@ -144,5 +156,5 @@
     <string name="import_skip_duplicate">sama hetki kahdesti</string>
 
     <string name="privacy_title">Tietosuoja</string>
-    <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin vaa\'alta, käsin tai tuodusta tiedostosta ja lukee sieltä painot näytettäväksi ja omaan vientitiedostoosi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
+    <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin vaa\'alta, käsin tai tuodusta tiedostosta sekä pituutesi, jos tallennat sen Omiin tietoihin, ja lukee sieltä painot näytettäväksi ja omaan vientitiedostoosi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
 </resources>

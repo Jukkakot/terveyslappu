@@ -46,7 +46,10 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
                         LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
                     ImportState.ReadFailed -> Text(stringResource(R.string.import_read_failed))
-                    is ImportState.Preview -> Preview(state.parsed)
+                    is ImportState.Preview -> {
+                        Preview(state.parsed)
+                        if (state.fillsProfile) Text(stringResource(R.string.import_profile), modifier = Modifier.testTag("importProfile"))
+                    }
                     is ImportState.Writing -> {
                         val total = state.parsed.weights.size
                         Text(stringResource(R.string.import_writing, state.saved, total))

@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,7 @@ class MainActions(
     val onPeriod: (Period) -> Unit = {},
     val onGrantHistory: () -> Unit = {},
     val onTheme: (ThemeMode) -> Unit = {},
+    val onProfile: (OwnerProfile) -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */
@@ -67,6 +69,8 @@ fun MainScreen(
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
     backup: BackupStatus = BackupStatus(),
     themeMode: ThemeMode = ThemeMode.SYSTEM,
+    profile: OwnerProfile = OwnerProfile(),
+    heightInHealthConnect: Boolean = true,
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
@@ -75,7 +79,7 @@ fun MainScreen(
     when (screen) {
         Screen.HOME -> HomeScreen(state, actions, snackbar, backup)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar)
-        Screen.SETTINGS -> SettingsScreen(granted, themeMode, backup, versionName, actions, snackbar)
+        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar)
     }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
 }

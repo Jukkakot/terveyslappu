@@ -36,7 +36,8 @@ archive); a `UserPromptSubmit` hook repeats this.
   read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
   BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
   parser: separator, columns, date order; batch writer; CSV export format; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `chart/` (periods, period stats, chart axes; pure except `PeriodPrefs`), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
-  `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
+  `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `profile/` (owner details: rules, `#profile;` export line (pure), `ProfilePrefs` singleton in
+  `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
   write; the singleton lives in `TerveysApp`), `ui/` (`MainScreen` switches Home/Historia/Asetukset by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in
   dialog, view models, theme + `AppearancePrefs` (singleton in `TerveysApp`), formats; `chart/HomeSummary` is the home card's pure data), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
@@ -66,4 +67,5 @@ archive); a `UserPromptSubmit` hook repeats this.
   `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.discard ok|failed`, `scale.ignore key=` (previous weigh-in's lingering broadcast), `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|xls`, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick`, `export.history granted|denied`,
   `export.write ok count= history= ms=`; backup: `backup.enable|disable|pick`,
-  `backup.run reason= ok count= ms=` / `backup.run failed`; chart: `chart.period`, `weight.read ok count= history=`; theme: `theme.set`.
+  `backup.run reason= ok count= ms=` / `backup.run failed`; owner details: `profile.set fields=` / `profile.import fields=` (field names, never values),
+  `profile.height.hc ok|denied|failed`; chart: `chart.period`, `weight.read ok count= history=`; theme: `theme.set`.

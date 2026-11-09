@@ -5,12 +5,14 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import fi.jukkakot.terveyslappu.history.ImportedWeight
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
+import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import java.time.Duration
 import java.time.Instant
@@ -21,6 +23,9 @@ import java.util.UUID
 enum class HealthConnectStatus { AVAILABLE, NEEDS_UPDATE, UNAVAILABLE }
 
 enum class HistoryAccess { UNSUPPORTED, NOT_GRANTED, GRANTED }
+
+/** Writing the owner's height (owner-profile); separate from the weight permissions. */
+val HEIGHT_WRITE_PERMISSION: String = HealthPermission.getWritePermission(HeightRecord::class)
 
 /** Health Connect permission to read records older than 30 days before the first grant. */
 const val HISTORY_PERMISSION = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
@@ -35,6 +40,17 @@ class HealthConnectWeights(private val context: Context) {
     )
 
     private val client by lazy { HealthConnectClient.getOrCreate(context) }
+
+    /** Writes the owner's height measured now (owner-profile); needs [HEIGHT_WRITE_PERMISSION]. */
+    suspend fun writeHeight(cm: Int, time: Instant, zoneOffset: ZoneOffset) {
+        val record = HeightRecord(
+            time = time,
+            zoneOffset = zoneOffset,
+            height = Length.meters(cm / 100.0),
+            metadata = Metadata.manualEntry(),
+        )
+        client.insertRecords(listOf(record))
+    }
 
     fun status(): HealthConnectStatus = when (HealthConnectClient.getSdkStatus(context)) {
         HealthConnectClient.SDK_AVAILABLE -> HealthConnectStatus.AVAILABLE

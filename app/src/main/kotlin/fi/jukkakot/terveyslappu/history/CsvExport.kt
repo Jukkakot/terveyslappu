@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.history
 
+import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.profile.ProfileLine
 import fi.jukkakot.terveyslappu.raw.RawEntry
 import fi.jukkakot.terveyslappu.raw.RawFormat
 import java.math.BigDecimal
@@ -21,7 +23,9 @@ object CsvExport {
     private val date = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val time = DateTimeFormatter.ofPattern("HH:mm:ss")
 
-    fun write(rows: List<ExportRow>, fallbackZone: ZoneId): String = buildString {
+    /** [profile]'s `#profile;` line comes first when any detail is set (owner-profile). */
+    fun write(rows: List<ExportRow>, fallbackZone: ZoneId, profile: OwnerProfile = OwnerProfile()): String = buildString {
+        ProfileLine.encode(profile)?.let { append(it).append('\n') }
         append(HEADER).append('\n')
         for (row in rows.sortedBy { it.time }) {
             val local = row.time.atZone(row.zoneOffset ?: fallbackZone)
