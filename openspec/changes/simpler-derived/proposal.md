@@ -16,6 +16,8 @@ judgement at first glance; the tone colour already tells enough.
 - Historia's BMI tab keeps the class word on the latest BMI and the coloured bands (the place to look
   closer).
 - Reasons now only concern the BMI and range (height missing, under 18).
+- Historia's grouped list starts with every group closed (user 2026-11-09), instead of the newest
+  path open.
 - Birth year and gender stay in Omat tiedot (birth year keeps the under-18 rule; nothing else uses
   gender now, but removing a field the user filled is not asked for).
 
@@ -29,10 +31,11 @@ judgement at first glance; the tone colour already tells enough.
 - `home-screen`: the derived row shows the BMI number in its tone without the class word, and the
   normal-weight range.
 - `weight-chart`: tabs Paino and BMI only; kcal units, statistics and scale rule removed.
+- `weight-entry`: grouped list groups closed by default.
 
 ## Impact
 
-- Parts touched: home row, Historia tabs. Not touched: Health Connect, scale, widget, export, Omat
+- Parts touched: home row, Historia tabs, Historia list's default open state. Not touched: Health Connect, scale, widget, export, Omat
   tiedot.
 - Code: `derived/Derived` (drop `Bmr`, `Quantity.BMR`, BMR in `LatestDerived`), `ui/DerivedUi`
   (row, kcal formats), `ui/HistoryScreen` (tabs, chart labels), `ui/Format` (kcal helpers),

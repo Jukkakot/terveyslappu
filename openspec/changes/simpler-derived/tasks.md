@@ -15,7 +15,13 @@
   word. Verify: MainScreen smoke test that the home row has no "ylipaino" text but its description
   names the class; the BMI tab test still passes; LargeTextTest green.
 
-## 3. Context
+## 3. Groups closed by default
 
-- [ ] 3.1 product.md: derived values decision updated (no energy figures, colour only on home, why);
+- [ ] 3.1 Historia's list starts with every group closed (no default open path; `ListGroups.defaultOpen`
+  goes); period change resets to closed. Verify: `ListGroupsTest` default-open test replaced; the
+  MainScreen grouped-list smoke test still opens a year on tap.
+
+## 4. Context
+
+- [ ] 4.1 product.md: derived values decision updated (no energy figures, colour only on home, why) and the grouped list now starts closed;
   bump `appVersion` minor. Verify: `./gradlew test lint assembleDebug` passes.
