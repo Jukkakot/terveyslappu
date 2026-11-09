@@ -183,6 +183,7 @@ class MainActivity : ComponentActivity() {
                         onConfirmImport = viewModel::confirmImport,
                         onDismissImport = viewModel::dismissImport,
                         onPeriod = viewModel::onPeriod,
+                        onHomePeriod = viewModel::onHomePeriod,
                         onGrantHistory = {
                             afterHistory = viewModel::onHistoryResult
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }

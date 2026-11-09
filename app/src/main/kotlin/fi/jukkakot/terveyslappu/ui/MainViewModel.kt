@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import fi.jukkakot.terveyslappu.TerveysApp
+import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.chart.PeriodPrefs
 import fi.jukkakot.terveyslappu.chart.encode
@@ -62,6 +63,8 @@ data class MainUiState(
     /** Every weight this app wrote, newest first; the period filters it for chart, stats and list. */
     val weights: List<WeightEntry>? = null,
     val period: Period = Period.DEFAULT,
+    /** The home card's chart period in days (home-screen "Home chart period"). */
+    val homeDays: Long = HomeSummary.DEFAULT_DAYS,
     /** Whether weights older than 30 days can be read; null until checked. */
     val history: HistoryAccess? = null,
     val loadFailed: Boolean = false,
@@ -86,13 +89,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** The owner details (owner-profile). */
     val profile = (app as TerveysApp).profile
 
-    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load()))
+    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays()))
     val state: StateFlow<MainUiState> = _state
 
     fun onPeriod(period: Period) {
         AppLog.i("chart.period", period.encode())
         periodPrefs.save(period)
         _state.update { it.copy(period = period) }
+    }
+
+    fun onHomePeriod(days: Long) {
+        val chosen = HomeSummary.homeDays(days)
+        AppLog.i("home.period", "", "days" to chosen)
+        periodPrefs.saveHomeDays(chosen)
+        _state.update { it.copy(homeDays = chosen) }
     }
 
     /** The history permission screen returned (chart notice): read again with what is now allowed. */

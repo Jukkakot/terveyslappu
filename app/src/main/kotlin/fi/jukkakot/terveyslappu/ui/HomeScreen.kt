@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +37,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.HomeSummary
+import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Instant
 import java.time.LocalDate
@@ -95,14 +101,14 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
 @Composable
 private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus) {
     val now = remember(state.weights) { Instant.now() }
-    val summary = remember(state.weights) { state.weights?.let { HomeSummary.of(it, now) } }
+    val summary = remember(state.weights, state.homeDays) { state.weights?.let { HomeSummary.of(it, now, state.homeDays) } }
     val today = LocalDate.now()
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed) { actions.onScreen(Screen.SETTINGS) }
-        LatestCard(state, summary, today) { actions.onScreen(Screen.HISTORY) }
+        LatestCard(state, summary, today, actions.onHomePeriod) { actions.onScreen(Screen.HISTORY) }
         summary?.let { RecentList(it.recent, today) }
     }
 }
@@ -112,7 +118,7 @@ internal val groupShape = RoundedCornerShape(20.dp)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDate, onOpen: () -> Unit) {
+private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDate, onHomePeriod: (Long) -> Unit, onOpen: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(
         Modifier
@@ -131,7 +137,7 @@ private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDa
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         when {
-            summary != null -> LatestValues(summary)
+            summary != null -> LatestValues(summary, state.homeDays, onHomePeriod)
             state.loadFailed -> Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge)
             state.weights == null -> Box(Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             else -> Column(Modifier.padding(vertical = 8.dp).testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -144,7 +150,7 @@ private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDa
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestValues(summary: HomeSummary) {
+private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
     FlowRow(
         Modifier.fillMaxWidth(),
@@ -158,8 +164,8 @@ private fun LatestValues(summary: HomeSummary) {
         }
         summary.change?.let { ChangeChip(it, Modifier.align(Alignment.CenterVertically)) }
     }
-    if (summary.spark.isNotEmpty()) {
-        val first = summary.spark.first()
+    val first = summary.spark.firstOrNull()
+    if (first != null) {
         val description = stringResource(R.string.home_spark, formatKg(first.kg), formatKg(summary.latest.kg))
         Sparkline(summary, colors.primary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
         val zone = ZoneId.systemDefault()
@@ -168,15 +174,52 @@ private fun LatestValues(summary: HomeSummary) {
             Text(formatShortDay(summary.sparkFrom.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
             Text(formatShortDay(summary.sparkTo.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant)
         }
+    }
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        HomePeriodLabel(days, onHomePeriod)
+        val range = when {
+            first == null -> stringResource(R.string.period_empty)
+            summary.sparkChange == null -> stringResource(R.string.kg_value, formatKg(first.kg))
+            else -> stringResource(R.string.home_spark_range, formatKg(first.kg), formatKg(summary.latest.kg))
+        }
+        Text(
+            range,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.weight(1f).padding(start = 8.dp).testTag("sparkRange"),
+        )
         summary.sparkChange?.let { change ->
-            Row(Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics {}) {
-                Text(
-                    stringResource(R.string.home_spark_range, formatKg(first.kg), formatKg(summary.latest.kg)),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.onSurfaceVariant,
-                    modifier = Modifier.weight(1f).testTag("sparkRange"),
+            ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+        }
+    }
+}
+
+/** The home chart's period (home-screen "Home chart period"): its own tap opens a menu, not Historia. */
+@Composable
+private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Surface(
+            onClick = { open = true },
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.heightIn(min = 32.dp).testTag("homePeriod"),
+        ) {
+            Row(Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Icon(painterResource(R.drawable.ic_arrow_drop_down), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(18.dp))
+            }
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            HomeSummary.HOME_DAYS.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(Period.Last(option).label())) },
+                    onClick = {
+                        open = false
+                        onHomePeriod(option)
+                    },
+                    modifier = Modifier.testTag("homePeriod-$option"),
                 )
-                ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
             }
         }
     }

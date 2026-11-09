@@ -57,6 +57,7 @@ class MainActions(
     val onConfirmImport: () -> Unit = {},
     val onDismissImport: () -> Unit = {},
     val onPeriod: (Period) -> Unit = {},
+    val onHomePeriod: (Long) -> Unit = {},
     val onGrantHistory: () -> Unit = {},
     val onTheme: (ThemeMode) -> Unit = {},
     val onProfile: (OwnerProfile) -> Unit = {},

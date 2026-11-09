@@ -25,14 +25,14 @@ class WeightScaleTest {
     }
 
     @Test
-    fun `home sparkline spans the whole 30 days with the shared scale`() {
+    fun `home sparkline spans the whole default week with the shared scale`() {
         val now = Instant.parse("2026-11-09T07:05:00Z")
         val weights = listOf(
             weightEntry("a", now.minusSeconds(86_400), null, 97.84, "me", "me"),
             weightEntry("b", now, null, 97.76, "me", "me"),
         )
         val summary = HomeSummary.of(weights, now)!!
-        assertEquals(now.minus(HomeSummary.SPARK_DAYS), summary.sparkFrom)
+        assertEquals(now.minus(java.time.Duration.ofDays(7)), summary.sparkFrom)
         assertEquals(now, summary.sparkTo)
         assertEquals(KgRange(95.0, 100.0), summary.sparkScale)
     }

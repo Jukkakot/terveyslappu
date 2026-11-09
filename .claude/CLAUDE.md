@@ -68,4 +68,4 @@ archive); a `UserPromptSubmit` hook repeats this.
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick format=`, `export.history granted|denied`,
   `export.write ok format= count= history= ms=`; backup: `backup.enable|disable|pick`,
   `backup.run reason= ok count= ms=` / `backup.run failed`; owner details: `profile.set fields=` (field names, never values),
-  `profile.height.hc ok|denied|failed`; chart: `chart.period`, `weight.read ok count= history=`; theme: `theme.set`.
+  `profile.height.hc ok|denied|failed`; chart: `chart.period`, `home.period days=`, `weight.read ok count= history=`; theme: `theme.set`.

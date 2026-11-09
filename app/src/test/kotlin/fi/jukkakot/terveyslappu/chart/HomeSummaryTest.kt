@@ -26,7 +26,7 @@ class HomeSummaryTest {
 
     @Test
     fun `sparkline holds the last 30 days oldest first`() {
-        val summary = HomeSummary.of(listOf(weight("a", 0, 82.4), weight("b", 29, 84.2), weight("old", 31, 85.0)), now)!!
+        val summary = HomeSummary.of(listOf(weight("a", 0, 82.4), weight("b", 29, 84.2), weight("old", 31, 85.0)), now, 30)!!
         assertEquals(listOf("b", "a"), summary.spark.map { it.id })
         assertEquals(-1.8, summary.sparkChange!!, 1e-9)
     }
@@ -37,5 +37,14 @@ class HomeSummaryTest {
         assertNull(summary.change)
         assertEquals(emptyList(), summary.spark)
         assertNull(summary.sparkChange)
+    }
+
+    @Test
+    fun `home period defaults to a week and only takes its choices`() {
+        val weights = listOf(weight("a", 0, 82.4), weight("b", 6, 82.0), weight("c", 20, 83.0))
+        assertEquals(listOf("b", "a"), HomeSummary.of(weights, now)!!.spark.map { it.id })
+        assertEquals(listOf("c", "b", "a"), HomeSummary.of(weights, now, 30)!!.spark.map { it.id })
+        assertEquals(7, HomeSummary.homeDays(14))
+        assertEquals(90, HomeSummary.homeDays(90))
     }
 }

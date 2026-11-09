@@ -33,7 +33,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-private fun Period.label(): Int = when (this) {
+internal fun Period.label(): Int = when (this) {
     Period.WEEK -> R.string.period_week
     Period.MONTH -> R.string.period_month
     Period.QUARTER -> R.string.period_quarter

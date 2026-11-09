@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -59,6 +60,7 @@ class MainScreenTest {
                     MainActions(
                         onScreen = { state = state.copy(screen = it) },
                         onPeriod = { state = state.copy(period = it) },
+                        onHomePeriod = { state = state.copy(homeDays = it) },
                         onWeightText = { state = state.copy(weightText = it) },
                         onDelete = onDelete,
                         onGrantHistory = onGrantHistory,
@@ -98,6 +100,17 @@ class MainScreenTest {
         compose.onNodeWithTag("shareLog").assertExists()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("latestCard").assertExists()
+    }
+
+    @Test
+    fun `home period label switches the chart and does not open Historia`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights))
+        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals("82,9 → 82,4 kg")
+        compose.onNodeWithTag("homePeriod").performClick()
+        compose.onNodeWithTag("homePeriod-30").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
+        compose.onNodeWithTag("chart").assertDoesNotExist()
+        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals("83,6 → 82,4 kg")
     }
 
     @Test

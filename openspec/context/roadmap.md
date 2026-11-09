@@ -61,6 +61,8 @@ Phases in order; one OpenSpec change each unless noted.
   part per data kind, owner details no longer carried, backup on the first open of each day).
 - ~~**chart-scale**~~: done 2026-11-09 (shared 4 kg minimum scale, home line over the whole 30
   days with dates and start/end weights, kg on axes and stats).
+- ~~**home-period**~~: done 2026-11-09 (home card line 1 vk by default, 1 kk / 3 kk from a
+  label under it, remembered).
 - **Trend line** (idea 2026-11-09, not asked yet): a smoothed line (e.g. 7-day moving average) over
   the daily dots, the usual way weight apps separate the trend from water-weight noise.
 - **Goal weight and forecast** on the chart (user 2026-11-09: later).

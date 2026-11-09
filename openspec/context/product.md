@@ -89,8 +89,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   card, Historia) uses the weights with 0.5 kg room, widened to at least 4 kg and rounded to whole
   kilos. Daily weight moves 0.5–2 kg with water and glycogen, so a narrower scale makes noise look
   like a trend (the home line once dropped steeply for a 0.08 kg difference); one rule everywhere
-  keeps a change the same size across periods. The home line spans the whole 30 days. kg is shown
+  keeps a change the same size across periods. The home line spans its whole period. kg is shown
   on every number and axis; no unit choice (user: kg only).
+- **Home chart period: 1 vk first, own choice** (user 2026-11-09, home-period): the home card's
+  line shows 1 vk, 1 kk or 3 kk, picked from a small label under it (its tap does not open
+  Historia), remembered and separate from Historia's period. A week was the user's wish from the
+  start; the main-screen refresh had given the card a fixed 30 days.
 - **Changes without judgement** (user 2026-11-09, history-list-delta): every change number has a
   small arrow up/down (none at ±0) because the direction is read before the digits; the Historia
   list shows each weight's change from the one before it, gains and losses in two palette tones

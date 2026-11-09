@@ -8,8 +8,8 @@
     <string name="home_empty">Ei vielä painoja</string>
     <string name="home_empty_hint">Punnitse vaa\'alla, niin paino näkyy tässä.</string>
     <string name="home_change">Muutos edellisestä %1$s kg</string>
-    <string name="home_spark">Painon kehitys 30 päivää, %1$s → %2$s kg</string>
-    <string name="home_spark_range">30 pv: %1$s → %2$s kg</string>
+    <string name="home_spark">Painon kehitys jaksolla, %1$s → %2$s kg</string>
+    <string name="home_spark_range">%1$s → %2$s kg</string>
     <string name="home_backup_failed">Varmuuskopio epäonnistui</string>
     <string name="home_backup_stale">Varmuuskopio on vanha</string>
     <string name="kg_value">%1$s kg</string>

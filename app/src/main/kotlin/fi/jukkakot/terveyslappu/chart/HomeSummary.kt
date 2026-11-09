@@ -9,27 +9,32 @@ data class HomeSummary(
     val latest: WeightEntry,
     /** Latest minus the weight before it, kg; null with a single weight. */
     val change: Double?,
-    /** The last 30 days' weights, oldest first, for the sparkline; empty when the latest is older. */
+    /** The chosen period's weights, oldest first, for the sparkline; empty when the latest is older. */
     val spark: List<WeightEntry>,
     /** Last minus first of [spark]; null with fewer than two points. */
     val sparkChange: Double?,
     /** The three latest weights, newest first. */
     val recent: List<WeightEntry>,
-    /** The sparkline's x range: the whole 30 days ending at [sparkTo]. */
+    /** The sparkline's x range: the whole period ending at [sparkTo]. */
     val sparkFrom: Instant,
     val sparkTo: Instant,
     /** The sparkline's y range ([WeightScale]); null when [spark] is empty. */
     val sparkScale: KgRange?,
 ) {
     companion object {
-        val SPARK_DAYS: Duration = Duration.ofDays(30)
+        /** The home card's period choices in days (1 vk, 1 kk, 3 kk) and the first-time one. */
+        val HOME_DAYS: List<Long> = listOf(7, 30, 90)
+        const val DEFAULT_DAYS = 7L
 
-        /** Summary of [weights] in any order, or null when there are none. */
-        fun of(weights: List<WeightEntry>, now: Instant): HomeSummary? {
+        /** [days] when it is a choice, else the default. */
+        fun homeDays(days: Long): Long = if (days in HOME_DAYS) days else DEFAULT_DAYS
+
+        /** Summary of [weights] in any order over the last [days], or null when there are none. */
+        fun of(weights: List<WeightEntry>, now: Instant, days: Long = DEFAULT_DAYS): HomeSummary? {
             if (weights.isEmpty()) return null
             val newest = weights.sortedByDescending { it.time }
             val latest = newest.first()
-            val since = now.minus(SPARK_DAYS)
+            val since = now.minus(Duration.ofDays(days))
             val spark = newest.filter { !it.time.isBefore(since) }.reversed()
             return HomeSummary(
                 latest = latest,
