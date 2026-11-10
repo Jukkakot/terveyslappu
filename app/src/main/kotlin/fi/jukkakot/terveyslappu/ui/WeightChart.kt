@@ -40,6 +40,7 @@ import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.common.data.ExtraStore
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
@@ -72,17 +73,22 @@ fun WeightChart(
     ProvideVicoTheme(rememberM3VicoTheme(lineColor = colors.outlineVariant, textColor = colors.onSurfaceVariant)) {
         val dot = rememberShapeComponent(fill = Fill(colors.primary), shape = CircleShape)
         val fill = remember(colors.primary) { LineCartesianLayer.LineFill.single(Fill(colors.primary)) }
-        val dots = remember(dot) { LineCartesianLayer.PointProvider.single(LineCartesianLayer.Point(dot, 7.dp)) }
-        val dotted = LineCartesianLayer.rememberLine(fill = fill, pointProvider = dots)
-        val plain = LineCartesianLayer.rememberLine(fill = fill, pointProvider = null)
-        // One series per segment; a lone weight between gaps keeps its dot even in a dense chart.
+        // One unbroken straight line through every weight, however far apart (chart-gap-lines);
+        // in a dense chart only the weights far from both neighbours keep their dot.
         val widthDp = LocalConfiguration.current.screenWidthDp - CHART_INSET_DP
-        val lines = remember(data, dotted, plain, widthDp) {
+        val dots = remember(data, dot, widthDp) {
             val dense = !ChartDots.fit(data.xs.size, widthDp.toFloat())
-            data.segments.map { if (!dense || it.first == it.last) dotted else plain }
+            val point = LineCartesianLayer.Point(dot, 7.dp)
+            val loneXs = data.lone.map { data.xs[it] }.toSet()
+            object : LineCartesianLayer.PointProvider {
+                override fun getPoint(entry: LineCartesianLayerModel.Entry, seriesIndex: Int, extraStore: ExtraStore) =
+                    if (!dense || entry.x in loneXs) point else null
+                override fun getLargestPoint(extraStore: ExtraStore) = point
+            }
         }
+        val line = LineCartesianLayer.rememberLine(fill = fill, pointProvider = dots)
         val layer = rememberLineCartesianLayer(
-            lineProvider = remember(lines) { LineCartesianLayer.LineProvider.series(lines) },
+            lineProvider = remember(line) { LineCartesianLayer.LineProvider.series(line) },
             rangeProvider = remember(data) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = data.maxX, minY = data.minY, maxY = data.maxY) },
         )
         val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> if (data.overYear) formatMonthYear(data.dayAt(x)) else formatShortDay(data.dayAt(x)) } }
@@ -121,7 +127,7 @@ fun WeightChart(
             markerController = CartesianMarkerController.rememberToggleOnTap(),
         )
         val model = remember(data) { CartesianChartModel(LineCartesianLayerModel.build {
-            data.segments.forEach { seg -> series(data.xs.slice(seg), data.ys.slice(seg)) }
+            series(data.xs, data.ys)
         }) }
         Box(modifier.fillMaxWidth().testTag("chart").semantics { contentDescription = description }) {
             CartesianChartHost(

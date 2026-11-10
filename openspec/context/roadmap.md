@@ -57,6 +57,8 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**home-period**~~: done 2026-11-09 (home card line 1 vk by default, 1 kk / 3 kk from a
   label under it, remembered).
 - ~~**chart-dots**~~: done 2026-11-09 (weights as dots on both charts when they fit).
+- ~~**chart-gap-lines**~~: done 2026-11-10 (Historia's line no longer breaks at gaps over 30
+  days: one straight line through every weight).
 - ~~Trend line~~ and ~~goal weight and forecast~~: dropped (user 2026-11-09: not wanted).
 - ~~**derived-values**~~: done 2026-11-09 (BMI with class, normal-weight range and basal metabolic
   rate on the home row and as Historia tabs Paino / BMI / Perusaineenvaihdunta; plot flush with the

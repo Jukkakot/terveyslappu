@@ -25,8 +25,8 @@ class ChartData(
     val maxY: Double,
     /** Days between x-axis labels. */
     val labelSpacing: Int,
-    /** Index ranges into [entries], each drawn as its own line: a gap over [MAX_GAP_DAYS] breaks the line. */
-    val segments: List<IntRange> = listOf(entries.indices),
+    /** Indices of weights more than [MAX_GAP_DAYS] from every neighbour: they keep their dot in a dense chart. */
+    val lone: Set<Int> = emptySet(),
     /** The chart spans more than a year, so x labels show month and year. */
     val overYear: Boolean = false,
 ) {
@@ -43,22 +43,18 @@ class ChartData(
         /** About this many labels fit under the chart on a phone. */
         private const val LABELS = 5
 
-        /** Consecutive weights further apart than this many days are not joined by the line. */
+        /** A pause longer than this many days between weights is a gap (lone dots, list gap rows). */
         const val MAX_GAP_DAYS = 30.0
 
-        /** Splits sorted x values into runs whose neighbours are at most [MAX_GAP_DAYS] apart. */
-        fun segments(xs: List<Double>): List<IntRange> {
-            if (xs.isEmpty()) return emptyList()
-            val result = mutableListOf<IntRange>()
-            var start = 0
-            for (i in 1 until xs.size) {
-                if (xs[i] - xs[i - 1] > MAX_GAP_DAYS) {
-                    result += start until i
-                    start = i
-                }
-            }
-            result += start until xs.size
-            return result
+        /**
+         * Indices of sorted x values more than [MAX_GAP_DAYS] from each neighbour they have; a single
+         * value is not lone (a chart of one weight shows its dot anyway).
+         */
+        fun lone(xs: List<Double>): Set<Int> {
+            if (xs.size < 2) return emptySet()
+            return xs.indices.filter { i ->
+                (i == 0 || xs[i] - xs[i - 1] > MAX_GAP_DAYS) && (i == xs.lastIndex || xs[i + 1] - xs[i] > MAX_GAP_DAYS)
+            }.toSet()
         }
 
         /**
@@ -94,7 +90,7 @@ class ChartData(
                 minY = range.min,
                 maxY = range.max,
                 labelSpacing = max(1, ceil(maxX / LABELS).toInt()),
-                segments = segments(xs),
+                lone = lone(xs),
                 overYear = origin.plusDays(maxX.toLong()) > origin.plusYears(1),
             )
         }
