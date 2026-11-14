@@ -71,29 +71,42 @@ class WeighIn(
     private val _secondsLeft = MutableStateFlow<Int?>(null)
     val secondsLeft: StateFlow<Int?> = _secondsLeft
 
+    /** The scan; cancelled when the dialog stops or restarts. */
     private var job: Job? = null
+    /** Save, retry or Poista: runs in its own scope so closing or recreating the dialog does not cut it. */
+    private var work: Job? = null
     private var decided: Pair<Double, Instant>? = null
     private var decidedRaw: RawEntry? = null
     private var decidedKey: Int? = null
     private var decidedScale: KnownScale? = null
     private var saved: WeighInState.Saved? = null
 
+    /** True once a stable weight is decided: the weigh-in then only saves, shows and maybe discards it. */
+    val decidedWeight: Boolean get() = decided != null
+
+    /** Shows an access state; ignored once a weight is decided (a recreated dialog keeps the result). */
     fun show(state: WeighInState) {
+        if (decided != null) return
         _state.value = state
     }
 
-    /** Starts scanning (again); a running scan is replaced. */
-    fun start(scope: CoroutineScope) {
+    /**
+     * Starts scanning (again); a running scan is replaced. The decided weight is saved in
+     * [saveScope], which outlives the dialog. Ignored once a weight is decided, so a restart never
+     * weighs or saves again.
+     */
+    fun start(scope: CoroutineScope, saveScope: CoroutineScope = scope) {
+        if (decided != null) return
         job?.cancel()
-        job = scope.launch { scan() }
+        job = scope.launch { scan(saveScope) }
     }
 
     /** Deletes the saved weight and its raw data (Poista); a failed delete stays on the result. */
     fun discard(scope: CoroutineScope) {
         val result = saved ?: return
         val weight = decided ?: return
-        job?.cancel()
-        job = scope.launch {
+        if (work?.isActive == true) return
+        work = scope.launch {
             try {
                 delete(weight.first, weight.second)
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -139,7 +152,7 @@ class WeighIn(
         null
     }
 
-    private suspend fun scan() {
+    private suspend fun scan(saveScope: CoroutineScope) {
         decided = null
         decidedRaw = null
         decidedKey = null
@@ -189,16 +202,17 @@ class WeighIn(
             decidedKey = result.packet?.companyId
             decidedScale = result.packet?.let { p -> p.address?.let { KnownScale(it, p.name?.ifEmpty { null }) } }
             decidedRaw = result.packet?.let { RawEntry(time.epochSecond, SOURCE, ScalePacket.rawFields(it.companyId, it.data)) }
-            saveDecided()
+            work = saveScope.launch { saveDecided() }
         }
     }
 
     /** Saves the decided weight again after a failed save. */
     fun retrySave(scope: CoroutineScope) {
-        if (decided == null) return
-        job = scope.launch { saveDecided() }
+        if (decided == null || _state.value !is WeighInState.SaveFailed || work?.isActive == true) return
+        work = scope.launch { saveDecided() }
     }
 
+    /** Stops scanning; a save or Poista already under way finishes. */
     fun stop() {
         job?.cancel()
         job = null

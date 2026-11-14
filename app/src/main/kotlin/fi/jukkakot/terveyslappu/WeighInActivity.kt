@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -27,7 +28,8 @@ import fi.jukkakot.terveyslappu.ui.TerveysTheme
 import fi.jukkakot.terveyslappu.ui.WeighInActions
 import fi.jukkakot.terveyslappu.ui.WeighInDialog
 import fi.jukkakot.terveyslappu.ui.WeighInViewModel
-import kotlinx.coroutines.delay
+import fi.jukkakot.terveyslappu.ui.closeWhenDue
+import fi.jukkakot.terveyslappu.ui.closesOnRequest
 import kotlinx.coroutines.launch
 
 /**
@@ -50,8 +52,6 @@ class WeighInActivity : ComponentActivity() {
         if (bluetoothOn()) prepare() else viewModel.show(WeighInState.BluetoothOff)
     }
 
-    private var prepared = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppLog.i("weighin.open", "", "from" to (intent.getStringExtra(EXTRA_FROM) ?: "unknown"))
@@ -60,21 +60,21 @@ class WeighInActivity : ComponentActivity() {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 val secondsLeft by viewModel.secondsLeft.collectAsStateWithLifecycle()
                 var keepOpen by rememberSaveable { mutableStateOf(false) }
-                LaunchedEffect(state, keepOpen) {
-                    // Discarded, or no weight within the time limit: the countdown said it would close.
-                    if (state is WeighInState.Discarded || state is WeighInState.NotFound) finish()
-                    if (state is WeighInState.Saved && !keepOpen) {
-                        delay(CLOSE_AFTER_SAVED_MS)
-                        finish()
-                    }
-                }
+                // Discarded, nothing found, or the saved result's ten seconds: the dialog closes by itself.
+                LaunchedEffect(state, keepOpen) { closeWhenDue(state, keepOpen, ::finish) }
+                // While saving, Back does nothing (the save finishes in the app scope either way).
+                BackHandler(enabled = !closesOnRequest(state)) {}
                 WeighInDialog(
                     state,
                     secondsLeft = secondsLeft,
                     actions = WeighInActions(
-                        onClose = ::finish,
+                        onClose = { if (closesOnRequest(viewModel.state.value)) finish() },
                         onKeepOpen = { if (state is WeighInState.Saved) keepOpen = true },
-                        onDiscard = viewModel::discard,
+                        // Poista stops the auto-close so it cannot cut the delete short.
+                        onDiscard = {
+                            keepOpen = true
+                            viewModel.discard()
+                        },
                         onRetryScan = ::prepare,
                         onRetrySave = viewModel::retrySave,
                         onOpenAppSettings = {
@@ -97,7 +97,7 @@ class WeighInActivity : ComponentActivity() {
         val state = viewModel.state.value
         val resume = state is WeighInState.Scanning || state is WeighInState.Live ||
             state is WeighInState.PermissionDenied || state is WeighInState.BluetoothOff
-        if (!prepared || resume) prepare()
+        if (!viewModel.prepared || resume) prepare()
     }
 
     override fun onStop() {
@@ -107,7 +107,9 @@ class WeighInActivity : ComponentActivity() {
     }
 
     private fun prepare() {
-        prepared = true
+        // A recreated dialog (rotation) keeps a decided weight: never prepare or scan it again.
+        if (viewModel.decided) return
+        viewModel.prepared = true
         viewModel.show(WeighInState.Preparing)
         lifecycleScope.launch {
             when {
@@ -148,7 +150,6 @@ class WeighInActivity : ComponentActivity() {
     companion object {
         /** Which start opened the dialog, for the log: tile, widget, shortcut, main. */
         const val EXTRA_FROM = "from"
-        private const val CLOSE_AFTER_SAVED_MS = 10_000L
         private val NEARBY_PERMISSIONS = arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
 
         fun intent(context: android.content.Context, from: String): Intent =

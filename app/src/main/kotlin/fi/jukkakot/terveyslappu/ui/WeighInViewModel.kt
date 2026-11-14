@@ -46,7 +46,16 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
     /** Seconds left before the weigh-in gives up (shown in the dialog). */
     val secondsLeft: StateFlow<Int?> = weighIn.secondsLeft
 
-    fun discard() = weighIn.discard(viewModelScope)
+    /** Save and Poista outlive the dialog (rotation, close), so they run in the app-wide scope. */
+    private val appScope = (app as TerveysApp).appScope
+
+    /** Access was checked and the scan started once; kept across a recreated dialog. */
+    var prepared = false
+
+    /** A stable weight is decided: a recreated dialog must not prepare or scan again. */
+    val decided: Boolean get() = weighIn.decidedWeight
+
+    fun discard() = weighIn.discard(appScope)
 
     /** True when Health Connect is available and this app may write weight. */
     suspend fun hasHealthAccess(): Boolean {
@@ -59,9 +68,9 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
 
     fun show(state: WeighInState) = weighIn.show(state)
 
-    fun start() = weighIn.start(viewModelScope)
+    fun start() = weighIn.start(viewModelScope, appScope)
 
-    fun retrySave() = weighIn.retrySave(viewModelScope)
+    fun retrySave() = weighIn.retrySave(appScope)
 
     fun stop() = weighIn.stop()
 

@@ -2,7 +2,18 @@ package fi.jukkakot.terveyslappu.scale
 
 import fi.jukkakot.terveyslappu.raw.MemoryRawStore
 import fi.jukkakot.terveyslappu.scale.ScalePacketTest.Companion.packet
+import fi.jukkakot.terveyslappu.ui.CLOSE_AFTER_SAVED_MS
+import fi.jukkakot.terveyslappu.ui.autoCloseDelayMs
+import fi.jukkakot.terveyslappu.ui.closeWhenDue
+import fi.jukkakot.terveyslappu.ui.closesOnRequest
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -13,6 +24,9 @@ import org.junit.Test
 import java.io.IOException
 import java.time.Instant
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WeighInTest {
@@ -261,5 +275,128 @@ class WeighInTest {
         runCurrent()
         assertEquals(WeighInState.Discarded, w.state.value)
         assertEquals(KnownScale("00:11:22:33:44:55", "Yoda1"), last.scale())
+    }
+
+    /** A Health Connect that takes [ms] to answer a write or delete, counting the calls. */
+    private class SlowStore(val ms: Long) {
+        val weights = mutableMapOf<Instant, Double>()
+        var saves = 0
+        var deletes = 0
+    }
+
+    private fun TestScope.slowWeighIn(store: SlowStore, last: LastWeighInStore = MemoryLastWeighIn()) = WeighIn(
+        source = stable(825, key = 0x61C0),
+        // The write lands at once; Health Connect's answer takes a while (a cancel then loses only the answer).
+        save = { kg, t ->
+            store.saves++
+            store.weights[t] = kg
+            delay(store.ms)
+        },
+        elapsedMs = { testScheduler.currentTime },
+        now = { wallStart.plusMillis(testScheduler.currentTime) },
+        delete = { _, t ->
+            delay(store.ms)
+            store.deletes++
+            store.weights.remove(t)
+        },
+        last = last,
+    )
+
+    /** A scope like the dialog's (viewModelScope), cancelled when the dialog goes. */
+    private fun TestScope.dialogScope() = CoroutineScope(backgroundScope.coroutineContext + Job(backgroundScope.coroutineContext[Job]))
+
+    @Test
+    fun `a restart while saving neither shows Preparing nor saves again`() = runTest {
+        val store = SlowStore(1_000)
+        val last = MemoryLastWeighIn()
+        val w = slowWeighIn(store, last)
+        w.start(backgroundScope)
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
+        assertEquals(WeighInState.Saving(82.5), w.state.value)
+        // The recreated dialog prepares again.
+        w.show(WeighInState.Preparing)
+        w.start(backgroundScope)
+        assertEquals(WeighInState.Saving(82.5), w.state.value)
+        settle()
+        assertEquals(1, store.saves)
+        assertEquals(WeighInState.Saved(82.5), w.state.value)
+        assertEquals(0x61C0, last.load()?.first)
+    }
+
+    @Test
+    fun `the save finishes when the dialog's scope is cancelled`() = runTest {
+        val store = SlowStore(1_000)
+        val last = MemoryLastWeighIn()
+        val w = slowWeighIn(store, last)
+        val dialog = dialogScope()
+        w.start(dialog, saveScope = backgroundScope)
+        testScheduler.advanceTimeBy(500)
+        runCurrent()
+        dialog.cancel()
+        w.stop()
+        settle()
+        assertEquals(1, store.weights.size)
+        assertEquals(0x61C0, last.load()?.first)
+        assertEquals(WeighInState.Saved(82.5), w.state.value)
+    }
+
+    @Test
+    fun `Poista finishes after the dialog closes and a second tap is ignored`() = runTest {
+        val store = SlowStore(1_000)
+        val w = slowWeighIn(store)
+        w.start(backgroundScope)
+        settle()
+        w.discard(backgroundScope)
+        w.discard(backgroundScope)
+        // The dialog closes: its scan stops, the delete runs on.
+        w.stop()
+        settle()
+        assertEquals(1, store.deletes)
+        assertEquals(emptyMap(), store.weights)
+        assertEquals(WeighInState.Discarded, w.state.value)
+    }
+
+    @Test
+    fun `Poista just before the auto-close waits for the delete`() = runTest {
+        val store = SlowStore(2_000)
+        val w = slowWeighIn(store)
+        w.start(backgroundScope)
+        testScheduler.advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(WeighInState.Saved(82.5), w.state.value)
+        val keepOpen = MutableStateFlow(false)
+        var closedAt: Long? = null
+        backgroundScope.launch {
+            combine(w.state, keepOpen) { s, k -> s to k }.collectLatest { (s, k) ->
+                closeWhenDue(s, k) { if (closedAt == null) closedAt = testScheduler.currentTime }
+            }
+        }
+        runCurrent()
+        val savedAt = testScheduler.currentTime
+        testScheduler.advanceTimeBy(CLOSE_AFTER_SAVED_MS - 500)
+        runCurrent()
+        // Poista, as the activity wires it: keep open, then delete.
+        keepOpen.value = true
+        w.discard(backgroundScope)
+        testScheduler.advanceTimeBy(1_000)
+        runCurrent()
+        assertNull(closedAt)
+        assertEquals(1, store.weights.size)
+        testScheduler.advanceTimeBy(1_500)
+        runCurrent()
+        assertEquals(WeighInState.Discarded, w.state.value)
+        assertEquals(emptyMap(), store.weights)
+        assertEquals(savedAt + CLOSE_AFTER_SAVED_MS - 500 + 2_000, closedAt)
+    }
+
+    @Test
+    fun `the saved result closes by itself after ten seconds unless kept open`() {
+        assertEquals(CLOSE_AFTER_SAVED_MS, autoCloseDelayMs(WeighInState.Saved(82.5), keepOpen = false))
+        assertNull(autoCloseDelayMs(WeighInState.Saved(82.5), keepOpen = true))
+        assertEquals(0L, autoCloseDelayMs(WeighInState.Discarded, keepOpen = true))
+        assertNull(autoCloseDelayMs(WeighInState.Saving(82.5), keepOpen = false))
+        assertFalse(closesOnRequest(WeighInState.Saving(82.5)))
+        assertTrue(closesOnRequest(WeighInState.Saved(82.5)))
     }
 }
