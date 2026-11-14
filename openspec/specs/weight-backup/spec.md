@@ -71,3 +71,14 @@ The backup file SHALL be readable by Tuo tiedot, so a new phone gets the data ba
 #### Scenario: New phone
 - **WHEN** the backup file is imported with Tuo tiedot on another phone
 - **THEN** the weights, times and raw data in it are found
+
+### Requirement: Backup does not silently shrink
+When the history permission is not granted, the backup status SHALL say the copy holds recent
+weights only (like the export does). An automatic backup that would write fewer than half of the
+last successful count SHALL be refused: the file is left as it was, the status is failed with the
+reason, and `backup.run refused reason=shrink` is logged. "Varmuuskopioi nyt" is not guarded.
+
+#### Scenario: Permission missing
+- **GIVEN** the last backup held 100 weights and the history permission is revoked
+- **WHEN** an automatic backup would write 20
+- **THEN** it is refused and the file is unchanged
