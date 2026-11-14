@@ -5,7 +5,7 @@ The home screen's help button SHALL open a scrollable screen "Ohje" in the app t
 dark); Asetukset SHALL NOT have an Ohje row. The screen SHALL show a short intro line and then one section per
 feature, each with a title and one to three sentences: weighing from the widget, the Quick Settings
 tile and the launcher shortcut; manual entry; Historia (chart, periods, list); the food log (adding,
-products, Herkku, the Energia tab, base products from Fineli (THL, CC BY 4.0)); owner details and BMI; import and export
+products, Herkku, the Energia tab, the base products' sources); owner details and BMI; import and export
 (including OKOK .xls); the automatic backup; Jaa loki. It SHALL NOT describe automatic weigh-in.
 Back from Ohje SHALL return to the home screen.
 

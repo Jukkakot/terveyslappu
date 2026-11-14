@@ -15,7 +15,8 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
   enter adds a bare number as kcal or a name without kcal.
 - **Products are learnt**: every name becomes a product with kcal per piece or per 100 g once
   known and its last used amount; kcal can be filled in later and fills the product's other items
-  too. About 150 generic base products from Fineli (THL, CC BY 4.0) so nothing starts from zero.
+  too. About 300 generic base products (dishes, breads, dairy, fruit, treats, drinks and raw
+  ingredients) from open sources (Open Food Facts, ODbL, for packaged foods) and generic estimates so nothing starts from zero.
 - **Ruoka day screen**: the day's items in eating order with small logging times, total with the
   treats' share and items without kcal, earlier days via arrows (catching up is normal), editor,
   delete with undo, Järjestä to drag the order. No meals, no clock times to enter, no budget,
@@ -27,7 +28,7 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
   weight line under it on the same time axis, period statistics and a list of logged days.
 - **Ruokakirjaus row** in Asetukset (before Ulkoasu); the list itself comes from settings-list.
 - The data file (export, import, backup) carries the foods and the products. Ohje gets a food log
-  section with the Fineli attribution. Version 1.24.
+  section naming the base products' sources. Version 1.24.
 - Not here: steps (own change next) and a combined weight/kcal/steps chart (backlog).
 
 ## Capabilities
@@ -47,6 +48,6 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
 - App screens: front page row and button, add sheet, Ruoka day screen and item editor, Historia
   Energia tab, Asetukset Ruokakirjaus row and sub-screen, Ohje text.
 - Health Connect: READ_NUTRITION and WRITE_NUTRITION, asked on first food use only.
-- App storage: own products (`products.json`); a shipped base-product asset built from Fineli.
+- App storage: own products (`products.json`); a shipped base-product asset (open sources, generic estimates).
 - Data file, backup, import: new parts in CSV and JSON, version stays 2.
 - Scale, widget, tile, background weigh-in: untouched. Build/CI: no new dependency.

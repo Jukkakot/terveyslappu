@@ -189,7 +189,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Food log: how it is used** (user 2026-11-14, while proposing food-log). Logged mostly right
   after eating ("Lisää annos" from the home screen adds to today, after the previous item), but
   catching up later is normal: in bed in the evening, or the next day for yesterday. Therefore:
-  - No clock times are ever asked or shown; a day is its items in eating order (breakfast first,
+  - No clock times are ever asked (the logging time is only shown small); a day is its items in eating order (breakfast first,
     something, lunch, ...). Meal names are at most a loose template, not data that matters.
   - A repeated thing is a saved **product** with a fixed kcal per piece or per 100 g ("suklaapala
     25 kcal", 5 kpl today), like products in a shopping-list app; repeats must be one or two taps.
@@ -203,8 +203,8 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   - Order kept (helps recall and spot what was forgotten); the logging time is saved for free and
     shown small; it also feeds "usually eaten at this time" suggestions, which replace day
     templates. No "eat now or later" switch: Järjestä fixes the rare advance entry.
-  - Products are learnt from what is typed (as in kauppalappu); about 150 base products from Fineli
-    (THL, CC BY 4.0) so nothing starts from zero. Storage: Health Connect, app storage, the data
+  - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
+    ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.
   - Simple and intuitive: never wonder what to do next; every field says what goes in it; one
     modern look across the app. Not doing: flags for unrealistically low days.

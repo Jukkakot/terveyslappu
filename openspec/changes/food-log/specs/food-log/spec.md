@@ -40,6 +40,12 @@ otherwise without kcal). The field SHALL stay open for the next item.
 - **WHEN** the user types 350 and presses enter
 - **THEN** an item "Pikalisäys" with 350 kcal is added
 
+#### Scenario: A whole day as one number
+- **GIVEN** the user estimated yesterday at 2 200 kcal with an AI chat
+- **WHEN** they move to yesterday on Ruoka, tap Lisää annos, type 2200 and press enter
+- **THEN** yesterday has an item "Pikalisäys" 2 200 kcal next to any other items, counted in
+  Energia like any item
+
 #### Scenario: Only a name
 - **WHEN** the user types "työpaikan pizza", which is no product yet, and presses enter
 - **THEN** an item "työpaikan pizza" without kcal is added and counted as "1 ilman kcal"
@@ -77,11 +83,12 @@ logged item of that product that has no kcal yet; items that already have kcal S
 - **THEN** both items show 800 kcal and the next "työpaikan pizza" is logged with 800 kcal
 
 ### Requirement: Base products
-The app SHALL ship a set of about 150 generic Finnish foods and drinks (no brands) with kcal per
-100 g or per piece and a typical portion, taken from the Finnish national food composition
-database Fineli (THL, licence CC BY 4.0), so the user does not start from nothing. They SHALL be
+The app SHALL ship a set of about 300 generic Finnish foods and drinks (no brands): everyday home
+dishes, breads, dairy, fruit and vegetables, treats, drinks and raw ingredients, with kcal per
+100 g or per piece and a typical portion, taken from open sources (Open Food Facts, ODbL) and
+generic estimates, so the user does not start from nothing. They SHALL be
 found by typing like own products, after them; logging one SHALL make it an own product with its
-values, which the user can then change. The source and licence SHALL be named in Ohje.
+values, which the user can then change. The sources and licences SHALL be named in Ohje.
 
 #### Scenario: First use
 - **GIVEN** no own products yet
@@ -90,7 +97,8 @@ values, which the user can then change. The source and licence SHALL be named in
 
 ### Requirement: Editing, order and delete
 Tapping a logged item SHALL open its editor with clear labelled fields: amount (with its unit),
-kcal, Herkku (on the product), and Poista. Delete SHALL happen at once with a Kumoa line. The Ruoka
+kcal, Herkku, and Poista. Herkku belongs to the product: switching it SHALL change the product
+and all its logged items, also earlier ones, and the totals and the chart follow. Delete SHALL happen at once with a Kumoa line. The Ruoka
 screen SHALL offer "Järjestä", where items are moved by dragging; the order SHALL be saved when
 leaving it. Earlier days SHALL be added to and edited the same way as today.
 

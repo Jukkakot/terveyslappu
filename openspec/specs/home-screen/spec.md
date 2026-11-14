@@ -9,13 +9,14 @@ TBD - created by archiving change main-screen-refresh. Update Purpose after arch
 The home screen SHALL show only: a card with the latest weight this app wrote (large, with its date
 and time, the change from the weight before it with a direction sign, not by colour alone, and a
 small line chart of the chosen period without axes), under the card a row of the latest weight's
-derived values, the three latest weights, a settings button in the top bar, and Punnitse vaa'alla as
-the only filled action at the bottom. The small chart SHALL
+derived values, the three latest weights, a help button and a settings button in the top bar, and
+Punnitse vaa'alla as the only filled action at the bottom. The small chart SHALL
 span the whole chosen period ending now, use the weight scale of the weight chart, and show under it
 the first and last day of the period, the first and the latest weight of the period with `kg`, and
 the change over it. Both changes on the card SHALL show a small arrow up for a gain and down for a
 loss next to the number, and no arrow when the shown value is zero. Tapping the card SHALL open
-Historia; the settings button SHALL open Asetukset. The home screen SHALL have no ⋮ menu.
+Historia; the help button SHALL open Ohje; the settings button SHALL open Asetukset. The home
+screen SHALL have no ⋮ menu.
 
 The derived-values row SHALL show, of the latest weight, the BMI number in its category tone without
 the category word (the word SHALL stay in the screen reader text), and the normal-weight range; a value that cannot be computed SHALL be
@@ -51,6 +52,10 @@ tiedot. Without weights the row SHALL NOT be shown.
 - **WHEN** the user taps the settings button
 - **THEN** Asetukset opens; back returns to the home screen
 
+#### Scenario: Open Ohje
+- **WHEN** the user taps the help button
+- **THEN** Ohje opens; back returns to the home screen
+
 #### Scenario: No weights yet
 - **WHEN** the app has written no weights
 - **THEN** the card invites to weigh with the scale instead of showing a number, and no list and no
@@ -59,7 +64,8 @@ tiedot. Without weights the row SHALL NOT be shown.
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
 - **WHEN** its last run failed or its last success is older than three days
-- **THEN** the home screen shows one notice that opens Asetukset; otherwise nothing about the backup
+- **THEN** the home screen shows one notice that opens Asetukset at Tiedot ja varmuuskopio;
+  otherwise nothing about the backup
 
 #### Scenario: All details set
 - **GIVEN** height 180 cm, birth year 1990, gender Mies and the latest weight 82.0 kg in 2026
@@ -86,13 +92,33 @@ weights with delete and undo, and an add button in its top bar that opens the ma
 - **THEN** it shows the chosen period's chips, chart, statistics and weights, newest first
 
 ### Requirement: Asetukset screen
-Asetukset SHALL group, with section titles: Ulkoasu (theme), Tiedot (Tuo tiedot, Vie tiedot),
-Varmuuskopio (state and its actions) and Tuki (Jaa loki, the version).
+Asetukset SHALL be a list of rows, each with an icon, a name, one line of its current state and a
+chevron, and each SHALL open its own sub-screen holding what was its section: Omat tiedot,
+Automaattinen punnitus, Tiedot ja varmuuskopio (Tuo tiedot, Vie tiedot and the backup; shown only
+with the Health Connect permission, as before), Ulkoasu (theme) and Tuki (Jaa loki, Kopioi loki,
+the version). The sections' contents and behaviour SHALL stay as they were. A section's warning
+(backup failed or late, weighings waiting to be saved, listening blocked) SHALL show on its row's
+state line in the warning tint. A link elsewhere that opens Asetukset at a section SHALL open that
+sub-screen directly; back from a sub-screen SHALL return to where it was opened from: the
+Asetukset list when opened from it, otherwise the screen holding the link.
 
 #### Scenario: Asetukset contents
 - **WHEN** the user opens Asetukset
-- **THEN** the theme choice, the import and export, the backup and Jaa loki with the version are
-  shown in those groups
+- **THEN** five rows are shown with their state lines, e.g. Omat tiedot "180 cm · 1990 · Mies",
+  Automaattinen punnitus "Päällä 6.00–10.00", Ulkoasu "Teema: Järjestelmä", Tuki with the version
+
+#### Scenario: Open a sub-screen
+- **WHEN** the user taps Tiedot ja varmuuskopio
+- **THEN** its sub-screen shows Tuo tiedot, Vie tiedot and the backup; back returns to Asetukset
+
+#### Scenario: Warning on the row
+- **GIVEN** the backup's last run failed
+- **WHEN** Asetukset is shown
+- **THEN** the Tiedot ja varmuuskopio row says so in the warning tint
+
+#### Scenario: Link from home
+- **WHEN** the user taps "BMI vaatii pituuden" on the home screen
+- **THEN** the Omat tiedot sub-screen opens, and back returns to the home screen
 
 ### Requirement: Home chart period
 The home card's small chart SHALL show the last 7 days the first time. A period label under the

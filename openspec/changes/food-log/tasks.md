@@ -9,7 +9,7 @@
 
 ## 2. Base products
 
-- [ ] 2.1 Get the Fineli open data package (cloud fetch refused, questions.md Q6) and pick about 150 generic foods with kcal per 100 g and typical portion; a script in `scripts/` writes `assets/base-products.json`
+- [ ] 2.1 Build about 300 generic foods (dishes, breads, dairy, fruit and vegetables, treats, drinks, raw ingredients) with kcal per 100 g or per piece and a typical portion from open sources (Open Food Facts) and generic estimates; a script in `scripts/` writes `assets/base-products.json`
 - [ ] 2.1b Add generic home dishes with estimated kcal per 100 g (user's everyday cooking, 2026-11-14): kinkkukiusaus, tortillapizza (tomaatti, juustoraaste, kalkkunapepperoni, feta, punasipuli), kanakeitto, makkarakeitto, uuniranskalaiset, nakit, lihapullat (jauheliha 10 %, kermaviili, sipulikeittoaines), kananugetit, lasagnette (jauheliha 10 %), kermaviilikana, keitetty riisi, keitetty peruna, makaroni; jauheliha 10 % / 9,5 %
 - [ ] 2.2 Loader and a test that every base product has a name and energy
 
