@@ -8,8 +8,7 @@ TBD - created by archiving change main-screen-refresh. Update Purpose after arch
 ### Requirement: Simple home screen
 The home screen SHALL show, under the help and settings buttons of the top bar, one card per
 feature: the weight card on top across the whole width, and under it a row of the smaller feature
-cards, now only the food card across the whole width (a later steps card takes the row's right
-half). The home screen with its notices SHALL fit a phone screen in portrait without scrolling.
+cards: the food card in the left half and the steps card in the right half. The home screen with its notices SHALL fit a phone screen in portrait without scrolling.
 The home screen SHALL NOT list single weights, SHALL NOT show the BMI, the normal-weight range or
 the automatic weigh-in state, and SHALL have no ⋮ menu and no action outside the cards.
 
@@ -27,7 +26,8 @@ Asetukset.
 Feature cards SHALL follow one pattern (parity, user 2026-11-14): the latest value, a small chart of
 the card's own chosen period, the feature's own quick action inside the card when it has one, and a
 tap that opens its details; a part that means nothing for a quantity is left out. The order SHALL
-be fixed for now.
+be fixed for now. The steps card opens Askeleet from anywhere except its period label, unlike the
+food card's split taps (food has a quick action; steps have nothing to add).
 
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
@@ -55,14 +55,15 @@ be fixed for now.
 - **THEN** the weigh-in dialog opens, and Historia does not open
 
 #### Scenario: Fits without scrolling
-- **GIVEN** weights, food logged today and the "?" notice shown, on a phone of about 6 inches in portrait
+- **GIVEN** weights, food and steps today and the "?" notice shown, on a phone of about 6 inches in portrait
 - **WHEN** the home screen is shown
-- **THEN** both cards and the notice are fully visible without scrolling
+- **THEN** the weight card, the food and steps cards side by side and the notice are fully visible without scrolling
+- Covered by design: one Robolectric layout smoke test at about 360 dp width.
 
 #### Scenario: Automatic weigh-in off
 - **GIVEN** automatic weigh-in is switched on or off
 - **WHEN** the home screen is shown
-- **THEN** only the weight and food cards are shown, and nothing about automatic weigh-in
+- **THEN** only the weight, food and steps cards are shown, and nothing about automatic weigh-in
 
 #### Scenario: All details set
 - **GIVEN** height 180 cm, birth year 1990, gender Mies and the latest weight 82.0 kg in 2026
@@ -94,7 +95,7 @@ be fixed for now.
 #### Scenario: No weights yet
 - **WHEN** the app has written no weights
 - **THEN** the weight card invites to weigh with its Punnitse button instead of showing a number,
-  and the food card is still shown
+  and the food and steps cards are still shown
 
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
@@ -181,7 +182,7 @@ the "?" row in Historia, and still carry its text.
 - **THEN** no notice about checking is shown
 
 ### Requirement: Food row on the home screen
-The food card SHALL be built like the weight card: "Syöty tänään" with today's total kcal large and
+The food card, the left half of the row, SHALL be built like the weight card: "Syöty tänään" with today's total kcal large and
 the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
 days ending today, chosen from its own menu and remembered, 7 by default) with the treats' share in
 its tone as on Energia, and under them the period's first and last day and its average kcal per
@@ -189,7 +190,7 @@ logged day (today left out, as on Energia). Inside the card SHALL be an outlined
 opens the add field for today. A tap on the card's title or today's number SHALL open Ruoka on
 today; a tap on the bars or what is under them (not the period label) SHALL open Historia on
 Energia. There SHALL be no change arrow from the previous day and no separate button for today.
-Nothing on the card SHALL be a filled button. The card SHALL be shown also when no weights exist
+Nothing on the card SHALL be a filled button. At half width the period label and the average SHALL share one row (the average may shorten to "7 800/pv" style) and "+ Annos" SHALL sit on its own row under it; all parts SHALL stay readable and tappable (44 dp touch targets). The card SHALL fill the row's height (the taller card sets it). The card SHALL be shown also when no weights exist
 yet; without the nutrition permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask
 for it.
 
@@ -214,6 +215,64 @@ for it.
 - **WHEN** the user taps the food card's bars
 - **THEN** Historia opens on Energia; back returns to the home screen
 
+#### Scenario: Half width
+- **WHEN** the front page is shown on a phone of about 6 inches in portrait
+- **THEN** the food card fills the left half with its number, bars, period label and + Annos all visible and none cut off
+
 #### Scenario: Nothing logged
 - **WHEN** nothing is logged today
 - **THEN** the card reads "Syöty tänään: ei kirjauksia" with no warning tone
+
+### Requirement: Steps card on the home screen
+The steps card SHALL fill the right half of the food card's row, built like the food card: the
+title "Askeleet tänään", today's steps large (thin-space thousands, "6 420"), small daily bars of the
+card's own period (7, 30 or 90 days ending today, chosen from its own menu, remembered, 7 by
+default and separate from the weight and food periods) in one tone, and under them the period's
+first and last day and the average ("keskim. 7 800 askelta/pv", "keskim. 7 800/pv" at half width)
+of days with steps, today left out. The card has no quick action, no change arrow and no goal. A
+tap anywhere on the card except its period label SHALL open Historia on Askeleet; back SHALL
+return to the home screen. The card SHALL be shown also when no weights exist yet and SHALL reload
+when the app is resumed and when the home screen is shown.
+
+#### Scenario: Steps today
+- **GIVEN** Health Connect holds 6 420 steps for today
+- **WHEN** the front page is shown
+- **THEN** the steps card shows 6 420 and a bar per day with steps of the last 7 days
+
+#### Scenario: Own period
+- **WHEN** the user picks 30 pv in the steps card's menu
+- **THEN** the bars span 30 days, the weight and food cards keep their own periods, and the choice stays after a restart
+
+#### Scenario: Open Askeleet
+- **WHEN** the user taps the steps card's number or bars
+- **THEN** Historia opens on Askeleet; back returns to the home screen
+
+#### Scenario: No steps yet today
+- **GIVEN** Health Connect holds steps for earlier days but none for today
+- **THEN** the card shows "ei tietoa" in the number slot and the earlier days' bars and average
+
+#### Scenario: No steps data at all
+- **GIVEN** Health Connect holds no steps
+- **THEN** the card keeps the title "Askeleet tänään", shows "ei tietoa" in the number slot and
+  "ei vielä keskiarvoa" for the average
+
+### Requirement: Steps card height
+The steps card SHALL fill the row's height (the taller of the two cards sets it), with its free
+space under its bars so the bottoms of both cards line up.
+
+#### Scenario: Equal height
+- **GIVEN** the food card is taller than the steps card
+- **THEN** both cards end at the same line and the steps card's extra space is under its bars
+
+### Requirement: Steps card without access
+Without the steps permission the steps card SHALL read "Askeleet: anna lupa" and a tap SHALL ask
+for it (or, after a denial, open Askeleet as described in the steps capability). When Health
+Connect is unavailable it SHALL read "Askeleet: ei saatavilla" and have no tap action.
+
+#### Scenario: No permission
+- **GIVEN** the steps permission is not granted
+- **THEN** the card reads "Askeleet: anna lupa" and the food card is unchanged
+
+#### Scenario: Unavailable
+- **GIVEN** Health Connect is unavailable
+- **THEN** the card reads "Askeleet: ei saatavilla" and tapping it does nothing
