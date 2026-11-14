@@ -11,7 +11,7 @@ the app is a JSON block in the chat's answer; the user shares or copies the answ
 **Goals:** one share (or paste) logs the day's items; a strict, documented shape the AI can follow;
 a lenient reader in the app; the user fine-tunes before saving; nothing existing is changed.
 
-**Non-Goals:** choosing another day (backlog); portion sizes pieni/normaali/iso; an MCP service or
+**Non-Goals:** portion sizes pieni/normaali/iso; an MCP service or
 any server (dropped by the user 2026-11-14); meal names or times.
 
 ## Decisions
@@ -29,46 +29,19 @@ any server (dropped by the user 2026-11-14); meal names or times.
 - **`products` replaces, items only fill.** `products` is the chat's explicit "keep this" list, so
   it may overwrite a product; an item only teaches a product that has no energy yet, so a one-off
   estimate never silently changes a product the user tuned.
-- **Always today.** The user shares in the evening for the same day; no date in the shape, so the
-  AI cannot put items on a wrong day. A date key is ignored.
-- **The prompt below is the contract.** Kopioi ohje tekoälylle copies it word for word (Finnish UI
-  text, a string resource); changing the shape means changing this text and the reader together.
+- **Today by default, calendar to change.** The user mostly shares in the evening for the same
+  day; no date in the shape, so the AI cannot put items on a wrong day (a date key is ignored);
+  the preview's day opens a single-day calendar for a catch-up.
+- **Dish alone in products.** A dish is eaten with different sides, so a product holds the dish
+  without sides (best per 100 g with a usual amount); an item carries the AI's kcal for what was
+  eaten. The existing item editor already logs a product by grams, pieces or a total kcal.
+- **The prompt file is the contract** (see below).
 
-## The prompt (copied by Kopioi ohje tekoälylle)
+## The prompt
 
-````text
-Kun arvioit syömiseni kalorit, anna vastauksen lopuksi tulos Terveyslappu-sovellukseen alla olevassa JSON-muodossa yhtenä koodilohkona. Jaan vastauksesi sovellukseen, joka lukee koodilohkon ja kirjaa jokaisen rivin tämän päivän ruokiin. Muu teksti saa olla lohkon ympärillä.
-
-```json
-{
-  "items": [
-    {"name": "Kaurapuuro", "amount": 300, "unit": "g", "kcal": 210},
-    {"name": "Lohikeitto", "amount": 1, "unit": "kpl", "kcal": 380},
-    {"name": "Pulla", "amount": 1, "unit": "kpl", "kcal": 250, "herkku": true}
-  ],
-  "products": [
-    {"name": "Lohikeitto", "kcal": 380, "per": "annos"}
-  ]
-}
-```
-
-Kentät ja mihin niitä käytetään:
-
-items = mitä söin, syömisjärjestyksessä. Jokaisesta tulee oma rivi päivän ruokalistaan, ja sen kcal lasketaan päivän summaan.
-- name (pakollinen): lyhyt suomenkielinen ruuan nimi ilman määrää, esim. "Kaurapuuro", ei "Kaurapuuro 3 dl". Sovellus tekee nimistä tuotteita ja ehdottaa niitä myöhemmin, joten käytä samasta ruuasta aina samaa nimeä.
-- amount ja unit: syöty määrä. unit on "g" (valmiin ruuan paino grammoina) tai "kpl" (kappaleet tai annokset). Sovellus laskee näistä tuotteelle kalorit per 100 g tai per kpl, joten saman ruuan voi myöhemmin kirjata yhdellä napautuksella ilman tekoälyä.
-- kcal: tämän rivin kokonaiskalorit kokonaislukuna (ei per 100 g). Jätä pois, jos et osaa arvioida; rivi kirjataan silloin ilman kaloreita, ja täydennän sen itse.
-- herkku: true makeisille, leivonnaisille, jälkiruuille, sipseille, limsoille ja alkoholille. Sovellus näyttää herkkujen osuuden päivän kaloreista erikseen. Jätä pois tavalliselta ruualta.
-
-products = ateriat ja ruuat, jotka tallennetaan sovellukseen valmiiksi, esim. usein syömäni kotiruuat. Sama ruoka voi olla myös items-listassa. Tuote korvaa sovelluksessa saman nimisen tuotteen aiemmat arvot, joten listaa vain ruuat, joiden arvon haluan pysyvän.
-- name (pakollinen): kuten yllä.
-- kcal (pakollinen): kalorit per yksikkö.
-- per: "100g", "kpl" tai "annos". Annos tallentuu kappaleena.
-- amount ja unit (vapaaehtoinen): tavallinen annokseni, esim. 250 ja "g".
-- herkku: kuten yllä.
-
-Säännöt: yksi JSON-koodilohko vastausta kohden. Numerot ilman yksiköitä ja lainausmerkkejä, desimaalit pisteellä. Ei kommentteja JSONin sisällä. Älä lisää päivämäärää: sovellus kirjaa kaiken aina kuluvalle päivälle.
-````
+The prompt lives in `app/src/main/assets/ai-food-prompt.txt` (user 2026-11-14: kept in git and
+maintained with the reader). Kopioi ohje tekoälylle copies the file as is; a change to the shape
+changes the file, the reader and its tests in the same commit.
 
 ## Risks / Trade-offs
 

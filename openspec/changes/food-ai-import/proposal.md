@@ -14,12 +14,16 @@ fine-tuning, and logs every item with its kcal.
   a code block or with chat text around it.
 - **Kopioi ohje tekoälylle**: copies a short Finnish instruction with the JSON shape and an
   example, to paste into the chat or the user's own calorie skill.
-- The JSON shape (the interface; `design.md` documents each field's purpose and holds the prompt
-  Kopioi ohje copies): `{"items": [{"name", "amount", "unit": "g"|"kpl", "kcal", "herkku"}],
+- The JSON shape (the interface; the prompt file `app/src/main/assets/ai-food-prompt.txt` documents each
+  field's purpose, is what Kopioi ohje copies, and is kept in git with the reader): `{"items": [{"name", "amount", "unit": "g"|"kpl", "kcal", "herkku"}],
   "products": [{"name", "kcal", "per": "100g"|"kpl"|"annos", "herkku"}]}`; a bare array of items
   is accepted too. `products` is the chat's "Sovellukseen" list: meals and foods to keep.
-- The items always go to the end of **today** (user 2026-11-14); choosing another day is later
-  work in the backlog. No portion sizes (pieni/normaali/iso) in this change.
+- The items go to the end of **today** by default; the preview's day opens a calendar to pick
+  another day (user 2026-11-14). No portion sizes (pieni/normaali/iso) in this change.
+- **Dish alone in `products`** (user 2026-11-14): the same dish is eaten with different sides, so
+  grams of the whole plate say little. Items carry the AI's kcal for what was eaten; a product
+  holds the dish alone (best per 100 g with a usual amount), and later logs pick grams or kcal in
+  the existing item editor.
 - **Preview with fine-tuning**: every item and product editable or removable, the sum;
   nothing is saved before Lisää. Kumoa takes the whole import back.
 - **Append only** (user 2026-11-14): an import never changes or deletes logged items and never

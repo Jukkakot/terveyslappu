@@ -28,7 +28,8 @@ have `per` (`100g`, `kpl` or `annos`; `annos` is kept as a piece), `amount`/`uni
 amount) and `herkku`. Unknown keys (also a date) SHALL be ignored; an item or product without a name or with
 unusable numbers SHALL be skipped and counted in the preview. "Kopioi ohje tekoälylle" in the
 Lisää annos sheet SHALL copy the Finnish instruction for the AI, which states this shape, the
-purpose of every field and an example.
+purpose of every field and an example. The instruction SHALL ask a product's energy for the dish
+alone, without side dishes, so the product can be logged later with other sides.
 
 #### Scenario: Items and products
 - **GIVEN** the text holds
@@ -41,7 +42,8 @@ purpose of every field and an example.
 
 ### Requirement: Preview and fine-tuning
 Before anything is saved, the preview SHALL show every item with its amount and kcal, the sum, the
-products to keep, and the number of skipped entries. The items SHALL always go to today. The user SHALL be able to edit each item (name, amount, kcal,
+products to keep, the number of skipped entries, and the day the items go to: today by default;
+tapping the day SHALL open a calendar to pick another day (not after today). The user SHALL be able to edit each item (name, amount, kcal,
 Herkku) and each product (name, energy, Herkku), and remove items or products, before saving.
 Peruuta SHALL save nothing.
 
@@ -55,12 +57,16 @@ Peruuta SHALL save nothing.
 - **WHEN** the user shares the day's estimate at 21.30
 - **THEN** the items are added after Rahka on today
 
+#### Scenario: Yesterday's estimate
+- **WHEN** the user shares yesterday's estimate in the morning, taps the day and picks yesterday
+- **THEN** the items are added at the end of yesterday, without a shown time
+
 #### Scenario: Cancel
 - **WHEN** the user taps Peruuta in the preview
 - **THEN** nothing is logged and no product changes
 
 ### Requirement: Saving an AI import
-"Lisää" SHALL add the items in their order at the end of today, as logged items written to
+"Lisää" SHALL add the items in their order at the end of the chosen day, as logged items written to
 Health Connect like any item, and SHALL show a line "<N> annosta lisätty · Kumoa"; Kumoa SHALL
 remove the added items and restore the products as they were. An import SHALL only add: it SHALL
 NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the

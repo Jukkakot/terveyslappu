@@ -4,7 +4,7 @@
       parse object with `items`/`products` or a bare list (unknown keys ignored), tolerant numbers ("300", "1,5"),
       skip nameless or unusable entries; result = items + products + skipped count, or a
       failure reason.
-- [ ] 1.2 Plan the import with the existing add/product rules: items at the end of today in
+- [ ] 1.2 Plan the import with the existing add/product rules: items at the end of the chosen day in
       order, product matching by name key, energy learnt only by products without one, known
       Herkku wins, `products` list creates or replaces, Pikalisäys never a product; the plan keeps
       the products' previous state for Kumoa. Append only: no existing item in the plan's changes.
@@ -16,9 +16,10 @@
 
 - [ ] 2.1 Share target for `text/plain` (`ACTION_SEND`) that opens the app on the import preview;
       text without JSON shows the reason.
-- [ ] 2.2 Lisää annos sheet: Liitä tekoälyltä (clipboard) and Kopioi ohje tekoälylle: the prompt of
-      `design.md` word for word.
-- [ ] 2.3 Preview (always today): items and products
+- [ ] 2.2 Lisää annos sheet: Liitä tekoälyltä (clipboard) and Kopioi ohje tekoälylle: copies
+      `assets/ai-food-prompt.txt` as is (already written); a test that its example parses.
+- [ ] 2.3 Preview: day row (today by default; tap opens a single-day calendar, no future days),
+      items and products
       editable and removable, sum, skipped count; Lisää / Peruuta; "N annosta lisätty · Kumoa".
 - [ ] 2.4 Log `food.import from=share|paste ok count= products= skipped=` / `food.import failed
       reason=` (never names or kcal).

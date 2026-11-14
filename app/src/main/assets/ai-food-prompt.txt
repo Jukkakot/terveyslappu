@@ -1,0 +1,31 @@
+Kun arvioit syömiseni kalorit, anna vastauksen lopuksi tulos Terveyslappu-sovellukseen alla olevassa JSON-muodossa yhtenä koodilohkona. Jaan vastauksesi sovellukseen, joka lukee koodilohkon ja kirjaa jokaisen rivin päivän ruokiin. Muu teksti saa olla lohkon ympärillä.
+
+```json
+{
+  "items": [
+    {"name": "Kaurapuuro", "amount": 300, "unit": "g", "kcal": 210},
+    {"name": "Lohikeitto", "amount": 1, "unit": "kpl", "kcal": 380},
+    {"name": "Pulla", "amount": 1, "unit": "kpl", "kcal": 250, "herkku": true}
+  ],
+  "products": [
+    {"name": "Lohikeitto", "kcal": 75, "per": "100g", "amount": 400, "unit": "g"}
+  ]
+}
+```
+
+Kentät ja mihin niitä käytetään:
+
+items = mitä söin, syömisjärjestyksessä. Jokaisesta tulee oma rivi päivän ruokalistaan, ja sen kcal lasketaan päivän summaan.
+- name (pakollinen): lyhyt suomenkielinen ruuan nimi ilman määrää, esim. "Kaurapuuro", ei "Kaurapuuro 3 dl". Sovellus tekee nimistä tuotteita ja ehdottaa niitä myöhemmin, joten käytä samasta ruuasta aina samaa nimeä.
+- amount ja unit: syöty määrä. unit on "g" (valmiin ruuan paino grammoina) tai "kpl" (kappaleet tai annokset).
+- kcal: tämän rivin kokonaiskalorit kokonaislukuna (ei per 100 g). Jätä pois, jos et osaa arvioida; rivi kirjataan silloin ilman kaloreita, ja täydennän sen itse.
+- herkku: true makeisille, leivonnaisille, jälkiruuille, sipseille, limsoille ja alkoholille. Sovellus näyttää herkkujen osuuden päivän kaloreista erikseen. Jätä pois tavalliselta ruualta.
+
+products = ateriat ja ruuat, jotka tallennetaan sovellukseen valmiiksi, esim. usein syömäni kotiruuat. Sama ruoka voi olla myös items-listassa. Anna tuotteen arvot pelkälle ruualle ilman lisukkeita (salaatit, leivät, juomat), koska syön samaa ruokaa eri lisukkeiden kanssa ja kirjaan sen myöhemmin grammoina tai kaloreina. Tuote korvaa sovelluksessa saman nimisen tuotteen aiemmat arvot, joten listaa vain ruuat, joiden arvon haluan pysyvän.
+- name (pakollinen): kuten yllä.
+- kcal (pakollinen): kalorit per yksikkö.
+- per: "100g" (paras, kun ruuan paino on arvioitavissa), "kpl" tai "annos". Annos tallentuu kappaleena.
+- amount ja unit (vapaaehtoinen): tavallinen annokseni, esim. 400 ja "g".
+- herkku: kuten yllä.
+
+Säännöt: yksi JSON-koodilohko vastausta kohden. Numerot ilman yksiköitä ja lainausmerkkejä, desimaalit pisteellä. Ei kommentteja JSONin sisällä. Älä lisää päivämäärää: valitsen päivän sovelluksessa.
