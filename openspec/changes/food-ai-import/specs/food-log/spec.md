@@ -1,60 +1,93 @@
 ## ADDED Requirements
 
-### Requirement: Paste from an AI chat
-The Lisää annos sheet SHALL offer "Liitä tekoälyltä", which reads the clipboard text and finds one
-JSON value in it, also when it is inside a code block or surrounded by other text. The value SHALL
-be an object with an `items` list (what was eaten) and/or a `products` list (products to keep), or
-a bare list of items. A product SHALL have `name` and `kcal` and MAY have `per` (`100g`, `kpl` or
-`annos`; `annos` is kept as a piece), `amount`/`unit` (its usual amount) and `herkku`; it SHALL be
-saved as an own product, also when no item uses it. Each item SHALL have `name` (text,
-required), and MAY have `amount` (number > 0), `unit` (`g` or `kpl`, default `g` when an amount is
-given), `kcal` (the item's total, number >= 0) and `herkku` (true/false). Unknown keys SHALL be
-ignored. An item without a name SHALL be skipped and counted in the preview.
+### Requirement: Food from an AI chat
+The app SHALL take a day's food as JSON text in two ways: "Liitä tekoälyltä" in the Lisää annos
+sheet reads the clipboard, and sharing text from another app (such as an AI chat) to the app opens
+the same preview. The JSON SHALL be found also inside a code block or surrounded by other text.
+Text with no usable JSON SHALL show a short reason and add nothing.
 
-Before anything is saved, the sheet SHALL show a preview: every item with its amount and kcal, the
-sum, and the number of skipped items. "Lisää" SHALL add the items in their order at the end of the
-day shown, as logged items written to Health Connect like any item, and SHALL show a line
-"<N> annosta lisätty · Kumoa"; Kumoa SHALL remove all of them. Each item's name SHALL become or
-match a product like a typed name; a product without energy SHALL learn it from an item that has
-both an amount and kcal (kcal per 100 g for grams, per piece for kpl), and its last used amount
-SHALL become the item's amount. A product's existing energy and category SHALL NOT change; an item
-of a known Herkku product SHALL be a treat whatever `herkku` says. Text with no usable JSON SHALL
-show a short reason and add nothing.
+#### Scenario: Shared from the chat
+- **GIVEN** the AI chat's answer holds a code block with items
+- **WHEN** the user shares the answer to the app
+- **THEN** the app opens the preview of those items
 
-The sheet SHALL also offer "Kopioi ohje tekoälylle", which copies a short Finnish instruction that
-asks for exactly this JSON shape, with an example.
+#### Scenario: Pasted
+- **WHEN** the user copies the answer and taps Liitä tekoälyltä
+- **THEN** the same preview opens
 
-#### Scenario: A day from the chat
-- **GIVEN** the clipboard holds the chat's answer with a code block
-  `{"items":[{"name":"Kaurapuuro","amount":300,"unit":"g","kcal":210},{"name":"Pulla","amount":1,"unit":"kpl","kcal":250,"herkku":true}]}`
-- **WHEN** the user taps Liitä tekoälyltä and then Lisää
-- **THEN** Kaurapuuro 300 g 210 kcal and Pulla 1 kpl 250 kcal (herkku) are the last items of the
-  day shown, and the preview had read 460 kcal
+#### Scenario: No JSON
+- **GIVEN** the text holds only chat text
+- **THEN** a short reason is shown and nothing is added
 
-#### Scenario: Undo the paste
+### Requirement: AI food JSON shape
+The JSON SHALL be an object with an `items` list (what was eaten) and/or a `products` list
+(products to keep), or a bare list of items, optionally with `date` (YYYY-MM-DD). An item SHALL
+have `name` and MAY have `amount` (> 0), `unit` (`g` or `kpl`, default `g` with an amount), `kcal`
+(the item's total, >= 0) and `herkku` (true/false). A product SHALL have `name` and `kcal` and MAY
+have `per` (`100g`, `kpl` or `annos`; `annos` is kept as a piece), `amount`/`unit` (its usual
+amount) and `herkku`. Unknown keys SHALL be ignored; an item or product without a name or with
+unusable numbers SHALL be skipped and counted in the preview. "Kopioi ohje tekoälylle" in the
+Lisää annos sheet SHALL copy a short Finnish instruction that asks for exactly this shape, with an
+example.
+
+#### Scenario: Items and products
+- **GIVEN** the text holds
+  `{"items":[{"name":"Kaurapuuro","amount":300,"unit":"g","kcal":210}],"products":[{"name":"Lohikeitto","kcal":380,"per":"annos"}]}`
+- **THEN** the preview shows Kaurapuuro 300 g 210 kcal and the product Lohikeitto 380 kcal / kpl
+
+#### Scenario: Item without kcal
+- **WHEN** an item `{"name":"Kahvi"}` is added
+- **THEN** Kahvi is logged without kcal and counted as "1 ilman kcal"
+
+### Requirement: Preview and fine-tuning
+Before anything is saved, the preview SHALL show the day the items go to, every item with its
+amount and kcal, the sum, the products to keep, and the number of skipped entries. The day SHALL be
+the JSON's `date` when given, otherwise the day the sheet was opened for (today from a share), and
+the user SHALL be able to change it. The user SHALL be able to edit each item (name, amount, kcal,
+Herkku) and each product (name, energy, Herkku), and remove items or products, before saving.
+Peruuta SHALL save nothing.
+
+#### Scenario: Fix one portion
+- **GIVEN** the preview shows Pulla 1 kpl 250 kcal
+- **WHEN** the user changes it to 2 kpl 500 kcal and taps Lisää
+- **THEN** Pulla is logged 2 kpl 500 kcal and the sum read 500 kcal more than before
+
+#### Scenario: Cancel
+- **WHEN** the user taps Peruuta in the preview
+- **THEN** nothing is logged and no product changes
+
+### Requirement: Saving an AI import
+"Lisää" SHALL add the items in their order at the end of the chosen day, as logged items written to
+Health Connect like any item, and SHALL show a line "<N> annosta lisätty · Kumoa"; Kumoa SHALL
+remove the added items and restore the products as they were. An import SHALL only add: it SHALL
+NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the
+food log. Each item's name SHALL become or match a product like a typed name; a product without
+energy SHALL learn it from an item with both amount and kcal (kcal per 100 g for grams, per piece
+for kpl) and take the item's amount as its usual amount. An item SHALL NOT change a known
+product's energy or category, and an item of a known Herkku product SHALL be a treat. A product in
+the `products` list SHALL be saved as given: created when new, its energy, usual amount and
+category replaced when it exists.
+
+#### Scenario: Undo the import
 - **WHEN** the user taps Kumoa on "2 annosta lisätty"
-- **THEN** both items are gone and the day is as before
+- **THEN** both items are gone and the products are as before
+
+#### Scenario: Earlier items untouched
+- **GIVEN** today already holds Rahka 200 g
+- **WHEN** an import with Kaurapuuro is added to today
+- **THEN** Rahka stays as it was and Kaurapuuro is the last item
 
 #### Scenario: New product learns its energy
 - **GIVEN** no product Kaurapuuro
-- **WHEN** Kaurapuuro 300 g 210 kcal is pasted
+- **WHEN** Kaurapuuro 300 g 210 kcal is added
 - **THEN** a product Kaurapuuro 70 kcal / 100 g, usually 300 g, is suggested next time
 
-#### Scenario: Known product keeps its values
+#### Scenario: Item keeps a known product's values
 - **GIVEN** a product Rahka 65 kcal / 100 g
-- **WHEN** Rahka 200 g 150 kcal is pasted
+- **WHEN** an item Rahka 200 g 150 kcal is added
 - **THEN** the item reads 150 kcal and the product stays 65 kcal / 100 g
 
-#### Scenario: Products to keep
-- **GIVEN** the pasted JSON has `"products":[{"name":"Lohikeitto","kcal":380,"per":"annos"}]`
-- **WHEN** the user adds the paste
-- **THEN** Lohikeitto 380 kcal / kpl is an own product and one tap logs it next time
-
-#### Scenario: Item without kcal
-- **WHEN** an item `{"name":"Kahvi"}` is pasted
-- **THEN** Kahvi is added without kcal and counted as "1 ilman kcal"
-
-#### Scenario: No JSON
-- **GIVEN** the clipboard holds only chat text
-- **WHEN** the user taps Liitä tekoälyltä
-- **THEN** a short reason is shown and nothing is added
+#### Scenario: Product list updates
+- **GIVEN** a product Lohikeitto 300 kcal / kpl
+- **WHEN** an import with product Lohikeitto 380 kcal per annos is added
+- **THEN** Lohikeitto is 380 kcal / kpl from then on; earlier logged items keep their kcal

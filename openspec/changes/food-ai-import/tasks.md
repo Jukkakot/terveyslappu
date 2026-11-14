@@ -1,24 +1,31 @@
 ## 1. Parsing and plan (pure)
 
-- [ ] 1.1 `food/AiPaste.kt`: find the JSON in clipboard text (code fence, first `{`/`[` to its
-      matching end), parse object-with-`items` or bare list, tolerant numbers (also "300" and
-      "1,5"), skip nameless items; result = items + skipped count, or a failure reason.
-- [ ] 1.2 Plan the paste with the existing add/product rules: items at the end of the day in order,
-      product matching by name key, energy learnt only by products without one, known Herkku wins,
-      Pikalisäys name never a product.
+- [ ] 1.1 `food/AiPaste.kt`: find the JSON in text (code fence, first `{`/`[` to its matching end),
+      parse object with `date`/`items`/`products` or a bare list, tolerant numbers ("300", "1,5"),
+      skip nameless or unusable entries; result = items + products + date + skipped count, or a
+      failure reason.
+- [ ] 1.2 Plan the import with the existing add/product rules: items at the end of the day in
+      order, product matching by name key, energy learnt only by products without one, known
+      Herkku wins, `products` list creates or replaces, Pikalisäys never a product; the plan keeps
+      the products' previous state for Kumoa. Append only: no existing item in the plan's changes.
 - [ ] 1.3 Unit tests: fence + surrounding text, bare list, no JSON, nameless item, unit default,
-      learnt energy, known product untouched, treat rule (made-up foods).
+      `annos` as kpl, learnt energy, known product untouched by an item, product list replaces,
+      undo restores products, existing items untouched (made-up foods).
 
-## 2. Sheet
+## 2. Share, sheet and preview
 
-- [ ] 2.1 Lisää annos sheet: Liitä tekoälyltä (clipboard read) → preview (items, sum, skipped) →
-      Lisää / Peruuta; "N annosta lisätty · Kumoa" undoes all; failure line for no JSON.
-- [ ] 2.2 Kopioi ohje tekoälylle: Finnish instruction text with the shape and an example to the
-      clipboard.
-- [ ] 2.3 Log `food.paste ok count= skipped=` / `food.paste failed reason=` (never names or kcal).
-- [ ] 2.4 One smoke test of the preview.
+- [ ] 2.1 Share target for `text/plain` (`ACTION_SEND`) that opens the app on the import preview;
+      text without JSON shows the reason.
+- [ ] 2.2 Lisää annos sheet: Liitä tekoälyltä (clipboard) and Kopioi ohje tekoälylle (Finnish
+      instruction with the shape and an example).
+- [ ] 2.3 Preview: day (from `date`, else the sheet's day / today, changeable), items and products
+      editable and removable, sum, skipped count; Lisää / Peruuta; "N annosta lisätty · Kumoa".
+- [ ] 2.4 Log `food.import from=share|paste ok count= products= skipped=` / `food.import failed
+      reason=` (never names or kcal).
+- [ ] 2.5 One smoke test of the preview.
 
 ## 3. Docs and release
 
 - [ ] 3.1 One line in Ohje; bump MINOR in `gradle.properties`.
-- [ ] 3.2 Update `.claude/CLAUDE.md` map (AiPaste) and log events; roadmap backlog line done.
+- [ ] 3.2 Update `.claude/CLAUDE.md` map (AiPaste, share target) and log events; roadmap backlog
+      line done.
