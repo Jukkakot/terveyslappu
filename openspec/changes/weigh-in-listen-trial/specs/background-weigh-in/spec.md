@@ -7,11 +7,13 @@ what it heard; saving the weight comes later.
 ## ADDED Requirements
 
 ### Requirement: Trial setting
-Asetukset SHALL have a section "Automaattinen punnitus (kokeilu)" with an on/off switch, a start
-time and an end time. The switch SHALL be off on a new install and after an update. Start and end
-SHALL be chosen with a time picker in whole minutes; the defaults SHALL be 06:00 and 10:00. An end
-earlier than the start SHALL mean the window runs over midnight. Start equal to end SHALL NOT be
-accepted. The choices SHALL survive app restarts and phone restarts.
+Asetukset SHALL have a section "Automaattinen punnitus (kokeilu)" with: an on/off switch, a start
+and an end time (time pickers, whole minutes, defaults 06:00 and 10:00), a listening mode "Säästö"
+or "Tasapaino" (default Säästö), and a switch "Kuuntele myös virransäästötilassa" (default on).
+The trial switch SHALL be off on a first install and SHALL keep its state over app updates. An
+end earlier than the start SHALL mean the window runs over midnight; start equal to end SHALL be
+refused. The choices SHALL survive app and phone restarts and SHALL NOT be restored to another
+phone from a system backup.
 
 #### Scenario: Turn on
 - **WHEN** the user turns the switch on
@@ -25,43 +27,61 @@ accepted. The choices SHALL survive app restarts and phone restarts.
 - **WHEN** the user picks an end equal to the start
 - **THEN** the choice is refused with a short message and the previous end stays
 
+#### Scenario: Settings changed while on
+- **WHEN** the user changes the window, the mode or the power-saving switch while the trial is on
+- **THEN** listening is re-planned at once (stopped with a summary if now is outside the new
+  window, restarted with the new mode if inside)
+
 ### Requirement: Which scale
 The trial SHALL listen only to the scale of the latest weigh-in saved from the weigh-in dialog,
-identified by its Bluetooth name and address. Before any such weigh-in the switch SHALL be
-disabled with the text that one weigh-in from the widget or the app is needed first. A later
-weigh-in from another scale SHALL replace the remembered one.
+identified by its Bluetooth address (and its name when the packet had one). Before such a
+weigh-in exists the trial switch SHALL be disabled with the text "Punnitse kerran widgetistä tai
+sovelluksesta, niin sovellus oppii vaakasi." A later weigh-in from another scale SHALL replace the
+remembered one. A packet from another address SHALL NOT count as heard, even with the same name.
 
 #### Scenario: No scale yet
-- **WHEN** no weigh-in has been saved from the dialog since this change
-- **THEN** the switch cannot be turned on and the section says to weigh in once first
+- **WHEN** no weigh-in has been saved from the dialog since this update
+- **THEN** the switch cannot be turned on and the section shows the hint
 
-#### Scenario: Another device nearby
-- **WHEN** another device, or a scale with another address and name, advertises in the window
-- **THEN** the trial does not record it
+#### Scenario: Same-named scale nearby
+- **WHEN** a scale with the same name but another address advertises in the window
+- **THEN** it is logged as another device and not counted as heard
 
 ### Requirement: Listen in the background
-While the switch is on and the current time is inside the window, the phone SHALL listen for the
-remembered scale with a low-power Bluetooth scan that runs with the screen off and the app not
-open, and that wakes the app only for the scale's packets. Outside the window it SHALL NOT scan.
-The window start and end MAY be late by up to 15 minutes. Listening SHALL resume after a phone
-restart or an app update without opening the app. Turning the switch off SHALL stop the scan at
-once.
+While the trial is on and the current time is inside the window, the phone SHALL listen for the
+remembered scale with the chosen mode (Säästö = the lowest-power scan, Tasapaino = the balanced
+scan), with the screen off and the app not open, waking the app only for the scale's packets.
+Outside the window it SHALL NOT scan. When the phone's power saving mode is on and "Kuuntele myös
+virransäästötilassa" is off, it SHALL NOT scan. The window start may be late because of the
+phone's idle mode; how late SHALL be logged. While inside the window the app SHALL check about
+once an hour that listening is still possible and register it again, so a scan lost to Bluetooth
+being turned off and on, or to the system, comes back within about an hour. Listening SHALL resume
+after a phone restart or an app update without opening the app. Turning the switch off SHALL stop
+the scan at once.
 
 #### Scenario: Window starts
-- **WHEN** the window starts and the switch is on
-- **THEN** the scan starts within 15 minutes and `listen.start` is logged
+- **WHEN** the window starts and the trial is on
+- **THEN** the scan starts and `listen.start` is logged with how late it started
 
 #### Scenario: Window ends
 - **WHEN** the window ends
-- **THEN** the scan stops and a `listen.summary` line is logged
+- **THEN** the scan stops and the window summary is logged
 
 #### Scenario: Phone restarted inside the window
 - **WHEN** the phone restarts at 07:00 with a 06:00-10:00 window
 - **THEN** listening resumes after boot without the user opening the app
 
+#### Scenario: Bluetooth turned off and on
+- **WHEN** Bluetooth is turned off and on again inside the window
+- **THEN** listening is running again within about an hour
+
+#### Scenario: Power saving mode
+- **WHEN** the phone's power saving mode is on and "Kuuntele myös virransäästötilassa" is off
+- **THEN** no scan runs and the status says so
+
 #### Scenario: Weigh-in dialog open
 - **WHEN** the user opens the weigh-in dialog while the trial listens
-- **THEN** the dialog works as before; the trial keeps listening and its packets are logged as its own
+- **THEN** the dialog works as before and the trial's packets are logged as its own
 
 ### Requirement: Save nothing
 The trial SHALL NOT write anything to Health Connect, the raw-reading archive, the backup or the
@@ -72,33 +92,50 @@ export, and SHALL NOT show a notification for a heard weigh-in.
 - **THEN** nothing is saved anywhere except the log and the last-heard line in Asetukset
 
 ### Requirement: Record what was heard
-The trial SHALL log each heard packet raw (as the dialog does, marked as coming from the trial)
-with its signal strength and whether the screen was on, but SHALL log a packet identical to the
-previous one from the trial only as a count. At the end of each window it SHALL log a summary:
-packets heard, distinct readings, strongest and weakest signal, first and last time heard, and the
-stable weights heard. Asetukset SHALL show when the scale was last heard and its signal strength,
-e.g. "Kuultu viimeksi tänään 7.12, signaali -97".
+The trial SHALL log each heard packet raw, marked as coming from the trial, with its signal
+strength. A packet identical to the trial's previous one SHALL only be counted.
 
 #### Scenario: Lingering broadcast
 - **WHEN** the scale repeats the same stable packet for two minutes
-- **THEN** the log has the first packet raw and a count of the repeats, not hundreds of lines
+- **THEN** the log has the first packet raw and one line with the count of repeats
+
+### Requirement: Window summary
+At the end of each window, and when the trial is turned off or an unfinished window is found
+later, the trial SHALL log one summary: why it ended, the mode, packets heard, distinct readings,
+strongest and weakest signal, first and last time heard, stable weights heard, and the battery
+level at the start and at the end.
 
 #### Scenario: Nothing heard
 - **WHEN** a window ends without a packet from the scale
 - **THEN** the summary says zero packets
 
-### Requirement: Trial status
-The section SHALL show one status: "Kuuntelee nyt" inside the window; "Lepää, alkaa klo HH.MM"
-outside it; or "Estetty" with the reason when Bluetooth is off, the Bluetooth permission is
-missing, or the phone's battery optimisation applies to the app. Each blocked reason SHALL offer a
-button that opens the matching system screen. The status SHALL be up to date whenever Asetukset is
-shown.
+#### Scenario: Window not closed
+- **WHEN** the end of a window was missed (phone off, alarm lost)
+- **THEN** the next start or turn-on logs that window's summary as unfinished first
 
-#### Scenario: Battery optimisation on
-- **WHEN** the battery optimisation applies to the app
-- **THEN** the status says "Estetty" with the reason and a button to the battery setting
+### Requirement: Last heard
+The section SHALL show when the scale was last heard by the trial and the signal strength:
+"Ei vielä kuultu", "Kuultu viimeksi tänään 7.12, signaali -97", "eilen 7.12" or "12.11. klo
+7.12". It SHALL refresh when Asetukset is shown and every minute while it is open.
+
+#### Scenario: Heard this morning
+- **WHEN** the trial heard the scale at 7.12 today with signal -97
+- **THEN** the line reads "Kuultu viimeksi tänään 7.12, signaali -97"
+
+### Requirement: Trial status
+The section SHALL show one status, the first that applies: "Estetty: Bluetooth-lupa puuttuu",
+"Estetty: Bluetooth pois päältä", "Tauolla: virransäästötila" (power saving on and the switch for it
+off), "Kuuntelee nyt", or "Lepää, alkaa klo HH.MM". When the app's battery use is restricted by the
+phone, a warning line SHALL be shown under the status, "Akunkäyttö rajoitettu: kuuntelu voi
+katketa", while listening still runs. Each blocked reason and the warning SHALL have a button that
+opens the matching system screen. If the system stopped the app by force, the status SHALL say to
+open the app once.
+
+#### Scenario: Battery use restricted
+- **WHEN** the phone restricts the app's battery use and the window is on
+- **THEN** the status says "Kuuntelee nyt", the warning line is shown with a button to the app's
+  battery setting, and listening runs
 
 #### Scenario: Bluetooth off
 - **WHEN** Bluetooth is off inside the window
-- **THEN** the status says "Estetty: Bluetooth pois päältä", and listening resumes in the next
-  window once Bluetooth is on
+- **THEN** the status says "Estetty: Bluetooth pois päältä" with a button to turn it on
