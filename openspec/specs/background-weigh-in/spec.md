@@ -160,13 +160,13 @@ section SHALL also show "N punnitusta odottaa tallennusta".
   and no scan runs
 
 ### Requirement: Save the automatic weight
-While the feature is on, a weight heard from the remembered scale inside the window and decided by
-the stable-weight rule SHALL be written to Health Connect as a weight automatically recorded by a
-scale, without the app open and with the screen off. The background SHALL use the same
-stable-weight rule as the weigh-in dialog, fed with the packets' timestamps, so both decide the
-same kg; the saved time SHALL be the time of the deciding packet. The raw reading SHALL be kept as
-for a dialog weigh-in, with the extra field `via=auto`. A weight outside 20-300 kg SHALL NOT be
-saved. The background SHALL NOT save while the weigh-in dialog is in the foreground.
+While the feature is on, a weight heard from the remembered scale inside the window SHALL be
+written to Health Connect as a weight automatically recorded by a scale, without the app open and
+with the screen off. The background SHALL decide the weight at the first stable packet of a
+weighing, without waiting for a quiet time; the saved time SHALL be the time of that packet. The
+raw reading SHALL be kept as for a dialog weigh-in, with the extra field `via=auto`. A weight
+outside 20-300 kg SHALL NOT be saved. The background SHALL NOT save while the weigh-in dialog is in
+the foreground.
 
 #### Scenario: Morning weigh-in
 - **GIVEN** the feature is on with a 06:00-10:00 window and the phone lies in another room
@@ -315,25 +315,24 @@ weight SHALL remove it like any weight.
 
 ### Requirement: Weigh-in notification
 After every automatic weigh-in the app SHALL show a notification with the weight and, when a
-reference exists, the change from it ("82,5 kg tallennettu", "−0,3 kg edellisestä") and the action
-Poista. With no reference the text SHALL be only "82,5 kg tallennettu". A "?" weight's
-notification SHALL say it needs checking ("61,3 kg – tarkista", "Poikkeaa 20,7 kg edellisestä
-hyväksytystä") and SHALL also have Hyväksy. A weight saved late from the pending queue SHALL add its
-weighing time ("82,5 kg tallennettu klo 7.12"). Tapping the notification SHALL open Historia. All
-the notifications SHALL be in one group in one channel family, and none SHALL disappear by itself:
-each stays until the user dismisses it. Every weigh-in notification SHALL alert (default
-importance: sound and vibration as the phone is set), so a connected watch can show it. The
-earlier silent channel SHALL be replaced by an alerting one on update. Without the notification
-permission the weight SHALL still be saved.
+reference exists, the change from it ("82,5 kg tallennettu", "−0,3 kg edellisestä"). A normal
+weigh-in's notification SHALL have the actions OK and Poista punnitus. A "?" weight's notification
+SHALL say it needs checking ("61,3 kg – tarkista", "Poikkeaa 20,7 kg edellisestä hyväksytystä") and
+SHALL have Hyväksy and Poista punnitus. With no reference the text SHALL be only "82,5 kg
+tallennettu". A weight saved late from the pending queue SHALL add its weighing time ("82,5 kg
+tallennettu klo 7.12"). Tapping the notification SHALL open Historia. All the notifications SHALL
+be in one group in one alerting channel family, and none SHALL disappear by itself. Without the
+notification permission the weight SHALL still be saved.
 
 #### Scenario: Normal weigh-in
 - **WHEN** 82.5 kg is saved automatically without a mark
-- **THEN** an alerting notification shows 82,5 kg, the change and Poista, and stays until dismissed
+- **THEN** an alerting notification shows 82,5 kg, the change, OK and Poista punnitus, and stays
+  until dismissed
 
 #### Scenario: Questioned weigh-in
 - **WHEN** 61.3 kg is saved automatically and marked "?"
-- **THEN** an alerting notification asks to check it and offers Hyväksy and Poista, and stays until
-  dismissed
+- **THEN** an alerting notification asks to check it and offers Hyväksy and Poista punnitus, and
+  stays until dismissed
 
 #### Scenario: No reference
 - **WHEN** a weight is saved while the reference is unknown
@@ -348,17 +347,26 @@ permission the weight SHALL still be saved.
 - **THEN** the silent channel is removed and the next normal weigh-in alerts
 
 ### Requirement: Notification actions
-Poista SHALL delete the weight and its raw data without a confirmation; Hyväksy SHALL accept the
-weight (with chained acceptance). Either SHALL work without opening the app and SHALL close the
-notification.
+Poista punnitus SHALL delete the weight and its raw data without a confirmation; Hyväksy SHALL
+accept the weight (with chained acceptance); OK SHALL only close the notification. Each SHALL work
+without opening the app and SHALL close the notification. Swiping a "?" notification away SHALL
+leave the mark.
 
 #### Scenario: Delete from the notification
-- **WHEN** the user taps Poista on the notification
+- **WHEN** the user taps Poista punnitus on the notification
 - **THEN** the weight and its raw data are removed from the phone and the notification closes
 
 #### Scenario: Accept from the notification
 - **WHEN** the user taps Hyväksy on a "?" weight's notification
 - **THEN** the mark is removed and the notification closes
+
+#### Scenario: OK
+- **WHEN** the user taps OK on a normal weigh-in's notification
+- **THEN** the notification closes and the weight stays
+
+#### Scenario: Swiped away
+- **WHEN** the user swipes a "?" weight's notification away
+- **THEN** the weight keeps its "?" mark
 
 #### Scenario: Deletion fails
 - **WHEN** deleting from the notification fails
@@ -447,15 +455,13 @@ NOT count. Stopping SHALL be logged (`listen.stop reason=done`).
 - **THEN** listening starts as usual
 
 ### Requirement: Timely background decision
-When a stable reading is waiting in the background for the stable-weight rule's quiet time, the
-app SHALL wake itself a few seconds after that quiet time and decide it then, unless a later
-packet decided it first, so the weight is saved and notified within about half a minute of the
-scale settling, also when no further packet comes. The deciding time SHALL still be the reading's
-own packet time.
+The background scan SHALL report each packet from the scale at once, without batching, and the
+weight SHALL be saved and notified within a few seconds of the phone hearing the scale's first
+stable packet, while the user may still stand on the scale.
 
 #### Scenario: Single stable packet
 - **WHEN** the scale's stable 99.05 kg is heard once at 16.23.02 and nothing after it
-- **THEN** the weight is saved and notified by about 16.23.30, at the time 16.23.02
+- **THEN** the weight is saved and notified within a few seconds, at the time 16.23.02
 
 ### Requirement: Status symbol in Asetukset
 The status line of "Automaattinen punnitus" SHALL start with the same symbol and colour as the
