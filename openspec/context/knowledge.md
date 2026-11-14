@@ -61,3 +61,7 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
 - **Background work is unreliable on Samsung** (battery optimisation stops scheduled jobs); prefer
   doing work when the app is opened or right after the change that needs it.
+- **Samsung "Optimoitu" battery setting stops screen-off BLE scans** (own test 2026-11-14, S24,
+  Android 17): a filtered PendingIntent scan delivered packets only when the screen came on while
+  the app was "Optimoitu"; after "Rajoittamaton" packets arrived with the screen off and locked.
+  Android's "Restricted" is not the only blocker: warn unless the app ignores battery optimisation.
