@@ -2,16 +2,16 @@
 
 ## 1. Pure core
 
-- [ ] 1.1 Listen window: inside-or-not, next start, next end and next hourly check for a start/end
+- [x] 1.1 Listen window: inside-or-not, next start, next end and next hourly check for a start/end
       pair, over midnight, DST through the phone's zone; reject start == end. Unit tests (incl.
       midnight and DST days).
-- [ ] 1.2 Trial status choice in the spec's order (permission, Bluetooth, power saving pause,
+- [x] 1.2 Trial status choice in the spec's order (permission, Bluetooth, power saving pause,
       listening, resting until HH.MM, no scale yet) plus the separate battery-restricted warning.
       Unit tests.
-- [ ] 1.3 Heard-packet accumulator: address check, dedupe on company id + data, repeat runs with
+- [x] 1.3 Heard-packet accumulator: address check, dedupe on company id + data, repeat runs with
       rssi min/max, summary counters, stable weights via the existing stable-weight rule,
       stale-window detection. Unit tests with made-up packets (NFR-1).
-- [ ] 1.4 Last-heard text ("Ei vielä kuultu", tänään / eilen / date). Unit test.
+- [x] 1.4 Last-heard text ("Ei vielä kuultu", tänään / eilen / date). Unit test.
 
 ## 2. Remember the scale
 

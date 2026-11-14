@@ -23,6 +23,9 @@ class StableWeight(private val quietMs: Long = DEFAULT_QUIET_MS) {
     var result: StableResult? = null
         private set
 
+    /** The stable reading waiting for confirmation, if any (background listening keeps it between deliveries). */
+    val pending: StableResult? get() = candidate
+
     /** Feeds one reading received at [atMs]; returns the result once decided. */
     fun onReading(reading: ScaleReading, atMs: Long, packet: RawPacket? = null): StableResult? {
         result?.let { return it }
