@@ -197,7 +197,17 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   - Categories only where they have a reason. **Herkku** has one: in the kcal bars, base food and
     treats in their own colours show whether the excess comes from ordinary meals or from treats.
     No other categories until one has a reason (user: "everything needs a reason").
-  - No food widget for now; the app's home screen is enough.
+  - No food widget for now; the app's front page is enough.
+  - Food, kcal and weight only inside the app, never on the phone's home screen (widget, tile,
+    notification): the user looks at them only when they choose to open the app.
+  - Order kept (helps recall and spot what was forgotten); the logging time is saved for free and
+    shown small; it also feeds "usually eaten at this time" suggestions, which replace day
+    templates. No "eat now or later" switch: Järjestä fixes the rare advance entry.
+  - Products are learnt from what is typed (as in kauppalappu); about 150 base products from Fineli
+    (THL, CC BY 4.0) so nothing starts from zero. Storage: Health Connect, app storage, the data
+    file and its backup; no server database.
+  - Simple and intuitive: never wonder what to do next; every field says what goes in it; one
+    modern look across the app. Not doing: flags for unrealistically low days.
 
 ## Lessons from rubikki-solveri (2026-11-08)
 

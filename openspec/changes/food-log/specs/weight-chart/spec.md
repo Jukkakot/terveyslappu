@@ -52,7 +52,7 @@ line, budget or second y-axis on the same plot.
   them on the same days
 
 #### Scenario: Treat share
-- **GIVEN** a day of 2 000 kcal with 300 kcal marked herkku
+- **GIVEN** a day of 2 000 kcal with 300 kcal of Herkku products
 - **THEN** its bar shows a 300 kcal part in the treat tone on top of 1 700
 
 #### Scenario: Year view

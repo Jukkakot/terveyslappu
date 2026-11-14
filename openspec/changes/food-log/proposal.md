@@ -4,60 +4,53 @@
 
 Meals vary from day to day and the calories of everyday portions are unknown, so the user cannot
 tell whether everyday eating matches the goal (weight going down). A light food log for a learning
-period, written to Health Connect like the weight, shows what the usual meals contain and how
-eating and weight move together (product.md "Food log: why", BR1–BR6).
+period, written to Health Connect like the weight, shows what the usual things contain and how
+eating and weight move together (product.md "Food log: why" and "Food log: how it is used").
 
 ## What Changes
 
-- New **Ruoka** screen for one day: the slots Aamupala, Lounas, Päivällinen, Iltapala and Väliin,
-  each with its items and kcal, the day's total, and arrows to earlier days. Opened from a small
-  "Syöty tänään" row on the home screen; the weigh-in stays the home screen's only filled action.
-- Logging in a slot: frequent items of that slot first, saved meals (several items in one tap),
-  saved dishes (kcal per 100 g with a usual portion, only the grams change), fixed items (kcal per
-  serving) and quick add of a bare kcal number. A new dish is saved once with its name and kcal
-  (the user asks an AI chat for the number); the kitchen scale is used only to learn the usual
-  portion.
-- **Herkku** mark on an item (a saved item carries it, quick add can set it): treats are counted
-  apart from meals everywhere they are summed (BR4).
-- Every logged item is written to Health Connect as a nutrition record with the slot's meal type
-  (Väliin and Iltapala as snack) and its energy; edit and delete with undo, as for weights.
-- Historia gets a third tab **Energia** next to Paino and BMI: daily kcal bars (treat share in its
-  own tone), a 7-day average line, and the period's weight line in a small chart under it on the
-  same time axis (BR2), plus period statistics (average kcal per logged day, treats per day, logged
-  days). Days without a log are gaps, not zeros. No budget, no "calories left", no conclusions, no
-  streaks or red numbers (BR2, BR5).
-- The data file (Vie/Tuo tiedot, backup) carries two new kinds: the logged foods and the saved
-  items, so a phone move and a restore keep the learnt dishes.
-- **Asetukset regrouped** (user 2026-11-14): the long page becomes a list of rows (icon, name,
-  one line of current state, chevron), each opening its own sub-screen: Omat tiedot, Automaattinen
-  punnitus, Ruokakirjaus (new: manage saved items and meals), Tiedot ja varmuuskopio, Ulkoasu,
-  Tuki. Warnings show on the main list's row. Links into a section open its sub-screen directly;
-  back returns where the user came from. Sub-screen contents stay as they are.
-- Ohje gets a section on the food log. Version 1.21.
-- Steps (BR2's "moved") are **not** in this change: a separate change after this one (open
-  question 1).
+- **Lisää annos** on the front page (outlined, the weigh-in stays the only filled action) and on
+  the Ruoka screen: an add field with suggestion buttons for what is usually eaten at this time of
+  day, suggestions while typing, one tap adds with the usual amount and a Muuta · Kumoa line;
+  enter adds a bare number as kcal or a name without kcal.
+- **Products are learnt**: every name becomes a product with kcal per piece or per 100 g once
+  known and its last used amount; kcal can be filled in later and fills the product's other items
+  too. About 150 generic base products from Fineli (THL, CC BY 4.0) so nothing starts from zero.
+- **Ruoka day screen**: the day's items in eating order with small logging times, total with the
+  treats' share and items without kcal, earlier days via arrows (catching up is normal), editor,
+  delete with undo, Järjestä to drag the order. No meals, no clock times to enter, no budget,
+  no judgement.
+- **Herkku** is the only category besides Ruoka: base food and treats in their own colours show
+  whether the excess comes from ordinary meals or from treats.
+- Every item is a Health Connect nutrition record; food and kcal are never shown outside the app.
+- Historia gets a third tab **Energia**: daily bars (base food / Herkku), a 7-day average line, the
+  weight line under it on the same time axis, period statistics and a list of logged days.
+- **Asetukset regrouped** into a list of rows (icon, name, state line, chevron) opening
+  sub-screens: Omat tiedot, Automaattinen punnitus, Ruokakirjaus (products), Tiedot ja
+  varmuuskopio, Ulkoasu, Tuki. Warnings on the rows; deep links open the sub-screen and back
+  returns where the user came from.
+- The data file (export, import, backup) carries the foods and the products. Ohje gets a food log
+  section with the Fineli attribution. Version 1.21.
+- Not here: steps (own change next) and a combined weight/kcal/steps chart (backlog).
 
 ## Capabilities
 
 ### New Capabilities
-- `food-log`: the day screen, slots, saved items and meals, quick add, the treat mark, Health
-  Connect nutrition write/read/edit/delete, and the home screen's entry row.
+- `food-log`: adding, products and base products, the day screen, editing and order, Herkku,
+  Health Connect nutrition, food only inside the app, Ruokakirjaus in Asetukset.
 
 ### Modified Capabilities
 - `weight-chart`: Historia's tabs gain Energia with its chart, statistics and list.
-- `home-screen`: the simple home screen gains the "Syöty tänään" row; the Asetukset screen
-  becomes a list of sub-screens.
+- `home-screen`: the front page gains "Syöty tänään" and Lisää annos; Asetukset becomes a list of
+  sub-screens.
 - `data-file`: two new data kinds, `foods` and `food_items`.
 - `help-page`: an Ohje section on the food log.
 
 ## Impact
 
-- App screens: new Ruoka day screen and item picker/editor dialogs; home screen row; Historia
-  Energia tab; Asetukset split into a main list and six sub-screens; Ohje text.
-- Health Connect: new permissions READ_NUTRITION and WRITE_NUTRITION (asked when the food log is
-  first opened, not at app start); reads only this app's nutrition records.
-- App storage: saved items and meals, and each logged item's slot and treat mark (Health Connect's
-  meal type cannot tell Iltapala from Väliin, nor a treat).
-- Data file, backup, import: new parts in CSV and JSON, version stays 2 (unknown parts are already
-  skipped by older readers).
+- App screens: front page row and button, add sheet, Ruoka day screen and item editor, Historia
+  Energia tab, Asetukset main list and six sub-screens, Ohje text.
+- Health Connect: READ_NUTRITION and WRITE_NUTRITION, asked on first food use only.
+- App storage: own products (`products.json`); a shipped base-product asset built from Fineli.
+- Data file, backup, import: new parts in CSV and JSON, version stays 2.
 - Scale, widget, tile, background weigh-in: untouched. Build/CI: no new dependency.

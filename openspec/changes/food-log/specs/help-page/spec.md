@@ -1,11 +1,11 @@
 ## MODIFIED Requirements
 
 ### Requirement: Ohje screen
-Asetukset's Tuki section SHALL have a row "Ohje" that opens a scrollable screen "Ohje" in the
+Asetukset's Tuki sub-screen SHALL have a row "Ohje" that opens a scrollable screen "Ohje" in the
 app theme (light and dark). The screen SHALL show a short intro line and then one section per
 feature, each with a title and one to three sentences: weighing from the widget, the Quick Settings
-tile and the launcher shortcut; manual entry; Historia (chart, periods, list); the food log (slots,
-saved dishes and meals, herkku, the Energia tab); owner details and BMI; import and export
+tile and the launcher shortcut; manual entry; Historia (chart, periods, list); the food log (adding,
+products, Herkku, the Energia tab, base products from Fineli (THL, CC BY 4.0)); owner details and BMI; import and export
 (including OKOK .xls); the automatic backup; Jaa loki. It SHALL NOT describe automatic weigh-in.
 Back from Ohje SHALL return to Asetukset.
 
