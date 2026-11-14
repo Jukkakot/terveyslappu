@@ -2,6 +2,13 @@
 
 Start only after the phase 1 trial results are in and `weigh-in-listen-trial` is archived.
 
+## 0. Trial findings (2026-11-14)
+
+- [ ] 0.1 Battery warning and widget status: treat "Optimoitu" like "Rajoitettu" (warn unless the app
+      ignores battery optimisation; Samsung Optimized stopped screen-off scans in the trial).
+- [ ] 0.2 `listen.start late=` is 0 when started by enable/settings/app inside the window (only
+      alarm starts measure lateness).
+
 ## 1. Pure core
 
 - [ ] 1.1 Plausibility: reference choice (latest own accepted weight before the new one, not "?"),
