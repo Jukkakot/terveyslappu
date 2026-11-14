@@ -6,6 +6,8 @@
     <!-- food-log: nutrition records, asked on first food use only. -->
     <uses-permission android:name="android.permission.health.READ_NUTRITION" />
     <uses-permission android:name="android.permission.health.WRITE_NUTRITION" />
+    <!-- steps: read only (never WRITE_STEPS), asked from the steps card or the Askeleet tab. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
     <!-- owner-profile: the owner's height (asked when a height is first saved). -->
     <uses-permission android:name="android.permission.health.WRITE_HEIGHT" />
     <!-- weight-export: read weights older than 30 days (asked only when exporting). -->

@@ -6,11 +6,12 @@
 
 ## 2. Health Connect
 
-- [ ] 2.1 `READ_STEPS` in the manifest; `HealthConnectSteps` with `granted()`, `daily(from, to)` (one-day period aggregate, `LocalDateTime` bounds, no origin filter) and `firstDay()` (one ascending record, readable records only); read start = max(period start, first readable day); request bounds = the phone's current local dates; permission check mirrors food (client `granted()`, own launcher asking only `READ_STEPS`); history notice when the history permission is not granted and the period starts more than 30 days back (reuse `HistoryAccess`; nothing when unsupported)
-- [ ] 2.1b Check on the device whether the aggregate call throws or clamps past the readable history limit and log it; fallback: chunked reads from the first readable day, or catch the failure and show the readable part
-- [ ] 2.2 `StepsViewModel`: `StepsAccess` states, refresh on resume and on entering the home screen or the tab (re-read the whole shown range, no live updates), failed read: message only when nothing was read yet, else last numbers with a quiet "ei päivitetty" line, daily list cache sliced per period, permission request and result; singleton wiring next to the food one
+- [x] 2.1 `READ_STEPS` in the manifest; `HealthConnectSteps` with `granted()`, `daily(from, to)` (one-day period aggregate, `LocalDateTime` bounds, no origin filter) and `firstDay()` (one ascending record, readable records only); read start = max(period start, first readable day); request bounds = the phone's current local dates; permission check mirrors food (client `granted()`, own launcher asking only `READ_STEPS`); history notice when the history permission is not granted and the period starts more than 30 days back (reuse `HistoryAccess`; nothing when unsupported)
+- [x] 2.1b Check on the device whether the aggregate call throws or clamps past the readable history limit and log it; fallback: chunked reads from the first readable day, or catch the failure and show the readable part
+  - Done as (apply): reads go in chunks of at most 366 days; a failed read whose start is the first readable day is retried once from the next day; `steps.read ok ... fallback=none|later-start back=` (and `steps.read failed cause= retry=true` before a retry) tells on the device which happened.
+- [x] 2.2 `StepsViewModel`: `StepsAccess` states, refresh on resume and on entering the home screen or the tab (re-read the whole shown range, no live updates), failed read: message only when nothing was read yet, else last numbers with a quiet "ei päivitetty" line, daily list cache sliced per period, permission request and result; singleton wiring next to the food one
 - [ ] 2.3 Log events `steps.read ok|failed`, `hc.permission.steps request|granted|denied`, `home.period card=steps` (counts and timings, never step counts); add them to the event list in `.claude/CLAUDE.md`
-- [ ] 2.4 Tests: access state mapping (needs, denied, granted, unavailable) as a pure rule; a read failure leaves `loadFailed` and a log line; a manifest/lint test that `WRITE_STEPS` is absent
+- [x] 2.4 Tests: access state mapping (needs, denied, granted, unavailable) as a pure rule; a read failure leaves `loadFailed` and a log line; a manifest/lint test that `WRITE_STEPS` is absent
 
 ## 3. Front page
 
