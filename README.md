@@ -6,9 +6,12 @@ Napauta kotinäytön widgetiä tai pika-asetusten ruutua, astu Bluetooth-vaa'all
 Health Connectiin ilman että sovellusta tarvitsee avata. Sovelluksessa näet viimeisimmän painon,
 kehityksen kaaviona ja historian, ja painon voi lisätä myös käsin tai tuoda vanhasta tiedostosta.
 
+Kevyt ruokakirjaus kulkee mukana: lisää syömäsi annos parilla napautuksella, niin sovellus oppii
+tavalliset ruokasi ja näyttää päivän kalorit sekä herkkujen osuuden painon rinnalla.
+
 ## Periaatteet
 
-- **Health Connect on varasto.** Painot menevät puhelimen omaan Health Connectiin, josta muut
+- **Health Connect on varasto.** Painot ja ruokakirjaukset menevät puhelimen omaan Health Connectiin, josta muut
   terveyssovellukset näkevät ne. Sovelluksella ei ole omaa palvelinta, eikä mitään lähetetä
   minnekään.
 - **Vähän napautuksia.** Punnitus onnistuu yhdellä napautuksella ja vaa'alle astumalla.
