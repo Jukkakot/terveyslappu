@@ -89,3 +89,25 @@ cannot be tested in the cloud, so the implementer should be an opus agent.
 
 - Focus-gated clipboard read and task flags only show on a device; the user's own use is the test.
 - Moving writes to an app scope changes the in-app add path too; keep the existing food tests green.
+
+## Apply notes
+
+Choices the implementer made where the spec left room (simplest reasonable option):
+
+- Log keys: `food.add` now has `from=app|widget|shortcut` and the input kind moved from `from=` to
+  `kind=suggestion|typed|quick|undo`. Timings: `food.sheet.timing field= read= ok=` (ms from the tap).
+- The sheet lines hold in the app's sheet too: with the sheet open a failed write and the Kumoa of
+  a delete made in the editor opened from Muuta are lines in the sheet ("<name> poistettu · Kumoa");
+  with the sheet closed (Ruoka list) they stay snackbars. Peruuta keeps the line as it was.
+- An add whose re-read also fails writes nothing and shows "Tallennus epäonnistui".
+- Wording: "Ladataan…", "Päivää ei voitu lukea. Voit silti kirjoittaa.", "Salli"; denied uses the
+  existing "Avaa Health Connect"; unavailable the existing text and "Sulje".
+- Dialog: theme `Theme.Terveyslappu.WeighIn` (transparent), own task affinity, singleTask, started
+  with NEW_TASK only so a second widget tap lands in `onNewIntent`. The clipboard is read on the
+  first focus of the dialog's window or the sheet's window, whichever comes first.
+- Tuo ruoka-annokset in the dialog reads the clipboard there and hands the text to the app as
+  `from=paste`, also when it holds no food (the app shows its usual message).
+- Icon: new stroke drawable `ic_cutlery` (fork and knife) on the widget plate and the shortcut.
+- Fixed on the way: Poista right after an add (via Muuta) did not delete the record.
+- No UI test of the editor: `FoodEditor` does not settle under Robolectric even on its own (before
+  this change too); the editor return is tested on the view model.

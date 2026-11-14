@@ -197,9 +197,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - Categories only where they have a reason. **Herkku** has one: in the kcal bars, base food and
     treats in their own colours show whether the excess comes from ordinary meals or from treats.
     No other categories until one has a reason (user: "everything needs a reason").
-  - No food widget for now; the app's front page is enough.
-  - Food, kcal and weight only inside the app, never on the phone's home screen (widget, tile,
-    notification): the user looks at them only when they choose to open the app.
+  - Food widget (food-widget, user 2026-11-14): a 1x1 "Lisää annos" button and a launcher
+    shortcut open the add sheet over the home screen; adding the day's meals is as quick as
+    weighing. Add-only: the widget never shows food, kcal, a count or a state; no food tile.
+  - Food, kcal and weight are never *shown* on always-visible surfaces (widget face, tile,
+    shortcut label, notification): the user looks at them only when they choose to open the app
+    or its own dialog.
   - Order kept (helps recall and spot what was forgotten); the logging time is saved for free and
     shown small; it also feeds "usually eaten at this time" suggestions, which replace day
     templates. No "eat now or later" switch: Järjestä fixes the rare advance entry.

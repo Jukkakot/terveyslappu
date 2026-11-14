@@ -47,8 +47,8 @@ Implementer: an opus agent (device lifecycle that cannot be tested in the cloud)
 
 ## 4. Help, docs, release
 
-- [ ] 4.1 Help page food section names the widget and the shortcut.
-- [ ] 4.2 `product.md`: replace "No food widget for now" with the add-only widget decision;
+- [x] 4.1 Help page food section names the widget and the shortcut.
+- [x] 4.2 `product.md`: replace "No food widget for now" with the add-only widget decision;
   roadmap: mark food widget done; project CLAUDE.md map: the new activity and widget, and the log
   map: `food.sheet.open from=`, `from=` on `food.add`.
-- [ ] 4.3 Bump `appVersion` MINOR; `./gradlew test lint assembleDebug`.
+- [x] 4.3 Bump `appVersion` MINOR; `./gradlew test lint assembleDebug`.
