@@ -23,6 +23,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**home-overview**~~ done 2026-11-14 (v1.26, user 2026-11-14): the front page as one card per feature (Paino; Ruoka with its own bars and period; Automaattinen punnitus while on), the latest-weights rows go. Parity rule: every feature gets the same parts on the front page and in its details unless a part means nothing for it.
 - ~~**food-ai-import**~~ done 2026-11-14 (v1.25, user 2026-11-14): share or paste the AI chat's day estimate as JSON into the food log (today by default, calendar for another day), preview with fine-tuning, append only.
 - **Reorder the front page cards** (user 2026-11-14, later): an edit mode where the feature cards are dragged into the user's order.
+- **food widget** (user 2026-11-14, plan separately): a home-screen widget for adding the day's meals quickly.
 - **steps** (user 2026-11-14, after home-overview): steps from Garmin through Health Connect as its own change.
 - **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis.
 
