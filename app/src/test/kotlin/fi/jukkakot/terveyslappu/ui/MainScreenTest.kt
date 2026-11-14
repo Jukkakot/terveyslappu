@@ -59,6 +59,7 @@ class MainScreenTest {
         onDelete: (WeightEntry) -> Unit = {},
         onGrantHistory: () -> Unit = {},
         profile: OwnerProfile = OwnerProfile(),
+        onWeighIn: () -> Unit = {},
     ) {
         compose.setContent {
             var state by remember { mutableStateOf(start) }
@@ -73,6 +74,7 @@ class MainScreenTest {
                         onWeightText = { state = state.copy(weightText = it) },
                         onDelete = onDelete,
                         onGrantHistory = onGrantHistory,
+                        onWeighIn = onWeighIn,
                         onBack = { state = state.back() },
                         onSettingsPage = { state = state.withSettings(it, Screen.SETTINGS) },
                         onOpenBackupSettings = { state = state.withSettings(SettingsPage.DATA, Screen.HOME) },
@@ -132,7 +134,6 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights))
         compose.onNodeWithTag("recent").assertDoesNotExist()
         compose.onNodeWithTag("change", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("weighIn").assertExists()
         compose.onNodeWithTag("latestCard").performClick()
         compose.onNodeWithTag("chart").assertExists()
         compose.onNodeWithTag("back").performClick()
@@ -184,30 +185,40 @@ class MainScreenTest {
     }
 
     @Test
-    fun `the automatic weigh-in card shows only while it is on and opens its page`() {
-        var state by mutableStateOf(MainUiState(access = Access.GRANTED, weights = weights))
-        var listen by mutableStateOf(ListenUi())
+    fun `Punnitse in the weight card opens the weigh-in, not Historia`() {
+        var weighed = 0
+        show(MainUiState(access = Access.GRANTED, weights = weights), onWeighIn = { weighed++ })
+        compose.onNodeWithTag("weighIn").performClick()
+        assertEquals(1, weighed)
+        compose.onNodeWithTag("chart").assertDoesNotExist()
+        compose.onNodeWithTag("latestCard").assertExists()
+    }
+
+    @Test
+    fun `no weights still offers Punnitse`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()))
+        compose.onNodeWithTag("weighIn").assertExists()
+    }
+
+    @Test
+    fun `front page shows only the weight and food cards, nothing of automatic weigh-in or BMI`() {
         compose.setContent {
             TerveysTheme {
                 MainScreen(
-                    state,
+                    MainUiState(access = Access.GRANTED, weights = weights),
                     "0.1.1-test",
-                    MainActions(
-                        onOpenListen = { state = state.withSettings(SettingsPage.LISTEN, Screen.HOME) },
-                        onBack = { state = state.back() },
-                    ),
-                    listen = listen,
+                    MainActions(),
+                    listen = ListenUi(settings = ListenSettings(enabled = true)),
+                    profile = OwnerProfile(birthYear = 1990, heightCm = 180, gender = Gender.MALE),
                 )
             }
         }
-        compose.onNodeWithTag("listenCard").assertDoesNotExist()
-        compose.runOnIdle { listen = ListenUi(settings = ListenSettings(enabled = true)) }
-        compose.onNodeWithTag("listenCard").assertExists()
-        compose.onNodeWithTag("foodCard").assertExists()
-        compose.onNodeWithTag("listenCard").performClick()
-        compose.onNodeWithTag("listenPage").assertExists()
-        compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("latestCard").assertExists()
+        compose.onNodeWithTag("foodCard").assertExists()
+        compose.onNodeWithTag("listenCard").assertDoesNotExist()
+        compose.onNodeWithTag("derived").assertDoesNotExist()
+        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("derivedReason").assertDoesNotExist()
     }
 
     @Test
@@ -303,22 +314,6 @@ class MainScreenTest {
     }
 
     @Test
-    fun `home row shows the derived values and a reason opens Asetukset`() {
-        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(birthYear = 1990))
-        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("derivedReason").performClick()
-        compose.onNodeWithTag("height").assertExists()
-        compose.onNodeWithTag("back").performClick()
-        compose.onNodeWithTag("latestCard").assertExists()
-    }
-
-    @Test
-    fun `no weights shows no derived row`() {
-        show(MainUiState(access = Access.GRANTED, weights = emptyList()), profile = OwnerProfile(heightCm = 180))
-        compose.onNodeWithTag("derived").assertDoesNotExist()
-    }
-
-    @Test
     fun `BMI tab switches the chart and stats, opening on Paino`() {
         val man = OwnerProfile(birthYear = 1990, heightCm = 180, gender = Gender.MALE)
         show(MainUiState(access = Access.GRANTED, weights = weights, period = Period.MONTH, screen = Screen.HISTORY), profile = man)
@@ -354,14 +349,5 @@ class MainScreenTest {
         compose.onNodeWithTag("group-y2023").performClick()
         compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-m2023-06"))
         compose.onNodeWithTag("group-m2023-06").assertExists()
-    }
-
-    @Test
-    fun `home BMI shows its number without the class word, which stays for screen readers`() {
-        show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(heightCm = 180))
-        compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertExists()
-        compose.onNode(hasText("ylipaino", substring = true), useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithContentDescription("BMI 25,4, ylipaino", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("derivedReason").assertDoesNotExist()
     }
 }

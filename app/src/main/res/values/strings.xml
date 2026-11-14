@@ -50,13 +50,13 @@
     <string name="help_title">Ohje</string>
     <string name="help_intro">Terveyslappu kirjaa painosi Health Connectiin vaivattomasti. Tässä lyhyesti, mitä sovelluksella voi tehdä.</string>
     <string name="help_weigh_title">Punnitse nopeasti</string>
-    <string name="help_weigh_body">Aloita punnitus kotinäytön widgetistä, pika-asetusten laatasta tai sovelluksen kuvakkeen pikakuvakkeesta. Astu vaa\'alle, ja vakaa paino tallentuu Health Connectiin.</string>
+    <string name="help_weigh_body">Aloita punnitus etusivun painokortin Punnitse-napista, kotinäytön widgetistä, pika-asetusten laatasta tai sovelluksen kuvakkeen pikakuvakkeesta. Astu vaa\'alle, ja vakaa paino tallentuu Health Connectiin.</string>
     <string name="help_manual_title">Syötä paino käsin</string>
     <string name="help_manual_body">Plus-painikkeesta voit kirjata painon itse, myös takautuvasti valitsemallasi ajankohdalla.</string>
     <string name="help_history_title">Historia</string>
-    <string name="help_history_body">Historiassa näet painokaavion, valittavat jaksot ja tilastot sekä listan punnituksista. Avaa se kotinäytön kortista.</string>
+    <string name="help_history_body">Historiassa näet painokaavion, valittavat jaksot ja tilastot sekä listan punnituksista. Avaa se etusivun painokortista.</string>
     <string name="help_profile_title">Omat tiedot ja BMI</string>
-    <string name="help_profile_body">Kun lisäät Asetuksissa pituutesi ja muut omat tietosi, sovellus laskee painoindeksin (BMI) ja näyttää sen luokan.</string>
+    <string name="help_profile_body">Kun lisäät Asetuksissa pituutesi ja muut omat tietosi, Historian BMI-välilehti näyttää painoindeksin (BMI) ja sen luokan.</string>
     <string name="help_data_title">Tuo ja vie tiedot</string>
     <string name="help_data_body">Voit tuoda vanhoja painoja tiedostosta, myös OKOK-vaa\'an .xls-viennistä, ja viedä tietosi CSV- tai JSON-tiedostoon.</string>
     <string name="help_backup_title">Automaattinen varmuuskopio</string>
@@ -142,7 +142,6 @@
 
     <string name="weighin_action">Punnitse</string>
     <string name="weighin_title">Punnitus</string>
-    <string name="weighin_main_button">Punnitse vaa\'alla</string>
     <string name="weighin_preparing">Valmistellaan…</string>
     <string name="weighin_step_on">Astu vaa\'alle</string>
     <string name="weighin_settling">Odota, että paino asettuu</string>
@@ -283,6 +282,10 @@
     <string name="home_food_average">keskim. %1$s kcal/pv</string>
     <string name="home_food_no_average">ei vielä keskiarvoa</string>
     <string name="home_open_energy">Avaa energia</string>
+    <string name="home_open_food">Avaa päivän ruoat</string>
+    <string name="home_food_add">Annos</string>
+    <string name="home_weigh">Punnitse</string>
+    <string name="food_week">Viikko</string>
     <string name="food_today_permission">Ruokakirjaus: anna lupa</string>
     <string name="food_permission_reason">Ruokakirjaus tallentaa syömäsi Health Connectiin ravintotietoina, ja sovellus näyttää vain itse kirjaamansa. Siksi se tarvitsee luvan lukea ja kirjoittaa ravintotietoja. Punnitus toimii ilmankin.</string>
     <string name="food_permission_grant">Anna lupa</string>
@@ -334,17 +337,17 @@
     <string name="food_product_usual">Tavallinen määrä</string>
     <string name="food_product_remove">Poista tuote</string>
     <string name="food_product_remove_note">Poisto vie tuotteen ehdotuksista; kirjaukset säilyvät.</string>
-    <string name="ai_paste">Liitä tekoälyltä</string>
-    <string name="ai_copy_prompt">Kopioi ohje tekoälylle</string>
-    <string name="ai_prompt_copied">Ohje kopioitu. Liitä se tekoälylle.</string>
+    <string name="ai_paste">Tuo ruoka-annokset</string>
+    <string name="ai_copy_prompt">Kopioi tuontiohje</string>
+    <string name="ai_prompt_copied">Tuontiohje kopioitu.</string>
     <string name="ai_prompt_failed">Ohjetta ei voitu kopioida.</string>
-    <string name="ai_no_json">Tekstistä ei löytynyt ruokia. Pyydä tekoälyltä JSON-koodilohko ohjeen mukaan.</string>
+    <string name="ai_no_json">Tekstistä ei löytynyt ruoka-annoksia. Tuonti tarvitsee JSON-tekstin tuontiohjeen mukaan.</string>
     <string name="ai_empty">Tekstissä oli JSON, mutta ei yhtään käyttökelpoista ruokaa.</string>
-    <string name="ai_clip_items">Leikepöydällä ruoka-arvio: %1$d annosta</string>
-    <string name="ai_clip_products">Leikepöydällä ruoka-arvio: %1$d tuotetta</string>
+    <string name="ai_clip_items">Leikepöydällä ruoka-annoksia: %1$d</string>
+    <string name="ai_clip_products">Leikepöydällä tuotteita: %1$d</string>
     <string name="ai_clip_show">Näytä</string>
     <string name="ai_clip_skip">Ohita</string>
-    <string name="ai_title">Tuo tekoälyltä</string>
+    <string name="ai_title">Tuo ruoka-annokset</string>
     <string name="ai_day">Päivälle</string>
     <string name="ai_items">Annokset</string>
     <string name="ai_products">Tallennettavat tuotteet</string>
@@ -375,5 +378,5 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d ruokaa ja %3$d tuotetta</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d ruokaa jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruokakirjaus</string>
-    <string name="help_food_body">Lisää annos etusivulta tai Ruoka-näkymästä: ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja yksi napautus kirjaa. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Energia-välilehti näyttää päivät painon rinnalla. Tekoälyn arvion voi tuoda jakamalla vastauksen sovellukselle tai Lisää annos -ikkunan Liitä tekoälyltä -napilla; Kopioi ohje tekoälylle antaa tekoälylle oikean muodon. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
+    <string name="help_food_body">Lisää annos etusivun ruokakortin + Annos -napista tai Ruoka-näkymästä; kortin luku avaa päivän ruoat ja pylväät Historian Energia-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja yksi napautus kirjaa. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Energia-välilehti näyttää päivät painon rinnalla. Ruoka-annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo ruoka-annokset -napilla; Kopioi tuontiohje antaa kirjoittajalle oikean muodon, ja leikepöydälle kopioidut annokset tarjotaan tuotavaksi. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
 </resources>

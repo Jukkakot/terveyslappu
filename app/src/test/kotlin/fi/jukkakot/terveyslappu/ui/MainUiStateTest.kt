@@ -40,6 +40,15 @@ class SettingsBackRuleTest {
     }
 
     @Test
+    fun `Historia opened from Ruoka's Viikko returns to Ruoka, and a day there does not loop`() {
+        val week = MainUiState(screen = Screen.HISTORY, historyOnEnergy = true, historyOrigin = Screen.FOOD)
+        assertEquals(Screen.FOOD, week.back().screen)
+        val day = week.openFood()
+        assertEquals(Screen.FOOD, day.screen)
+        assertEquals(Screen.HOME, day.back().screen)
+    }
+
+    @Test
     fun `a sub-screen opened from the list returns to the list`() {
         val back = MainUiState().withSettings(SettingsPage.DATA, Screen.SETTINGS).back()
         assertEquals(Screen.SETTINGS, back.screen)

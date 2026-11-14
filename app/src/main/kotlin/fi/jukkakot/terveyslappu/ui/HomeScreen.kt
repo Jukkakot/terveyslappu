@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,17 +65,14 @@ import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.ChartDots
 import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
-import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.weight.WeightEntry
-import fi.jukkakot.terveyslappu.derived.LatestDerived
-import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-/** The home screen: one card per feature (weight, food, automatic weigh-in), Punnitse vaa'alla. */
+/** The home screen: one card per feature (weight on top, then the row of smaller cards: food), each with its own quick action. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreen(
@@ -83,10 +80,8 @@ internal fun HomeScreen(
     actions: MainActions,
     snackbar: SnackbarHostState,
     backup: BackupStatus,
-    profile: OwnerProfile = OwnerProfile(),
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
-    listen: ListenUi = ListenUi(),
 ) {
     Scaffold(
         topBar = {
@@ -102,7 +97,6 @@ internal fun HomeScreen(
                 },
             )
         },
-        bottomBar = { if (state.access == Access.GRANTED) WeighInBar(actions.onWeighIn) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
@@ -112,116 +106,139 @@ internal fun HomeScreen(
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup, profile, food, foodActions, listen)
+                Access.GRANTED -> HomeContent(state, actions, backup, food, foodActions)
             }
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions, listen: ListenUi) {
+private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, food: FoodUiState, foodActions: FoodActions) {
     val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
     val summary = remember(state.weights, state.homeDays, state.questioned) {
         state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
     }
     val today = LocalDate.now()
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        // Fits a ~6" phone with a notice; scrolls only with more notices or large text (home-screen).
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed, actions.onOpenBackupSettings)
         if (state.newestQuestioned != null) CheckNotice(actions.onOpenQuestioned)
-        // Recomputed whenever the weights or the owner details change (derived-values).
-        val derived = remember(summary?.latest, profile) { summary?.let { LatestDerived.of(it.latest, profile, ZoneId.systemDefault()) } }
-        LatestCard(state, summary, derived, today, actions.onHomePeriod, actions.onOpenProfile) { actions.onScreen(Screen.HISTORY) }
-        FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions)
-        if (listen.settings.enabled) ListenCard(listen, actions.onOpenListen)
+        food.clipOffer?.let { offer ->
+            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(start = 16.dp, end = 4.dp)) {
+                ClipOfferLine(offer, foodActions)
+            }
+        }
+        LatestCard(state, summary, today, actions.onHomePeriod, actions.onWeighIn) { actions.onScreen(Screen.HISTORY) }
+        // The row of smaller feature cards; a later steps card takes its right half (home-screen).
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions, Modifier.weight(1f))
+        }
     }
 }
 
 /**
  * The food card (home-screen "Food row on the home screen"), built like the weight card: today's
- * kcal, daily bars of its own period, the period's dates and average, outlined Lisää annos and
- * Tänään inside; a tap elsewhere opens Historia on Energia. Nothing on it is filled. Today is read at
- * every composition, so a resume after midnight shows the new day.
+ * kcal, daily bars of its own period, the period's dates and average, outlined + Annos inside. The
+ * title and today's number open Ruoka on today; the bars and what is under them open Historia on
+ * Energia; the period label keeps its menu. Nothing on it is filled. Today is read at every
+ * composition, so a resume after midnight shows the new day.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions) {
+private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val needsPermission = food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED
     val summary = remember(food.items, days, today) { HomeFood.of(food.items.orEmpty(), days, today) }
+    // Without the permission a tap asks for it (denied: Ruoka explains and offers the grant).
+    val onTop = { if (food.access == FoodAccess.NEEDS) actions.onGrant() else actions.onOpenDay(today) }
     Column(
-        Modifier
-            .fillMaxWidth()
+        modifier
             .clip(cardShape)
             .background(colors.surfaceContainer)
-            .clickable(onClickLabel = stringResource(R.string.home_open_energy)) { if (needsPermission) actions.onOpenDay(today) else onOpenEnergy() }
-            .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+            .padding(8.dp)
             .testTag("foodCard"),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.home_food_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        }
-        if (needsPermission) {
-            Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp).testTag("foodToday"))
-            return@Column
-        }
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (summary.todayLogged) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displayMedium, modifier = Modifier.alignByBaseline())
-                    Spacer(Modifier.width(6.dp))
-                    Text("kcal", style = MaterialTheme.typography.titleLarge, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(innerShape)
+                .clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .testTag("foodToday"),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.home_food_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            }
+            when {
+                needsPermission -> Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+                summary.todayLogged -> FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline())
+                        Spacer(Modifier.width(6.dp))
+                        Text("kcal", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
+                    }
+                    if (summary.todayTreat > 0) {
+                        Text(
+                            stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onSurfaceVariant,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                        )
+                    }
                 }
-                if (summary.todayTreat > 0) {
-                    Text(
-                        stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.onSurfaceVariant,
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                    )
-                }
-            } else {
-                Text(stringResource(R.string.home_food_none), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+                else -> Text(stringResource(R.string.home_food_none), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
             }
         }
-        if (summary.bars.isNotEmpty()) {
-            val description = stringResource(R.string.home_food_bars, summary.bars.size)
-            FoodBars(summary, colors.primary, colors.tertiary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
-        }
+        if (needsPermission) return@Column
         val small = MaterialTheme.typography.labelSmall
-        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
-            Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(innerShape)
+                .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .testTag("foodBars"),
+        ) {
+            if (summary.bars.isNotEmpty()) {
+                val description = stringResource(R.string.home_food_bars, summary.bars.size)
+                FoodBars(summary, colors.primary, colors.tertiary, Modifier.fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
+            }
+            Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+                Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
+            }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, onPeriod, "foodPeriod")
             Text(
                 summary.averageKcal?.let { stringResource(R.string.home_food_average, formatKcal(it)) } ?: stringResource(R.string.home_food_no_average),
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(start = 8.dp).testTag("foodAverage"),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+                    .clip(innerShape)
+                    .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
+                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                    .testTag("foodAverage"),
             )
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { actions.onAdd(today) },
                 shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("homeFoodAdd"),
+                contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+                modifier = Modifier.heightIn(min = 44.dp).testTag("homeFoodAdd"),
             ) {
-                Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.food_add))
+                Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(R.string.home_food_add))
             }
-            OutlinedButton(
-                onClick = { actions.onOpenDay(today) },
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.heightIn(min = 48.dp).testTag("foodToday"),
-            ) { Text(stringResource(R.string.food_today)) }
         }
     }
 }
@@ -247,43 +264,21 @@ private fun FoodBars(summary: HomeFood, food: Color, treat: Color, modifier: Mod
     }
 }
 
-/** The automatic weigh-in card, only while it is on: the Asetukset row's state line; opens its page. */
-@Composable
-private fun ListenCard(listen: ListenUi, onOpen: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(colors.surfaceContainer)
-            .clickable(onClickLabel = stringResource(R.string.listen_section), onClick = onOpen)
-            .heightIn(min = 56.dp)
-            .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
-            .testTag("listenCard"),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(painterResource(R.drawable.ic_scale), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.listen_section), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            ListenState(SettingsSummary.listen(listen), listen.status)
-        }
-        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-    }
-}
-
 private val cardShape = RoundedCornerShape(24.dp)
+/** A tap area inside a card (its ripple keeps inside the card's corners). */
+private val innerShape = RoundedCornerShape(16.dp)
+/** Height of the cards' small charts: low, so the front page fits a phone without scrolling. */
+private val SMALL_CHART = 48.dp
 internal val groupShape = RoundedCornerShape(20.dp)
 
-@OptIn(ExperimentalLayoutApi::class)
+/** The weight card: latest weight, change, small chart, and Punnitse, the home screen's only filled action. */
 @Composable
 private fun LatestCard(
     state: MainUiState,
     summary: HomeSummary?,
-    derived: LatestDerived?,
     today: LocalDate,
     onHomePeriod: (Long) -> Unit,
-    onOpenProfile: () -> Unit,
+    onWeighIn: () -> Unit,
     onOpen: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -293,9 +288,9 @@ private fun LatestCard(
             .clip(cardShape)
             .background(colors.surfaceContainer)
             .clickable(onClickLabel = stringResource(R.string.home_open_history), onClick = onOpen)
-            .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
             .testTag("latestCard"),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val title = summary?.let { stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
@@ -304,7 +299,7 @@ private fun LatestCard(
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         when {
-            summary != null -> LatestValues(summary, derived, state.homeDays, onHomePeriod, onOpenProfile)
+            summary != null -> LatestValues(summary, state.homeDays, onHomePeriod)
             state.loadFailed -> Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge)
             state.weights == null -> Box(Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             else -> Column(Modifier.padding(vertical = 8.dp).testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -312,12 +307,21 @@ private fun LatestCard(
                 Text(stringResource(R.string.home_empty_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             }
         }
+        Button(
+            onClick = onWeighIn,
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.padding(top = 8.dp).fillMaxWidth().heightIn(min = 52.dp).testTag("weighIn"),
+        ) {
+            Icon(painterResource(R.drawable.ic_scale), contentDescription = null, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(stringResource(R.string.home_weigh), style = MaterialTheme.typography.titleMedium)
+        }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestValues(summary: HomeSummary, derived: LatestDerived?, days: Long, onHomePeriod: (Long) -> Unit, onOpenProfile: () -> Unit) {
+private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
     FlowRow(
         Modifier.fillMaxWidth(),
@@ -325,16 +329,16 @@ private fun LatestValues(summary: HomeSummary, derived: LatestDerived?, days: Lo
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(end = 8.dp)) {
-            Text(formatKg(summary.latest.kg), style = MaterialTheme.typography.displayMedium, modifier = Modifier.alignByBaseline())
+            Text(formatKg(summary.latest.kg), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline())
             Spacer(Modifier.width(6.dp))
-            Text("kg", style = MaterialTheme.typography.titleLarge, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
+            Text("kg", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
         }
         summary.change?.let { ChangeChip(it, Modifier.align(Alignment.CenterVertically)) }
     }
     val first = summary.spark.firstOrNull()
     if (first != null) {
         val description = stringResource(R.string.home_spark, formatKg(first.kg), formatKg(summary.latest.kg))
-        Sparkline(summary, colors.primary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
+        Sparkline(summary, colors.primary, Modifier.padding(top = 4.dp).fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
         val zone = ZoneId.systemDefault()
         val small = MaterialTheme.typography.labelSmall
         Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
@@ -359,7 +363,6 @@ private fun LatestValues(summary: HomeSummary, derived: LatestDerived?, days: Lo
             ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
         }
     }
-    derived?.let { DerivedRow(it, onOpenProfile) }
 }
 
 /** A card's chart period (home-screen "Home chart period"): its own tap opens a menu, not the card's details. */
@@ -495,21 +498,5 @@ private fun BackupNotice(failed: Boolean, onOpen: () -> Unit) {
             modifier = Modifier.weight(1f),
         )
         Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onErrorContainer, modifier = Modifier.size(20.dp))
-    }
-}
-
-/** The only filled action on the home screen, low for the thumb. */
-@Composable
-private fun WeighInBar(onWeighIn: () -> Unit) {
-    Box(Modifier.navigationBarsPadding().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)) {
-        Button(
-            onClick = onWeighIn,
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp).testTag("weighIn"),
-        ) {
-            Icon(painterResource(R.drawable.ic_scale), contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.weighin_main_button), style = MaterialTheme.typography.titleMedium)
-        }
     }
 }

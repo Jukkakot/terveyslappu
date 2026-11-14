@@ -185,8 +185,8 @@ class MainActivity : ComponentActivity() {
                     WeighInWidget.update(this@MainActivity)
                     onPauseOrDispose {}
                 }
-                // Clipboard offer: only while Ruoka or Lisää annos is shown, on open and on every resume.
-                val clipShown = state.screen == Screen.FOOD || food.sheetDay != null
+                // Clipboard offer: only while the front page, Ruoka or Lisää annos is shown, on open and on every resume.
+                val clipShown = state.screen == Screen.HOME || state.screen == Screen.FOOD || food.sheetDay != null
                 LifecycleResumeEffect(clipShown) {
                     if (clipShown) checkClipOffer()
                     onPauseOrDispose {}
@@ -314,7 +314,7 @@ class MainActivity : ComponentActivity() {
                         onHomePeriod = viewModel::onHomePeriod,
                         onFoodPeriod = viewModel::onFoodPeriod,
                         onOpenEnergy = viewModel::openEnergy,
-                        onOpenListen = viewModel::openListen,
+                        onOpenWeek = viewModel::openWeek,
                         onListenEnabled = { on ->
                             listen.setEnabled(on)
                             WeighInWidget.update(this)

@@ -95,6 +95,8 @@ data class MainUiState(
     val foodOrigin: Screen = Screen.HOME,
     /** Historia opens on Energia (back from Ruoka opened from the Energia tab); otherwise on Paino. */
     val historyOnEnergy: Boolean = false,
+    /** Where Historia was opened from: FOOD for Ruoka's Viikko (back returns there), otherwise HOME. */
+    val historyOrigin: Screen = Screen.HOME,
 ) {
     /** The weights not marked "?": everything that charts, counts or compares uses these. */
     val accepted: List<WeightEntry>? get() = weights?.filter { it.id !in questioned }
@@ -106,10 +108,21 @@ data class MainUiState(
     fun back(): MainUiState = when {
         screen == Screen.HOME -> this
         screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME)
+        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME)
         screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false)
         settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
+    }
+
+    /**
+     * Ruoka for a day. From Historia opened by Ruoka's Viikko it returns to that Ruoka (no loop of
+     * screens); from Historia otherwise back returns to Historia; else home.
+     */
+    fun openFood(): MainUiState = when {
+        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyOrigin = Screen.HOME)
+        screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY)
+        else -> copy(screen = Screen.FOOD, foodOrigin = Screen.HOME)
     }
 
     /** A sub-screen (or the list) of Asetukset, opened from [from]. */
@@ -230,17 +243,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false)
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME)
     }
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
-    fun openFood() = _state.update { it.copy(screen = Screen.FOOD, foodOrigin = if (it.screen == Screen.HISTORY) Screen.HISTORY else Screen.HOME) }
+    fun openFood() = _state.update { it.openFood() }
+
+    /** Ruoka's Viikko: Historia on Energia with 1 vk; back returns to Ruoka. */
+    fun openWeek() {
+        onPeriod(Period.WEEK)
+        _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = true, historyOrigin = Screen.FOOD) }
+    }
 
     /** The front page food card: Historia on Energia; back returns home. */
-    fun openEnergy() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = true) }
-
-    /** The front page automatic weigh-in card: its Asetukset page; back returns home. */
-    fun openListen() = _state.update { it.withSettings(SettingsPage.LISTEN, Screen.HOME) }
+    fun openEnergy() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = true, historyOrigin = Screen.HOME) }
 
     /** Historia has opened its Energia page. */
     fun energyShown() = _state.update { it.copy(historyOnEnergy = false) }
@@ -254,7 +270,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun openBackupSettings() = _state.update { it.withSettings(SettingsPage.DATA, Screen.HOME) }
 
     /** The home notice: Historia with the newest "?" weight shown (home-screen). */
-    fun openQuestioned() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = it.newestQuestioned?.id) }
+    fun openQuestioned() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = it.newestQuestioned?.id, historyOrigin = Screen.HOME) }
 
     /** Historia has scrolled to its target. */
     fun targetShown() = _state.update { it.copy(historyTarget = null) }

@@ -16,6 +16,7 @@ import fi.jukkakot.terveyslappu.food.FoodItem
 import fi.jukkakot.terveyslappu.food.Product
 import fi.jukkakot.terveyslappu.food.Suggestion
 import fi.jukkakot.terveyslappu.weight.weightEntry
+import fi.jukkakot.terveyslappu.food.ClipOffer
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +63,7 @@ class FoodScreenTest {
                         onScreen = { state = state.copy(screen = it) },
                         onOpenEnergy = { state = state.copy(screen = Screen.HISTORY, historyOnEnergy = true) },
                         onFoodPeriod = { state = state.copy(foodDays = it) },
+                        onOpenWeek = { state = state.copy(screen = Screen.HISTORY, historyOnEnergy = true, historyOrigin = Screen.FOOD) },
                     ),
                     food = food,
                     foodActions = FoodActions(
@@ -72,6 +74,7 @@ class FoodScreenTest {
                         onAdd = { food = food.copy(sheetDay = it) },
                         onPick = { picked = it },
                         onCloseSheet = { food = food.copy(sheetDay = null) },
+                        onClipSkip = { food = food.copy(clipOffer = null) },
                     ),
                 )
             }
@@ -97,8 +100,29 @@ class FoodScreenTest {
         compose.onNodeWithTag("foodPeriod").performScrollTo().performClick()
         compose.onNodeWithTag("foodPeriod-30").performClick()
         compose.onNodeWithTag("homePeriod").assertDoesNotExist()
-        compose.onNodeWithTag("foodCard").performScrollTo().performClick()
+        compose.onNodeWithTag("foodBars").performScrollTo().performClick()
         compose.onNodeWithTag("energyChart").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("foodToday").performScrollTo().performClick()
+        compose.onNodeWithTag("foodDay").assertExists()
+    }
+
+    @Test
+    fun `Viikko on Ruoka opens Energia and back returns to Ruoka`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
+        compose.onNodeWithTag("foodWeek").performClick()
+        compose.onNodeWithTag("energyChart").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("foodDay").assertExists()
+    }
+
+    @Test
+    fun `front page shows the clipboard offer above the cards and Ohita hides it`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(clipOffer = ClipOffer("x", 4, false)))
+        compose.onNodeWithTag("clipOffer").assertExists()
+        compose.onNodeWithTag("clipSkip").performClick()
+        compose.onNodeWithTag("clipOffer").assertDoesNotExist()
+        compose.onNodeWithTag("foodCard").assertExists()
     }
 
     @Test

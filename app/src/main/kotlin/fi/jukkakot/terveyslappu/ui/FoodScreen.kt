@@ -150,6 +150,7 @@ internal fun FoodScreen(
     onGrantHistory: () -> Unit,
     onBack: () -> Unit,
     snackbar: SnackbarHostState,
+    onWeek: () -> Unit = {},
 ) {
     val today = LocalDate.now()
     val ordering = food.ordering
@@ -162,6 +163,9 @@ internal fun FoodScreen(
                 onBack()
             }) {
                 if (food.access == FoodAccess.GRANTED && food.items != null) {
+                    if (ordering == null) {
+                        TextButton(onClick = onWeek, modifier = Modifier.testTag("foodWeek")) { Text(stringResource(R.string.food_week)) }
+                    }
                     if (ordering != null) {
                         TextButton(onClick = actions.onFinishOrder, modifier = Modifier.testTag("orderDone")) { Text(stringResource(R.string.food_order_done)) }
                     } else if (food.dayItems(food.day).size > 1) {
