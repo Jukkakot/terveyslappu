@@ -29,6 +29,11 @@ class ProductStore(file: File? = null) : JsonFileValue<List<Product>>(file, List
         return true
     }
 
+    /** Kumoa of an AI import: each product back as it was ([previous] null = it did not exist). */
+    fun restore(previous: Map<String, Product?>) {
+        update { old -> old.filter { it.key !in previous } + previous.values.filterNotNull() }
+    }
+
     fun remove(key: String) {
         update { old -> old.filter { it.key != key } }
     }

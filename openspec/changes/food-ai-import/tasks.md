@@ -1,10 +1,10 @@
 ## 1. Parsing and plan (pure)
 
-- [ ] 1.1 `food/AiPaste.kt`: find the JSON in text (code fence, first `{`/`[` to its matching end),
+- [x] 1.1 `food/AiPaste.kt`: find the JSON in text (code fence, first `{`/`[` to its matching end),
       parse object with `items`/`products` or a bare list (unknown keys ignored), tolerant numbers ("300", "1,5"),
       skip nameless or unusable entries; result = items + products + skipped count, or a
       failure reason.
-- [ ] 1.2 Plan the import with the existing add/product rules: items at the end of the chosen day in
+- [x] 1.2 Plan the import with the existing add/product rules: items at the end of the chosen day in
       order, product matching by name key, energy learnt only by products without one, known
       Herkku wins, `products` list creates or replaces, Pikalisäys never a product; the plan keeps
       the products' previous state for Kumoa. Append only: no existing item in the plan's changes.
