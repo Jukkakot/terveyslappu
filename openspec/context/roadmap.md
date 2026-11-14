@@ -19,7 +19,9 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **food-log** (user 2026-11-14): saved meals per slot, calories to Health Connect, eaten / steps / weight curves side by side; requirements in product.md "Food log: why". Next: /opsx:propose.
+- **food-log** (user 2026-11-14): saved meals per slot, calories to Health Connect, Energia tab next to Paino/BMI; also regroups Asetukset into a list of sub-screens (user 2026-11-14). Requirements in product.md "Food log: why". Proposed; open: treat mark, chart details.
+- **steps** (user 2026-11-14, after food-log): steps from Garmin through Health Connect as its own change.
+- **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis.
 
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
   (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current

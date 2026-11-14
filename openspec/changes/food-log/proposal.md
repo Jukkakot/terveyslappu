@@ -28,6 +28,11 @@ eating and weight move together (product.md "Food log: why", BR1–BR6).
   streaks or red numbers (BR2, BR5).
 - The data file (Vie/Tuo tiedot, backup) carries two new kinds: the logged foods and the saved
   items, so a phone move and a restore keep the learnt dishes.
+- **Asetukset regrouped** (user 2026-11-14): the long page becomes a list of rows (icon, name,
+  one line of current state, chevron), each opening its own sub-screen: Omat tiedot, Automaattinen
+  punnitus, Ruokakirjaus (new: manage saved items and meals), Tiedot ja varmuuskopio, Ulkoasu,
+  Tuki. Warnings show on the main list's row. Links into a section open its sub-screen directly;
+  back returns where the user came from. Sub-screen contents stay as they are.
 - Ohje gets a section on the food log. Version 1.21.
 - Steps (BR2's "moved") are **not** in this change: a separate change after this one (open
   question 1).
@@ -40,14 +45,15 @@ eating and weight move together (product.md "Food log: why", BR1–BR6).
 
 ### Modified Capabilities
 - `weight-chart`: Historia's tabs gain Energia with its chart, statistics and list.
-- `home-screen`: the simple home screen gains the "Syöty tänään" row.
+- `home-screen`: the simple home screen gains the "Syöty tänään" row; the Asetukset screen
+  becomes a list of sub-screens.
 - `data-file`: two new data kinds, `foods` and `food_items`.
 - `help-page`: an Ohje section on the food log.
 
 ## Impact
 
 - App screens: new Ruoka day screen and item picker/editor dialogs; home screen row; Historia
-  Energia tab; Ohje text.
+  Energia tab; Asetukset split into a main list and six sub-screens; Ohje text.
 - Health Connect: new permissions READ_NUTRITION and WRITE_NUTRITION (asked when the food log is
   first opened, not at app start); reads only this app's nutrition records.
 - App storage: saved items and meals, and each logged item's slot and treat mark (Health Connect's

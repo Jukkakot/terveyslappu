@@ -41,6 +41,15 @@ ignoring case.
 - **WHEN** the user changes it to 150 kcal / 100 g
 - **THEN** yesterday still shows 350 kcal and a new log of 250 g gives 375 kcal
 
+### Requirement: Ruokakirjaus in Asetukset
+Asetukset's Ruokakirjaus sub-screen SHALL list the saved meals and saved items with their kcal per
+usual portion or serving, and SHALL let the user add, edit and remove them. Its row in Asetukset
+SHALL read the counts ("12 ruokaa, 3 ateriaa").
+
+#### Scenario: See what usual dishes contain
+- **WHEN** the user opens Ruokakirjaus
+- **THEN** Jauhelihakastike shows 140 kcal / 100 g and 350 kcal per 250 g
+
 ### Requirement: Saved meals
 The user SHALL be able to save a meal: a name, a slot and a list of saved items with amounts. One
 tap on it in its slot SHALL log all its items with those amounts, each as its own logged item.
