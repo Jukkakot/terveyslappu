@@ -6,11 +6,12 @@ Weight, food and steps are now all in Historia, one quantity per tab. Energia an
 
 ## What Changes
 
-- A fifth Historia tab **Yhdistelmä** after Askeleet. It shows the chosen quantities as **stacked panels on one shared time axis** (no two-axis plot): Paino (weight line, weight scale), Energia (daily kcal bars with the treats' share, 7-day average line) and Askeleet (daily step bars, 7-day average line), always in that order, top to bottom.
+- A fifth Historia tab **Yhdistelmä** after Askeleet: the one tab whose quantities are chosen and stacked. It shows the chosen quantities as **stacked panels on one shared time axis** (no two-axis plot): Paino (weight line, weight scale), Energia (daily kcal bars with the treats' share, 7-day average line) and Askeleet (daily step bars, 7-day average line), always in that order, top to bottom.
 - **Choice chips** on the tab (Paino, Energia, Askeleet; any combination, at least one stays on), remembered, all three on by default.
-- Uses Historia's period chips; one shared x-axis (dates under the bottom panel only), the same weekly bars over 90 days as the single tabs.
-- **Crosshair:** tapping, or press-and-hold then dragging, puts one vertical line through all panels at that day, and one readout above the panels shows that day's weight, kcal and steps. A plain horizontal swipe still switches tabs.
-- A panel with no data or no permission keeps its place with a one-line reason (and a grant button), so the layout does not jump.
+- Uses Historia's period chips; one shared x-axis and one date row under the whole stack, the same weekly bars over 90 days as the single tabs. Kaikki starts at the first day with data among the shown panels whose data is loaded.
+- **Crosshair:** tapping, or press-and-hold then dragging, puts one vertical line through all panels at that day (over 90 days at the week), and one readout above the panels shows the weight, kcal and steps. A plain horizontal swipe still switches tabs.
+- A panel with no data or no permission keeps its place and height with a centred message (and a grant button), so the layout does not jump.
+- TalkBack gets "Edellinen päivä" / "Seuraava päivä" actions on the stack.
 - Nothing new is read or stored beyond the chip choice; no list of days under the panels. Not in this change: BMI panel (Q13), user-orderable panels, a front page combined card, exports of the chart.
 - Parts touched: Historia (HistoryScreen, EnergyPage/StepsPage drawing extracted for reuse), app preferences (chip choice), Ohje.
 

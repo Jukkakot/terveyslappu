@@ -3,27 +3,25 @@
 ### Requirement: Combined chart tab
 Historia SHALL have a fifth tab "Yhdistelmä" after Askeleet that shows the weight, the energy and
 the steps of the chosen period as separate panels stacked on one shared time axis, never as one
-plot with two value axes. This is the one tab that shows more than one quantity; "One quantity at
-a time" otherwise stays. Above the panels, filter chips Paino, Energia and Askeleet SHALL let the
-user pick which panels are shown, in any combination; the last shown panel cannot be switched
-off. The choice SHALL be remembered between app starts, and by default all three are on. The
-panels SHALL always be in the order Paino, Energia, Askeleet from top to bottom, each with its own
-value scale and unit label, drawn like on its own tab (weight line on the weight scale; kcal bars
-with the treats' tone and the 7-day average line; step bars and the 7-day average line; weekly
-bars over 90 days; gaps for days without data, never zero). The time axis SHALL span the chosen
-period (Kaikki: from the first day with data in any shown panel), with its dates only under the
-bottom panel. The tab SHALL show no statistics and no list. Opening the tab SHALL NOT ask for any
-permission by itself.
+plot with two value axes. It is the one tab whose quantities are chosen and stacked; the other
+tabs stay one quantity each. Filter chips Paino, Energia and Askeleet SHALL let the user pick the
+shown panels in any combination; the last shown panel cannot be switched off. The choice SHALL be
+remembered, all three on by default. Panels SHALL be in the order Paino, Energia, Askeleet, each
+with its own scale and unit, drawn like on its own tab. The time axis SHALL span the chosen
+period, with one date row under the whole stack. Kaikki starts at the first day with data among
+the shown panels whose data is loaded. The tab SHALL show no statistics and no list, and SHALL NOT
+ask for any permission by itself. Historia SHALL stay on Yhdistelmä while it is composed, and
+reopening Historia shows Paino.
 
 #### Scenario: All three panels
 - **GIVEN** weights, food and steps in the last 30 days and all chips on
 - **WHEN** the user opens Yhdistelmä for 1 kk
-- **THEN** three panels are stacked, weight, energy, steps, over the same 30 days, with dates only under the steps panel
+- **THEN** three panels are stacked, weight, energy, steps, over the same 30 days, with one date row under the stack
 
 #### Scenario: Pick panels
 - **GIVEN** all chips on
 - **WHEN** the user switches Energia off
-- **THEN** only the weight and steps panels are shown, on the same axis, and the choice stays after a restart
+- **THEN** only the weight and steps panels are shown, on the same axis and taller, and the choice stays after a restart
 
 #### Scenario: Last panel stays
 - **GIVEN** only Paino is on
@@ -34,43 +32,81 @@ permission by itself.
 - **WHEN** weight and steps are both shown
 - **THEN** each has its own panel and scale; no panel has a second value axis
 
+#### Scenario: Kaikki start
+- **GIVEN** Kaikki and steps data that loads later than the weights
+- **THEN** the axis starts at the first day with data of the loaded panels and may move earlier when the steps load
+
+#### Scenario: Weekly bars
+- **WHEN** the period is over 90 days
+- **THEN** kcal and steps are weekly bars, one "viikoittain" note is above the panels, and partial first and last weeks are clipped to the period
+
 #### Scenario: Swipe still switches tabs
-- **WHEN** the user swipes the panels sideways without holding
+- **WHEN** the user swipes or flings the panels sideways without holding
 - **THEN** Historia switches tab as on the other tabs and no crosshair appears
+
+#### Scenario: Staying on the tab
+- **GIVEN** Yhdistelmä is shown
+- **WHEN** the user leaves Historia and opens it again
+- **THEN** Paino is shown
 
 ### Requirement: Combined chart crosshair
 Tapping a panel, or pressing and holding and then dragging sideways, SHALL place one vertical
-line at that day through all shown panels and SHALL show above them one readout of the day: the
-date and, for each shown panel, its value (weight in kg of that day, or "ei painoa"; kcal;
-steps, or "ei tietoa"). Tapping the same place again or tapping outside the panels SHALL remove
-it. Changing the period or the chips SHALL remove it. In weekly bars the readout SHALL name the
-week and give the averages.
+line at that day through all shown panels and SHALL show above them one readout: the date and, for
+each shown panel, its value (weight in kg or "ei painoa"; kcal or "ei kirjauksia"; steps or "ei
+tietoa"). A panel without its permission SHALL be left out of the readout. After a press-and-hold
+the drag SHALL own both axes until release. Tapping a panel SHALL never open anything. Tapping the
+readout or the panels' empty margin SHALL remove the crosshair; leaving the tab, a period or chip
+change and leaving Historia SHALL remove it; a data reload SHALL keep it. Over 90 days the line
+SHALL snap to the week and be drawn at the week's centre. TalkBack SHALL offer "Edellinen päivä"
+and "Seuraava päivä" actions on the panels, starting from the newest day, and the readout SHALL be
+a polite live region updated only on tap or drop.
 
 #### Scenario: Tap a day
 - **GIVEN** 1 kk with all three panels
 - **WHEN** the user taps a day with all three quantities
 - **THEN** a line crosses the three panels and the readout shows that date, the weight, the kcal and the steps
 
-#### Scenario: Day without steps
-- **WHEN** the user taps a day with weight and food but no steps
-- **THEN** the readout shows the weight and kcal and "ei tietoa" for the steps
+#### Scenario: Day without data
+- **WHEN** the user taps a day with weight but no food and no steps
+- **THEN** the readout shows the weight, "ei kirjauksia" for kcal and "ei tietoa" for the steps
+
+#### Scenario: Today
+- **WHEN** the user taps today
+- **THEN** the readout shows today's running values without a mark
 
 #### Scenario: Scrub
-- **WHEN** the user presses and holds on a panel and drags sideways
-- **THEN** the line and the readout follow the finger day by day
+- **WHEN** the user presses and holds on a panel and drags sideways and up or down
+- **THEN** the line and the readout follow the finger day by day and the page does not scroll until release
+
+#### Scenario: Week readout
+- **GIVEN** a period over 90 days
+- **WHEN** the user taps a week
+- **THEN** the line is at the week's centre and the readout reads "vk 46 (10.–16.11.)" with the week's average weight (without "?" weights), the average kcal and the average steps per logged day, today left out, and "ei tietoa" for a part with no days
+
+#### Scenario: Clearing
+- **GIVEN** a crosshair
+- **WHEN** the user taps the readout, or changes a chip, the period or the tab
+- **THEN** the crosshair is removed
+
+#### Scenario: Step through days
+- **GIVEN** TalkBack on the panels
+- **WHEN** the user runs "Edellinen päivä" with no crosshair
+- **THEN** the newest day is chosen and the readout is announced
 
 ### Requirement: Combined chart panels without data
-A panel whose quantity has no data in the chosen period SHALL keep its place and show one line
-instead of the drawing: "Ei painoja tällä jaksolla", "Ei ruokakirjauksia tällä jaksolla" or
-"Ei askeleita tällä jaksolla". A panel without its permission SHALL show the reason of its own tab
-with its grant button (Ruokakirjaus and steps; weights need none). While a panel's data is still
-loading it SHALL show a progress indicator. The other panels SHALL be unaffected.
+A panel whose quantity has no data in the chosen period SHALL keep its place and its height and
+show one centred line instead of the drawing: "Ei painoja tällä jaksolla", "Ei ruokakirjauksia
+tällä jaksolla" or "Ei askeleita tällä jaksolla". A panel without its permission SHALL show the
+reason of its own tab with its grant button (Ruokakirjaus and steps; weights need none). While a
+panel's data is still loading it SHALL show a progress indicator. The other panels SHALL be
+unaffected. Panel heights SHALL be 112 dp for three shown panels, 136 dp for two and 160 dp for
+one.
 
 #### Scenario: No steps permission
 - **GIVEN** the steps permission is not granted and all chips are on
 - **WHEN** Yhdistelmä is shown
-- **THEN** the weight and energy panels are drawn and the steps panel shows the reason and a grant button
+- **THEN** the weight and energy panels are drawn and the steps panel, at the same height, shows the reason and a grant button
 
 #### Scenario: No food in the period
 - **GIVEN** nothing is logged in the period
-- **THEN** the energy panel shows "Ei ruokakirjauksia tällä jaksolla" and the other panels are drawn
+- **THEN** the energy panel shows "Ei ruokakirjauksia tällä jaksolla" at its usual height and the other panels are drawn

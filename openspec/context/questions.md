@@ -11,3 +11,4 @@ is folded into a change or a context file.
 | Q11 | combined-chart: a new last Historia tab "Yhdistelmä" (stacked panels Paino, Energia, Askeleet, same time axis). Right name and place, or should it be the first tab or a mode of an existing tab? | New last tab named Yhdistelmä; Historia still opens on Paino. |
 | Q12 | combined-chart: which panels are on by default, and may you switch any off? | All three on by default, any combination, at least one stays on, choice remembered. |
 | Q13 | combined-chart: should BMI be a fourth panel option? | No: it is derived from weight and would only repeat the weight line. |
+| Q14 | home-card-order: in edit mode, are the cards shown as a compact list of rows (name, ↑, ↓, drag handle) instead of the real cards side by side? | Compact list: food and steps share a row outside edit mode, so dragging the real cards cannot work cleanly. |
