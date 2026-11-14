@@ -20,9 +20,15 @@ class PeriodPrefs(context: Context) {
 
     fun saveFoodDays(days: Long) = prefs.edit().putLong(FOOD_KEY, days).apply()
 
+    /** The steps card's own period in days (home-screen "Steps card on the home screen"). */
+    fun loadStepsDays(): Long = HomeSummary.homeDays(prefs.getLong(STEPS_KEY, HomeSummary.DEFAULT_DAYS))
+
+    fun saveStepsDays(days: Long) = prefs.edit().putLong(STEPS_KEY, days).apply()
+
     private companion object {
         const val KEY = "period"
         const val HOME_KEY = "homeDays"
         const val FOOD_KEY = "foodDays"
+        const val STEPS_KEY = "stepsDays"
     }
 }

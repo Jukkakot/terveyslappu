@@ -54,6 +54,9 @@ import fi.jukkakot.terveyslappu.ui.MainViewModel
 import fi.jukkakot.terveyslappu.ui.FoodAccess
 import fi.jukkakot.terveyslappu.ui.FoodActions
 import fi.jukkakot.terveyslappu.ui.FoodViewModel
+import fi.jukkakot.terveyslappu.ui.Access
+import fi.jukkakot.terveyslappu.ui.StepsActions
+import fi.jukkakot.terveyslappu.ui.StepsViewModel
 import kotlinx.coroutines.flow.merge
 import java.time.LocalDate
 import fi.jukkakot.terveyslappu.ui.TerveysTheme
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
     private val foodModel: FoodViewModel by viewModels()
+    private val stepsModel: StepsViewModel by viewModels()
 
     /** What to do once the nutrition permission screen returns granted (food-log design 8). */
     private var afterFoodGrant: (() -> Unit)? = null
@@ -122,6 +126,20 @@ class MainActivity : ComponentActivity() {
                     viewModel.openFood()
                     if (foodModel.state.value.access == FoodAccess.NEEDS) grantFood()
                 }
+                val steps by stepsModel.state.collectAsStateWithLifecycle()
+                // steps design 8: only READ_STEPS, asked from the steps card or the Askeleet tab.
+                val stepsLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                ) { granted -> stepsModel.onPermissionResult(granted) }
+                fun grantSteps() {
+                    stepsModel.onPermissionRequested()
+                    launchSafely("hc.permission.steps") { stepsLauncher.launch(stepsModel.steps.permissions) }
+                }
+                // The front page reads the steps card's range whenever it is shown (steps "Refresh and failed reads").
+                val homeShown = state.screen == Screen.HOME && state.access == Access.GRANTED
+                LaunchedEffect(homeShown, state.stepsDays) {
+                    if (homeShown) stepsModel.show(LocalDate.now().minusDays(state.stepsDays - 1))
+                }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
@@ -181,6 +199,7 @@ class MainActivity : ComponentActivity() {
                 LifecycleResumeEffect(Unit) {
                     viewModel.refreshAccess()
                     foodModel.refresh()
+                    stepsModel.refresh()
                     listenTick++
                     WeighInWidget.update(this@MainActivity)
                     onPauseOrDispose {}
@@ -213,6 +232,14 @@ class MainActivity : ComponentActivity() {
                     listen = listenUi,
                     food = food,
                     baseProducts = (application as TerveysApp).baseProducts,
+                    steps = steps,
+                    stepsActions = StepsActions(
+                        onGrant = ::grantSteps,
+                        onOpenSettings = { open(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)) },
+                        onOpen = viewModel::openSteps,
+                        onPeriod = viewModel::onStepsPeriod,
+                        onShown = stepsModel::show,
+                    ),
                     foodActions = FoodActions(
                         onOpenDay = ::openFoodDay,
                         onAdd = { day ->
@@ -314,6 +341,9 @@ class MainActivity : ComponentActivity() {
                         onHomePeriod = viewModel::onHomePeriod,
                         onFoodPeriod = viewModel::onFoodPeriod,
                         onOpenEnergy = viewModel::openEnergy,
+                        onStepsPeriod = viewModel::onStepsPeriod,
+                        onOpenSteps = viewModel::openSteps,
+                        onStepsShown = viewModel::stepsShown,
                         onOpenWeek = viewModel::openWeek,
                         onListenEnabled = { on ->
                             listen.setEnabled(on)

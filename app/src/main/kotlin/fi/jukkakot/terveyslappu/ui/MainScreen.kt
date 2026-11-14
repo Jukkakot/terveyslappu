@@ -33,6 +33,7 @@ import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.listen.ListenSettings
 import fi.jukkakot.terveyslappu.listen.ListenUi
+import fi.jukkakot.terveyslappu.steps.StepsUiState
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.LocalDateTime
 
@@ -67,6 +68,11 @@ class MainActions(
     val onPeriod: (Period) -> Unit = {},
     val onHomePeriod: (Long) -> Unit = {},
     val onFoodPeriod: (Long) -> Unit = {},
+    val onStepsPeriod: (Long) -> Unit = {},
+    /** The steps card: Historia on Askeleet. */
+    val onOpenSteps: () -> Unit = {},
+    /** Historia opened on Askeleet after the steps card. */
+    val onStepsShown: () -> Unit = {},
     /** The food card: Historia on Energia. */
     val onOpenEnergy: () -> Unit = {},
     /** Ruoka's Viikko: Historia on Energia with 1 vk. */
@@ -103,14 +109,16 @@ fun MainScreen(
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
     baseProducts: List<fi.jukkakot.terveyslappu.food.BaseProduct> = emptyList(),
+    steps: StepsUiState = StepsUiState(),
+    stepsActions: StepsActions = StepsActions(),
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
     val screen = if ((state.screen == Screen.HISTORY || state.screen == Screen.FOOD) && !granted) Screen.HOME else state.screen
     BackHandler(enabled = screen != Screen.HOME) { actions.onBack() }
     when (screen) {
-        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions)
-        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions)
+        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions, steps, stepsActions)
+        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions, steps, stepsActions)
         Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions)
         Screen.HELP -> HelpScreen(actions)
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)

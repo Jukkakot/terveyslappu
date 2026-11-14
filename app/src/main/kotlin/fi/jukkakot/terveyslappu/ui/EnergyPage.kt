@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -81,7 +82,6 @@ private fun EnergyChart(series: EnergySeries, weights: List<WeightEntry>, zone: 
     val treat = colors.tertiary
     val line = colors.onSurface
     val grid = colors.outlineVariant
-    val weightColor = colors.secondary
     val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
     val top = max(series.bars.maxOf { it.total }, series.average.maxOfOrNull { it.kcal } ?: 0)
     val maxKcal = (ceil(top * 1.1 / 500.0) * 500).coerceAtLeast(500.0)
@@ -134,32 +134,43 @@ private fun EnergyChart(series: EnergySeries, weights: List<WeightEntry>, zone: 
             }
         }
         Legend(food, treat, line, series.average.size > 1)
-        // The weights of the same days, on the same x positions, with the shared weight scale.
-        val shown = weights.filter { val d = it.time.atZone(zone).toLocalDate(); d >= series.from && d <= series.to }.sortedBy { it.time }
-        if (shown.isNotEmpty()) {
-            val scale = WeightScale.of(shown.map { it.kg })
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics {}) {
-                Text("${formatKg(scale.max)} kg", style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            }
-            Canvas(Modifier.fillMaxWidth().height(64.dp).testTag("energyWeights")) {
-                val start = series.from.atStartOfDay(zone).toInstant().epochSecond
-                val spanSeconds = days * 86_400f
-                fun at(e: WeightEntry) = Offset(
-                    size.width * ((e.time.epochSecond - start) / spanSeconds).coerceIn(0f, 1f),
-                    size.height * ((scale.max - e.kg) / scale.span).toFloat(),
-                )
-                if (shown.size > 1) {
-                    val path = Path()
-                    shown.forEachIndexed { i, e -> at(e).let { p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) } }
-                    drawPath(path, weightColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-                }
-                drawCircle(weightColor, radius = 3.dp.toPx(), center = at(shown.last()))
-            }
-        }
+        PeriodWeights(series.from, series.to, weights, zone, "energyWeights")
         Row(Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics {}) {
             Text(formatShortDay(series.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
             Text(formatShortDay(series.to), style = small, color = colors.onSurfaceVariant)
         }
+    }
+}
+
+/**
+ * The weights of the period's days under a bar chart (Energia, Askeleet), on the same x positions
+ * and with the shared weight scale; nothing when the period has no weights.
+ */
+@Composable
+internal fun PeriodWeights(from: LocalDate, to: LocalDate, weights: List<WeightEntry>, zone: ZoneId, tag: String) {
+    val colors = MaterialTheme.colorScheme
+    val weightColor = colors.secondary
+    val small = MaterialTheme.typography.labelSmall
+    val days = (ChronoUnit.DAYS.between(from, to) + 1).toInt().coerceAtLeast(1)
+    val shown = weights.filter { val d = it.time.atZone(zone).toLocalDate(); d >= from && d <= to }.sortedBy { it.time }
+    if (shown.isEmpty()) return
+    val scale = WeightScale.of(shown.map { it.kg })
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics {}) {
+        Text("${formatKg(scale.max)} kg", style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+    }
+    Canvas(Modifier.fillMaxWidth().height(64.dp).clipToBounds().testTag(tag)) {
+        val start = from.atStartOfDay(zone).toInstant().epochSecond
+        val spanSeconds = days * 86_400f
+        fun at(e: WeightEntry) = Offset(
+            size.width * ((e.time.epochSecond - start) / spanSeconds).coerceIn(0f, 1f),
+            size.height * ((scale.max - e.kg) / scale.span).toFloat(),
+        )
+        if (shown.size > 1) {
+            val path = Path()
+            shown.forEachIndexed { i, e -> at(e).let { p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) } }
+            drawPath(path, weightColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+        }
+        drawCircle(weightColor, radius = 3.dp.toPx(), center = at(shown.last()))
     }
 }
 

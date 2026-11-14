@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -66,13 +69,16 @@ import fi.jukkakot.terveyslappu.chart.ChartDots
 import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.steps.HomeSteps
+import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsUiState
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-/** The home screen: one card per feature (weight on top, then the row of smaller cards: food), each with its own quick action. */
+/** The home screen: one card per feature (weight on top, then the row of smaller cards: food and steps), each with its own quick action. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreen(
@@ -82,6 +88,8 @@ internal fun HomeScreen(
     backup: BackupStatus,
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
+    steps: StepsUiState = StepsUiState(),
+    stepsActions: StepsActions = StepsActions(),
 ) {
     Scaffold(
         topBar = {
@@ -106,14 +114,22 @@ internal fun HomeScreen(
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup, food, foodActions)
+                Access.GRANTED -> HomeContent(state, actions, backup, food, foodActions, steps, stepsActions)
             }
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, food: FoodUiState, foodActions: FoodActions) {
+private fun HomeContent(
+    state: MainUiState,
+    actions: MainActions,
+    backup: BackupStatus,
+    food: FoodUiState,
+    foodActions: FoodActions,
+    steps: StepsUiState,
+    stepsActions: StepsActions,
+) {
     val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
     val summary = remember(state.weights, state.homeDays, state.questioned) {
         state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
@@ -132,9 +148,10 @@ private fun HomeContent(state: MainUiState, actions: MainActions, backup: Backup
             }
         }
         LatestCard(state, summary, today, actions.onHomePeriod, actions.onWeighIn) { actions.onScreen(Screen.HISTORY) }
-        // The row of smaller feature cards; a later steps card takes its right half (home-screen).
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions, Modifier.weight(1f))
+        // The row of smaller feature cards: food in the left half, steps in the right; the taller sets the height (home-screen).
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions, Modifier.weight(1f).fillMaxHeight())
+            StepsCard(steps, state.stepsDays, today, stepsActions, Modifier.weight(1f).fillMaxHeight())
         }
     }
 }
@@ -215,7 +232,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: 
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, onPeriod, "foodPeriod")
             Text(
                 summary.averageKcal?.let { stringResource(R.string.home_food_average, formatKcal(it)) } ?: stringResource(R.string.home_food_no_average),
@@ -223,22 +240,25 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: 
                 color = colors.onSurfaceVariant,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 8.dp)
+                    .padding(start = 4.dp)
                     .clip(innerShape)
                     .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
-                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                    .heightIn(min = 44.dp)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = 4.dp)
                     .testTag("foodAverage"),
             )
-            OutlinedButton(
-                onClick = { actions.onAdd(today) },
-                shape = RoundedCornerShape(20.dp),
-                contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
-                modifier = Modifier.heightIn(min = 44.dp).testTag("homeFoodAdd"),
-            ) {
-                Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.home_food_add))
-            }
+        }
+        Spacer(Modifier.weight(1f))
+        OutlinedButton(
+            onClick = { actions.onAdd(today) },
+            shape = RoundedCornerShape(20.dp),
+            contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).testTag("homeFoodAdd"),
+        ) {
+            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(R.string.home_food_add))
         }
     }
 }
@@ -261,6 +281,100 @@ private fun FoodBars(summary: HomeFood, food: Color, treat: Color, modifier: Mod
             }
         }
         drawLine(food.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+    }
+}
+
+/**
+ * The steps card (home-screen "Steps card on the home screen"), the food card's twin without a
+ * quick action: today's steps, daily bars of its own period, the period's dates and average. A tap
+ * anywhere but the period label opens Askeleet (without the permission: asks for it; after a denial
+ * Askeleet explains); unavailable: no tap action. Free space goes under the bars.
+ */
+@Composable
+private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, actions: StepsActions, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val summary = remember(steps.days, days, today) { HomeSteps.of(steps.days.orEmpty(), days, today) }
+    val onTap: (() -> Unit)? = when (steps.access) {
+        StepsAccess.NEEDS -> actions.onGrant
+        StepsAccess.DENIED, StepsAccess.GRANTED -> actions.onOpen
+        StepsAccess.UNAVAILABLE, StepsAccess.CHECKING -> null
+    }
+    val shows = steps.access == StepsAccess.GRANTED && steps.days != null
+    Column(
+        modifier
+            .clip(cardShape)
+            .background(colors.surfaceContainer)
+            .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_steps), onClick = onTap) else Modifier)
+            .padding(8.dp)
+            .testTag("stepsCard"),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsToday")) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(R.drawable.ic_walk), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.home_steps_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                if (onTap != null) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            }
+            val big = MaterialTheme.typography.displaySmall
+            when {
+                steps.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.steps_unavailable), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+                steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED ->
+                    Text(stringResource(R.string.steps_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+                steps.access == StepsAccess.CHECKING || (steps.days == null && !steps.loadFailed) ->
+                    Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
+                steps.days == null -> Text(stringResource(R.string.steps_read_failed), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp).testTag("stepsFailed"))
+                summary.today != null -> Text(formatSteps(summary.today), style = big, modifier = Modifier.testTag("stepsTodayValue"))
+                else -> Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
+            }
+        }
+        if (!shows) return@Column
+        val small = MaterialTheme.typography.labelSmall
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsBars")) {
+            if (summary.bars.isNotEmpty()) {
+                val description = stringResource(R.string.home_steps_bars, summary.bars.size)
+                StepsBars(summary, colors.primary, Modifier.fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
+            }
+            Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+                Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            HomePeriodLabel(days, actions.onPeriod, "stepsPeriod")
+            Text(
+                summary.averageSteps?.let { stringResource(R.string.home_steps_average, formatSteps(it)) } ?: stringResource(R.string.home_food_no_average),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("stepsAverage"),
+            )
+        }
+        if (steps.stale) {
+            Text(
+                stringResource(R.string.steps_stale),
+                style = small,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp).testTag("stepsStale"),
+            )
+        }
+    }
+}
+
+/** Daily step bars of the period without axes, in one tone. */
+@Composable
+private fun StepsBars(summary: HomeSteps, color: Color, modifier: Modifier) {
+    Canvas(modifier) {
+        val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
+        val max = summary.bars.maxOf { it.steps }.coerceAtLeast(1).toFloat()
+        val dayW = size.width / days
+        for (bar in summary.bars) {
+            val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
+            val width = maxOf(dayW * 0.7f, 1.dp.toPx())
+            val top = size.height * (1 - bar.steps / max)
+            drawRect(color, Offset(left, top), Size(width, size.height - top))
+        }
+        drawLine(color.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
     }
 }
 

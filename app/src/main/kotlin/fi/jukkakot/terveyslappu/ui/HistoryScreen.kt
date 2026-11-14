@@ -71,6 +71,9 @@ import fi.jukkakot.terveyslappu.derived.Derived
 import fi.jukkakot.terveyslappu.derived.Quantity
 import fi.jukkakot.terveyslappu.food.EnergySeries
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsSeries
+import fi.jukkakot.terveyslappu.steps.StepsUiState
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -84,6 +87,8 @@ internal fun HistoryScreen(
     profile: OwnerProfile = OwnerProfile(),
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
+    steps: StepsUiState = StepsUiState(),
+    stepsActions: StepsActions = StepsActions(),
 ) {
     Scaffold(
         topBar = {
@@ -100,7 +105,7 @@ internal fun HistoryScreen(
             when {
                 state.loadFailed && all == null -> Notice(stringResource(R.string.recent_failed))
                 all == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> PeriodList(state, all, actions, profile, food, foodActions)
+                else -> PeriodList(state, all, actions, profile, food, foodActions, steps, stepsActions)
             }
         }
     }
@@ -109,7 +114,16 @@ internal fun HistoryScreen(
 
 /** Chips, chart and stats scroll away above the period's weights, so the list keeps room on a small phone. */
 @Composable
-private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions) {
+private fun PeriodList(
+    state: MainUiState,
+    all: List<WeightEntry>,
+    actions: MainActions,
+    profile: OwnerProfile,
+    food: FoodUiState,
+    foodActions: FoodActions,
+    steps: StepsUiState,
+    stepsActions: StepsActions,
+) {
     val zone = ZoneId.systemDefault()
     val now = remember(state.loadedAt, state.period) { state.loadedAt ?: Instant.now() }
     val today = LocalDate.now(zone)
@@ -155,10 +169,24 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
         )
     }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
-    // Paino, BMI, then Energia (food-log); back from Ruoka opened from Energia returns to it.
-    val pager = rememberPagerState(initialPage = if (state.historyOnEnergy) ENERGY_PAGE else 0) { ENERGY_PAGE + 1 }
-    LaunchedEffect(Unit) { if (state.historyOnEnergy) actions.onEnergyShown() }
+    // Paino, BMI, Energia (food-log), then Askeleet (steps); back from Ruoka opened from Energia returns to it.
+    val initialPage = when {
+        state.historyOnSteps -> STEPS_PAGE
+        state.historyOnEnergy -> ENERGY_PAGE
+        else -> 0
+    }
+    val pager = rememberPagerState(initialPage = initialPage) { STEPS_PAGE + 1 }
+    LaunchedEffect(Unit) {
+        if (state.historyOnEnergy) actions.onEnergyShown()
+        if (state.historyOnSteps) actions.onStepsShown()
+    }
     val onEnergy = pager.currentPage == ENERGY_PAGE
+    val onSteps = pager.currentPage == STEPS_PAGE
+    // Entering Askeleet (or changing its period) reads the shown range again (steps "Refresh and failed reads").
+    LaunchedEffect(onSteps, state.period) {
+        if (onSteps) stepsActions.onShown(if (state.period == Period.All) null else StepsSeries.dates(state.period, today, null).first)
+    }
+    val stepsSeries = remember(steps.days, state.period, today) { StepsSeries.of(steps.days.orEmpty(), state.period, today) }
     // The nutrition permission is asked when Energia is first opened (review decision).
     LaunchedEffect(onEnergy) { if (onEnergy && food.access == FoodAccess.NEEDS) foodActions.onGrant() }
     val series = remember(food.items, state.period, today) { EnergySeries.of(food.items.orEmpty(), state.period, today) }
@@ -197,11 +225,19 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
                     text = { Text(stringResource(R.string.quantity_energy), maxLines = 1) },
                     modifier = Modifier.testTag("tab-ENERGY"),
                 )
+                Tab(
+                    selected = onSteps,
+                    onClick = { scope.launch { pager.animateScrollToPage(STEPS_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_steps), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-STEPS"),
+                )
             }
         }
         item(key = "pager") {
             HorizontalPager(pager, verticalAlignment = Alignment.Top) { page ->
-                if (page == ENERGY_PAGE) {
+                if (page == STEPS_PAGE) {
+                    StepsTab(steps, stepsSeries, shown, zone, stepsActions)
+                } else if (page == ENERGY_PAGE) {
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
                         food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -212,7 +248,13 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
                 }
             }
         }
-        if (onEnergy) {
+        if (onSteps) {
+            val stepDays = if (steps.access == StepsAccess.GRANTED && steps.days != null) stepsSeries.days else emptyList()
+            items(stepDays, key = { "steps-${it.day}" }) { day ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                StepsDayRow(day, today)
+            }
+        } else if (onEnergy) {
             items(if (food.access == FoodAccess.GRANTED) series.days else emptyList(), key = { "energy-${it.day}" }) { day ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 EnergyDayRow(day, today) { foodActions.onOpenDay(it) }
@@ -235,6 +277,7 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
 }
 
 private val ENERGY_PAGE = Quantity.entries.size
+private val STEPS_PAGE = ENERGY_PAGE + 1
 
 /** Energia without the nutrition permission: the reason and a button to grant it (weight-chart). */
 @Composable

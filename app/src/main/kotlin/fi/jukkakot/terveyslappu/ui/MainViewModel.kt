@@ -76,6 +76,8 @@ data class MainUiState(
     val homeDays: Long = HomeSummary.DEFAULT_DAYS,
     /** The front page food card's own chart period in days. */
     val foodDays: Long = HomeSummary.DEFAULT_DAYS,
+    /** The front page steps card's own chart period in days. */
+    val stepsDays: Long = HomeSummary.DEFAULT_DAYS,
     /** Whether weights older than 30 days can be read; null until checked. */
     val history: HistoryAccess? = null,
     val loadFailed: Boolean = false,
@@ -95,6 +97,8 @@ data class MainUiState(
     val foodOrigin: Screen = Screen.HOME,
     /** Historia opens on Energia (back from Ruoka opened from the Energia tab); otherwise on Paino. */
     val historyOnEnergy: Boolean = false,
+    /** Historia opens on Askeleet (the front page steps card). */
+    val historyOnSteps: Boolean = false,
     /** Where Historia was opened from: FOOD for Ruoka's Viikko (back returns there), otherwise HOME. */
     val historyOrigin: Screen = Screen.HOME,
 ) {
@@ -109,7 +113,7 @@ data class MainUiState(
         screen == Screen.HOME -> this
         screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME)
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME)
-        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false)
+        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false)
         settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
@@ -176,7 +180,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays()))
+    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays(), stepsDays = periodPrefs.loadStepsDays()))
     val state: StateFlow<MainUiState> = _state
 
     fun onPeriod(period: Period) {
@@ -197,6 +201,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppLog.i("home.period", "", "card" to "food", "days" to chosen)
         periodPrefs.saveFoodDays(chosen)
         _state.update { it.copy(foodDays = chosen) }
+    }
+
+    fun onStepsPeriod(days: Long) {
+        val chosen = HomeSummary.homeDays(days)
+        AppLog.i("home.period", "", "card" to "steps", "days" to chosen)
+        periodPrefs.saveStepsDays(chosen)
+        _state.update { it.copy(stepsDays = chosen) }
     }
 
     /** The history permission screen returned (chart notice): read again with what is now allowed. */
@@ -243,7 +254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME)
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOrigin = Screen.HOME)
     }
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
@@ -257,6 +268,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The front page food card: Historia on Energia; back returns home. */
     fun openEnergy() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = true, historyOrigin = Screen.HOME) }
+
+    /** The front page steps card: Historia on Askeleet; back returns home. */
+    fun openSteps() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = false, historyOnSteps = true, historyOrigin = Screen.HOME) }
+
+    /** Historia has opened its Askeleet page. */
+    fun stepsShown() = _state.update { it.copy(historyOnSteps = false) }
 
     /** Historia has opened its Energia page. */
     fun energyShown() = _state.update { it.copy(historyOnEnergy = false) }
