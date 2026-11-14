@@ -20,17 +20,17 @@
 
 ## 3. Background listening
 
-- [ ] 3.1 Trial preferences (own file, excluded from backup and device transfer): switch, start,
+- [x] 3.1 Trial preferences (own file, excluded from backup and device transfer): switch, start,
       end, mode (default Säästö), power-saving switch (default on), last heard, accumulator state.
-- [ ] 3.2 PendingIntent scan start/stop per design 2-3; result receiver feeds the accumulator,
+- [x] 3.2 PendingIntent scan start/stop per design 2-3; result receiver feeds the accumulator,
       logs per design 10.
-- [ ] 3.3 Alarms per design 4 (start, end, hourly check); end logs the summary and clears;
+- [x] 3.3 Alarms per design 4 (start, end, hourly check); end logs the summary and clears;
       settings changes re-plan at once.
-- [ ] 3.4 Re-arm on boot, app update and app start when nothing is armed; switch off stops the
+- [x] 3.4 Re-arm on boot, app update and app start when nothing is armed; switch off stops the
       scan, cancels alarms and logs `reason=off`.
-- [ ] 3.5 Manifest: receivers, `RECEIVE_BOOT_COMPLETED`; backup exclusion rules. Robolectric test:
+- [x] 3.5 Manifest: receivers, `RECEIVE_BOOT_COMPLETED`; backup exclusion rules. Robolectric test:
       enabling inside the window starts the scan, outside schedules the start.
-- [ ] 3.6 `ScaleReplayTest` and the replay notes in `.claude/CLAUDE.md` skip `src=bg` lines.
+- [x] 3.6 `ScaleReplayTest` and the replay notes in `.claude/CLAUDE.md` skip `src=bg` lines.
 
 ## 4. Asetukset section
 

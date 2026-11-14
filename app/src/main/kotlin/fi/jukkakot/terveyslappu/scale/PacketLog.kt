@@ -54,9 +54,12 @@ object PacketLog {
         )
     }
 
-    /** Runs the weigh-in decision over a log's packet lines, as the phone did. */
+    /** The background listen trial's packets (`src=bg`), which are not part of a dialog weigh-in. */
+    fun isBackground(line: String): Boolean = line.contains(" src=bg")
+
+    /** Runs the weigh-in decision over a log's dialog packet lines (`src=bg` skipped), as the phone did. */
     fun replay(lines: List<String>, decision: StableWeight = StableWeight()): StableResult? {
-        for (packet in lines.mapNotNull(::parse)) {
+        for (packet in lines.filterNot(::isBackground).mapNotNull(::parse)) {
             if (!ScalePacket.isScale(packet.name, packet.companyId)) continue
             decision.onTick(packet.atMs)?.let { return it }
             val reading = ScalePacket.decode(packet.data) ?: continue

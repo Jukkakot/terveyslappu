@@ -33,7 +33,7 @@ class MemoryLastWeighIn : LastWeighInStore {
 }
 
 /** App-private preferences, so reopening the widget right after Poista still knows the id. */
-class LastWeighInPrefs(context: Context) : LastWeighInStore {
+class LastWeighInPrefs(context: Context, private val onScale: () -> Unit = {}) : LastWeighInStore {
     private val prefs = context.getSharedPreferences("weighin", Context.MODE_PRIVATE)
 
     override fun load(): Pair<Int, Instant>? {
@@ -48,7 +48,9 @@ class LastWeighInPrefs(context: Context) : LastWeighInStore {
     override fun scale(): KnownScale? = prefs.getString(ADDRESS, null)?.let { KnownScale(it, prefs.getString(NAME, null)) }
 
     override fun saveScale(scale: KnownScale) {
+        val changed = scale != this.scale()
         prefs.edit().putString(ADDRESS, scale.address).putString(NAME, scale.name).apply()
+        if (changed) onScale()
     }
 
     private companion object {

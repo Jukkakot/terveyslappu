@@ -52,7 +52,7 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   dialog, view models, theme + `AppearancePrefs` (singleton in `TerveysApp`), formats; `chart/HomeSummary` is the home card's pure data, `chart/WeightScale` the shared y-scale), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
-- Replay a shared weigh-in log: copy its `scale.packet` lines into
+- Replay a shared weigh-in log: copy its dialog `scale.packet` lines (not `src=bg`, the listen trial's; replay skips those) into
   `app/src/test/resources/scale-replays/<case>.replay`, replace the weight bytes with made-up
   ones (NFR-1), first line `# expect kg=<weight>` or `# expect none`; `ScaleReplayTest` runs all.
 - Checks: `./gradlew test lint assembleDebug` (same in CI). The cloud session-start hook installs

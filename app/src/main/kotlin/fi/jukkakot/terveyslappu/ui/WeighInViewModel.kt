@@ -35,7 +35,8 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
             (app as TerveysApp).backup.request("weighin")
         },
         archive = (app as TerveysApp).rawArchive,
-        last = LastWeighInPrefs(app),
+        // A new scale re-plans background listening at once (its filters follow the remembered scale).
+        last = LastWeighInPrefs(app) { (app as TerveysApp).listen.replan("scale") },
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )

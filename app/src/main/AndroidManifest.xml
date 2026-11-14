@@ -14,6 +14,8 @@
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- background-weigh-in: re-arm the listen trial after a phone restart. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="false" />
@@ -87,6 +89,21 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/weigh_in_widget" />
+        </receiver>
+
+        <!-- background-weigh-in: the listen trial's scan results and alarms (our PendingIntents only). -->
+        <receiver
+            android:name=".listen.ListenReceiver"
+            android:exported="false" />
+
+        <!-- background-weigh-in: re-arms the trial after boot and app updates. -->
+        <receiver
+            android:name=".listen.ListenBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
 
         <!-- Health Connect shows this when the user asks why the app wants access. -->

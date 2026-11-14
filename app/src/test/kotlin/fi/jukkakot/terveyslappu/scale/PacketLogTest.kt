@@ -54,4 +54,10 @@ class PacketLogTest {
         // The second stable packet decides; it is the one kept raw.
         assertEquals(700L, result.packet!!.atMs)
     }
+
+    @Test
+    fun `replay skips the background trial's packets`() {
+        val bg = "2026-11-08T07:00:00.500+02:00 D scale.packet t=500 key=12c0 data=0339138b00000100000000000000 rssi=-95 name=Yoda1 addr=00:11:22:33:44:55 src=bg screen=off"
+        assertNull(PacketLog.replay(listOf(bg, bg.replace("t=500", "t=700"))))
+    }
 }
