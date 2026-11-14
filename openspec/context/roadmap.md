@@ -41,10 +41,11 @@ Phases in order; one OpenSpec change each unless noted.
     optimisation, Bluetooth, permission); a notification after every automatic weigh-in; Health
     Connect recording method "automatically recorded", the "?" mark and its confirmation in our own
     storage and the export. Check Health Connect's background write limits first.
-  - Plausibility vs. the previous weight, d = days since it (at least 1): ok if
-    |change| <= 1 kg + 0.1 kg x (d-1); rejected if > 2 kg + 0.3 kg x (d-1); in between saved
-    with "?". The user confirms "?" weights in Historia or from the notification. A rejected
-    weight is not saved; its notification offers "Tallenna silti".
+  - Plausibility (user 2026-11-14, simple on purpose): every automatic weight is saved. One
+    further from the latest confirmed weight (not "?") than a limit in Asetukset (default 5 kg,
+    no time factor) is marked "?"; the user confirms or deletes it in Historia or from the
+    notification, and a confirmed one becomes the new reference (re-calibrates after a long
+    break). A notification after every automatic weigh-in, with Poista.
 - **Help page** (user 2026-11-14): a light in-app guide that presents the features; its own
   small change.
 
