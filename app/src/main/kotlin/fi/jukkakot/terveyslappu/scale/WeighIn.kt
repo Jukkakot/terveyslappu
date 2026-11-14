@@ -130,6 +130,7 @@ class WeighIn(
         val key = decidedKey ?: return
         try {
             keys.touch(key)
+            decided?.let { keys.remember(it.first, decidedScale?.address) }
         } catch (e: Exception) {
             AppLog.e("weighin.last", e, "save")
         }
@@ -268,6 +269,10 @@ class WeighIn(
                     return@collect
                 }
                 val reading = ScalePacket.decode(packet.data) ?: return@collect
+                if (reading.stable && sameWeight(reading.kg, packet.address)) {
+                    AppLog.i("scale.ignore", "", "reason" to "same", "kg" to reading.kg)
+                    return@collect
+                }
                 onReading(reading)
                 decision.onReading(reading, packet.atMs, packet)?.let { result ->
                     // Claimed atomically before saving: the background may have saved this weighing first.
@@ -289,6 +294,13 @@ class WeighIn(
         keys.isTaken(key)
     } catch (e: Exception) {
         AppLog.e("weighin.last", e, "load")
+        false
+    }
+
+    private fun sameWeight(kg: Double, address: String?): Boolean = try {
+        keys.sameWeight(kg, address)
+    } catch (e: Exception) {
+        AppLog.e("weighin.last", e, "same")
         false
     }
 

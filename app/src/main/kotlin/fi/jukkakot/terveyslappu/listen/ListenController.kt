@@ -5,6 +5,7 @@ import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.KnownScale
 import fi.jukkakot.terveyslappu.scale.PacketLog
 import fi.jukkakot.terveyslappu.scale.RawPacket
+import fi.jukkakot.terveyslappu.scale.StableWeight
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
@@ -43,7 +44,20 @@ interface ListenStore {
     fun saveSession(session: ListenSession?)
     fun lastHeard(): LastHeard?
     fun saveLastHeard(heard: LastHeard)
+    /** The window-done record (design 4). */
+    fun done(): WindowDone?
+    fun saveDone(done: WindowDone?)
 }
+
+/**
+ * The unmarked weights of this app saved in the window that started at [windowStartMs] (their
+ * `clientRecordId`s): a non-empty set means the window's weight is in and listening stops.
+ */
+data class WindowDone(val windowStartMs: Long, val ids: Set<String>)
+
+/** True when [done] still holds at [now]: until the next window start after its window's start. Pure. */
+fun WindowDone?.holds(window: ListenWindow, now: Instant, zone: ZoneId): Boolean =
+    this != null && ids.isNotEmpty() && now.isBefore(window.nextStart(Instant.ofEpochMilli(windowStartMs), zone))
 
 /** The phone's state the trial reads. */
 interface ListenDevice {
@@ -71,11 +85,17 @@ interface ListenRadio {
     fun stop()
 }
 
-/** The one alarm that wakes the trial at the window start, the hourly check and the end (design 4). */
+/**
+ * The alarm that wakes the trial at the window start, the hourly check and the end (design 4),
+ * and a second, separate one ([setTick]) that decides a waiting stable reading a few seconds after
+ * it. [cancel] cancels both.
+ */
 interface ListenAlarm {
     fun set(atMs: Long, action: String)
     fun cancel()
     fun armed(): Boolean
+    fun setTick(atMs: Long)
+    fun cancelTick()
 }
 
 /** One manufacturer-data entry of a delivered scan result. */
@@ -184,7 +204,20 @@ class ListenController(
             changed()
             return
         }
-        when (val plan = settings.window.plan(Instant.ofEpochMilli(nowMs), device.zone())) {
+        val now = Instant.ofEpochMilli(nowMs)
+        val plan = settings.window.plan(now, device.zone())
+        if (plan is WindowPlan.Inside && store.done().holds(settings.window, now, device.zone())) {
+            // The window's weight is in: stop for the rest of the window (design 4).
+            radio.stop()
+            store.session()?.let {
+                AppLog.i("listen.stop", "", "reason" to "done")
+                close(it, "done", nowMs)
+            }
+            arm(settings.window.nextStart(now, device.zone()), ACTION_START)
+            changed()
+            return
+        }
+        when (plan) {
             is WindowPlan.Outside -> {
                 radio.stop()
                 store.session()?.let {
@@ -209,7 +242,7 @@ class ListenController(
         if (session != null && reason == ACTION_CHECK) {
             val (ticked, decided) = HeardPackets.tick(session, nowMs - session.startedMs)
             session = ticked
-            decided?.let(sink::decided)
+            decided?.let { sink.decided(it.from(scale.address)) }
         }
         val powerSave = device.powerSave()
         if (reason == ACTION_CHECK) {
@@ -240,6 +273,7 @@ class ListenController(
             session = session.copy(windowEndMs = plan.end.toEpochMilli(), mode = settings.mode.key)
         }
         store.saveSession(session)
+        armTick(session)
         if (!device.healthWrite()) {
             radio.stop()
             AppLog.w("listen.stop", "", "reason" to "hc")
@@ -265,6 +299,56 @@ class ListenController(
         AppLog.w("listen.failed", "", "code" to code)
     }
 
+    /**
+     * This app saved (or accepted) the weight [id] at [timeMs], not marked "?" (design 4): inside
+     * the current window it counts as the window's weight and listening stops.
+     */
+    @Synchronized
+    fun weightSaved(id: String, timeMs: Long) {
+        val zone = device.zone()
+        val (start, end) = store.settings().window.current(Instant.ofEpochMilli(device.nowMs()), zone) ?: return
+        if (timeMs < start.toEpochMilli() || timeMs >= end.toEpochMilli()) return
+        val old = store.done()?.takeIf { it.windowStartMs == start.toEpochMilli() }
+        val ids = (old?.ids ?: emptySet()) + id
+        if (old?.ids == ids) return
+        store.saveDone(WindowDone(start.toEpochMilli(), ids))
+        replan("done")
+    }
+
+    /** A weight of this app was deleted or marked "?": when it was the window's last one, listening resumes. */
+    @Synchronized
+    fun weightRemoved(id: String) {
+        val old = store.done() ?: return
+        if (id !in old.ids) return
+        val ids = old.ids - id
+        store.saveDone(if (ids.isEmpty()) null else old.copy(ids = ids))
+        replan("done")
+    }
+
+    /**
+     * The tick alarm (design 2): decides a stable reading that waited out its quiet time, as the
+     * hourly check does, without replanning anything.
+     */
+    @Synchronized
+    fun onTick() {
+        val session = store.session() ?: return
+        val nowMs = device.nowMs()
+        val (ticked, decided) = HeardPackets.tick(session, nowMs - session.startedMs)
+        AppLog.i("listen.tick", "", "decided" to (decided != null), "pending" to (ticked.pendingKg != null))
+        store.saveSession(ticked)
+        decided?.let { sink.decided(it.from(device.scale()?.address)) }
+        armTick(ticked)
+    }
+
+    /** A stable reading is waiting: wake up just after its quiet time; none waiting: no tick. */
+    private fun armTick(session: ListenSession) {
+        if (session.pendingKg == null) {
+            alarm.cancelTick()
+            return
+        }
+        alarm.setTick(session.startedMs + session.pendingAtMs + StableWeight.DEFAULT_QUIET_MS + TICK_MARGIN_MS)
+    }
+
     /** A delivery from the scan (design 6, 10): logs and accumulates; a late one after the window is dropped. */
     @Synchronized
     fun onResults(results: List<HeardResult>) {
@@ -285,6 +369,7 @@ class ListenController(
             events.forEach { log(it, screen) }
         }
         store.saveSession(session)
+        armTick(session)
         val heard = last
         if (session.packets > before && heard != null) {
             store.saveLastHeard(LastHeard(Instant.ofEpochMilli(session.startedMs + heard.atMs), heard.rssi))
@@ -300,7 +385,7 @@ class ListenController(
             is HeardEvent.OutOfRange -> AppLog.i("auto.skip", "", "reason" to "range", "kg" to event.kg)
             is HeardEvent.Decided -> {
                 AppLog.i("scale.stable", "", "kg" to event.kg, "src" to "bg")
-                sink.decided(event)
+                sink.decided(event.from(device.scale()?.address))
             }
         }
     }
@@ -323,6 +408,7 @@ class ListenController(
             "batteryEnd" to device.battery(),
         )
         store.saveSession(null)
+        alarm.cancelTick()
     }
 
     /** The section's state, read fresh (status, warning, last heard). */
@@ -333,6 +419,7 @@ class ListenController(
         val zone = device.zone()
         val hasScale = device.scale() != null
         val plan = settings.window.plan(now, zone)
+        val nextStart = settings.window.nextStart(now, zone)
         val facts = ListenFacts(
             enabled = settings.enabled,
             hasScale = hasScale,
@@ -343,7 +430,9 @@ class ListenController(
             listenInPowerSave = settings.listenInPowerSave,
             armed = alarm.armed(),
             inside = plan is WindowPlan.Inside,
-            nextStart = settings.window.nextStart(now, zone).atZone(zone).toLocalTime(),
+            nextStart = nextStart.atZone(zone).toLocalTime(),
+            done = store.done().holds(settings.window, now, zone),
+            nextStartTomorrow = nextStart.atZone(zone).toLocalDate().isAfter(now.atZone(zone).toLocalDate()),
         )
         val status = ListenStatusRule.status(facts)
         return ListenUi(
@@ -365,6 +454,8 @@ class ListenController(
         const val ACTION_START = "start"
         const val ACTION_CHECK = "check"
         const val ACTION_END = "end"
+        /** The tick comes this long after a pending reading's quiet time (inexact alarm, a little slack). */
+        const val TICK_MARGIN_MS = 5_000L
         private val clock = DateTimeFormatter.ofPattern("HH:mm")
         private val stampFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
     }

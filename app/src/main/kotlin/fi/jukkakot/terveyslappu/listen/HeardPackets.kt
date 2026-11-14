@@ -57,7 +57,9 @@ sealed interface HeardEvent {
      * A stable weight was decided (background-weigh-in "Save the automatic weight"): [atWallMs] is
      * the deciding reading's time, [companyId] and [data] its packet.
      */
-    class Decided(val kg: Double, val atWallMs: Long, val companyId: Int, val data: ByteArray) : HeardEvent
+    class Decided(val kg: Double, val atWallMs: Long, val companyId: Int, val data: ByteArray, val address: String? = null) : HeardEvent {
+        fun from(address: String?) = Decided(kg, atWallMs, companyId, data, address)
+    }
     /** A distinct stable reading outside 20-300 kg: never saved (`auto.skip reason=range`). */
     data class OutOfRange(val kg: Double) : HeardEvent
 }

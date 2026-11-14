@@ -31,6 +31,7 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
             val id = weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time))
             val terveys = app as TerveysApp
             runCatching { terveys.reference.accepted(listOf(RefPair(id, time.toEpochMilli(), kg))) }.onFailure { AppLog.e("auto.store", it, "reference") }
+            runCatching { terveys.listen.weightSaved(id, time.toEpochMilli()) }.onFailure { AppLog.e("listen.done", it, "saved") }
             terveys.weightsSignal.emit()
             terveys.backup.request("weighin")
         },
@@ -39,6 +40,7 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
             weights.deleteScale(time)
             val terveys = app as TerveysApp
             runCatching { terveys.reference.removed(scaleClientId(time)) }.onFailure { AppLog.e("auto.store", it, "reference") }
+            runCatching { terveys.listen.weightRemoved(scaleClientId(time)) }.onFailure { AppLog.e("listen.done", it, "removed") }
             terveys.weightsSignal.emit()
             terveys.backup.request("weighin")
         },

@@ -227,6 +227,8 @@
     <string name="listen_status_stopped">Pysäytetty: avaa sovellus kerran</string>
     <string name="listen_status_power_save">Tauolla: virransäästötila</string>
     <string name="listen_status_listening">Kuuntelee nyt</string>
+    <string name="listen_status_done">Valmis: tämän päivän paino tallennettu, kuuntelee taas klo %1$s</string>
+    <string name="listen_status_done_tomorrow">Valmis: tämän päivän paino tallennettu, kuuntelee taas huomenna klo %1$s</string>
     <string name="listen_status_resting">Lepää, alkaa klo %1$s</string>
     <string name="listen_battery_warning">Akunkäyttö rajoitettu: kuuntelu voi katketa</string>
     <string name="listen_fix_permission">Anna lupa</string>
@@ -250,7 +252,8 @@
     <string name="auto_accept">Hyväksy</string>
     <string name="auto_delete">Poista</string>
     <string name="auto_summary">Automaattiset punnitukset</string>
-    <string name="widget_state_on">Päällä</string>
+    <string name="widget_state_on">Kuuntelee</string>
+    <string name="widget_state_done">Valmis</string>
     <string name="widget_state_rest">Lepää</string>
     <string name="widget_state_blocked">Estetty</string>
     <string name="widget_state_description">%1$s, automaattinen punnitus: %2$s</string>

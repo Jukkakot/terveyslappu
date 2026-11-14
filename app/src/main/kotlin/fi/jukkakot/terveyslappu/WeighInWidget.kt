@@ -91,8 +91,9 @@ class WeighInWidget : AppWidgetProvider() {
                 } else {
                     val (icon, color, label) = when (state) {
                         WidgetState.ON -> Triple(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
+                        WidgetState.DONE -> Triple(R.drawable.ic_state_done, R.color.widget_state_done, R.string.widget_state_done)
                         WidgetState.RESTING -> Triple(R.drawable.ic_state_rest, R.color.widget_state_rest, R.string.widget_state_rest)
-                        WidgetState.BLOCKED -> Triple(R.drawable.ic_warning, R.color.widget_state_blocked, R.string.widget_state_blocked)
+                        WidgetState.BLOCKED -> Triple(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
                     }
                     setViewVisibility(R.id.widget_state, View.VISIBLE)
                     setImageViewResource(R.id.widget_state, icon)

@@ -53,11 +53,11 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
     fun channels() {
         val system = context.getSystemService(NotificationManager::class.java) ?: return
         system.createNotificationChannelGroup(NotificationChannelGroup(GROUP_CHANNELS, context.getString(R.string.auto_channel_group)))
+        // The old silent channel cannot be raised by an app: it is removed and replaced (all weigh-ins alert).
+        system.deleteNotificationChannel(OLD_CHANNEL_NORMAL)
         system.createNotificationChannel(
-            NotificationChannel(CHANNEL_NORMAL, context.getString(R.string.auto_channel_normal), NotificationManager.IMPORTANCE_LOW).apply {
+            NotificationChannel(CHANNEL_NORMAL, context.getString(R.string.auto_channel_normal), NotificationManager.IMPORTANCE_DEFAULT).apply {
                 group = GROUP_CHANNELS
-                setSound(null, null)
-                enableVibration(false)
             },
         )
         system.createNotificationChannel(
@@ -87,8 +87,7 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
             .setGroup(GROUP)
             .setWhen(note.timeMs)
             .setShowWhen(true)
-            .setSilent(!note.questioned)
-            .setPriority(if (note.questioned) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         if (note.questioned) builder.addAction(0, context.getString(R.string.auto_accept), action(note, AutoActionReceiver.ACTION_ACCEPT))
         builder.addAction(0, context.getString(R.string.auto_delete), action(note, AutoActionReceiver.ACTION_DELETE))
         return try {
@@ -132,7 +131,8 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
     }
 
     companion object {
-        const val CHANNEL_NORMAL = "weighins"
+        const val CHANNEL_NORMAL = "weighins_alert"
+        private const val OLD_CHANNEL_NORMAL = "weighins"
         const val CHANNEL_CHECK = "weighins_check"
         const val GROUP_CHANNELS = "auto"
         const val GROUP = "fi.jukkakot.terveyslappu.WEIGHINS"

@@ -107,6 +107,18 @@ class AutoWeightsTest {
     }
 
     @Test
+    fun `a re-broadcast with a new company id after a delete is not saved`() = runTest {
+        val auto = auto()
+        auto.decided(decided(82.4))
+        auto.flush(AutoWeights.WEIGHIN)
+        val id = scaleClientId(morning)
+        auto.delete(id, morning.toEpochMilli(), 82.4, false)
+        auto.decided(decided(82.4, morning.plusSeconds(20), key = 0x62C0))
+        assertEquals(0, auto.pending())
+        assertTrue(writer.saved.isEmpty())
+    }
+
+    @Test
     fun `a far weight and an unknown reference are marked`() = runTest {
         val auto = auto()
         auto.decided(decided(82.5))

@@ -240,6 +240,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .onSuccess { clientId ->
                     AppLog.i("weight.save", "ok", "kg" to input.kg, "time" to time, "clientId" to clientId, "ms" to msSince(started))
                     keepAuto("reference") { terveys.reference.accepted(listOf(RefPair(clientId, time.toEpochMilli(), input.kg))) }
+                    keepAuto("done") { terveys.listen.weightSaved(clientId, time.toEpochMilli()) }
                     _state.update { it.copy(weightText = "", pickedTime = null, saving = false, entryOpen = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_saved, listOf(formatKg(input.kg))))
                     load()
@@ -267,6 +268,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         keepAuto("mark") { terveys.marks.add(listOf(mark)) }
                     } else if (id != null) {
                         keepAuto("reference") { terveys.reference.accepted(listOf(RefPair(id, entry.time.toEpochMilli(), entry.kg))) }
+                        keepAuto("done") { terveys.listen.weightSaved(id, entry.time.toEpochMilli()) }
                     }
                     load()
                     backup.request("restore")
@@ -287,6 +289,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     val raw = keepRaw("delete") { rawArchive.remove(entry.time.epochSecond) }
                     val id = entry.clientRecordId
                     val mark = id?.let { keepAuto("mark") { terveys.marks.remove(listOf(it)).firstOrNull() } }
+                    keepAuto("remember") { terveys.keys.remember(entry.kg) }
+                    id?.let { keepAuto("done") { terveys.listen.weightRemoved(it) } }
                     if (id != null) {
                         keepAuto("reference") { terveys.reference.removed(id) }
                         keepAuto("notify") { terveys.autoNotifier.cancel(id) }

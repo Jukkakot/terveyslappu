@@ -2,7 +2,8 @@
 <resources>
     <color name="widget_background">@android:color/system_neutral1_800</color>
     <color name="widget_text">@android:color/system_neutral1_50</color>
-    <color name="widget_state_on">@android:color/system_accent1_200</color>
+    <color name="widget_state_on">#81C784</color>
+    <color name="widget_state_done">#81C784</color>
     <color name="widget_state_rest">@android:color/system_neutral2_400</color>
-    <color name="widget_state_blocked">#F2B8B5</color>
+    <color name="widget_state_blocked">#FFB74D</color>
 </resources>

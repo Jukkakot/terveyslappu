@@ -70,8 +70,23 @@ class ListenPrefs(context: Context) : ListenStore {
         putInt(HEARD_RSSI, heard.rssi)
     }
 
+    override fun done(): WindowDone? {
+        val start = prefs.getLong(DONE_START, 0).takeIf { it > 0 } ?: return null
+        return WindowDone(start, prefs.getStringSet(DONE_IDS, emptySet()).orEmpty().toSet())
+    }
+
+    override fun saveDone(done: WindowDone?) = prefs.edit(commit = true) {
+        if (done == null) {
+            remove(DONE_START).remove(DONE_IDS)
+        } else {
+            putLong(DONE_START, done.windowStartMs).putStringSet(DONE_IDS, done.ids)
+        }
+    }
+
     companion object {
         const val FILE = "listen"
+        private const val DONE_START = "done_window_start"
+        private const val DONE_IDS = "done_ids"
         private const val ENABLED = "enabled"
         private const val START = "start_min"
         private const val END = "end_min"
@@ -175,6 +190,23 @@ class AndroidListenRadio(private val context: Context) : ListenRadio {
 class AndroidListenAlarm(private val context: Context) : ListenAlarm {
     private val manager: AlarmManager? get() = context.getSystemService(AlarmManager::class.java)
 
+    private fun tickIntent(flags: Int): PendingIntent? = PendingIntent.getBroadcast(
+        context, TICK_REQUEST,
+        Intent(context, ListenReceiver::class.java).setAction(ListenReceiver.ACTION_TICK),
+        PendingIntent.FLAG_IMMUTABLE or flags,
+    )
+
+    override fun setTick(atMs: Long) {
+        val pending = tickIntent(PendingIntent.FLAG_UPDATE_CURRENT) ?: return
+        manager?.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMs, pending)
+    }
+
+    override fun cancelTick() {
+        val pending = tickIntent(PendingIntent.FLAG_NO_CREATE) ?: return
+        manager?.cancel(pending)
+        pending.cancel()
+    }
+
     private fun intent(action: String?, flags: Int): PendingIntent? = PendingIntent.getBroadcast(
         context, ALARM_REQUEST,
         Intent(context, ListenReceiver::class.java).setAction(ListenReceiver.ACTION_ALARM).apply {
@@ -189,6 +221,7 @@ class AndroidListenAlarm(private val context: Context) : ListenAlarm {
     }
 
     override fun cancel() {
+        cancelTick()
         val pending = intent(null, PendingIntent.FLAG_NO_CREATE) ?: return
         manager?.cancel(pending)
         pending.cancel()
@@ -198,5 +231,6 @@ class AndroidListenAlarm(private val context: Context) : ListenAlarm {
 
     private companion object {
         const val ALARM_REQUEST = 2
+        const val TICK_REQUEST = 3
     }
 }

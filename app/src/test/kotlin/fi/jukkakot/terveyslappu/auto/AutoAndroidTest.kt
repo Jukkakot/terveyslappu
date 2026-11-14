@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.auto
 
 import android.Manifest
 import android.app.Application
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.content.Intent
@@ -42,6 +43,13 @@ class AutoAndroidTest {
     private fun shown() = shadowOf(system).allNotifications
 
     @Test
+    fun `the old silent channel is removed when the channels are created`() {
+        system.createNotificationChannel(NotificationChannel("weighins", "old", NotificationManager.IMPORTANCE_LOW))
+        notifications.channels()
+        assertEquals(null, system.getNotificationChannel("weighins"))
+    }
+
+    @Test
     fun `a questioned weigh-in posts a sounding notification with two actions and no timeout`() {
         val note = AutoNote("terveyslappu-scale-1", 61.3, 1_000, true, NoteText("61,3 kg – tarkista", "Poikkeaa 20,7 kg edellisestä hyväksytystä"))
         assertTrue(notifications.post(note))
@@ -50,7 +58,7 @@ class AutoAndroidTest {
         assertEquals(0L, posted.timeoutAfter)
         assertEquals(AutoNotifications.CHANNEL_CHECK, posted.channelId)
         assertEquals(NotificationManager.IMPORTANCE_DEFAULT, system.getNotificationChannel(AutoNotifications.CHANNEL_CHECK).importance)
-        assertEquals(NotificationManager.IMPORTANCE_LOW, system.getNotificationChannel(AutoNotifications.CHANNEL_NORMAL).importance)
+        assertEquals(NotificationManager.IMPORTANCE_DEFAULT, system.getNotificationChannel(AutoNotifications.CHANNEL_NORMAL).importance)
 
         val normal = note.copy(id = "terveyslappu-scale-2", questioned = false, text = NoteText("82,5 kg tallennettu", null))
         notifications.post(normal)

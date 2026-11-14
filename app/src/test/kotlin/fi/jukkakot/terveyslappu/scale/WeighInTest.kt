@@ -227,6 +227,21 @@ class WeighInTest {
     }
 
     @Test
+    fun `the same weight with a new company id after a delete is ignored, another weight is not`() = runTest {
+        val store = Store()
+        val last = MemoryLastWeighIn()
+        WeighingKeys(last) { wallStart.minusSeconds(5) }.remember(82.5)
+        val w = storeWeighIn(store, stable(825, key = 0x62C0), last)
+        w.start(backgroundScope)
+        settle()
+        assertEquals(emptyMap(), store.weights)
+        val other = storeWeighIn(store, stable(818, key = 0x63C0), last)
+        other.start(backgroundScope)
+        settle()
+        assertEquals(listOf(81.8), store.weights.values.toList())
+    }
+
+    @Test
     fun `a weighing the background saved meanwhile is not saved again`() = runTest {
         val store = Store()
         val last = MemoryLastWeighIn()

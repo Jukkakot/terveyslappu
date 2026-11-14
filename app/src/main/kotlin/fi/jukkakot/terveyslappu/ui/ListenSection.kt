@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -76,7 +77,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
     )
     ui.status?.let { status ->
         val (text, fix) = statusText(status)
-        ListenNotice(text, warn = status != ListenStatus.Listening && status !is ListenStatus.Resting, fix = fix, tag = "listenStatus", actions = actions)
+        ListenNotice(text, warn = status.isBlocked(), fix = fix, tag = "listenStatus", actions = actions, symbol = status.symbol())
     }
     if (ui.batteryRestricted) {
         ListenNotice(stringResource(R.string.listen_battery_warning), warn = true, fix = ListenFix.BATTERY, tag = "listenBattery", actions = actions)
@@ -133,6 +134,22 @@ private fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (s
     ListenStatus.PowerSavePause -> stringResource(R.string.listen_status_power_save) to ListenFix.POWER_SAVE
     ListenStatus.Listening -> stringResource(R.string.listen_status_listening) to null
     is ListenStatus.Resting -> stringResource(R.string.listen_status_resting, clockFormat.format(status.startsAt)) to null
+    is ListenStatus.Done -> stringResource(
+        if (status.tomorrow) R.string.listen_status_done_tomorrow else R.string.listen_status_done,
+        clockFormat.format(status.nextStart),
+    ) to null
+}
+
+private fun ListenStatus.isBlocked() = this != ListenStatus.Listening && this !is ListenStatus.Resting && this !is ListenStatus.Done
+
+/** The widget's symbol for the status, in its colour (same drawable and colour resources). */
+private class StatusSymbol(val icon: Int, val color: Int, val label: Int)
+
+private fun ListenStatus.symbol(): StatusSymbol = when (this) {
+    ListenStatus.Listening -> StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
+    is ListenStatus.Done -> StatusSymbol(R.drawable.ic_state_done, R.color.widget_state_done, R.string.widget_state_done)
+    is ListenStatus.Resting -> StatusSymbol(R.drawable.ic_state_rest, R.color.widget_state_rest, R.string.widget_state_rest)
+    else -> StatusSymbol(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
 }
 
 private fun ListenFix.label(): Int = when (this) {
@@ -146,14 +163,18 @@ private fun ListenFix.label(): Int = when (this) {
 
 /** A status or warning line; a blocked reason or warning is in the error colour with an icon (not colour alone). */
 @Composable
-private fun ListenNotice(text: String, warn: Boolean, fix: ListenFix?, tag: String, actions: MainActions) {
+private fun ListenNotice(text: String, warn: Boolean, fix: ListenFix?, tag: String, actions: MainActions, symbol: StatusSymbol? = null) {
     val colors = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = 16.dp, end = 8.dp).testTag(tag),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (warn) Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = colors.error, modifier = Modifier.size(20.dp))
+        if (symbol != null) {
+            Icon(painterResource(symbol.icon), contentDescription = stringResource(symbol.label), tint = colorResource(symbol.color), modifier = Modifier.size(20.dp))
+        } else if (warn) {
+            Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = colors.error, modifier = Modifier.size(20.dp))
+        }
         Text(
             text,
             style = MaterialTheme.typography.bodyLarge,

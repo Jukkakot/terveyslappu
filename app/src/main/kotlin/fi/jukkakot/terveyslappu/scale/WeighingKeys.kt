@@ -1,6 +1,7 @@
 package fi.jukkakot.terveyslappu.scale
 
 import java.time.Instant
+import kotlin.math.abs
 
 /**
  * One weighing, one save (background-weigh-in design 6): the company id of the last saved or
@@ -29,13 +30,34 @@ class WeighingKeys(private val store: LastWeighInStore, private val now: () -> I
     /** Restarts the ignore time of [key] (a discarded weighing's broadcast keeps lingering). */
     fun touch(key: Int) = synchronized(LOCK) { store.save(key, now()) }
 
+    /**
+     * True when a stable [kg] from [address] repeats the last saved or deleted weight (within
+     * [SAME_KG], whatever its company id): ignored while the last hearing is under [SAME_MS] old,
+     * and each ignored hearing restarts that time (the scale repeats it every 20 s to 2 min).
+     */
+    fun sameWeight(kg: Double, address: String?): Boolean = synchronized(LOCK) {
+        val last = store.weight() ?: return false
+        val at = now()
+        val sameScale = last.address == null || address == null || last.address.equals(address, ignoreCase = true)
+        val same = sameScale && abs(last.kg - kg) <= SAME_KG + 1e-9 && last.heardAt.plusMillis(SAME_MS).isAfter(at)
+        if (same) store.saveWeight(last.copy(heardAt = at))
+        same
+    }
+
+    /** A weight was saved or deleted: its repeats are ignored from now on. [address] defaults to the remembered scale. */
+    fun remember(kg: Double, address: String? = null) = synchronized(LOCK) {
+        store.saveWeight(LastWeight(kg, address ?: store.scale()?.address, now()))
+    }
+
     private fun taken(key: Int, at: Instant): Boolean {
         val (last, lastAt) = store.load() ?: return false
         return last == key && lastAt.plusMillis(WeighIn.IGNORE_MS).isAfter(at)
     }
 
-    private companion object {
-        val LOCK = Any()
+    companion object {
+        private val LOCK = Any()
+        const val SAME_KG = 0.1
+        const val SAME_MS = 30_000L
     }
 }
 

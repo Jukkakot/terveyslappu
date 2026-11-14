@@ -86,6 +86,8 @@ class TerveysApp : Application() {
             },
             dialogShown = { WeighInForeground.shown },
             elapsedMs = SystemClock::elapsedRealtime,
+            weightSaved = { id, timeMs -> listen.weightSaved(id, timeMs) },
+            weightRemoved = { id -> listen.weightRemoved(id) },
         )
     }
 

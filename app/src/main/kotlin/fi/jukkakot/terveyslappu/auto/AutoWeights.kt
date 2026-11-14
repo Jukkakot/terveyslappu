@@ -64,6 +64,10 @@ class AutoWeights(
     private val elapsedMs: () -> Long,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
     private val budgetMs: Long = BUDGET_MS,
+    /** A weight of this app not marked "?" was saved or accepted: it can be the window's weight. */
+    private val weightSaved: (id: String, timeMs: Long) -> Unit = { _, _ -> },
+    /** A weight of this app was deleted. */
+    private val weightRemoved: (id: String) -> Unit = {},
 ) : DecidedSink {
 
     /** A decided background weight: skipped while the dialog is in front or when its weighing was claimed. */
@@ -71,6 +75,16 @@ class AutoWeights(
         val key = "%04x".format(weight.companyId and 0xFFFF)
         if (dialogShown()) {
             AppLog.i("auto.skip", "", "reason" to "dialog", "key" to key)
+            return
+        }
+        val same = try {
+            keys.sameWeight(weight.kg, weight.address)
+        } catch (e: Exception) {
+            AppLog.e("auto.claim", e, "same")
+            false
+        }
+        if (same) {
+            AppLog.i("scale.ignore", "", "reason" to "same", "kg" to weight.kg, "src" to "bg")
             return
         }
         val claimed = try {
@@ -83,6 +97,7 @@ class AutoWeights(
             AppLog.i("auto.skip", "", "reason" to "key", "key" to key)
             return
         }
+        keep("remember") { keys.remember(weight.kg, weight.address) }
         val offset = zone().rules.getOffset(Instant.ofEpochMilli(weight.atWallMs)).totalSeconds
         queue.add(PendingWeight(weight.kg, weight.atWallMs, offset, weight.companyId, weight.data.toHex()))
     }
@@ -135,6 +150,7 @@ class AutoWeights(
         if (questioned) keep("mark") { marks.add(listOf(Mark(id, weight.timeMs, weight.kg))) } else keep("reference") { reference.accepted(listOf(RefPair(id, weight.timeMs, weight.kg))) }
         keep("flag") { flags.backupDue = true }
         queue.remove(weight)
+        if (!questioned) keep("done") { weightSaved(id, weight.timeMs) }
         val markMs = elapsedMs() - started - writeMs
         val late = if (weight.attempts > 0) Instant.ofEpochMilli(weight.timeMs) else null
         val note = AutoNote(id, weight.kg, weight.timeMs, questioned, AutoText.of(weight.kg, questioned, ref, late, zone()))
@@ -170,6 +186,7 @@ class AutoWeights(
         marks.remove(chain.map { it.id })
         reference.accepted(chain.map { RefPair(it.id, it.timeMs, it.kg) })
         chain.forEach { keep("cancel") { notifier.cancel(it.id) } }
+        chain.forEach { mark -> keep("done") { weightSaved(mark.id, mark.timeMs) } }
         AppLog.i("auto.confirm", "", "from" to from, "chain" to chain.size - 1)
         if (from == FROM_NOTIFICATION) flags.backupDue = true
         keep("changed", changed)
@@ -191,10 +208,12 @@ class AutoWeights(
             return false
         }
         AppLog.i("auto.action", "delete ok")
+        keep("remember") { keys.remember(kg) }
         keep("raw") { raw.remove(timeMs / 1000) }
         keep("mark") { marks.remove(listOf(id)) }
         keep("reference") { reference.removed(id) }
         keep("cancel") { notifier.cancel(id) }
+        keep("done") { weightRemoved(id) }
         flags.backupDue = true
         keep("changed", changed)
         return true

@@ -199,6 +199,70 @@ class ListenControllerTest {
     }
 
     @Test
+    fun `a lone stable reading is decided by the tick alarm without a further packet`() {
+        val decided = mutableListOf<HeardEvent.Decided>()
+        listen = ListenController(store, device, radio, AndroidListenAlarm(context), sink = { decided += it })
+        listen.setEnabled(true)
+        val start = store.session()!!.startedMs
+        listen.onResults(listOf(HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", device.elapsed + 1_000_000_000)))
+        assertTrue(decided.isEmpty())
+        val alarms = shadowOf(context.getSystemService(AlarmManager::class.java))
+        assertTrue(start + 1_000 + 2_000 + ListenController.TICK_MARGIN_MS in alarms.scheduledAlarms.map { it.triggerAtTime })
+        device.now = start + 8_000
+        listen.onTick()
+        assertEquals(listOf(82.5), decided.map { it.kg })
+        assertEquals("00:11:22:33:44:55", decided.single().address)
+        assertEquals(start + 1_000, decided.single().atWallMs)
+        assertNull(store.session()!!.pendingKg)
+        // Decided: no tick left, only the hourly check.
+        assertEquals(1, alarms.scheduledAlarms.size)
+        listen.onTick()
+        assertEquals(1, decided.size)
+    }
+
+    @Test
+    fun `a saved weight stops listening for the window and it resumes at the next start`() {
+        listen.setEnabled(true)
+        assertEquals(ListenMode.SAVE, radio.running)
+        listen.weightSaved("w1", at("2026-11-14T07:12"))
+        assertNull(radio.running)
+        assertNull(store.session())
+        assertEquals(at("2026-11-15T06:00"), nextAlarm()!!.triggerAtTime)
+        assertEquals(WidgetState.DONE, listen.ui().widget)
+        assertEquals(ListenStatus.Done(java.time.LocalTime.of(6, 0), true), listen.ui().status)
+        device.now = at("2026-11-14T20:00")
+        assertEquals(WidgetState.DONE, listen.ui().widget)
+        device.now = at("2026-11-15T06:00")
+        listen.replan(ListenController.ACTION_START)
+        assertEquals(ListenMode.SAVE, radio.running)
+        assertEquals(ListenStatus.Listening, listen.ui().status)
+    }
+
+    @Test
+    fun `deleting the window's weight resumes listening, another weight keeps it stopped`() {
+        listen.setEnabled(true)
+        listen.weightSaved("w1", at("2026-11-14T07:12"))
+        listen.weightSaved("w2", at("2026-11-14T07:30"))
+        listen.weightRemoved("w1")
+        assertNull(radio.running)
+        listen.weightRemoved("w2")
+        assertEquals(ListenMode.SAVE, radio.running)
+        assertNotNull(store.session())
+        assertNull(store.done())
+    }
+
+    @Test
+    fun `a weight of another day or outside the window does not count`() {
+        listen.setEnabled(true)
+        listen.weightSaved("old", at("2026-11-13T07:12"))
+        assertEquals(ListenMode.SAVE, radio.running)
+        assertNull(store.done())
+        device.now = at("2026-11-14T11:00")
+        listen.weightSaved("late", at("2026-11-14T10:30"))
+        assertNull(store.done())
+    }
+
+    @Test
     fun `a session left over from a reboot is closed and a new one starts`() {
         listen.setEnabled(true)
         val first = store.session()!!
