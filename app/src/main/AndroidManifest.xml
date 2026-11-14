@@ -77,6 +77,18 @@
             android:taskAffinity=""
             android:theme="@style/Theme.Terveyslappu.WeighIn" />
 
+        <!-- Lisää annos dialog (food-widget): the add sheet over the home screen, in its own task,
+             not in recents; singleTask so a second widget tap keeps the open sheet. -->
+        <activity
+            android:name=".FoodAddActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/food_add"
+            android:launchMode="singleTask"
+            android:taskAffinity="fi.jukkakot.terveyslappu.foodadd"
+            android:theme="@style/Theme.Terveyslappu.WeighIn"
+            android:windowSoftInputMode="adjustResize" />
+
         <service
             android:name=".WeighInTileService"
             android:exported="true"
@@ -102,6 +114,20 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/weigh_in_widget" />
+        </receiver>
+
+        <!-- food-widget: a static "Lisää annos" button; redrawn only on install and app update. -->
+        <receiver
+            android:name=".FoodAddWidget"
+            android:exported="true"
+            android:label="@string/food_add">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/food_add_widget" />
         </receiver>
 
         <!-- background-weigh-in: the listen trial's scan results and alarms (our PendingIntents only). -->

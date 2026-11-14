@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shortcut icon: the cutlery glyph on the launcher colour, like ic_shortcut_scale (food-widget). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/ic_launcher_background" />
+            <size android:width="48dp" android:height="48dp" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/ic_cutlery" android:gravity="center" android:width="28dp" android:height="28dp" />
+</layer-list>

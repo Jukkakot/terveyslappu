@@ -163,6 +163,7 @@
     <string name="weighin_delete_failed">Poisto epäonnistui. Syy on lokissa.</string>
     <string name="weighin_change">%1$s kg edellisestä (%2$s)</string>
     <string name="widget_description">Punnitse yhdellä napautuksella</string>
+    <string name="widget_food_description">Lisää ruoka-annos yhdellä napautuksella</string>
 
     <string name="menu_import">Tuo tiedot</string>
     <string name="menu_export">Vie tiedot</string>
@@ -330,6 +331,7 @@
     <string name="food_write_failed">Tallennus ei onnistunut. Syy on lokissa.</string>
     <!-- The add sheet's own lines (food-widget design 7–8). -->
     <string name="food_sheet_failed">Tallennus epäonnistui</string>
+    <string name="food_sheet_allow">Salli</string>
     <string name="food_sheet_loading">Ladataan…</string>
     <string name="food_sheet_read_failed">Päivää ei voitu lukea. Voit silti kirjoittaa.</string>
     <string name="food_product_exists">Tuote %1$s on jo olemassa.</string>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fork and knife as a line icon (food-widget); used by the Lisää annos widget and shortcut. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Fork: two outer tines joined at the bottom, a middle tine, the handle. -->
+    <path
+        android:pathData="M5,3V8a3,3 0,0 0,6 0V3M8,3V8M8,11V21"
+        android:strokeWidth="2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Knife: the blade's outline down to the handle. -->
+    <path
+        android:pathData="M18,21V3C16,4.5 15,7 15,10V13H18"
+        android:strokeWidth="2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

@@ -112,6 +112,9 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     /** The dialog opened its sheet once; a recreated dialog keeps its state (design 11). */
     private var dialogStarted = false
 
+    /** The dialog read the clipboard once (design 13); kept across rotation. */
+    var dialogClipChecked = false
+
     var permissionAsked = false
         private set
 
