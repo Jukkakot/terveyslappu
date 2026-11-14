@@ -72,10 +72,15 @@ internal fun SettingsScreen(
     actions: MainActions,
     snackbar: SnackbarHostState,
     listen: ListenUi = ListenUi(),
+    food: FoodUiState = FoodUiState(),
+    foodActions: FoodActions = FoodActions(),
 ) {
     val shown = if (page == SettingsPage.DATA && !granted) SettingsPage.LIST else page
     when (shown) {
-        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen)
+        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen, food.products.size)
+        SettingsPage.FOOD -> SubPage(R.string.settings_food, actions, snackbar, "foodPage") {
+            Section(null) { ProductList(food.products, foodActions) }
+        }
         SettingsPage.PROFILE -> SubPage(R.string.profile_section, actions, snackbar, "profilePage") {
             Section(null) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
         }
@@ -171,6 +176,7 @@ private fun SettingsList(
     actions: MainActions,
     snackbar: SnackbarHostState,
     listen: ListenUi,
+    productCount: Int = 0,
 ) {
     val none = stringResource(R.string.settings_none)
     val male = stringResource(R.string.gender_male)
@@ -202,6 +208,9 @@ private fun SettingsList(
                     PageRow(R.drawable.ic_backup, R.string.settings_data_backup, "rowData", { actions.onSettingsPage(SettingsPage.DATA) }) {
                         BackupState(SettingsSummary.backup(backup, Instant.now()))
                     }
+                }
+                PageRow(R.drawable.ic_restaurant, R.string.settings_food, "rowFood", { actions.onSettingsPage(SettingsPage.FOOD) }) {
+                    StateLine(stringResource(R.string.settings_food_line, productCount))
                 }
                 PageRow(R.drawable.ic_palette, R.string.settings_appearance, "rowAppearance", { actions.onSettingsPage(SettingsPage.APPEARANCE) }) {
                     StateLine(stringResource(R.string.settings_theme_line, stringResource(themeMode.label())))

@@ -3,7 +3,7 @@
 ### Requirement: Data kinds
 The app's data file SHALL carry the measured data the app keeps, one part per data kind: `weights`
 (every weight with its time, kg, the writing app and its raw data), `foods` (every logged food
-item) and `food_items` (the own products, the user's own work). Owner details, app settings and
+item) and `products` (the own products, the user's own work). Owner details, app settings and
 state tied to the phone (backup access, the last weigh-in, the log, Health Connect permissions)
 SHALL NOT be carried. A data kind the app starts keeping later SHALL be added as its own part in
 both formats.
@@ -18,7 +18,7 @@ both formats.
 ### Requirement: Food parts
 A `foods` item SHALL hold the day, the logging time when known (with its offset), the position in
 the day, the name, the kcal when known, the amount with its unit (`g` or `kpl`) when known, and
-`treat` only for a Herkku item. A `food_items` item SHALL hold an own product's name, category and,
+`treat` only for a Herkku item, and its uuid. A `products` item SHALL hold an own product's name, category and,
 when known, its energy (kcal per 100 g or per piece) and last used amount. In CSV each is its own
 `#table;` part. Reading a file SHALL write the logged foods to Health Connect, skipping ones
 already there, and SHALL add the products whose name is not yet an own product.

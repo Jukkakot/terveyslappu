@@ -18,6 +18,7 @@ class DataTransferRulesTest {
         "sharedpref:appearance.xml",
         "sharedpref:chart.xml",
         "file:raw-archive.jsonl",
+        "file:products.json",
     )
 
     private fun includes(section: String): Set<String> {

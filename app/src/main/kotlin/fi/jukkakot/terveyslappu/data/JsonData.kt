@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter
  */
 object JsonData {
     private val json = Json { prettyPrint = true }
-    private val known = setOf("app", "version", DataFile.WEIGHTS)
+    private val known = setOf("app", "version", DataFile.WEIGHTS, FoodData.FOODS, FoodData.PRODUCTS)
     private val offsetTime = DateTimeFormatter.ISO_OFFSET_DATE_TIME
     private const val RAW_SOURCE = "source"
     private const val CHECK = "check"
@@ -60,6 +60,7 @@ object JsonData {
                     }
                 },
             )
+            with(FoodData) { putJson(set, fallbackZone) }
         }
         return json.encodeToString(JsonElement.serializer(), root) + "\n"
     }
@@ -69,7 +70,7 @@ object JsonData {
      * numbers stand in for line numbers. Unknown top-level keys are reported, not read. A file
      * that is not a JSON object gives no weights.
      */
-    fun read(text: String, now: Instant): ParsedHistory {
+    fun read(text: String, now: Instant, zone: ZoneId = ZoneId.systemDefault()): ParsedHistory {
         val root = runCatching { json.parseToJsonElement(text.removePrefix("\uFEFF")) }.getOrNull() as? JsonObject
             ?: return ParsedHistory(emptyList(), emptyList(), null)
         val collector = WeightCollector(now)
@@ -87,7 +88,7 @@ object JsonData {
             collector.add(line, text, time, kg, check) { second -> raw(obj["raw"], second) }
         }
         val unknown = root.keys.filter { it !in known }
-        return collector.result(null).copy(unknownKinds = unknown)
+        return collector.result(null).copy(unknownKinds = unknown, foods = FoodData.readJson(root, zone))
     }
 
     private fun raw(element: JsonElement?, second: Long): RawEntry? {

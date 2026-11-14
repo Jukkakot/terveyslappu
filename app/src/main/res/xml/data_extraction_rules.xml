@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Android backup (encrypted cloud) and phone-to-phone transfer carry an allow-list of app data:
-    owner details, appearance, chart periods and the raw-data archive. Left out on purpose:
+    owner details, appearance, chart periods, the raw-data archive and the own food products. Left out on purpose:
     "backup" (the backup file's URI; its permission does not move, so it would only show a
     failing backup), "weighin" (the previous weigh-in's lingering-broadcast state and the
     remembered scale), "listen" (the background listen trial: its choices stay on this phone)
@@ -15,11 +15,13 @@
         <include domain="sharedpref" path="appearance.xml" />
         <include domain="sharedpref" path="chart.xml" />
         <include domain="file" path="raw-archive.jsonl" />
+        <include domain="file" path="products.json" />
     </cloud-backup>
     <device-transfer>
         <include domain="sharedpref" path="profile.xml" />
         <include domain="sharedpref" path="appearance.xml" />
         <include domain="sharedpref" path="chart.xml" />
         <include domain="file" path="raw-archive.jsonl" />
+        <include domain="file" path="products.json" />
     </device-transfer>
 </data-extraction-rules>

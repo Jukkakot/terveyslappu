@@ -24,6 +24,7 @@ private val helpSections = listOf(
     R.string.help_weigh_title to R.string.help_weigh_body,
     R.string.help_manual_title to R.string.help_manual_body,
     R.string.help_history_title to R.string.help_history_body,
+    R.string.help_food_title to R.string.help_food_body,
     R.string.help_profile_title to R.string.help_profile_body,
     R.string.help_data_title to R.string.help_data_body,
     R.string.help_backup_title to R.string.help_backup_body,

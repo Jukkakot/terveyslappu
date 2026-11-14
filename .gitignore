@@ -26,3 +26,4 @@ Screen_Recording*
 
 # Agent worktrees
 .claude/worktrees/
+__pycache__/

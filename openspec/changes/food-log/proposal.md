@@ -40,7 +40,7 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
 ### Modified Capabilities
 - `weight-chart`: Historia's tabs gain Energia with its chart, statistics and list.
 - `home-screen`: the front page gains "Syöty tänään" and Lisää annos.
-- `data-file`: two new data kinds, `foods` and `food_items`.
+- `data-file`: two new data kinds, `foods` and `products`.
 - `help-page`: an Ohje section on the food log.
 
 ## Impact

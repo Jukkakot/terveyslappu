@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -74,7 +75,15 @@ import java.time.ZoneId
 /** The simple home screen (mockup B): latest card, three latest weights, Punnitse vaa'alla. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, backup: BackupStatus, profile: OwnerProfile = OwnerProfile()) {
+internal fun HomeScreen(
+    state: MainUiState,
+    actions: MainActions,
+    snackbar: SnackbarHostState,
+    backup: BackupStatus,
+    profile: OwnerProfile = OwnerProfile(),
+    food: FoodUiState = FoodUiState(),
+    foodActions: FoodActions = FoodActions(),
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -99,14 +108,14 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup, profile)
+                Access.GRANTED -> HomeContent(state, actions, backup, profile, food, foodActions)
             }
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile) {
+private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions) {
     val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
     val summary = remember(state.weights, state.homeDays, state.questioned) {
         state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
@@ -123,6 +132,48 @@ private fun HomeContent(state: MainUiState, actions: MainActions, backup: Backup
         val derived = remember(summary?.latest, profile) { summary?.let { LatestDerived.of(it.latest, profile, ZoneId.systemDefault()) } }
         derived?.let { DerivedRow(it, actions.onOpenProfile) }
         summary?.let { RecentList(it.recent, today, state.questioned) }
+        FoodRowAndAdd(food, today, foodActions)
+    }
+}
+
+/**
+ * "Syöty tänään" and the outlined Lisää annos (home-screen "Food row on the home screen"); neither
+ * is filled, so Punnitse vaa'alla stays the only filled action. Today is read at every composition,
+ * so a resume after midnight shows the new day.
+ */
+@Composable
+private fun FoodRowAndAdd(food: FoodUiState, today: LocalDate, actions: FoodActions) {
+    val colors = MaterialTheme.colorScheme
+    val text = when {
+        food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED -> stringResource(R.string.food_today_permission)
+        else -> food.items?.filter { it.day == today }?.takeIf { it.isNotEmpty() }
+            ?.let { stringResource(R.string.food_today_row, formatKcal(fi.jukkakot.terveyslappu.food.DaySum.of(it).total)) }
+            ?: stringResource(R.string.food_today_none)
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(groupShape)
+            .background(colors.surfaceContainer)
+            .clickable(onClickLabel = stringResource(R.string.food_title)) { actions.onOpenDay(today) }
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .testTag("foodToday"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+    }
+    OutlinedButton(
+        onClick = { actions.onAdd(today) },
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("homeFoodAdd"),
+    ) {
+        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(R.string.food_add))
     }
 }
 

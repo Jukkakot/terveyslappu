@@ -203,6 +203,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   - Order kept (helps recall and spot what was forgotten); the logging time is saved for free and
     shown small; it also feeds "usually eaten at this time" suggestions, which replace day
     templates. No "eat now or later" switch: Järjestä fixes the rare advance entry.
+  - As built (food-log, v1.24): no meal slots after all (every eaten thing is its own item, meal
+    type unknown in Health Connect); every typed name is learnt as a product; about 370 generic
+    base products (Open Food Facts style averages and generic estimates, `scripts/base_products.py`)
+    so nothing starts from zero; a whole day can be one bare number (Pikalisäys).
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.

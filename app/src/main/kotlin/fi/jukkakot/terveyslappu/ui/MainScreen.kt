@@ -79,6 +79,8 @@ class MainActions(
     val onOpenQuestioned: () -> Unit = {},
     /** Historia scrolled to its target row. */
     val onTargetShown: () -> Unit = {},
+    /** Historia opened on Energia after Ruoka. */
+    val onEnergyShown: () -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */
@@ -93,17 +95,23 @@ fun MainScreen(
     profile: OwnerProfile = OwnerProfile(),
     heightInHealthConnect: Boolean = true,
     listen: ListenUi = ListenUi(),
+    food: FoodUiState = FoodUiState(),
+    foodActions: FoodActions = FoodActions(),
+    baseProducts: List<fi.jukkakot.terveyslappu.food.BaseProduct> = emptyList(),
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
-    val screen = if (state.screen == Screen.HISTORY && !granted) Screen.HOME else state.screen
+    val screen = if ((state.screen == Screen.HISTORY || state.screen == Screen.FOOD) && !granted) Screen.HOME else state.screen
     BackHandler(enabled = screen != Screen.HOME) { actions.onBack() }
     when (screen) {
-        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile)
-        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile)
-        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen)
+        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile, food, foodActions)
+        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions)
+        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions)
         Screen.HELP -> HelpScreen(actions)
+        Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar)
     }
+    if (food.sheetDay != null) AddFoodSheet(food, baseProducts, foodActions)
+    food.editing?.let { FoodEditor(it, food.products, foodActions) }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
 }
 

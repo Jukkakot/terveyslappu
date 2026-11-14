@@ -42,6 +42,9 @@ import fi.jukkakot.terveyslappu.raw.RawEntry
 import fi.jukkakot.terveyslappu.auto.Mark
 import fi.jukkakot.terveyslappu.auto.RefPair
 import fi.jukkakot.terveyslappu.weight.importClientId
+import fi.jukkakot.terveyslappu.food.FoodImportResult
+import fi.jukkakot.terveyslappu.food.HealthConnectFoods
+import fi.jukkakot.terveyslappu.food.importFoods
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
 import java.time.Instant
@@ -50,11 +53,11 @@ import java.time.ZoneId
 
 enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIED, GRANTED }
 
-/** The main activity's three screens (home-screen); back from Historia or Asetukset returns Home. */
-enum class Screen { HOME, HISTORY, SETTINGS, HELP }
+/** The main activity's screens (home-screen); back from Historia or Asetukset returns Home, from Ruoka where it was opened. */
+enum class Screen { HOME, HISTORY, SETTINGS, HELP, FOOD }
 
-/** Asetukset' list and its five sub-screens (settings-list design 1). */
-enum class SettingsPage { LIST, PROFILE, LISTEN, DATA, APPEARANCE, SUPPORT }
+/** Asetukset' list and its sub-screens (settings-list design 1; FOOD = Ruokakirjaus, food-log). */
+enum class SettingsPage { LIST, PROFILE, LISTEN, DATA, FOOD, APPEARANCE, SUPPORT }
 
 data class MainUiState(
     val access: Access = Access.CHECKING,
@@ -86,6 +89,10 @@ data class MainUiState(
     val questioned: Set<String> = emptySet(),
     /** Historia opens with this weight's row shown (the home notice: the newest "?" weight). */
     val historyTarget: String? = null,
+    /** Where Ruoka was opened from (HOME or HISTORY). */
+    val foodOrigin: Screen = Screen.HOME,
+    /** Historia opens on Energia (back from Ruoka opened from the Energia tab); otherwise on Paino. */
+    val historyOnEnergy: Boolean = false,
 ) {
     /** The weights not marked "?": everything that charts, counts or compares uses these. */
     val accepted: List<WeightEntry>? get() = weights?.filter { it.id !in questioned }
@@ -96,7 +103,8 @@ data class MainUiState(
     /** The one back rule, for the top-bar arrow and system back (settings-list design 2). */
     fun back(): MainUiState = when {
         screen == Screen.HOME -> this
-        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null)
+        screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME)
+        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false)
         settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
@@ -213,8 +221,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null)
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false)
     }
+
+    /** Ruoka, opened from the front page or from Historia's Energia tab. */
+    fun openFood() = _state.update { it.copy(screen = Screen.FOOD, foodOrigin = if (it.screen == Screen.HISTORY) Screen.HISTORY else Screen.HOME) }
+
+    /** Historia has opened its Energia page. */
+    fun energyShown() = _state.update { it.copy(historyOnEnergy = false) }
 
     fun back() = _state.update { it.back() }
 
@@ -436,8 +450,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 is WriteResult.Done -> {
                     AppLog.i("import.write", "ok", "count" to result.count, "from" to from, "ms" to msSince(started))
                     importMarks(parsed.weights)
+                    val foods = importFoodParts(parsed)
                     _state.update { it.copy(import = null) }
-                    _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
+                    when {
+                        foods != null && foods.notWritten > 0 -> _messages.tryEmit(UiMessage(R.string.import_foods_not_written, listOf(result.count, foods.notWritten)))
+                        foods != null && (foods.written > 0 || foods.products > 0) ->
+                            _messages.tryEmit(UiMessage(R.string.import_done_foods, listOf(result.count, foods.written, foods.products)))
+                        else -> _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
+                    }
                     load()
                     backup.request("import")
                 }
@@ -447,6 +467,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /** The file's foods and products (data-file "Food parts"); null when it has none or the write failed. */
+    private suspend fun importFoodParts(parsed: ParsedHistory): FoodImportResult? {
+        val parts = parsed.foods
+        if (parts.foods.isEmpty() && parts.products.isEmpty()) return null
+        val started = System.nanoTime()
+        return runCatching { importFoods(parts, HealthConnectFoods(getApplication()), terveys.products, Instant.now()) }
+            .onSuccess {
+                AppLog.i("import.foods", "ok", "written" to it.written, "products" to it.products, "notWritten" to it.notWritten, "ms" to msSince(started))
+                terveys.foodSignal.emit()
+            }
+            .onFailure { AppLog.e("import.foods", it, "failed", "ms" to msSince(started)) }
+            .getOrNull()
     }
 
     /** Keeps the edited details; true when a new height should also go to Health Connect. */

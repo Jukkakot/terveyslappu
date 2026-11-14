@@ -37,6 +37,7 @@ object CsvData {
                 append(if (row.check) HistoryParser.CHECK_MARK else "").append('\n')
             }
         }
+        append(FoodData.csv(set))
     }
 
     /** 82.4 → `82,4`, 82.45 → `82,45`, 82.0 → `82`. */
