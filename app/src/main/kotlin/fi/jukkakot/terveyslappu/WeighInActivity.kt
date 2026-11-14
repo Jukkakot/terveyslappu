@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import fi.jukkakot.terveyslappu.scale.WeighInForeground
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -93,6 +94,8 @@ class WeighInActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        // The background saves nothing while the dialog is in front (background-weigh-in design 6).
+        WeighInForeground.shown = true
         // Coming back (e.g. from the app settings): scan again unless a weight was already decided.
         val state = viewModel.state.value
         val resume = state is WeighInState.Scanning || state is WeighInState.Live ||
@@ -102,6 +105,7 @@ class WeighInActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        WeighInForeground.shown = false
         val state = viewModel.state.value
         if (state is WeighInState.Scanning || state is WeighInState.Live) viewModel.stop()
     }

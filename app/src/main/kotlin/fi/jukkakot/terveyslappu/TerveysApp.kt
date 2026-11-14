@@ -2,6 +2,17 @@ package fi.jukkakot.terveyslappu
 
 import android.app.Application
 import android.os.Build
+import android.os.SystemClock
+import fi.jukkakot.terveyslappu.auto.AutoNotifications
+import fi.jukkakot.terveyslappu.auto.AutoWeights
+import fi.jukkakot.terveyslappu.auto.FlagStore
+import fi.jukkakot.terveyslappu.auto.HealthConnectAutoWriter
+import fi.jukkakot.terveyslappu.auto.MarkStore
+import fi.jukkakot.terveyslappu.auto.PendingStore
+import fi.jukkakot.terveyslappu.auto.ReferenceStore
+import fi.jukkakot.terveyslappu.auto.WeightsSignal
+import fi.jukkakot.terveyslappu.scale.WeighInForeground
+import fi.jukkakot.terveyslappu.scale.WeighingKeys
 import android.util.Log
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.log.CrashHandler
@@ -42,9 +53,49 @@ class TerveysApp : Application() {
     /** The phone owner's details (owner-profile). */
     val profile: ProfilePrefs by lazy { ProfilePrefs(this) }
 
-    /** The background listen trial (background-weigh-in); receivers and Asetukset share it. */
+    /** The weighing-key claim shared by the dialog and the background save (background-weigh-in design 6). */
+    val keys: WeighingKeys by lazy { WeighingKeys(LastWeighInPrefs(this)) }
+
+    /** "?" marks, the reference list, the pending queue and the backup-due flag (app storage, never backed up). */
+    val marks: MarkStore by lazy { MarkStore(File(filesDir, "marks.json")) }
+    val reference: ReferenceStore by lazy { ReferenceStore(File(filesDir, "reference.json")) }
+    val pendingWeights: PendingStore by lazy { PendingStore(File(filesDir, "pending-weights.json")) }
+    val autoFlags: FlagStore by lazy { FlagStore(File(filesDir, "auto-flags.json")) }
+
+    /** The process-wide "weights changed" signal (design 12). */
+    val weightsSignal = WeightsSignal()
+
+    val autoNotifier: AutoNotifications by lazy { AutoNotifications(this) }
+
+    /** The automatic weigh-in's save, acceptance and delete (background-weigh-in). */
+    val auto: AutoWeights by lazy {
+        val prefs = ListenPrefs(this)
+        AutoWeights(
+            keys = keys,
+            queue = pendingWeights,
+            marks = marks,
+            reference = reference,
+            flags = autoFlags,
+            raw = rawArchive,
+            writer = HealthConnectAutoWriter(HealthConnectWeights(this)),
+            notifier = autoNotifier,
+            limit = { prefs.settings().limit },
+            changed = {
+                weightsSignal.emit()
+                WeighInWidget.update(this)
+            },
+            dialogShown = { WeighInForeground.shown },
+            elapsedMs = SystemClock::elapsedRealtime,
+        )
+    }
+
+    /** Background listening and saving (background-weigh-in); receivers and Asetukset share it. */
     val listen: ListenController by lazy {
-        ListenController(ListenPrefs(this), AndroidListenDevice(this, LastWeighInPrefs(this)), AndroidListenRadio(this), AndroidListenAlarm(this))
+        ListenController(
+            ListenPrefs(this), AndroidListenDevice(this, LastWeighInPrefs(this)), AndroidListenRadio(this), AndroidListenAlarm(this),
+            sink = auto,
+            pendingCount = { pendingWeights.count() },
+        )
     }
 
     /** The theme choice (app-appearance), read by every activity's theme. */
@@ -79,6 +130,7 @@ class TerveysApp : Application() {
             "android" to Build.VERSION.RELEASE,
         )
         listen.onAppStart()
+        WeighInWidget.update(this)
     }
 
     private companion object {

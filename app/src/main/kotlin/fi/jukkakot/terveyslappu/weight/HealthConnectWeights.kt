@@ -174,6 +174,11 @@ class HealthConnectWeights(private val context: Context) {
         client.deleteRecords(WeightRecord::class, recordIdsList = emptyList(), clientRecordIdsList = listOf(scaleClientId(time)))
     }
 
+    /** Deletes this app's weight with [clientRecordId] (the automatic weigh-in's Poista). */
+    suspend fun deleteByClientId(clientRecordId: String) {
+        client.deleteRecords(WeightRecord::class, recordIdsList = emptyList(), clientRecordIdsList = listOf(clientRecordId))
+    }
+
     /** Deletes one of this app's own records; others' records are never touched. */
     suspend fun delete(entry: WeightEntry) {
         require(entry.own) { "only own records can be deleted" }

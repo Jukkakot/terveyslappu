@@ -29,9 +29,12 @@ data class BackupStatus(
     /** The latest attempt failed. */
     val failed: Boolean get() = lastFailedAt != null && (lastOkAt == null || lastFailedAt.isAfter(lastOkAt))
 
-    /** A backup should run on app open: on, and no success yet on [now]'s calendar day in [zone]. */
-    fun isDue(now: Instant, zone: ZoneId): Boolean =
-        enabled && (lastOkAt == null || lastOkAt.atZone(zone).toLocalDate() != now.atZone(zone).toLocalDate())
+    /**
+     * A backup should run on app open: on, and no success yet on [now]'s calendar day in [zone], or
+     * [changedWhileClosed] (an automatic weigh-in or a notification action set the backup-due flag).
+     */
+    fun isDue(now: Instant, zone: ZoneId, changedWhileClosed: Boolean = false): Boolean =
+        enabled && (changedWhileClosed || lastOkAt == null || lastOkAt.atZone(zone).toLocalDate() != now.atZone(zone).toLocalDate())
 
     /** The last success is old enough to warn about. */
     fun isStale(now: Instant): Boolean = enabled && lastOkAt != null && Duration.between(lastOkAt, now) >= STALE_AFTER
@@ -93,8 +96,8 @@ class WeightBackup(
         scope.launch { run(reason) }
     }
 
-    fun requestIfDue() {
-        if (_status.value.isDue(now(), ZoneId.systemDefault())) request("due")
+    fun requestIfDue(changedWhileClosed: Boolean = false) {
+        if (_status.value.isDue(now(), ZoneId.systemDefault(), changedWhileClosed)) request(if (changedWhileClosed) "background" else "due")
     }
 
     suspend fun run(reason: String) {

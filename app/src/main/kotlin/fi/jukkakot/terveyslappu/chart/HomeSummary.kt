@@ -13,7 +13,7 @@ data class HomeSummary(
     val spark: List<WeightEntry>,
     /** Last minus first of [spark]; null with fewer than two points. */
     val sparkChange: Double?,
-    /** The three latest weights, newest first. */
+    /** The three latest weights, newest first, "?" weights included. */
     val recent: List<WeightEntry>,
     /** The sparkline's x range: the whole period ending at [sparkTo]. */
     val sparkFrom: Instant,
@@ -29,10 +29,14 @@ data class HomeSummary(
         /** [days] when it is a choice, else the default. */
         fun homeDays(days: Long): Long = if (days in HOME_DAYS) days else DEFAULT_DAYS
 
-        /** Summary of [weights] in any order over the last [days], or null when there are none. */
-        fun of(weights: List<WeightEntry>, now: Instant, days: Long = DEFAULT_DAYS): HomeSummary? {
-            if (weights.isEmpty()) return null
-            val newest = weights.sortedByDescending { it.time }
+        /**
+         * Summary of [weights] in any order over the last [days], or null when none is accepted.
+         * Weights in [questioned] (entry ids, marked "?") are left out of everything but [recent].
+         */
+        fun of(weights: List<WeightEntry>, now: Instant, days: Long = DEFAULT_DAYS, questioned: Set<String> = emptySet()): HomeSummary? {
+            val all = weights.sortedByDescending { it.time }
+            val newest = all.filter { it.id !in questioned }
+            if (newest.isEmpty()) return null
             val latest = newest.first()
             val since = now.minus(Duration.ofDays(days))
             val spark = newest.filter { !it.time.isBefore(since) }.reversed()
@@ -41,7 +45,7 @@ data class HomeSummary(
                 change = newest.getOrNull(1)?.let { latest.kg - it.kg },
                 spark = spark,
                 sparkChange = if (spark.size > 1) spark.last().kg - spark.first().kg else null,
-                recent = newest.take(3),
+                recent = all.take(3),
                 sparkFrom = since,
                 sparkTo = maxOf(now, latest.time),
                 sparkScale = if (spark.isEmpty()) null else WeightScale.of(spark.map { it.kg }),

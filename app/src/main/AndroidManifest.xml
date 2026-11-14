@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- background-weigh-in: re-arm the listen trial after a phone restart. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- background-weigh-in: a notification after every automatic weigh-in (asked when the switch is turned on). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="false" />
@@ -94,6 +96,11 @@
         <!-- background-weigh-in: the listen trial's scan results and alarms (our PendingIntents only). -->
         <receiver
             android:name=".listen.ListenReceiver"
+            android:exported="false" />
+
+        <!-- background-weigh-in: Poista and Hyväksy from a weigh-in notification (our PendingIntents only). -->
+        <receiver
+            android:name=".auto.AutoActionReceiver"
             android:exported="false" />
 
         <!-- background-weigh-in: re-arms the trial after boot and app updates. -->

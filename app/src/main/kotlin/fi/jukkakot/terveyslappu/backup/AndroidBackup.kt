@@ -61,12 +61,15 @@ fun Context.appLabel(packageName: String): String = try {
 suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<ExportRow> {
     val ownLabel = context.getString(R.string.recent_this_app)
     val labels = HashMap<String, String>()
-    val archive = (context.applicationContext as TerveysApp).rawArchive
+    val app = context.applicationContext as TerveysApp
+    val archive = app.rawArchive
+    val marks = app.marks.ids()
     return weights.all(Instant.now()).map {
         ExportRow(
             it.time, it.zoneOffset, it.kg,
             if (it.own) ownLabel else labels.getOrPut(it.sourcePackage) { context.appLabel(it.sourcePackage) },
             raw = if (it.own) archive.get(it.time.epochSecond) else null,
+            check = it.own && it.clientRecordId in marks,
         )
     }
 }

@@ -37,6 +37,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.auto.Plausibility
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import fi.jukkakot.terveyslappu.listen.ListenMode
 import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
@@ -46,13 +49,14 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /** Which system screen a status or warning button opens. */
-enum class ListenFix { PERMISSION, BLUETOOTH, POWER_SAVE, BATTERY }
+enum class ListenFix { PERMISSION, HEALTH, BLUETOOTH, POWER_SAVE, BATTERY, NOTIFICATIONS }
 
 private val clockFormat = DateTimeFormatter.ofPattern("H.mm")
 
 /**
- * "Automaattinen punnitus (kokeilu)" (background-weigh-in): the switch, the window, the mode, the
- * power-saving choice, the status with its fix, the battery warning and the last-heard line.
+ * "Automaattinen punnitus" (background-weigh-in): the switch, the status with its fix, the battery
+ * and notification warnings, the pending queue, the window, the mode, the power-saving choice, the
+ * acceptance limit and the last-heard line.
  */
 @Composable
 internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarHostState) {
@@ -77,6 +81,12 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
     if (ui.batteryRestricted) {
         ListenNotice(stringResource(R.string.listen_battery_warning), warn = true, fix = ListenFix.BATTERY, tag = "listenBattery", actions = actions)
     }
+    if (ui.notificationsOff) {
+        ListenNotice(stringResource(R.string.listen_notifications_warning), warn = true, fix = ListenFix.NOTIFICATIONS, tag = "listenNotifications", actions = actions)
+    }
+    if (ui.pending > 0) {
+        ListenNotice(stringResource(R.string.listen_pending, ui.pending), warn = true, fix = null, tag = "listenPending", actions = actions)
+    }
     TimeRow(stringResource(R.string.listen_start), settings.start, "listenStart") { picking = true }
     TimeRow(stringResource(R.string.listen_end), settings.end, "listenEnd") { picking = false }
     ModeChoice(settings.mode) { actions.onListenSettings(settings.copy(mode = it)) }
@@ -88,6 +98,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
         tag = "listenPowerSave",
         onChange = { actions.onListenSettings(settings.copy(listenInPowerSave = it)) },
     )
+    LimitRow(settings.limit) { actions.onListenSettings(settings.copy(limit = it)) }
     Text(
         ui.lastHeard,
         style = MaterialTheme.typography.bodyMedium,
@@ -116,6 +127,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
 private fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (status) {
     ListenStatus.NoScale -> stringResource(R.string.listen_status_no_scale) to null
     ListenStatus.PermissionMissing -> stringResource(R.string.listen_status_permission) to ListenFix.PERMISSION
+    ListenStatus.HealthMissing -> stringResource(R.string.listen_status_health) to ListenFix.HEALTH
     ListenStatus.BluetoothOff -> stringResource(R.string.listen_status_bluetooth) to ListenFix.BLUETOOTH
     ListenStatus.Stopped -> stringResource(R.string.listen_status_stopped) to null
     ListenStatus.PowerSavePause -> stringResource(R.string.listen_status_power_save) to ListenFix.POWER_SAVE
@@ -125,6 +137,8 @@ private fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (s
 
 private fun ListenFix.label(): Int = when (this) {
     ListenFix.PERMISSION -> R.string.listen_fix_permission
+    ListenFix.HEALTH -> R.string.listen_fix_health
+    ListenFix.NOTIFICATIONS -> R.string.listen_fix_notifications
     ListenFix.BLUETOOTH -> R.string.listen_fix_bluetooth
     ListenFix.POWER_SAVE -> R.string.listen_fix_power_save
     ListenFix.BATTERY -> R.string.listen_fix_battery
@@ -180,6 +194,39 @@ private fun TimeRow(label: String, time: LocalTime, tag: String, onClick: () -> 
     ) {
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Text(clockFormat.format(time), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+/** Hyväksyntäraja: 0,5-20 kg in 0,5 kg steps with − and + (background-weigh-in "Trial setting"). */
+@Composable
+private fun LimitRow(limit: Double, onLimit: (Double) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp).testTag("listenLimit"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.listen_limit), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.listen_limit_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        }
+        val less = stringResource(R.string.listen_limit_less)
+        val more = stringResource(R.string.listen_limit_more)
+        TextButton(
+            onClick = { onLimit(Plausibility.limit(limit - Plausibility.STEP)) },
+            enabled = limit > Plausibility.MIN_LIMIT,
+            modifier = Modifier.semantics { contentDescription = less }.testTag("listenLimitLess"),
+        ) { Text("−", style = MaterialTheme.typography.titleLarge) }
+        Text(
+            stringResource(R.string.listen_limit_value, formatKg(limit)),
+            style = MaterialTheme.typography.bodyLarge,
+            color = colors.primary,
+            modifier = Modifier.testTag("listenLimitValue"),
+        )
+        TextButton(
+            onClick = { onLimit(Plausibility.limit(limit + Plausibility.STEP)) },
+            enabled = limit < Plausibility.MAX_LIMIT,
+            modifier = Modifier.semantics { contentDescription = more }.testTag("listenLimitMore"),
+        ) { Text("+", style = MaterialTheme.typography.titleLarge) }
     }
 }
 

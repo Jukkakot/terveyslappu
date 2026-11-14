@@ -7,8 +7,15 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-/** One exported weight: when (with the record's own offset when known), kg, the writing app and its kept raw data. */
-data class ExportRow(val time: Instant, val zoneOffset: ZoneOffset?, val kg: Double, val source: String, val raw: RawEntry? = null)
+/** One exported weight: when (with the record's own offset when known), kg, the writing app, its kept raw data and its "?" mark. */
+data class ExportRow(
+    val time: Instant,
+    val zoneOffset: ZoneOffset?,
+    val kg: Double,
+    val source: String,
+    val raw: RawEntry? = null,
+    val check: Boolean = false,
+)
 
 /**
  * Everything the data file carries (data-file "Data kinds"): one field per data kind. A new kind

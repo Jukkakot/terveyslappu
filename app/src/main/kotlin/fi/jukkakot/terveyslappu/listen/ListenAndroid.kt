@@ -16,7 +16,9 @@ import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.PowerManager
 import android.os.SystemClock
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
+import fi.jukkakot.terveyslappu.auto.Plausibility
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.KnownScale
 import fi.jukkakot.terveyslappu.scale.LastWeighInStore
@@ -39,6 +41,8 @@ class ListenPrefs(context: Context) : ListenStore {
         end = LocalTime.ofSecondOfDay(prefs.getInt(END, ListenWindow.DEFAULT_END.toSecondOfDay() / 60) * 60L),
         mode = ListenMode.of(prefs.getString(MODE, null)),
         listenInPowerSave = prefs.getBoolean(POWER_SAVE, true),
+        // New in phase 2: a trial install has no limit yet and gets the default (migration keeps the rest).
+        limit = Plausibility.limit(prefs.getInt(LIMIT, (Plausibility.DEFAULT_LIMIT * 2).toInt()) / 2.0),
     )
 
     override fun saveSettings(settings: ListenSettings) = prefs.edit(commit = true) {
@@ -47,6 +51,7 @@ class ListenPrefs(context: Context) : ListenStore {
         putInt(END, settings.end.toSecondOfDay() / 60)
         putString(MODE, settings.mode.key)
         putBoolean(POWER_SAVE, settings.listenInPowerSave)
+        putInt(LIMIT, (Plausibility.limit(settings.limit) * 2).toInt())
     }
 
     override fun session(): ListenSession? = prefs.getString(SESSION, null)?.let {
@@ -72,11 +77,16 @@ class ListenPrefs(context: Context) : ListenStore {
         private const val END = "end_min"
         private const val MODE = "mode"
         private const val POWER_SAVE = "in_power_save"
+        /** Hyväksyntäraja in half kilos. */
+        private const val LIMIT = "limit_half_kg"
         private const val SESSION = "session"
         private const val HEARD_AT = "heard_at"
         private const val HEARD_RSSI = "heard_rssi"
     }
 }
+
+/** Health Connect permissions are platform permissions from Android 14 (minSdk 34): checked without a Health Connect call. */
+const val HEALTH_WRITE_WEIGHT = "android.permission.health.WRITE_WEIGHT"
 
 /** The phone's Bluetooth, power and battery state, and the scale remembered by the dialog. */
 class AndroidListenDevice(private val context: Context, private val weighIn: LastWeighInStore) : ListenDevice {
@@ -87,9 +97,13 @@ class AndroidListenDevice(private val context: Context, private val weighIn: Las
     override fun permission() = context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
     override fun bluetoothOn() = adapter?.isEnabled == true
     override fun powerSave() = power?.isPowerSaveMode == true
-    override fun batteryRestricted() = context.getSystemService(ActivityManager::class.java)?.isBackgroundRestricted == true
+    /** Rajoitettu (background restricted) or Optimoitu (not ignoring optimisation): Samsung stops screen-off scans in both. */
+    override fun batteryRestricted() = context.getSystemService(ActivityManager::class.java)?.isBackgroundRestricted == true ||
+        power?.isIgnoringBatteryOptimizations(context.packageName) == false
     override fun battery() = context.getSystemService(BatteryManager::class.java)?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
     override fun screenOn() = power?.isInteractive == true
+    override fun healthWrite() = context.checkSelfPermission(HEALTH_WRITE_WEIGHT) == PackageManager.PERMISSION_GRANTED
+    override fun notificationsOn() = NotificationManagerCompat.from(context).areNotificationsEnabled()
     override fun offloadedFiltering() = adapter?.isOffloadedFilteringSupported == true
     override fun offloadedBatching() = adapter?.isOffloadedScanBatchingSupported == true
     override fun nowMs() = System.currentTimeMillis()

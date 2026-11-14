@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.data
 
+import fi.jukkakot.terveyslappu.history.HistoryParser
 import fi.jukkakot.terveyslappu.raw.RawFormat
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -8,7 +9,7 @@ import java.time.format.DateTimeFormatter
 
 /**
  * The data file as CSV (data-file "CSV layout"): `#terveyslappu;version=2`, then per data kind
- * `#table;<kind>`, its header and rows. Weights keep the `date;time;weight_kg;source;raw` columns,
+ * `#table;<kind>`, its header and rows. Weights keep the `date;time;weight_kg;source;raw;check` columns (`check` is `?` for a weight marked "?"),
  * oldest first, the time with its UTC offset (`07:12:00+03:00`; older files have none and are read
  * in the phone's zone), comma decimals, so `HistoryParser` reads them like any history table. Reading
  * lives in `HistoryParser.parse`, which also reads older files and other apps' tables.
@@ -16,7 +17,7 @@ import java.time.format.DateTimeFormatter
 object CsvData {
     const val VERSION_LINE = "#${DataFile.APP};version=${DataFile.VERSION}"
     const val TABLE_PREFIX = "#table;"
-    const val WEIGHT_HEADER = "date;time;weight_kg;source;raw"
+    const val WEIGHT_HEADER = "date;time;weight_kg;source;raw;check"
 
     private val date = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val time = DateTimeFormatter.ofPattern("HH:mm:ssxxx")
@@ -32,7 +33,8 @@ object CsvData {
                 append(time.format(local)).append(';')
                 append(kg(row.kg)).append(';')
                 append(quote(row.source)).append(';')
-                append(row.raw?.let { quote(RawFormat.encode(it)) } ?: "").append('\n')
+                append(row.raw?.let { quote(RawFormat.encode(it)) } ?: "").append(';')
+                append(if (row.check) HistoryParser.CHECK_MARK else "").append('\n')
             }
         }
     }

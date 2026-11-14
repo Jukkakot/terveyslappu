@@ -78,8 +78,8 @@ class ListGroupsTest {
         val entries = (1..20).map { w("2025-11-%02d".format(it), 92.3 - (it - 1) * 1.3 / 19) } + w("2025-10-15", 94.0)
         val nov = groups(tree(entries)).single { it.key == "m2025-11" }
         assertEquals(20, nov.count)
-        assertEquals(92.3, nov.first.kg, 1e-9)
-        assertEquals(91.0, nov.last.kg, 1e-9)
+        assertEquals(92.3, nov.first!!.kg, 1e-9)
+        assertEquals(91.0, nov.last!!.kg, 1e-9)
         assertEquals(-1.3, nov.change, 1e-9)
     }
 

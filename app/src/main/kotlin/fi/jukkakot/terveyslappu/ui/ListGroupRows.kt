@@ -69,13 +69,17 @@ internal fun GroupRowItem(group: ListNode.Group, open: Boolean, today: LocalDate
         Column(Modifier.weight(1f)) {
             Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             Text(
-                if (group.count == 1) stringResource(R.string.group_value_single, formatKg(group.last.kg))
-                else stringResource(R.string.group_values, formatKg(group.first.kg), formatKg(group.last.kg), group.count),
+                when {
+                    // Only "?" weights: just the count (a group never uses them as first or last).
+                    group.first == null || group.last == null -> pluralCount(group.count)
+                    group.count == 1 -> stringResource(R.string.group_value_single, formatKg(group.last.kg))
+                    else -> stringResource(R.string.group_values, formatKg(group.first.kg), formatKg(group.last.kg), group.count)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant,
             )
         }
-        if (group.count > 1) {
+        if (group.acceptedCount > 1) {
             val direction = shownDirection(group.change, 1)
             ChangeLabel(formatChange(group.change), direction, style = MaterialTheme.typography.bodyMedium, color = changeColor(direction))
         }
@@ -87,6 +91,9 @@ internal fun GroupRowItem(group: ListNode.Group, open: Boolean, today: LocalDate
         )
     }
 }
+
+@Composable
+private fun pluralCount(count: Int): String = stringResource(R.string.group_count_only, count)
 
 /** A pause over 30 days: a thin row naming the days without weights. */
 @Composable

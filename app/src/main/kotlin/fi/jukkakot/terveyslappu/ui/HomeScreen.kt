@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -104,18 +105,21 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
 @Composable
 private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile) {
     val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
-    val summary = remember(state.weights, state.homeDays) { state.weights?.let { HomeSummary.of(it, now, state.homeDays) } }
+    val summary = remember(state.weights, state.homeDays, state.questioned) {
+        state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
+    }
     val today = LocalDate.now()
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed) { actions.onScreen(Screen.SETTINGS) }
+        if (state.newestQuestioned != null) CheckNotice(actions.onOpenQuestioned)
         LatestCard(state, summary, today, actions.onHomePeriod) { actions.onScreen(Screen.HISTORY) }
         // Recomputed whenever the weights or the owner details change (derived-values).
         val derived = remember(summary?.latest, profile) { summary?.let { LatestDerived.of(it.latest, profile, ZoneId.systemDefault()) } }
         derived?.let { DerivedRow(it, actions.onOpenProfile) }
-        summary?.let { RecentList(it.recent, today) }
+        summary?.let { RecentList(it.recent, today, state.questioned) }
     }
 }
 
@@ -286,7 +290,7 @@ private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
 }
 
 @Composable
-private fun RecentList(recent: List<WeightEntry>, today: LocalDate) {
+private fun RecentList(recent: List<WeightEntry>, today: LocalDate, questioned: Set<String>) {
     Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer).testTag("recent")) {
         recent.forEach { entry ->
             Row(
@@ -295,9 +299,45 @@ private fun RecentList(recent: List<WeightEntry>, today: LocalDate) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(formatRowTime(entry.time, today, ZoneId.systemDefault()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                Text(stringResource(R.string.kg_value, formatKg(entry.kg)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                val kg = stringResource(R.string.kg_value, formatKg(entry.kg))
+                if (entry.id in questioned) {
+                    // A "?" weight: its sign, no change (home-screen "Questioned weights on the home screen").
+                    val description = stringResource(R.string.check_row_description, formatKg(entry.kg))
+                    Text(
+                        kg + " " + stringResource(R.string.check_mark),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.semantics { contentDescription = description }.testTag("recentQuestioned"),
+                    )
+                } else {
+                    Text(kg, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
+    }
+}
+
+/** "Punnitus odottaa tarkistusta" in the "?" row's amber tint; opens Historia at the newest "?" weight. */
+@Composable
+private fun CheckNotice(onOpen: () -> Unit) {
+    val check = checkColors()
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(check.container)
+            .border(1.dp, check.outline, shape)
+            .clickable(onClickLabel = stringResource(R.string.history_title), onClick = onOpen)
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .testTag("checkNotice"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = check.content, modifier = Modifier.size(20.dp))
+        Text(stringResource(R.string.home_check_notice), style = MaterialTheme.typography.bodyMedium, color = check.content, modifier = Modifier.weight(1f))
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = check.content, modifier = Modifier.size(20.dp))
     }
 }
 

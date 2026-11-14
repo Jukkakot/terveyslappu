@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.listen
 
+import fi.jukkakot.terveyslappu.auto.Plausibility
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.KnownScale
 import fi.jukkakot.terveyslappu.scale.PacketLog
@@ -22,13 +23,14 @@ enum class ListenMode(val key: String) {
     }
 }
 
-/** The trial's choices (background-weigh-in "Trial setting"). */
+/** The automatic weigh-in's choices (background-weigh-in "Trial setting"); [limit] is Hyväksyntäraja in kg. */
 data class ListenSettings(
     val enabled: Boolean = false,
     val start: LocalTime = ListenWindow.DEFAULT_START,
     val end: LocalTime = ListenWindow.DEFAULT_END,
     val mode: ListenMode = ListenMode.SAVE,
     val listenInPowerSave: Boolean = true,
+    val limit: Double = Plausibility.DEFAULT_LIMIT,
 ) {
     val window: ListenWindow get() = ListenWindow(start, end)
 }
@@ -51,6 +53,10 @@ interface ListenDevice {
     fun powerSave(): Boolean
     fun batteryRestricted(): Boolean
     fun battery(): Int
+    /** Health Connect weight write access (background-weigh-in "Trial status"). */
+    fun healthWrite(): Boolean = true
+    /** The app may post notifications (a warning line when not). */
+    fun notificationsOn(): Boolean = true
     fun screenOn(): Boolean
     fun offloadedFiltering(): Boolean
     fun offloadedBatching(): Boolean
@@ -82,14 +88,24 @@ data class HeardResult(
     val timestampNanos: Long,
 )
 
-/** What the Asetukset section shows. */
+/** What the Asetukset section shows; [widget] and [windowEndMs] are what the widget draws. */
 data class ListenUi(
     val settings: ListenSettings = ListenSettings(),
     val hasScale: Boolean = false,
     val status: ListenStatus? = null,
     val batteryRestricted: Boolean = false,
+    val notificationsOff: Boolean = false,
+    /** Weights waiting in the pending queue ("N punnitusta odottaa tallennusta"). */
+    val pending: Int = 0,
     val lastHeard: String = LastHeardText.text(null, Instant.EPOCH, ZoneId.systemDefault()),
+    val widget: WidgetState? = null,
+    val windowEndMs: Long? = null,
 )
+
+/** Where a decided background weight goes (the automatic save); called under the controller's lock. */
+fun interface DecidedSink {
+    fun decided(weight: HeardEvent.Decided)
+}
 
 /**
  * The listen-only trial (background-weigh-in, design.md): plans the scan and the alarm from the
@@ -102,6 +118,8 @@ class ListenController(
     private val device: ListenDevice,
     private val radio: ListenRadio,
     private val alarm: ListenAlarm,
+    private val sink: DecidedSink = DecidedSink {},
+    private val pendingCount: () -> Int = { 0 },
 ) {
     private val _changes = MutableStateFlow(0)
 
@@ -134,6 +152,7 @@ class ListenController(
             "window" to "${clock.format(next.start)}-${clock.format(next.end)}",
             "mode" to next.mode.key,
             "powerSave" to if (next.listenInPowerSave) "on" else "off",
+            "limit" to next.limit,
         )
         replan("settings")
     }
@@ -186,6 +205,12 @@ class ListenController(
             close(session, "stale", nowMs)
             session = null
         }
+        // A lone stable reading with nothing after it is decided at the hourly check (design 2).
+        if (session != null && reason == ACTION_CHECK) {
+            val (ticked, decided) = HeardPackets.tick(session, nowMs - session.startedMs)
+            session = ticked
+            decided?.let(sink::decided)
+        }
         val powerSave = device.powerSave()
         if (reason == ACTION_CHECK) {
             AppLog.i(
@@ -206,7 +231,7 @@ class ListenController(
             )
             AppLog.i(
                 "listen.start", "",
-                "late" to (nowMs - plan.start.toEpochMilli()) / 60_000,
+                "late" to lateMinutes(reason, nowMs, plan.start.toEpochMilli()),
                 "mode" to settings.mode.key,
                 "offloadFilter" to device.offloadedFiltering(),
                 "offloadBatch" to device.offloadedBatching(),
@@ -215,7 +240,10 @@ class ListenController(
             session = session.copy(windowEndMs = plan.end.toEpochMilli(), mode = settings.mode.key)
         }
         store.saveSession(session)
-        if (powerSave && !settings.listenInPowerSave) {
+        if (!device.healthWrite()) {
+            radio.stop()
+            AppLog.w("listen.stop", "", "reason" to "hc")
+        } else if (powerSave && !settings.listenInPowerSave) {
             radio.stop()
             AppLog.i("listen.stop", "", "reason" to "powerSave")
         } else {
@@ -223,6 +251,10 @@ class ListenController(
         }
         arm(plan.nextCheck, if (plan.nextCheck == plan.end) ACTION_END else ACTION_CHECK)
     }
+
+    /** Only an alarm start measures lateness; enable, settings or app inside the window log 0 (trial finding). */
+    private fun lateMinutes(reason: String, nowMs: Long, startMs: Long): Long =
+        if (reason == ACTION_START || reason == ACTION_CHECK) (nowMs - startMs) / 60_000 else 0
 
     private fun arm(at: Instant, action: String) {
         alarm.set(at.toEpochMilli(), action)
@@ -236,7 +268,10 @@ class ListenController(
     /** A delivery from the scan (design 6, 10): logs and accumulates; a late one after the window is dropped. */
     @Synchronized
     fun onResults(results: List<HeardResult>) {
-        var session = store.session() ?: return
+        var session = store.session() ?: run {
+            AppLog.i("auto.skip", "", "reason" to "outside", "count" to results.size)
+            return
+        }
         val scale = device.scale() ?: return
         val screen = if (device.screenOn()) "on" else "off"
         val before = session.packets
@@ -262,6 +297,11 @@ class ListenController(
             is HeardEvent.Raw -> AppLog.d(PacketLog.EVENT, "", *PacketLog.fields(event.packet), "src" to "bg", "screen" to screen)
             is HeardEvent.Repeat -> AppLog.d("listen.repeat", "", "count" to event.count, "rssiMin" to event.rssiMin, "rssiMax" to event.rssiMax)
             is HeardEvent.Other -> AppLog.d("listen.other", "", "addr" to (event.address ?: "-"), "name" to (event.name ?: "-"), "rssi" to event.rssi)
+            is HeardEvent.OutOfRange -> AppLog.i("auto.skip", "", "reason" to "range", "kg" to event.kg)
+            is HeardEvent.Decided -> {
+                AppLog.i("scale.stable", "", "kg" to event.kg, "src" to "bg")
+                sink.decided(event)
+            }
         }
     }
 
@@ -297,6 +337,7 @@ class ListenController(
             enabled = settings.enabled,
             hasScale = hasScale,
             permission = device.permission(),
+            healthWrite = device.healthWrite(),
             bluetoothOn = device.bluetoothOn(),
             powerSave = device.powerSave(),
             listenInPowerSave = settings.listenInPowerSave,
@@ -304,12 +345,17 @@ class ListenController(
             inside = plan is WindowPlan.Inside,
             nextStart = settings.window.nextStart(now, zone).atZone(zone).toLocalTime(),
         )
+        val status = ListenStatusRule.status(facts)
         return ListenUi(
             settings = settings,
             hasScale = hasScale,
-            status = ListenStatusRule.status(facts),
+            status = status,
             batteryRestricted = settings.enabled && device.batteryRestricted(),
+            notificationsOff = settings.enabled && !device.notificationsOn(),
+            pending = pendingCount(),
             lastHeard = LastHeardText.text(store.lastHeard(), now, zone),
+            widget = WidgetStateRule.of(status, facts.inside),
+            windowEndMs = (plan as? WindowPlan.Inside)?.end?.toEpochMilli(),
         )
     }
 

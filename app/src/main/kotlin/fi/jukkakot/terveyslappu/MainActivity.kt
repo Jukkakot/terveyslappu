@@ -1,7 +1,10 @@
 package fi.jukkakot.terveyslappu
 
 import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
+import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.pm.PackageManager
+import fi.jukkakot.terveyslappu.ui.Screen
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -56,6 +59,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) openFrom(intent)
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
@@ -79,6 +83,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 val listenUi = remember(listenVersion, listenTick) { listen.ui() }
+                val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                    // A denial keeps the switch on: weights are still saved, Asetukset warns (background-weigh-in).
+                    AppLog.i("auto.notify", if (granted) "granted" else "denied")
+                    listenTick++
+                }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
@@ -138,6 +147,7 @@ class MainActivity : ComponentActivity() {
                 LifecycleResumeEffect(Unit) {
                     viewModel.refreshAccess()
                     listenTick++
+                    WeighInWidget.update(this@MainActivity)
                     onPauseOrDispose {}
                 }
                 LaunchedEffect(Unit) {
@@ -213,18 +223,30 @@ class MainActivity : ComponentActivity() {
                         onDismissImport = viewModel::dismissImport,
                         onPeriod = viewModel::onPeriod,
                         onHomePeriod = viewModel::onHomePeriod,
-                        onListenEnabled = listen::setEnabled,
-                        onListenSettings = listen::updateSettings,
-                        onListenFix = { fix ->
-                            open(
-                                when (fix) {
-                                    ListenFix.BLUETOOTH -> Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
-                                    ListenFix.POWER_SAVE -> Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
-                                    ListenFix.PERMISSION, ListenFix.BATTERY ->
-                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
-                                },
-                            )
+                        onListenEnabled = { on ->
+                            listen.setEnabled(on)
+                            WeighInWidget.update(this)
+                            if (on && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                                launchSafely("auto.notify") { notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                            }
                         },
+                        onListenSettings = { settings ->
+                            listen.updateSettings(settings)
+                            WeighInWidget.update(this)
+                        },
+                        onListenFix = { fix ->
+                            when (fix) {
+                                ListenFix.HEALTH -> launchSafely("hc.permission.request") { permissionLauncher.launch(viewModel.weights.permissions) }
+                                ListenFix.NOTIFICATIONS -> open(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName))
+                                ListenFix.BLUETOOTH -> open(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                                ListenFix.POWER_SAVE -> open(Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
+                                ListenFix.PERMISSION, ListenFix.BATTERY ->
+                                    open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri()))
+                            }
+                        },
+                        onAccept = viewModel::accept,
+                        onOpenQuestioned = viewModel::openQuestioned,
+                        onTargetShown = viewModel::targetShown,
                         onGrantHistory = {
                             viewModel.afterHistory = AfterHistory.RELOAD
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
@@ -233,6 +255,16 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        openFrom(intent)
+    }
+
+    /** A weigh-in notification's tap opens Historia (background-weigh-in). */
+    private fun openFrom(intent: Intent?) {
+        if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HISTORY) viewModel.onScreen(Screen.HISTORY)
     }
 
     private fun shareLog() {
@@ -277,10 +309,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private companion object {
+    companion object {
+        private const val EXTRA_SCREEN = "screen"
+        private const val SCREEN_HISTORY = "history"
+
+        /** Opens the app at Historia, reusing a running main screen. */
+        fun historyIntent(context: android.content.Context): Intent = Intent(context, MainActivity::class.java)
+            .putExtra(EXTRA_SCREEN, SCREEN_HISTORY)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
         /** Text tables; some file managers label CSV files as octet-stream. */
-        const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
-        val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/json", "application/octet-stream")
-        const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
+        private const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
+        private val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/json", "application/octet-stream")
+        private const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }
 }

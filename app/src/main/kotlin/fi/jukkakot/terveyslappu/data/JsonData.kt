@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.data
 
+import fi.jukkakot.terveyslappu.history.HistoryParser
 import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.SkipReason
 import fi.jukkakot.terveyslappu.history.WeightCollector
@@ -29,6 +30,7 @@ object JsonData {
     private val known = setOf("app", "version", DataFile.WEIGHTS)
     private val offsetTime = DateTimeFormatter.ISO_OFFSET_DATE_TIME
     private const val RAW_SOURCE = "source"
+    private const val CHECK = "check"
 
     fun write(set: DataSet, fallbackZone: ZoneId): String {
         val root = buildJsonObject {
@@ -52,6 +54,7 @@ object JsonData {
                                         },
                                     )
                                 }
+                                if (row.check) put(CHECK, HistoryParser.CHECK_MARK)
                             },
                         )
                     }
@@ -80,7 +83,8 @@ object JsonData {
             if (time == null) return@forEachIndexed collector.skip(line, SkipReason.UNREADABLE_DATE, text)
             val kg = (obj["kg"] as? JsonPrimitive)?.doubleOrNull
                 ?: return@forEachIndexed collector.skip(line, SkipReason.UNREADABLE_WEIGHT, text)
-            collector.add(line, text, time, kg) { second -> raw(obj["raw"], second) }
+            val check = (obj[CHECK] as? JsonPrimitive)?.takeIf { it.isString }?.content == HistoryParser.CHECK_MARK
+            collector.add(line, text, time, kg, check) { second -> raw(obj["raw"], second) }
         }
         val unknown = root.keys.filter { it !in known }
         return collector.result(null).copy(unknownKinds = unknown)

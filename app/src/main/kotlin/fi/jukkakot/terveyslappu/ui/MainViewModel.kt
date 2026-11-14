@@ -39,6 +39,9 @@ import fi.jukkakot.terveyslappu.history.HistoryWriter
 import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.WriteResult
 import fi.jukkakot.terveyslappu.raw.RawEntry
+import fi.jukkakot.terveyslappu.auto.Mark
+import fi.jukkakot.terveyslappu.auto.RefPair
+import fi.jukkakot.terveyslappu.weight.importClientId
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
 import java.time.Instant
@@ -74,7 +77,17 @@ data class MainUiState(
     val profileFocus: Boolean = false,
     /** When [weights] were last read; the charts take their "now" from it so a reload moves them on. */
     val loadedAt: Instant? = null,
+    /** Ids of read weights marked "?" (only marks that match a read weight). */
+    val questioned: Set<String> = emptySet(),
+    /** Historia opens with this weight's row shown (the home notice: the newest "?" weight). */
+    val historyTarget: String? = null,
 ) {
+    /** The weights not marked "?": everything that charts, counts or compares uses these. */
+    val accepted: List<WeightEntry>? get() = weights?.filter { it.id !in questioned }
+
+    /** The newest weight marked "?", if any. */
+    val newestQuestioned: WeightEntry? get() = weights?.filter { it.id in questioned }?.maxByOrNull { it.time }
+
     /** The state after a successful read at [at]. */
     fun loaded(entries: List<WeightEntry>, history: HistoryAccess, at: Instant) =
         copy(weights = entries, history = history, loadFailed = false, loadedAt = at)
@@ -109,6 +122,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The owner details (owner-profile). */
     val profile = (app as TerveysApp).profile
+
+    private val terveys = app as TerveysApp
+
+    /** The first read after the app opens writes the pending queue first, so the list includes it (design 3). */
+    private var firstLoad = true
+
+    init {
+        // Changes made by the background save or a notification action (design 12).
+        viewModelScope.launch {
+            terveys.weightsSignal.changes.collect { if (_state.value.access == Access.GRANTED) load() }
+        }
+    }
 
     private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays()))
     val state: StateFlow<MainUiState> = _state
@@ -158,7 +183,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(access = access) }
             if (access == Access.GRANTED) {
                 load()
-                backup.requestIfDue()
+                backup.requestIfDue(changedWhileClosed = runCatching { terveys.autoFlags.takeBackupDue() }.getOrDefault(false))
             }
         }
     }
@@ -169,7 +194,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         refreshAccess()
     }
 
-    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen, profileFocus = false) }
+    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen, profileFocus = false, historyTarget = null) }
+
+    /** The home notice: Historia with the newest "?" weight shown (home-screen). */
+    fun openQuestioned() = _state.update { it.copy(screen = Screen.HISTORY, profileFocus = false, historyTarget = it.newestQuestioned?.id) }
+
+    /** Historia has scrolled to its target. */
+    fun targetShown() = _state.update { it.copy(historyTarget = null) }
+
+    /** Hyväksy on a "?" row: the mark goes with the chained acceptance (weight-entry). */
+    fun accept(entry: WeightEntry) {
+        val id = entry.clientRecordId ?: return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { runCatching { terveys.auto.accept(id, "historia") }.onFailure { AppLog.e("auto.confirm", it, "failed") } }
+            // The weights-changed signal of the acceptance reloads the list.
+            backup.request("confirm")
+        }
+    }
 
     /** A derived value's reason: Asetukset at Omat tiedot (derived-values). */
     fun openProfile() = _state.update { it.copy(screen = Screen.SETTINGS, profileFocus = true) }
@@ -198,6 +239,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { weights.write(input.kg, time, zone.rules.getOffset(time)) }
                 .onSuccess { clientId ->
                     AppLog.i("weight.save", "ok", "kg" to input.kg, "time" to time, "clientId" to clientId, "ms" to msSince(started))
+                    keepAuto("reference") { terveys.reference.accepted(listOf(RefPair(clientId, time.toEpochMilli(), input.kg))) }
                     _state.update { it.copy(weightText = "", pickedTime = null, saving = false, entryOpen = false) }
                     _messages.tryEmit(UiMessage(R.string.weight_saved, listOf(formatKg(input.kg))))
                     load()
@@ -212,14 +254,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val rawArchive get() = getApplication<TerveysApp>().rawArchive
 
-    /** Undo of a delete: writes the weight back with its raw data (delete-undo). */
-    fun restore(entry: WeightEntry, raw: RawEntry? = null) {
+    /** Undo of a delete: writes the weight back with its raw data and its "?" mark (delete-undo). */
+    fun restore(entry: WeightEntry, raw: RawEntry? = null, mark: Mark? = null) {
         viewModelScope.launch {
             val started = System.nanoTime()
             runCatching { weights.restore(entry) }
                 .onSuccess {
                     AppLog.i("weight.restore", "ok", "kg" to entry.kg, "time" to entry.time, "ms" to msSince(started))
                     raw?.let { keepRaw("restore") { rawArchive.add(it) } }
+                    val id = entry.clientRecordId
+                    if (mark != null) {
+                        keepAuto("mark") { terveys.marks.add(listOf(mark)) }
+                    } else if (id != null) {
+                        keepAuto("reference") { terveys.reference.accepted(listOf(RefPair(id, entry.time.toEpochMilli(), entry.kg))) }
+                    }
                     load()
                     backup.request("restore")
                 }
@@ -237,7 +285,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .onSuccess {
                     AppLog.i("weight.delete", "ok", "id" to entry.id, "ms" to msSince(started))
                     val raw = keepRaw("delete") { rawArchive.remove(entry.time.epochSecond) }
-                    _messages.tryEmit(UiMessage(R.string.delete_done, action = UiAction(R.string.undo) { restore(entry, raw) }))
+                    val id = entry.clientRecordId
+                    val mark = id?.let { keepAuto("mark") { terveys.marks.remove(listOf(it)).firstOrNull() } }
+                    if (id != null) {
+                        keepAuto("reference") { terveys.reference.removed(id) }
+                        keepAuto("notify") { terveys.autoNotifier.cancel(id) }
+                    }
+                    _messages.tryEmit(UiMessage(R.string.delete_done, action = UiAction(R.string.undo) { restore(entry, raw, mark) }))
                     load()
                     backup.request("delete")
                 }
@@ -252,6 +306,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         weights.writeImported(batch, ZoneId.systemDefault())
         keepRaw("import") { withContext(Dispatchers.IO) { rawArchive.addAll(batch.mapNotNull { it.raw }) } }
     })
+
+    /** Marks and reference trouble is logged and never fails the weight action itself. */
+    private inline fun <T> keepAuto(step: String, block: () -> T): T? = try {
+        block()
+    } catch (e: Exception) {
+        AppLog.e("auto.store", e, step)
+        null
+    }
+
+    /** Imported weights: `check` `?` gives the mark back, the others join the reference list (data-file "Mark read back"). */
+    private fun importMarks(weights: List<fi.jukkakot.terveyslappu.history.ImportedWeight>) {
+        val (checked, plain) = weights.partition { it.check }
+        keepAuto("mark") { terveys.marks.add(checked.map { Mark(importClientId(it.time), it.time.toEpochMilli(), it.kg) }) }
+        keepAuto("reference") { terveys.reference.accepted(plain.map { RefPair(importClientId(it.time), it.time.toEpochMilli(), it.kg) }) }
+    }
 
     /** Archive trouble is logged and never fails the weight action itself. */
     private inline fun <T> keepRaw(action: String, block: () -> T): T? = try {
@@ -334,6 +403,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             when (result) {
                 is WriteResult.Done -> {
                     AppLog.i("import.write", "ok", "count" to result.count, "from" to from, "ms" to msSince(started))
+                    importMarks(parsed.weights)
                     _state.update { it.copy(import = null) }
                     _messages.tryEmit(UiMessage(R.string.import_done, listOf(result.count)))
                     load()
@@ -407,18 +477,42 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun load() {
+        if (firstLoad) {
+            firstLoad = false
+            withContext(Dispatchers.IO) { runCatching { terveys.auto.flush("app") }.onFailure { AppLog.e("auto.retry", it, "failed") } }
+        }
         val started = System.nanoTime()
         val history = historyAccess()
         val at = Instant.now()
         runCatching { weights.own(at).newestFirst() }
             .onSuccess { entries ->
                 AppLog.i("weight.read", "ok", "ms" to msSince(started), "count" to entries.size, "history" to history.name)
-                _state.update { it.loaded(entries, history, at) }
+                val questioned = withContext(Dispatchers.IO) { keepAuto("sync") { syncMarks(entries, history, at) } } ?: emptySet()
+                _state.update { it.loaded(entries, history, at).copy(questioned = questioned) }
             }
             .onFailure { error ->
                 AppLog.e("weight.read", error, "failed", "ms" to msSince(started))
                 _state.update { it.copy(loadFailed = true) }
             }
+    }
+
+    /**
+     * After a foreground read (design 4, 5): orphan marks are dropped, the reference list is seeded
+     * from the read accepted weights. Without the history permission only the last 30 days are read,
+     * so older marks are kept and an empty read keeps the old reference pairs. Returns the ids of
+     * the read weights marked "?".
+     */
+    private fun syncMarks(entries: List<WeightEntry>, history: HistoryAccess, at: Instant): Set<String> {
+        val own = entries.filter { it.own && it.clientRecordId != null }
+        val readIds = own.mapNotNull { it.clientRecordId }.toSet()
+        val readSince = at.minus(java.time.Duration.ofDays(30)).toEpochMilli()
+        val keep = if (history == HistoryAccess.GRANTED) readIds else readIds + terveys.marks.all().filter { it.timeMs < readSince }.map { it.id }
+        val dropped = terveys.marks.retain(keep)
+        if (dropped > 0) AppLog.i("marks.orphans", "", "dropped" to dropped)
+        val marked = terveys.marks.ids()
+        val pairs = own.filter { it.clientRecordId !in marked }.map { RefPair(it.clientRecordId!!, it.time.toEpochMilli(), it.kg) }
+        terveys.reference.seed(if (pairs.isEmpty() && history != HistoryAccess.GRANTED) terveys.reference.get().pairs else pairs)
+        return own.filter { it.clientRecordId in marked }.map { it.id }.toSet()
     }
 
     private companion object {

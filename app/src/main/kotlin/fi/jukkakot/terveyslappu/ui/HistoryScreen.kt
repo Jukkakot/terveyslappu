@@ -2,6 +2,13 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -98,16 +105,51 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
     val zone = ZoneId.systemDefault()
     val now = remember(state.loadedAt, state.period) { state.loadedAt ?: Instant.now() }
     val today = LocalDate.now(zone)
-    val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
-    val tree = remember(shown) { ListGroups.build(shown, zone) }
-    val dayWeights = remember(all) { RangePick.dayWeights(all, zone) }
+    // "?" weights stay out of the chart, the stats and the calendar, but are listed whatever the period (weight-entry).
+    val accepted = remember(all, state.questioned) { all.filter { it.id !in state.questioned } }
+    val shown = remember(accepted, state.period) { state.period.filter(accepted, now, zone) }
+    val listed = remember(shown, all, state.questioned) { shown + all.filter { it.id in state.questioned } }
+    val tree = remember(listed, state.questioned) { ListGroups.build(listed, zone, questioned = state.questioned) }
+    val dayWeights = remember(accepted) { RangePick.dayWeights(accepted, zone) }
     // Every group starts closed; reset with the period, forgotten when Historia is left (weight-entry "Open by default").
     var open by remember(state.period) { mutableStateOf(emptySet<String>()) }
     val rows = remember(tree, open) { ListGroups.flatten(tree, open) }
+    var checking by remember { mutableStateOf<WeightEntry?>(null) }
+    val listState = rememberLazyListState()
+    val headerItems = if (state.history == HistoryAccess.NOT_GRANTED && state.period.needsHistory(now, zone)) 4 else 3
+    // The home notice opens Historia at the newest "?" weight: open its groups, then scroll to its row.
+    LaunchedEffect(state.historyTarget, tree) {
+        val target = state.historyTarget ?: return@LaunchedEffect
+        val path = ListGroups.pathTo(tree, target)
+        if (path == null) actions.onTargetShown() else open = open + path
+    }
+    LaunchedEffect(state.historyTarget, rows) {
+        val target = state.historyTarget ?: return@LaunchedEffect
+        val index = rows.indexOfFirst { (it.node as? ListNode.Weight)?.entry?.id == target }
+        if (index >= 0) {
+            listState.scrollToItem(headerItems + index)
+            actions.onTargetShown()
+        }
+    }
+    checking?.let { entry ->
+        CheckDialog(
+            entry,
+            today,
+            onAccept = {
+                checking = null
+                actions.onAccept(entry)
+            },
+            onDelete = {
+                checking = null
+                actions.onDelete(entry)
+            },
+            onDismiss = { checking = null },
+        )
+    }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
     val pager = rememberPagerState { Quantity.entries.size }
     val scope = rememberCoroutineScope()
-    LazyColumn(Modifier.fillMaxSize().testTag("weights")) {
+    LazyColumn(Modifier.fillMaxSize().testTag("weights"), state = listState) {
         item(key = "chips") {
             PeriodChips(
                 state.period,
@@ -145,7 +187,11 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
         items(rows, key = { it.node.key }) { row ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             when (val node = row.node) {
-                is ListNode.Weight -> WeightRowItem(node.entry, node.change, today, row.depth, onDelete = { actions.onDelete(node.entry) })
+                is ListNode.Weight -> if (node.questioned) {
+                    QuestionedRowItem(node.entry, today, row.depth, onCheck = { checking = node.entry }, onDelete = { actions.onDelete(node.entry) })
+                } else {
+                    WeightRowItem(node.entry, node.change, today, row.depth, onDelete = { actions.onDelete(node.entry) })
+                }
                 is ListNode.Group -> GroupRowItem(node, node.key in open, today, row.depth) {
                     open = if (node.key in open) open - node.key else open + node.key
                 }
@@ -252,6 +298,63 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
             }
         }
     }
+}
+
+/**
+ * A "?" weight (weight-entry "Questioned row look"): an amber-tinted outlined card with the "?"
+ * sign and "tarkista", no change; a tap opens Hyväksy / Poista / Peruuta.
+ */
+@Composable
+private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, onCheck: () -> Unit, onDelete: () -> Unit) {
+    val check = checkColors()
+    val shape = RoundedCornerShape(12.dp)
+    val description = stringResource(R.string.check_row_description, formatKg(entry.kg))
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = indent(depth) - 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+            .clip(shape)
+            .background(check.container)
+            .border(1.dp, check.outline, shape)
+            .clickable(onClickLabel = stringResource(R.string.check_title), onClick = onCheck)
+            .heightIn(min = 48.dp)
+            .padding(start = 8.dp)
+            .testTag("questioned-${entry.id}"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(formatRowTime(entry.time, today), style = MaterialTheme.typography.bodyLarge, color = check.content)
+            Text(stringResource(R.string.check_text), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = check.content)
+        }
+        Text(
+            stringResource(R.string.kg_value, formatKg(entry.kg)) + " " + stringResource(R.string.check_mark),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = check.content,
+            modifier = Modifier.semantics { contentDescription = description },
+        )
+        val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
+        IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = check.content)
+        }
+    }
+}
+
+/** Hyväksy / Poista / Peruuta for a "?" weight; Hyväksy takes the chained acceptance with it. */
+@Composable
+private fun CheckDialog(entry: WeightEntry, today: LocalDate, onAccept: () -> Unit, onDelete: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.check_title)) },
+        text = { Text(stringResource(R.string.check_body, formatKg(entry.kg), formatDayTime(entry.time, today))) },
+        confirmButton = { TextButton(onClick = onAccept, modifier = Modifier.testTag("checkAccept")) { Text(stringResource(R.string.check_accept)) } },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onDelete, modifier = Modifier.testTag("checkDelete")) { Text(stringResource(R.string.check_delete)) }
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("checkCancel")) { Text(stringResource(R.string.cancel)) }
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -18,14 +18,14 @@ class WeightCollector(private val now: Instant) {
     }
 
     /** [raw] gives the weight's raw data for its epoch second, read only for kept weights. */
-    fun add(line: Int, text: String, time: Instant, kg: Double, raw: (Long) -> RawEntry?) {
+    fun add(line: Int, text: String, time: Instant, kg: Double, check: Boolean = false, raw: (Long) -> RawEntry?) {
         when {
             kg !in MIN_KG..MAX_KG -> skip(line, SkipReason.OUT_OF_RANGE, text)
             time.isAfter(now) -> skip(line, SkipReason.FUTURE, text)
             else -> {
                 val second = time.epochSecond
                 bySecond.remove(second)?.let { (old, oldText) -> skip(old.line, SkipReason.DUPLICATE, oldText) }
-                bySecond[second] = ImportedWeight(time, kg, line, raw(second)) to text
+                bySecond[second] = ImportedWeight(time, kg, line, raw(second), check) to text
             }
         }
     }

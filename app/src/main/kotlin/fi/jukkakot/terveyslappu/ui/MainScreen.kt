@@ -69,6 +69,12 @@ class MainActions(
     val onListenEnabled: (Boolean) -> Unit = {},
     val onListenSettings: (ListenSettings) -> Unit = {},
     val onListenFix: (ListenFix) -> Unit = {},
+    /** Hyväksy on a "?" row in Historia. */
+    val onAccept: (WeightEntry) -> Unit = {},
+    /** The home notice: Historia at the newest "?" weight. */
+    val onOpenQuestioned: () -> Unit = {},
+    /** Historia scrolled to its target row. */
+    val onTargetShown: () -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */

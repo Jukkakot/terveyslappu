@@ -99,6 +99,7 @@
     <string name="group_close">Sulje %1$s</string>
     <string name="group_value_single">%1$s kg · 1 paino</string>
     <string name="group_values">%1$s → %2$s kg · %3$d painoa</string>
+    <string name="group_count_only">%1$d painoa</string>
     <string name="group_gap">Ei punnituksia %1$s–%2$s</string>
 
     <string name="quantity_weight">Paino</string>
@@ -209,9 +210,9 @@
         <item quantity="other">Sulkeutuu %1$d sekunnin kuluttua</item>
     </plurals>
     <!-- background-weigh-in: the listen trial in Asetukset. -->
-    <string name="listen_section">Automaattinen punnitus (kokeilu)</string>
+    <string name="listen_section">Automaattinen punnitus</string>
     <string name="listen_switch">Kuuntele vaakaa taustalla</string>
-    <string name="listen_switch_hint">Sovellus kuuntelee vaakaa valitsemanasi aikana eikä vielä tallenna painoa.</string>
+    <string name="listen_switch_hint">Sovellus kuuntelee vaakaa valitsemanasi aikana ja tallentaa painon itse, myös sovelluksen ollessa kiinni.</string>
     <string name="listen_no_scale">Punnitse kerran widgetistä tai sovelluksesta, niin sovellus oppii vaakasi.</string>
     <string name="listen_start">Alkaa</string>
     <string name="listen_end">Päättyy</string>
@@ -232,4 +233,34 @@
     <string name="listen_fix_bluetooth">Laita päälle</string>
     <string name="listen_fix_power_save">Asetukset</string>
     <string name="listen_fix_battery">Akkuasetus</string>
+    <string name="listen_status_health">Estetty: Health Connect -lupa puuttuu</string>
+    <string name="listen_fix_health">Anna lupa</string>
+    <string name="listen_notifications_warning">Ilmoitukset estetty</string>
+    <string name="listen_fix_notifications">Ilmoitusasetukset</string>
+    <string name="listen_pending">%1$d punnitusta odottaa tallennusta</string>
+    <string name="listen_limit">Hyväksyntäraja</string>
+    <string name="listen_limit_hint">Kauempana edellisestä hyväksytystä painosta oleva punnitus tallennetaan tarkistettavaksi.</string>
+    <string name="listen_limit_value">%1$s kg</string>
+    <string name="listen_limit_less">Pienennä hyväksyntärajaa</string>
+    <string name="listen_limit_more">Suurenna hyväksyntärajaa</string>
+    <!-- Automatic weigh-in notifications and widget (background-weigh-in). -->
+    <string name="auto_channel_group">Automaattinen punnitus</string>
+    <string name="auto_channel_normal">Punnitukset</string>
+    <string name="auto_channel_check">Tarkistettavat punnitukset</string>
+    <string name="auto_accept">Hyväksy</string>
+    <string name="auto_delete">Poista</string>
+    <string name="auto_summary">Automaattiset punnitukset</string>
+    <string name="widget_state_on">Päällä</string>
+    <string name="widget_state_rest">Lepää</string>
+    <string name="widget_state_blocked">Estetty</string>
+    <string name="widget_state_description">%1$s, automaattinen punnitus: %2$s</string>
+    <!-- "?" weights in Historia and on the home screen (weight-entry, home-screen). -->
+    <string name="check_mark">?</string>
+    <string name="check_text">tarkista</string>
+    <string name="check_row_description">%1$s kg, tarkista</string>
+    <string name="check_title">Tarkista punnitus</string>
+    <string name="check_body">%1$s kg %2$s poikkeaa edellisestä hyväksytystä painosta. Hyväksy se, jos punnitus on sinun.</string>
+    <string name="check_accept">Hyväksy</string>
+    <string name="check_delete">Poista</string>
+    <string name="home_check_notice">Punnitus odottaa tarkistusta</string>
 </resources>

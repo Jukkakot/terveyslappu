@@ -17,7 +17,8 @@ sealed interface ListNode {
 
     /**
      * A year, month or week holding at least one weight. [from]..[to] are its days (a week cut at the month
-     * border); [first] and [last] are its oldest and newest weight; [count] counts all its weights.
+     * border); [first] and [last] are its oldest and newest weight not marked "?" (null when all are);
+     * [count] counts all its weights; [oldest] and [newest] include "?" weights (gap rows).
      */
     data class Group(
         val level: GroupLevel,
@@ -26,17 +27,24 @@ sealed interface ListNode {
         val to: LocalDate,
         /** ISO week number (WEEK only). */
         val week: Int,
-        val first: WeightEntry,
-        val last: WeightEntry,
+        val first: WeightEntry?,
+        val last: WeightEntry?,
         val count: Int,
         /** Newest first. */
         val children: List<ListNode>,
+        val oldest: WeightEntry = first!!,
+        val newest: WeightEntry = last!!,
+        /** How many of [count] are not marked "?" (first → last span them). */
+        val acceptedCount: Int = count,
     ) : ListNode {
-        val change: Double get() = last.kg - first.kg
+        val change: Double get() = if (first != null && last != null) last.kg - first.kg else 0.0
     }
 
-    /** One weight with its change from the weight before it (null: oldest, or after a long pause). */
-    data class Weight(val entry: WeightEntry, val change: Double?) : ListNode {
+    /**
+     * One weight with its change from the weight before it (null: oldest, after a long pause, or a
+     * "?" weight). [questioned]: marked "?" (weight-entry "Questioned weight in the list").
+     */
+    data class Weight(val entry: WeightEntry, val change: Double?, val questioned: Boolean = false) : ListNode {
         override val key: String get() = entry.id
     }
 
@@ -64,12 +72,34 @@ object ListGroups {
      */
     const val FLAT_MAX = 14
 
-    fun build(entries: List<WeightEntry>, zone: ZoneId, flatMax: Int = FLAT_MAX): List<ListNode> {
+    /**
+     * [questioned]: ids of entries marked "?": listed with no change, skipped by the next weight's
+     * change and by the groups' first and last weight.
+     */
+    fun build(entries: List<WeightEntry>, zone: ZoneId, flatMax: Int = FLAT_MAX, questioned: Set<String> = emptySet()): List<ListNode> {
         val newest = entries.sortedByDescending { it.time }
-        val changes = changesFromPrevious(newest)
-        if (newest.size <= flatMax) return withGaps(newest.map { ListNode.Weight(it, changes[it.id]) }, zone)
+        val changes = changesFromPrevious(newest.filter { it.id !in questioned })
+        val ctx = Ctx(zone, changes, questioned)
+        if (newest.size <= flatMax) return withGaps(newest.map { ctx.weight(it) }, zone)
         val oneYear = newest.map { it.time.atZone(zone).year }.distinct().size == 1
-        return level(newest, if (oneYear) GroupLevel.MONTH else GroupLevel.YEAR, zone, changes)
+        return level(newest, if (oneYear) GroupLevel.MONTH else GroupLevel.YEAR, ctx)
+    }
+
+    /** The group keys to open so the weight [entryId] is shown (outermost first), or null when it is not in [nodes]. */
+    fun pathTo(nodes: List<ListNode>, entryId: String): List<String>? {
+        for (node in nodes) {
+            when (node) {
+                is ListNode.Weight -> if (node.entry.id == entryId) return emptyList()
+                is ListNode.Group -> pathTo(node.children, entryId)?.let { return listOf(node.key) + it }
+                is ListNode.Gap -> Unit
+            }
+        }
+        return null
+    }
+
+    private class Ctx(val zone: ZoneId, val changes: Map<String, Double>, val questioned: Set<String>) {
+        fun weight(e: WeightEntry): ListNode.Weight =
+            if (e.id in questioned) ListNode.Weight(e, null, questioned = true) else ListNode.Weight(e, changes[e.id])
     }
 
     /** The rows to draw: every node whose parents are all in [open]. */
@@ -80,22 +110,27 @@ object ListGroups {
         }
     }
 
-    private fun level(newest: List<WeightEntry>, level: GroupLevel?, zone: ZoneId, changes: Map<String, Double>): List<ListNode> {
-        if (level == null) return newest.map { ListNode.Weight(it, changes[it.id]) }
+    private fun level(newest: List<WeightEntry>, level: GroupLevel?, ctx: Ctx): List<ListNode> {
+        val zone = ctx.zone
+        if (level == null) return newest.map { ctx.weight(it) }
         val groups = newest.groupBy { key(level, it.time.atZone(zone).toLocalDate()) }
         val nodes = groups.values.map { members ->
             val day = members.first().time.atZone(zone).toLocalDate()
             val (from, to) = span(level, day)
+            val accepted = members.filter { it.id !in ctx.questioned }
             ListNode.Group(
                 level = level,
                 key = key(level, day),
                 from = from,
                 to = to,
                 week = weekMonday(day).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR),
-                first = members.last(),
-                last = members.first(),
+                first = accepted.lastOrNull(),
+                last = accepted.firstOrNull(),
                 count = members.size,
-                children = level(members, GroupLevel.entries.getOrNull(level.ordinal + 1), zone, changes),
+                children = level(members, GroupLevel.entries.getOrNull(level.ordinal + 1), ctx),
+                oldest = members.last(),
+                newest = members.first(),
+                acceptedCount = accepted.size,
             )
         }
         return withGaps(nodes, zone)
@@ -116,13 +151,13 @@ object ListGroups {
     }
 
     private fun oldest(node: ListNode): WeightEntry = when (node) {
-        is ListNode.Group -> node.first
+        is ListNode.Group -> node.oldest
         is ListNode.Weight -> node.entry
         is ListNode.Gap -> error("gap has no weight")
     }
 
     private fun newest(node: ListNode): WeightEntry = when (node) {
-        is ListNode.Group -> node.last
+        is ListNode.Group -> node.newest
         is ListNode.Weight -> node.entry
         is ListNode.Gap -> error("gap has no weight")
     }

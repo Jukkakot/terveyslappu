@@ -7,6 +7,8 @@ import androidx.health.connect.client.records.WeightRecord
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import fi.jukkakot.terveyslappu.TerveysApp
+import fi.jukkakot.terveyslappu.auto.RefPair
+import fi.jukkakot.terveyslappu.weight.scaleClientId
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.scale.LastWeighInPrefs
 import fi.jukkakot.terveyslappu.scale.ScaleScanner
@@ -26,17 +28,25 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
     private val weighIn = WeighIn(
         source = ScaleScanner(app),
         save = { kg, time ->
-            weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time))
-            (app as TerveysApp).backup.request("weighin")
+            val id = weights.writeScale(kg, time, ZoneId.systemDefault().rules.getOffset(time))
+            val terveys = app as TerveysApp
+            runCatching { terveys.reference.accepted(listOf(RefPair(id, time.toEpochMilli(), kg))) }.onFailure { AppLog.e("auto.store", it, "reference") }
+            terveys.weightsSignal.emit()
+            terveys.backup.request("weighin")
         },
         previous = { before -> weights.latestBefore(before) },
         delete = { _, time ->
             weights.deleteScale(time)
-            (app as TerveysApp).backup.request("weighin")
+            val terveys = app as TerveysApp
+            runCatching { terveys.reference.removed(scaleClientId(time)) }.onFailure { AppLog.e("auto.store", it, "reference") }
+            terveys.weightsSignal.emit()
+            terveys.backup.request("weighin")
         },
         archive = (app as TerveysApp).rawArchive,
         // A new scale re-plans background listening at once (its filters follow the remembered scale).
         last = LastWeighInPrefs(app) { (app as TerveysApp).listen.replan("scale") },
+        // The claim shared with the background save (one weighing, one save).
+        keys = (app as TerveysApp).keys,
         elapsedMs = SystemClock::elapsedRealtime,
         now = Instant::now,
     )

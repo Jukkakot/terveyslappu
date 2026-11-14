@@ -4,4 +4,8 @@
     <!-- Widget follows the phone's Material You colours; night values in values-night. -->
     <color name="widget_background">@android:color/system_neutral1_100</color>
     <color name="widget_text">@android:color/system_neutral1_900</color>
+    <!-- Widget state marks (background-weigh-in "Widget status"). -->
+    <color name="widget_state_on">@android:color/system_accent1_600</color>
+    <color name="widget_state_rest">@android:color/system_neutral2_500</color>
+    <color name="widget_state_blocked">#B3261E</color>
 </resources>

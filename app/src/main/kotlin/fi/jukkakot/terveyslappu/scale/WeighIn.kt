@@ -62,6 +62,7 @@ class WeighIn(
     private val delete: suspend (kg: Double, time: Instant) -> Unit = { _, _ -> },
     private val archive: RawStore = MemoryRawStore(),
     private val last: LastWeighInStore = MemoryLastWeighIn(),
+    private val keys: WeighingKeys = WeighingKeys(last, now),
 ) {
     private val openedMs = elapsedMs()
     private val _state = MutableStateFlow<WeighInState>(WeighInState.Preparing)
@@ -128,7 +129,7 @@ class WeighIn(
     private fun remember() {
         val key = decidedKey ?: return
         try {
-            last.save(key, now())
+            keys.touch(key)
         } catch (e: Exception) {
             AppLog.e("weighin.last", e, "save")
         }
@@ -146,7 +147,7 @@ class WeighIn(
 
     /** The previous weigh-in's company id while its broadcast may still linger, else null. */
     private fun ignoredKey(): Int? = try {
-        last.load()?.takeIf { (_, at) -> at.plusMillis(IGNORE_MS).isAfter(now()) }?.first
+        keys.lingering()
     } catch (e: Exception) {
         AppLog.e("weighin.last", e, "load")
         null
@@ -248,25 +249,30 @@ class WeighIn(
 
     private suspend fun decide(scanStartMs: Long, ignored: Int?, onReading: (ScaleReading) -> Unit): StableResult = coroutineScope {
         var ignoreLogged = false
-        val decision = StableWeight()
+        var decision = StableWeight()
         val done = CompletableDeferred<StableResult>()
         val ticker = launch {
             while (true) {
                 delay(tickMs)
-                decision.onTick(elapsedMs() - scanStartMs)?.let { done.complete(it) }
+                decision.onTick(elapsedMs() - scanStartMs)?.let { result ->
+                    if (claim(result)) done.complete(result) else decision = StableWeight()
+                }
             }
         }
         val collector = launch {
             source.packets().collect { packet ->
                 if (!ScalePacket.isScale(packet.name, packet.companyId)) return@collect
-                if (packet.companyId == ignored) {
+                if (packet.companyId == ignored || takenElsewhere(packet.companyId)) {
                     if (!ignoreLogged) AppLog.i("scale.ignore", "", "key" to "%04x".format(packet.companyId and 0xFFFF))
                     ignoreLogged = true
                     return@collect
                 }
                 val reading = ScalePacket.decode(packet.data) ?: return@collect
                 onReading(reading)
-                decision.onReading(reading, packet.atMs, packet)?.let { done.complete(it) }
+                decision.onReading(reading, packet.atMs, packet)?.let { result ->
+                    // Claimed atomically before saving: the background may have saved this weighing first.
+                    if (claim(result)) done.complete(result) else decision = StableWeight()
+                }
             }
         }
         // A scan error fails the collector, which cancels this scope and surfaces at once (no timeout wait).
@@ -276,6 +282,26 @@ class WeighIn(
             ticker.cancel()
             collector.cancel()
         }
+    }
+
+    /** True when the weighing [key] was claimed (saved or discarded) by the background or an earlier weigh-in. */
+    private fun takenElsewhere(key: Int): Boolean = try {
+        keys.isTaken(key)
+    } catch (e: Exception) {
+        AppLog.e("weighin.last", e, "load")
+        false
+    }
+
+    private fun claim(result: StableResult): Boolean {
+        val key = result.packet?.companyId ?: return true
+        val ok = try {
+            keys.claim(key)
+        } catch (e: Exception) {
+            AppLog.e("weighin.last", e, "claim")
+            true
+        }
+        if (!ok) AppLog.i("scale.ignore", "", "key" to "%04x".format(key and 0xFFFF), "claimed" to true)
+        return ok
     }
 
     /** Archive trouble is logged and never fails the weigh-in: the weight in Health Connect is what counts. */
