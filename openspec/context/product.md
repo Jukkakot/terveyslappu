@@ -186,6 +186,18 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
     weigh-in stays the core and the food log must not make it heavier.
   - Do not reinvent: follow common food-log patterns (saved meals per slot, quick add of a
     number, servings or grams when logging a saved item, frequent items first).
+- **Food log: how it is used** (user 2026-11-14, while proposing food-log). Logged mostly right
+  after eating ("Lisää annos" from the home screen adds to today, after the previous item), but
+  catching up later is normal: in bed in the evening, or the next day for yesterday. Therefore:
+  - No clock times are ever asked or shown; a day is its items in eating order (breakfast first,
+    something, lunch, ...). Meal names are at most a loose template, not data that matters.
+  - A repeated thing is a saved **product** with a fixed kcal per piece or per 100 g ("suklaapala
+    25 kcal", 5 kpl today), like products in a shopping-list app; repeats must be one or two taps.
+  - An item can be logged as plain text first and get its kcal later.
+  - Categories only where they have a reason. **Herkku** has one: in the kcal bars, base food and
+    treats in their own colours show whether the excess comes from ordinary meals or from treats.
+    No other categories until one has a reason (user: "everything needs a reason").
+  - No food widget for now; the app's home screen is enough.
 
 ## Lessons from rubikki-solveri (2026-11-08)
 
