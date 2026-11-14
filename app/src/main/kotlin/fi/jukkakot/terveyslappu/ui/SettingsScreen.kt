@@ -35,6 +35,8 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +72,9 @@ internal fun SettingsScreen(
     listen: ListenUi = ListenUi(),
 ) {
     val profileView = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    val copiedText = stringResource(R.string.log_copied)
+    val logEmpty = stringResource(R.string.log_empty)
     LaunchedEffect(profileFocus) { if (profileFocus) profileView.bringIntoView() }
     Scaffold(
         topBar = { SubScreenBar(stringResource(R.string.settings_title), onBack = { actions.onScreen(Screen.HOME) }) },
@@ -119,6 +124,19 @@ internal fun SettingsScreen(
                     actions.onShareLog,
                     "shareLog",
                     trailing = stringResource(R.string.settings_version, versionName),
+                )
+                SettingsRow(
+                    R.drawable.ic_copy,
+                    stringResource(R.string.menu_copy_log),
+                    {
+                        val count = actions.onCopyLog()
+                        scope.launch {
+                            snackbar.showSnackbar(
+                                if (count > 0) copiedText.format(count) else logEmpty,
+                            )
+                        }
+                    },
+                    "copyLog",
                 )
                 SettingsRow(R.drawable.ic_help, stringResource(R.string.menu_help), { actions.onScreen(Screen.HELP) }, "help")
             }

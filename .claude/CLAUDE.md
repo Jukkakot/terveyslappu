@@ -71,9 +71,9 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   is enough; SHA-256 `04:01:E0:47:...:FB:6B:B5:8A`). The user keeps the base64 text as the backup;
   losing it means one uninstall. Without the secret CI builds but publishes nothing.
 - Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
-- Logs: in the app, Asetukset (gear) → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB). Lines are
+- Logs: in the app, Asetukset (gear) → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB); Kopioi loki copies the last 24 h compacted for pasting into chat. Lines are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
-  `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
+  `hc.permission.*`, `weight.save|read|delete`, `log.share`, `log.copy lines= chars=`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),
   `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.discard ok|failed`, `scale.ignore key=` (previous weigh-in's lingering broadcast), `weighin.raw` / `raw.archive` (archive errors), `tile.click`; listen trial: `listen.enable|disable`, `listen.settings window= mode= powerSave=`, `listen.arm next= action=start|check|end` (`rearm` at app start), `listen.start late= mode= offloadFilter= offloadBatch=`, `listen.stop reason=`, `listen.check bt= powerSave= restricted=`, `listen.failed code=` (-1 no scanner/Bluetooth off, -2 no permission), `scale.packet ... src=bg screen=on|off`, `listen.repeat count= rssiMin= rssiMax=`, `listen.other addr= name= rssi=`, `listen.summary reason=end|off|stale ...`; import: `import.pick`, `import.read` (`format=text|json|xls`, `unknown=` data kinds not read, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick format=`, `export.history granted|denied`,

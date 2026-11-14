@@ -57,6 +57,8 @@
     <string name="help_log_title">Jaa loki</string>
     <string name="help_log_body">Jos jokin ei toimi, Jaa loki lähettää sovelluksen lokitiedoston, josta vika löytyy helpommin.</string>
     <string name="menu_share_log">Jaa loki</string>
+    <string name="menu_copy_log">Kopioi loki</string>
+    <string name="log_copied">Loki kopioitu (%1$d riviä)</string>
     <string name="log_share_chooser">Jaa loki</string>
     <string name="log_empty">Lokia ei löytynyt</string>
     <string name="open_failed">Avaaminen epäonnistui, syy on lokissa</string>

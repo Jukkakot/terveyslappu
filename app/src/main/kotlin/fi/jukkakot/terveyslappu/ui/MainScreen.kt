@@ -49,6 +49,8 @@ class MainActions(
     val onOpenSettings: () -> Unit = {},
     val onOpenStore: () -> Unit = {},
     val onShareLog: () -> Unit = {},
+    /** Copies the compact log to the clipboard; returns the number of log lines copied (0 when there is none). */
+    val onCopyLog: () -> Int = { 0 },
     val onWeighIn: () -> Unit = {},
     val onImportHistory: () -> Unit = {},
     val onExport: (DataFormat) -> Unit = {},

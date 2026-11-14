@@ -88,6 +88,7 @@ class SettingsScreenTest {
         assertTrue(imported)
         assertEquals(DataFormat.JSON, exported)
         compose.onNodeWithTag("shareLog").performScrollTo()
+        compose.onNodeWithTag("copyLog").assertExists()
         compose.onNodeWithText("v0.1.1-test").assertExists()
     }
 

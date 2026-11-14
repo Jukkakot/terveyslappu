@@ -2,6 +2,8 @@ package fi.jukkakot.terveyslappu
 
 import fi.jukkakot.terveyslappu.weight.HEIGHT_WRITE_PERMISSION
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.health.connect.HealthConnectManager
 import android.os.Bundle
@@ -13,7 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import fi.jukkakot.terveyslappu.data.DataFile
 import fi.jukkakot.terveyslappu.data.DataFormat
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import fi.jukkakot.terveyslappu.backup.keepAccess
 import fi.jukkakot.terveyslappu.backup.releaseAccess
 import fi.jukkakot.terveyslappu.weight.HISTORY_PERMISSION
@@ -32,6 +36,7 @@ import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fi.jukkakot.terveyslappu.log.AppLog
+import fi.jukkakot.terveyslappu.log.LogCompact
 import fi.jukkakot.terveyslappu.log.shareLogIntent
 import android.provider.Settings
 import androidx.compose.runtime.mutableIntStateOf
@@ -186,6 +191,7 @@ class MainActivity : ComponentActivity() {
                         onOpenSettings = { open(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)) },
                         onOpenStore = { open(Intent(Intent.ACTION_VIEW, STORE_URL.toUri())) },
                         onShareLog = ::shareLog,
+                        onCopyLog = ::copyLog,
                         onWeighIn = { open(WeighInActivity.intent(this, "main")) },
                         onImportHistory = {
                             try {
@@ -239,6 +245,17 @@ class MainActivity : ComponentActivity() {
         } else {
             open(shareLogIntent(this, files))
         }
+    }
+
+    /** Puts the compact last-24-h log on the clipboard; returns the log lines copied (app-log spec). */
+    private fun copyLog(): Int {
+        AppLog.flush()
+        val lines = AppLog.logFile?.readLines().orEmpty()
+        val result = LogCompact.build(lines, BuildConfig.VERSION_NAME, BuildConfig.GIT_SHA, Instant.now(), ZoneId.systemDefault())
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText("terveyslappu log", result.text))
+        AppLog.i("log.copy", "", "lines" to result.lines, "chars" to result.text.length)
+        return result.lines
     }
 
     /** Starts a picker or permission screen; a missing one is logged and shown (NFR-9). */
