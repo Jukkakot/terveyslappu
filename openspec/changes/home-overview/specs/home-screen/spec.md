@@ -48,6 +48,50 @@ details; a part that means nothing for a quantity is left out. The order SHALL b
 - **WHEN** the home screen is shown
 - **THEN** only the weight and food cards are shown
 
+#### Scenario: Steady weight
+- **GIVEN** the period's weights differ by less than 0.1 kg
+- **WHEN** the home screen is shown
+- **THEN** the small chart's line looks flat
+
+#### Scenario: Open Historia
+- **WHEN** the user taps the card
+- **THEN** Historia opens; back returns to the home screen
+
+#### Scenario: Open Asetukset
+- **WHEN** the user taps the settings button
+- **THEN** Asetukset opens; back returns to the home screen
+
+#### Scenario: Open Ohje
+- **WHEN** the user taps the help button
+- **THEN** Ohje opens; back returns to the home screen
+
+#### Scenario: No weights yet
+- **WHEN** the app has written no weights
+- **THEN** the card invites to weigh with the scale instead of showing a number, the food card is still shown, and no
+  derived-values row are shown
+
+#### Scenario: Backup in trouble
+- **GIVEN** the backup is on
+- **WHEN** its last run failed or its last success is older than three days
+- **THEN** the home screen shows one notice that opens Asetukset at Tiedot ja varmuuskopio;
+  otherwise nothing about the backup
+
+#### Scenario: All details set
+- **GIVEN** height 180 cm, birth year 1990, gender Mies and the latest weight 82.0 kg in 2026
+- **WHEN** the home screen is shown
+- **THEN** the row shows "BMI 25,3" in the yellow tone without the word "ylipaino", and
+  normaalipaino 60–81 kg, and no reason text
+
+#### Scenario: No details
+- **GIVEN** no owner details are set
+- **WHEN** the home screen is shown
+- **THEN** the row shows only "BMI vaatii pituuden", which opens Asetukset at Omat tiedot
+
+#### Scenario: Gender missing
+- **GIVEN** height and birth year set, gender Ei valittu
+- **WHEN** the home screen is shown
+- **THEN** the row shows the BMI and the normal-weight range and no reason text
+
 ### Requirement: Food row on the home screen
 The food card SHALL be built like the weight card: "Syöty tänään" with today's total kcal large and
 the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
@@ -91,3 +135,8 @@ the "?" row in Historia, and still carry its text.
 - **GIVEN** 82,0 kg yesterday and 61,3 kg marked "?" today
 - **WHEN** the home screen is shown
 - **THEN** the card shows 82,0 kg and the notice is shown
+
+#### Scenario: Nothing to check
+- **WHEN** no weight is marked "?"
+- **THEN** no notice about checking is shown
+
