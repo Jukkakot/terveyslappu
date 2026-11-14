@@ -25,6 +25,36 @@ class DataFileTest {
     }
 
     @Test
+    fun `a questioned weight carries check in both formats and reads back`() {
+        val auto = scaleRaw.copy(fields = scaleRaw.fields + ("via" to "auto"))
+        val rows = listOf(
+            ExportRow(t, ZoneOffset.ofHours(2), 82.0, "Terveyslappu"),
+            ExportRow(t.plusSeconds(86_400), ZoneOffset.ofHours(2), 61.3, "Terveyslappu", auto.copy(second = t.plusSeconds(86_400).epochSecond), check = true),
+        )
+        val csv = CsvData.write(DataSet(rows), zone)
+        assertTrue("2024-03-02;07:12:00+02:00;61,3;Terveyslappu;source=scale|packet=0339|key=12c0|weight_raw=825|via=auto;?" in csv.lines())
+        val json = JsonData.write(DataSet(rows), zone)
+        assertEquals(1, Regex("\"check\": \"\\?\"").findAll(json).count())
+        for ((format, text) in listOf(DataFormat.CSV to csv, DataFormat.JSON to json)) {
+            val read = read(format, text).weights
+            assertEquals(listOf(false, true), read.map { it.check }, format.name)
+            assertEquals("auto", read[1].raw?.fields?.get("via"), format.name)
+        }
+    }
+
+    @Test
+    fun `any other check value is no mark and files without the column still import`() {
+        val text = "date;time;weight_kg;source;raw;check\n2024-03-01;07:12:00+02:00;82,4;Terveyslappu;;x\n2024-03-02;07:12:00+02:00;82,5;Terveyslappu;;?\n"
+        assertEquals(listOf(false, true), HistoryParser.parse(text, zone, now).weights.map { it.check })
+        val old = "date;time;weight_kg;source;raw\n2024-03-01;07:12:00+02:00;82,4;Terveyslappu;\n"
+        val weights = HistoryParser.parse(old, zone, now).weights
+        assertEquals(listOf(82.4), weights.map { it.kg })
+        assertEquals(listOf(false), weights.map { it.check })
+        val json = "{\"app\":\"terveyslappu\",\"version\":2,\"weights\":[{\"time\":\"2024-03-01T07:12:00+02:00\",\"kg\":82.4,\"source\":\"x\",\"check\":\"ok\"}]}"
+        assertEquals(listOf(false), JsonData.read(json, now).weights.map { it.check })
+    }
+
+    @Test
     fun `csv layout`() {
         val rows = listOf(
             ExportRow(t, ZoneOffset.ofHours(2), 82.4, "Terveyslappu"),
@@ -34,9 +64,9 @@ class DataFileTest {
             listOf(
                 "#terveyslappu;version=2",
                 "#table;weights",
-                "date;time;weight_kg;source;raw",
-                "2024-03-01;07:12:00+02:00;82,4;Terveyslappu;",
-                "2024-03-02;07:12:00+02:00;82,5;Terveyslappu;source=scale|packet=0339|key=12c0|weight_raw=825",
+                "date;time;weight_kg;source;raw;check",
+                "2024-03-01;07:12:00+02:00;82,4;Terveyslappu;;",
+                "2024-03-02;07:12:00+02:00;82,5;Terveyslappu;source=scale|packet=0339|key=12c0|weight_raw=825;",
                 "",
             ),
             CsvData.write(DataSet(rows.reversed()), zone).lines(),

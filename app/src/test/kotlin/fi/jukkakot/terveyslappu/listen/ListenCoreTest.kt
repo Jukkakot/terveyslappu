@@ -100,7 +100,7 @@ class ListenCoreTest {
         var (s, events) = feed(heard(1_000, 825, true), *repeats.toTypedArray())
         val (closed, last) = HeardPackets.close(s, s.startedMs + 10_000)
         s = closed
-        events = events + last
+        events = (events + last).filterNot { it is HeardEvent.Decided }
         assertEquals(2, events.size)
         assertIs<HeardEvent.Raw>(events[0])
         assertEquals(HeardEvent.Repeat(20, -92, -90), events[1])

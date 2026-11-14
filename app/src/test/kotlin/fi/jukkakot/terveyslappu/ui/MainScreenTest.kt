@@ -72,12 +72,40 @@ class MainScreenTest {
                         onDelete = onDelete,
                         onGrantHistory = onGrantHistory,
                         onOpenProfile = { state = state.copy(screen = Screen.SETTINGS, profileFocus = true) },
+                        onAccept = { entry -> accepted = entry.id; state = state.copy(questioned = state.questioned - entry.id) },
+                        onOpenQuestioned = { state = state.copy(screen = Screen.HISTORY, historyTarget = state.newestQuestioned?.id) },
+                        onTargetShown = { state = state.copy(historyTarget = null) },
                     ),
                     backup = backup,
                     profile = profile,
                 )
             }
         }
+    }
+
+    private var accepted: String? = null
+
+    @Test
+    fun `a questioned weight is listed whatever the period, accepted from its row, and the home notice opens Historia`() {
+        // 61,3 kg a month old and marked "?": out of the week, still listed; the chart and the home card skip it.
+        val list = weights + weight("q", 40, 61.3)
+        show(MainUiState(access = Access.GRANTED, weights = list, questioned = setOf("q"), period = Period.WEEK))
+        compose.onNodeWithTag("recentQuestioned", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("checkNotice").performClick()
+        compose.onNodeWithTag("questioned-q").assertExists()
+        compose.onNode(hasText("tarkista") and hasAnyAncestor(hasTestTag("questioned-q")), useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("questioned-q").performClick()
+        compose.onNodeWithTag("checkAccept").performClick()
+        assertEquals("q", accepted)
+        compose.onNodeWithTag("questioned-q").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the home list shows the latest questioned weight with its sign and the card skips it`() {
+        val list = weights + weight("q", 0, 61.3).copy(time = now)
+        show(MainUiState(access = Access.GRANTED, weights = list, questioned = setOf("q")))
+        compose.onNodeWithTag("recentQuestioned", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("checkNotice").assertExists()
     }
 
     @Test

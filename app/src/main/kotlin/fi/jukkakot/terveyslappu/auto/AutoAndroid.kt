@@ -144,22 +144,10 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
 class AutoActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as TerveysApp
-        val id = intent.getStringExtra(EXTRA_ID) ?: return
-        val timeMs = intent.getLongExtra(EXTRA_TIME, 0)
-        val kg = intent.getDoubleExtra(EXTRA_KG, 0.0)
-        val questioned = intent.getBooleanExtra(EXTRA_QUESTIONED, false)
         val result = goAsync()
         app.appScope.launch(Dispatchers.IO) {
             try {
-                when (intent.action) {
-                    ACTION_DELETE -> app.auto.delete(id, timeMs, kg, questioned)
-                    ACTION_ACCEPT -> {
-                        val accepted = app.auto.accept(id, AutoWeights.FROM_NOTIFICATION)
-                        AppLog.i("auto.action", if (accepted.isEmpty()) "confirm failed" else "confirm ok")
-                        // Already accepted elsewhere: the notification still closes.
-                        if (accepted.isEmpty()) app.autoNotifier.cancel(id)
-                    }
-                }
+                handle(app.auto, app.autoNotifier, intent)
             } catch (e: Exception) {
                 AppLog.e("auto.action", e, "failed", "action" to intent.action)
             } finally {
@@ -169,6 +157,23 @@ class AutoActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        /** Poista or Hyväksy for the weight the intent names. */
+        suspend fun handle(auto: AutoWeights, notifier: AutoNotifier, intent: Intent) {
+            val id = intent.getStringExtra(EXTRA_ID) ?: return
+            val timeMs = intent.getLongExtra(EXTRA_TIME, 0)
+            val kg = intent.getDoubleExtra(EXTRA_KG, 0.0)
+            val questioned = intent.getBooleanExtra(EXTRA_QUESTIONED, false)
+            when (intent.action) {
+                ACTION_DELETE -> auto.delete(id, timeMs, kg, questioned)
+                ACTION_ACCEPT -> {
+                    val accepted = auto.accept(id, AutoWeights.FROM_NOTIFICATION)
+                    AppLog.i("auto.action", if (accepted.isEmpty()) "confirm failed" else "confirm ok")
+                    // Already accepted elsewhere: the notification still closes.
+                    if (accepted.isEmpty()) notifier.cancel(id)
+                }
+            }
+        }
+
         const val ACTION_DELETE = "fi.jukkakot.terveyslappu.auto.DELETE"
         const val ACTION_ACCEPT = "fi.jukkakot.terveyslappu.auto.ACCEPT"
         const val EXTRA_ID = "id"

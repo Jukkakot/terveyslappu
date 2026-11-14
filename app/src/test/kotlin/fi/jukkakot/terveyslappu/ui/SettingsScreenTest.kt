@@ -122,6 +122,29 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun `automatic weigh-in shows the limit, warnings and the pending queue`() {
+        var limit = 0.0
+        val ui = ListenUi(
+            settings = ListenSettings(enabled = true),
+            hasScale = true,
+            status = ListenStatus.HealthMissing,
+            notificationsOff = true,
+            pending = 1,
+        )
+        compose.setContent {
+            TerveysTheme {
+                SettingsScreen(true, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onListenSettings = { limit = it.limit }), SnackbarHostState(), listen = ui)
+            }
+        }
+        compose.onNodeWithText("Automaattinen punnitus").assertExists()
+        compose.onNodeWithTag("listenStatus-fix").performScrollTo().assertExists()
+        compose.onNodeWithTag("listenNotifications-fix").performScrollTo().assertExists()
+        compose.onNodeWithTag("listenPending").performScrollTo().assertExists()
+        compose.onNodeWithTag("listenLimitMore").performScrollTo().performClick()
+        assertEquals(5.5, limit)
+    }
+
+    @Test
     fun `listen trial needs a known scale, then shows its status and fix`() {
         var enabled: Boolean? = null
         var fix: ListenFix? = null

@@ -47,6 +47,8 @@ class ListenControllerTest {
         var elapsed = 1_000_000_000L
         var scale: KnownScale? = KnownScale("00:11:22:33:44:55", "Yoda1")
         var powerSave = false
+        var healthWrite = true
+        override fun healthWrite() = healthWrite
         override fun scale() = scale
         override fun permission() = true
         override fun bluetoothOn() = true
@@ -131,6 +133,69 @@ class ListenControllerTest {
         listen.updateSettings(store.settings().copy(start = java.time.LocalTime.of(20, 0), end = java.time.LocalTime.of(22, 0)))
         assertNull(store.session())
         assertEquals(at("2026-11-14T20:00"), nextAlarm()!!.triggerAtTime)
+    }
+
+    @Test
+    fun `an update from the trial keeps the switch, window and mode and gets the 5 kg limit`() {
+        context.getSharedPreferences(ListenPrefs.FILE, Context.MODE_PRIVATE).edit()
+            .putBoolean("enabled", true).putInt("start_min", 6 * 60).putInt("end_min", 10 * 60).putString("mode", "balanced").commit()
+        val settings = ListenPrefs(context).settings()
+        assertTrue(settings.enabled)
+        assertEquals(java.time.LocalTime.of(6, 0), settings.start)
+        assertEquals(java.time.LocalTime.of(10, 0), settings.end)
+        assertEquals(ListenMode.BALANCED, settings.mode)
+        assertEquals(5.0, settings.limit)
+        store.saveSettings(settings.copy(limit = 3.5))
+        assertEquals(3.5, ListenPrefs(context).settings().limit)
+    }
+
+    @Test
+    fun `without Health Connect write access no scan runs and the status says so`() {
+        device.healthWrite = false
+        listen.setEnabled(true)
+        assertNull(radio.running)
+        assertEquals(ListenStatus.HealthMissing, listen.ui().status)
+        assertEquals(WidgetState.BLOCKED, listen.ui().widget)
+    }
+
+    @Test
+    fun `a stable packet pair heard in the background is saved once`() {
+        val decided = mutableListOf<HeardEvent.Decided>()
+        val saved = mutableListOf<Double>()
+        val writer = object : fi.jukkakot.terveyslappu.auto.AutoWriter {
+            override suspend fun write(weight: fi.jukkakot.terveyslappu.auto.PendingWeight): String {
+                saved += weight.kg
+                return fi.jukkakot.terveyslappu.auto.AutoWeights.clientId(weight)
+            }
+            override suspend fun delete(clientRecordId: String) = Unit
+        }
+        val notifier = object : fi.jukkakot.terveyslappu.auto.AutoNotifier {
+            override fun post(note: fi.jukkakot.terveyslappu.auto.AutoNote) = true
+            override fun cancel(id: String) = Unit
+        }
+        val auto = fi.jukkakot.terveyslappu.auto.AutoWeights(
+            fi.jukkakot.terveyslappu.scale.WeighingKeys(fi.jukkakot.terveyslappu.scale.MemoryLastWeighIn()) { Instant.ofEpochMilli(device.now) },
+            fi.jukkakot.terveyslappu.auto.PendingStore(), fi.jukkakot.terveyslappu.auto.MarkStore(), fi.jukkakot.terveyslappu.auto.ReferenceStore(),
+            fi.jukkakot.terveyslappu.auto.FlagStore(), fi.jukkakot.terveyslappu.raw.MemoryRawStore(), writer, notifier,
+            limit = { 5.0 }, changed = {}, dialogShown = { false }, elapsedMs = { 0 }, zone = { zone },
+        )
+        listen = ListenController(store, device, radio, AndroidListenAlarm(context), sink = {
+            decided += it
+            auto.decided(it)
+        })
+        listen.setEnabled(true)
+        val t = device.elapsed
+        listen.onResults(
+            listOf(
+                HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", t + 1_000_000_000),
+                HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", t + 1_200_000_000),
+            ),
+        )
+        listen.onResults(listOf(HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", t + 3_000_000_000)))
+        kotlinx.coroutines.runBlocking { auto.flush(fi.jukkakot.terveyslappu.auto.AutoWeights.WEIGHIN) }
+        assertEquals(listOf(82.5), saved)
+        assertEquals(listOf(82.5), decided.map { it.kg })
+        assertEquals(store.session()!!.startedMs + 1_000, decided.single().atWallMs)
     }
 
     @Test
