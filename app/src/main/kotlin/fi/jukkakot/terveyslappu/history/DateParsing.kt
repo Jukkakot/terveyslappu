@@ -21,7 +21,7 @@ object DateParsing {
     private val dotted = Regex("""^(\d{1,2})\.(\d{1,2})\.(\d{4})$TIME$""")
     private val slashed = Regex("""^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$TIME$""")
     private val epoch = Regex("""^\d{10}(\d{3})?$""")
-    private val timeOnly = Regex("""^(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?$""")
+    private val timeOnly = Regex("""^(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*(Z|[+-]\d{2}:?\d{2})?$""")
 
     /** Whether [text] looks like a date this parser can read (day order not needed for the answer). */
     fun looksLikeDate(text: String): Boolean {
@@ -46,7 +46,7 @@ object DateParsing {
         }
     }
 
-    /** A valid clock time on its own (`7:12`, `07.12`, `07:12:30`); `82.45` is not one. */
+    /** A valid clock time on its own (`7:12`, `07.12`, `07:12:30`, `07:12:00+03:00`); `82.45` is not one. */
     fun isTimeOnly(text: String): Boolean = parseTime(text) != null
 
     /** The moment of [date] (with [time] from a separate column when the date has none), or null. */
@@ -63,13 +63,18 @@ object DateParsing {
         val g = match.groupValues
         return try {
             val day = LocalDate.of(g[ymd.first].toInt(), g[ymd.second].toInt(), g[ymd.third].toInt())
+            var offset = g[7]
             val clock = when {
                 g[4].isNotEmpty() -> LocalTime.of(g[4].toInt(), g[5].toInt(), g[6].ifEmpty { "0" }.toInt())
-                time != null -> parseTime(time) ?: return null
+                time != null -> {
+                    val m = timeOnly.matchEntire(time.trim()) ?: return null
+                    // An offset in the time column (the data file writes one) counts like one after the date.
+                    if (offset.isEmpty()) offset = m.groupValues[4]
+                    LocalTime.of(m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].ifEmpty { "0" }.toInt())
+                }
                 else -> LocalTime.MIDNIGHT
             }
             val local = LocalDateTime.of(day, clock)
-            val offset = g[7]
             if (offset.isEmpty()) local.atZone(zone).toInstant() else local.toInstant(parseOffset(offset))
         } catch (_: DateTimeException) {
             null

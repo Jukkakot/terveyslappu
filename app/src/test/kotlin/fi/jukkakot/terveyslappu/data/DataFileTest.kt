@@ -35,12 +35,39 @@ class DataFileTest {
                 "#terveyslappu;version=2",
                 "#table;weights",
                 "date;time;weight_kg;source;raw",
-                "2024-03-01;07:12:00;82,4;Terveyslappu;",
-                "2024-03-02;07:12:00;82,5;Terveyslappu;source=scale|packet=0339|key=12c0|weight_raw=825",
+                "2024-03-01;07:12:00+02:00;82,4;Terveyslappu;",
+                "2024-03-02;07:12:00+02:00;82,5;Terveyslappu;source=scale|packet=0339|key=12c0|weight_raw=825",
                 "",
             ),
             CsvData.write(DataSet(rows.reversed()), zone).lines(),
         )
+    }
+
+    @Test
+    fun `csv keeps the offset, also across zones and the repeated DST hour`() {
+        // Finland's clocks go back on 2024-10-27 at 04:00 EEST, so 03:30 happens twice.
+        val first = Instant.parse("2024-10-27T00:30:00Z")
+        val second = Instant.parse("2024-10-27T01:30:00Z")
+        val rows = listOf(
+            ExportRow(first, ZoneOffset.ofHours(3), 82.4, "A"),
+            ExportRow(second, ZoneOffset.ofHours(2), 82.5, "A"),
+            ExportRow(t, null, 82.6, "A"),
+        )
+        val text = CsvData.write(DataSet(rows), zone)
+        assertTrue("2024-10-27;03:30:00+03:00;82,4" in text, text)
+        assertTrue("2024-10-27;03:30:00+02:00;82,5" in text, text)
+        assertTrue("2024-03-01;07:12:00+02:00;82,6" in text, text)
+        for (reader in listOf("America/New_York", "Asia/Tokyo", "Europe/Helsinki")) {
+            val parsed = HistoryParser.parse(text, ZoneId.of(reader), now)
+            assertEquals(emptyList(), parsed.skipped, reader)
+            assertEquals(listOf(t, first, second), parsed.weights.map { it.time }.sorted(), reader)
+        }
+    }
+
+    @Test
+    fun `csv time without an offset is read in the phone zone`() {
+        val text = "date;time;weight_kg\n2024-03-01;07:12:00;82,4\n"
+        assertEquals(t, HistoryParser.parse(text, zone, now).weights.single().time)
     }
 
     @Test

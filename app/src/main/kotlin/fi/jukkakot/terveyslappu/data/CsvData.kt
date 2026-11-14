@@ -9,7 +9,8 @@ import java.time.format.DateTimeFormatter
 /**
  * The data file as CSV (data-file "CSV layout"): `#terveyslappu;version=2`, then per data kind
  * `#table;<kind>`, its header and rows. Weights keep the `date;time;weight_kg;source;raw` columns,
- * oldest first, comma decimals, so `HistoryParser` reads them like any history table. Reading
+ * oldest first, the time with its UTC offset (`07:12:00+03:00`; older files have none and are read
+ * in the phone's zone), comma decimals, so `HistoryParser` reads them like any history table. Reading
  * lives in `HistoryParser.parse`, which also reads older files and other apps' tables.
  */
 object CsvData {
@@ -18,7 +19,7 @@ object CsvData {
     const val WEIGHT_HEADER = "date;time;weight_kg;source;raw"
 
     private val date = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    private val time = DateTimeFormatter.ofPattern("HH:mm:ss")
+    private val time = DateTimeFormatter.ofPattern("HH:mm:ssxxx")
 
     fun write(set: DataSet, fallbackZone: ZoneId): String = buildString {
         append(VERSION_LINE).append('\n')
