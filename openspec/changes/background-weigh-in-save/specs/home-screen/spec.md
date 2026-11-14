@@ -4,7 +4,12 @@
 The home card, its small chart, its changes and the derived-values row SHALL use only weights not
 marked "?". The three latest weights SHALL include a "?" weight with its "?" sign and no change.
 When a "?" weight waits, the home screen SHALL show one notice "Punnitus odottaa tarkistusta" that
-opens Historia.
+opens Historia's list scrolled to the newest "?" weight. The notice SHALL count only marks that
+match a read weight. The home screen SHALL reload on the weights-changed signal and when the app
+resumes.
+
+The notice SHALL use the same warning tint (amber family, outlined, readable in both themes) as
+the "?" row in Historia, and still carry its text.
 
 #### Scenario: Questioned latest weight
 - **GIVEN** 82,0 kg yesterday and 61,3 kg marked "?" today

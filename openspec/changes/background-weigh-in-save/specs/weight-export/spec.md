@@ -2,15 +2,15 @@
 
 ### Requirement: File content
 The file's weights SHALL be every weight in Health Connect from every app, oldest first. In CSV each
-weight SHALL be one row of the `weights` table with date (`yyyy-MM-dd`), time (`HH:mm:ss`, the
-record's own offset), weight in kg with a comma decimal, the writing app's name, a `raw` column
+weight SHALL be one row of the `weights` table with date (`yyyy-MM-dd`), time (`HH:mm:ssXXX`, the
+record's own offset, e.g. `07:12:00+03:00`), weight in kg with a comma decimal, the writing app's name, a `raw` column
 holding the raw data the phone keeps for that weight as `name=value` pairs separated by `|` (empty
 when none), and a `check` column holding `?` for a weight marked "?" (empty otherwise), under the
 header row `date;time;weight_kg;source;raw;check`.
 
 #### Scenario: Row format
 - **GIVEN** an 82.4 kg weight at 1 March 2024 07:12 written by this app by hand
-- **THEN** the CSV row is `2024-03-01;07:12:00;82,4;Terveyslappu;;`
+- **THEN** the CSV row is `2024-03-01;07:12:00+02:00;82,4;Terveyslappu;;`
 
 #### Scenario: Scale row
 - **GIVEN** an 82.5 kg scale weigh-in with raw data kept
