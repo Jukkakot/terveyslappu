@@ -19,6 +19,8 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- **food-log** (user 2026-11-14): saved meals per slot, calories to Health Connect, eaten / steps / weight curves side by side; requirements in product.md "Food log: why". Next: /opsx:propose.
+
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
   (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current
   widget shows the previous result right away, which the user does not want there. Either the
@@ -89,7 +91,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**history-list-groups**~~: done 2026-11-09 (Historia list grouped year → month → week → day,
   single-child levels skipped, lists of up to 14 weights flat, newest path open, gap rows over 30
   days; no change across a gap).
-- Steps from Garmin through Health Connect next to weight (dropped for now, see product.md).
+- Steps from Garmin through Health Connect next to weight: back for the food log (product.md, "Food log: why").
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
 - ~~Body composition from impedance~~: dropped (user 2026-11-09, Q4: not needed).

@@ -162,6 +162,30 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Step on first, tap later is fine** (user 2026-11-09, Q5): a stable weight the scale is
   already showing when the weigh-in starts is saved; only the previous weigh-in's lingering
   broadcast (same company id, two minutes) is ignored.
+- **Food log: why** (user 2026-11-14, explore session). When meals vary from day to day, the
+  calories in everyday portions are unknown, and the user wants to learn them and see whether
+  everyday eating matches the goal (weight going down). Requirements:
+  - BR1 Learn: see what the usual meals contain; logging is for a learning period, not for life.
+  - BR2 See the whole: eaten, moved (steps) and weight side by side, at week level, as curves.
+    The app draws no conclusions: no "calories left", no daily budget, no maintenance or energy
+    expenditure inferred from intake and weight change (too many unknowns; user rejected it).
+  - BR3 Effortless: meal slots breakfast, lunch, dinner, evening snack plus extra items in
+    between; fixed meals in one tap; a household's handful of usual dishes saved once, so only
+    the portion varies. Portions in grams as eaten (cooked, not dry weight); a kitchen scale is
+    used a few times per dish to learn the usual portion, not every time. A meal can combine
+    items (a dish plus bread).
+  - BR4 Treats visible: small frequent treats add up unnoticed, so they stand apart from meals.
+  - BR5 No pressure: a missed day is fine; no streaks, red numbers or judgement.
+  - BR6 Data in Health Connect (`NutritionRecord`, meal type breakfast/lunch/dinner/snack), as
+    weight.
+  - No photo AI in the app and no other food app to maintain: the user asks an AI chat for the
+    calories of a new dish and saves the number. Free photo-AI apps were looked at (most limit
+    the free tier); Samsung Health logs food for free and writes nutrition to Health Connect.
+  - Steps come back from the backlog for BR2 (Garmin → Health Connect).
+  - The daily morning weigh-in is the main motivator; the drift began when it stopped, so the
+    weigh-in stays the core and the food log must not make it heavier.
+  - Do not reinvent: follow common food-log patterns (saved meals per slot, quick add of a
+    number, servings or grams when logging a saved item, frequent items first).
 
 ## Lessons from rubikki-solveri (2026-11-08)
 
