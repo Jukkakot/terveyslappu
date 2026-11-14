@@ -56,8 +56,8 @@ say "in Asetukset" mean its sub-screen; no wording change needed there.
 - Back arrow and system back both call `MainActions.onBack` (`MainUiState.back()`); the sub-screens
   of DATA without Health Connect fall back to the list on screen only (state keeps DATA, back follows
   its origin).
-- Sub-screens keep today's section headers under the top bar title, so the name shows twice (kept
-  "unchanged"; trivial to drop later).
+- A sub-screen with one section shows no section header (the top bar names it); Tiedot ja
+  varmuuskopio keeps its two headers.
 - Row icons: `ic_person` and `ic_palette` added; Automaattinen punnitus uses `ic_scale`, Tiedot ja
   varmuuskopio `ic_backup`, Tuki `ic_file`.
 - A running backup shows "Varmuuskopioidaan…" on its row; a refused backup uses the refused text.

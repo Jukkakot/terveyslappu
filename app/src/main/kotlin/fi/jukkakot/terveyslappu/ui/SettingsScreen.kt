@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -75,10 +77,10 @@ internal fun SettingsScreen(
     when (shown) {
         SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen)
         SettingsPage.PROFILE -> SubPage(R.string.profile_section, actions, snackbar, "profilePage") {
-            Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
+            Section(null) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
         }
         SettingsPage.LISTEN -> SubPage(R.string.listen_section, actions, snackbar, "listenPage") {
-            Section(R.string.listen_section) { ListenGroup(listen, actions, snackbar) }
+            Section(null) { ListenGroup(listen, actions, snackbar) }
         }
         SettingsPage.DATA -> SubPage(R.string.settings_data_backup, actions, snackbar, "dataPage") {
             var choosingFormat by remember { mutableStateOf(false) }
@@ -98,7 +100,7 @@ internal fun SettingsScreen(
             Section(R.string.settings_backup) { BackupGroup(backup, Instant.now(), actions) }
         }
         SettingsPage.APPEARANCE -> SubPage(R.string.settings_appearance, actions, snackbar, "appearancePage") {
-            Section(R.string.settings_appearance) {
+            Section(null) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge)
                     ThemeChoice(themeMode, actions.onTheme)
@@ -136,7 +138,7 @@ private fun SupportPage(versionName: String, actions: MainActions, snackbar: Sna
     val copiedText = stringResource(R.string.log_copied)
     val logEmpty = stringResource(R.string.log_empty)
     SubPage(R.string.settings_support, actions, snackbar, "supportPage") {
-        Section(R.string.settings_support) {
+        Section(null) {
             SettingsRow(
                 R.drawable.ic_share,
                 stringResource(R.string.menu_share_log),
@@ -278,13 +280,17 @@ private fun BackupState(line: BackupLine) {
 }
 
 @Composable
-private fun Section(title: Int, content: @Composable ColumnScope.() -> Unit) {
-    Text(
-        stringResource(title),
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 8.dp),
-    )
+private fun Section(title: Int?, content: @Composable ColumnScope.() -> Unit) {
+    if (title == null) {
+        Spacer(Modifier.height(16.dp))
+    } else {
+        Text(
+            stringResource(title),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 8.dp),
+        )
+    }
     Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer), content = content)
 }
 
