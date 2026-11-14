@@ -328,6 +328,10 @@
     <string name="food_save">Tallenna</string>
     <string name="food_deleted">%1$s poistettu</string>
     <string name="food_write_failed">Tallennus ei onnistunut. Syy on lokissa.</string>
+    <!-- The add sheet's own lines (food-widget design 7–8). -->
+    <string name="food_sheet_failed">Tallennus epäonnistui</string>
+    <string name="food_sheet_loading">Ladataan…</string>
+    <string name="food_sheet_read_failed">Päivää ei voitu lukea. Voit silti kirjoittaa.</string>
     <string name="food_product_exists">Tuote %1$s on jo olemassa.</string>
     <string name="food_per_kpl">%1$s kcal / kpl</string>
     <string name="food_per_100g">%1$s kcal / 100 g</string>

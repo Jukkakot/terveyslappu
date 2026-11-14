@@ -11,6 +11,18 @@ interface FoodRecords {
     suspend fun granted(): Boolean
     suspend fun own(now: Instant): List<FoodItem>
     suspend fun insert(items: List<FoodItem>)
+    suspend fun delete(recordIds: List<String>)
+
+    /**
+     * Rewrites changed items (design "Identity is the uuid"): inserts the new versions first, then
+     * deletes the old records whose client id changed (an unchanged id was upserted in place).
+     */
+    suspend fun replace(old: List<FoodItem>, new: List<FoodItem>) {
+        insert(new)
+        val newIds = new.map { FoodRecordId.encode(it) }.toSet()
+        val stale = old.filter { it.recordId != null && (it.pos == null || FoodRecordId.encode(it) !in newIds) }.mapNotNull { it.recordId }
+        delete(stale)
+    }
 }
 
 /**

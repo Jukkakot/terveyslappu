@@ -68,6 +68,9 @@ class FoodDataTest {
         override suspend fun insert(items: List<FoodItem>) {
             stored += items
         }
+        override suspend fun delete(recordIds: List<String>) {
+            stored.removeAll { it.recordId in recordIds }
+        }
     }
 
     @Test

@@ -77,6 +77,8 @@ class FoodActions(
     val onPick: (Suggestion) -> Unit = {},
     val onEnter: () -> Unit = {},
     val onUndoAdd: () -> Unit = {},
+    /** The sheet line's Kumoa of a delete made in the editor opened from the sheet. */
+    val onUndoDelete: () -> Unit = {},
     val onEdit: (FoodItem) -> Unit = {},
     val onCloseEditor: () -> Unit = {},
     val onSave: (FoodItem, EditInput) -> Unit = { _, _ -> },

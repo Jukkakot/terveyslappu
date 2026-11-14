@@ -5,7 +5,6 @@ import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.pm.PackageManager
 import fi.jukkakot.terveyslappu.ui.Screen
-import fi.jukkakot.terveyslappu.food.ClipOffers
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -53,6 +52,7 @@ import fi.jukkakot.terveyslappu.ui.MainScreen
 import fi.jukkakot.terveyslappu.ui.MainViewModel
 import fi.jukkakot.terveyslappu.ui.FoodAccess
 import fi.jukkakot.terveyslappu.ui.FoodActions
+import fi.jukkakot.terveyslappu.ui.FoodClipboard
 import fi.jukkakot.terveyslappu.ui.FoodViewModel
 import fi.jukkakot.terveyslappu.ui.Access
 import fi.jukkakot.terveyslappu.ui.StepsActions
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
                     foodModel.onPermissionResult(granted)
                     val then = afterFoodGrant
                     afterFoodGrant = null
-                    if (granted.containsAll(foodModel.foods.permissions)) then?.invoke()
+                    if (granted.containsAll(foodModel.permissions)) then?.invoke()
                 }
                 /** Asks the nutrition permission (or opens Health Connect once it was denied), then [then]. */
                 fun grantFood(then: (() -> Unit)? = null) {
@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         afterFoodGrant = then
                         foodModel.onPermissionRequested()
-                        launchSafely("hc.permission.nutrition") { foodLauncher.launch(foodModel.foods.permissions) }
+                        launchSafely("hc.permission.nutrition") { foodLauncher.launch(foodModel.permissions) }
                     }
                 }
                 fun openFoodDay(day: LocalDate) {
@@ -257,6 +257,7 @@ class MainActivity : ComponentActivity() {
                         onPick = foodModel::addSuggestion,
                         onEnter = foodModel::addTyped,
                         onUndoAdd = foodModel::undoAdd,
+                        onUndoDelete = foodModel::undoDelete,
                         onEdit = foodModel::openEditor,
                         onCloseEditor = foodModel::closeEditor,
                         onSave = foodModel::saveEdit,
@@ -388,47 +389,25 @@ class MainActivity : ComponentActivity() {
     /** A weigh-in notification's tap opens Historia (background-weigh-in). */
     private fun openFrom(intent: Intent?) {
         if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HISTORY) viewModel.onScreen(Screen.HISTORY)
-        // food-ai-import: text shared from an AI chat opens the import preview.
+        // food-widget design 5: the Lisää annos dialog's import shows the preview over the front page.
+        if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HOME) viewModel.onScreen(Screen.HOME)
+        // food-ai-import: text shared from an AI chat (or handed over by the dialog) opens the import preview.
         if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true) {
-            foodModel.openAi(intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty(), "share")
+            foodModel.openAi(intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty(), intent.getStringExtra(EXTRA_IMPORT_FROM) ?: "share")
         }
     }
 
     /** Liitä tekoälyltä: the clipboard text goes to the import preview. */
     private fun pasteAiFood() {
-        val clip = getSystemService(ClipboardManager::class.java).primaryClip
-        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this).toString() else ""
         foodModel.closeSheet()
-        foodModel.openAi(text, "paste")
+        foodModel.openAi(FoodClipboard.text(this), "paste")
     }
 
-    /**
-     * The clipboard offer (food-ai-import): called only while Ruoka or Lisää annos is shown. The description is checked
-     * first (no paste toast); the text is read only for a text clip newer than the last offered one.
-     */
-    private fun checkClipOffer() {
-        val manager = getSystemService(ClipboardManager::class.java)
-        val description = manager.primaryClipDescription ?: return
-        val time = description.timestamp
-        if (!ClipOffers.shouldRead(description.hasMimeType("text/*"), time, foodModel.lastOfferedClip())) return
-        val clip = manager.primaryClip
-        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this).toString() else ""
-        foodModel.offerClip(time, text)
-    }
+    /** The clipboard offer (food-ai-import): called only while the front page, Ruoka or Lisää annos is shown. */
+    private fun checkClipOffer() = FoodClipboard.checkOffer(this, foodModel)
 
     /** Kopioi ohje tekoälylle: assets/ai-food-prompt.txt as is. */
-    private fun copyAiPrompt() {
-        runCatching { assets.open("ai-food-prompt.txt").bufferedReader().use { it.readText() } }
-            .onSuccess {
-                getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("terveyslappu ai prompt", it))
-                AppLog.i("food.prompt.copy", "", "chars" to it.length)
-                Toast.makeText(this, R.string.ai_prompt_copied, Toast.LENGTH_SHORT).show()
-            }
-            .onFailure {
-                AppLog.e("food.prompt.copy", it, "failed")
-                Toast.makeText(this, R.string.ai_prompt_failed, Toast.LENGTH_SHORT).show()
-            }
-    }
+    private fun copyAiPrompt() = FoodClipboard.copyPrompt(this)
 
     private fun shareLog() {
         AppLog.i("log.share")
@@ -475,6 +454,20 @@ class MainActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_SCREEN = "screen"
         private const val SCREEN_HISTORY = "history"
+        private const val SCREEN_HOME = "home"
+        private const val EXTRA_IMPORT_FROM = "importFrom"
+
+        /**
+         * The Lisää annos dialog's import (food-widget design 5): the app on the preview over the
+         * front page, through the share path; a running main screen is reused.
+         */
+        fun importIntent(context: android.content.Context, text: String, from: String): Intent = Intent(context, MainActivity::class.java)
+            .setAction(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, text)
+            .putExtra(EXTRA_SCREEN, SCREEN_HOME)
+            .putExtra(EXTRA_IMPORT_FROM, from)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
         /** Opens the app at Historia, reusing a running main screen. */
         fun historyIntent(context: android.content.Context): Intent = Intent(context, MainActivity::class.java)

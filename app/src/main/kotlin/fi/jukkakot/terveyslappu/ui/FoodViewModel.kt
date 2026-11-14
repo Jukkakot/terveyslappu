@@ -18,6 +18,7 @@ import fi.jukkakot.terveyslappu.food.FoodDay
 import fi.jukkakot.terveyslappu.food.FoodEdits
 import fi.jukkakot.terveyslappu.food.FoodItem
 import fi.jukkakot.terveyslappu.food.FoodPlan
+import fi.jukkakot.terveyslappu.food.FoodRecords
 import fi.jukkakot.terveyslappu.food.HealthConnectFoods
 import fi.jukkakot.terveyslappu.food.Product
 import fi.jukkakot.terveyslappu.food.Suggestion
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.time.LocalDate
@@ -38,6 +38,18 @@ import java.util.UUID
 
 /** Whether the food log may read and write nutrition records (design 8). */
 enum class FoodAccess { CHECKING, UNAVAILABLE, NEEDS, DENIED, GRANTED }
+
+/** The line under the add field (food-widget design 7): the latest add, a delete's Kumoa, or a failed write. */
+sealed interface SheetLine {
+    /** "<name> <amount> · <kcal> · Muuta · Kumoa". */
+    data class Added(val item: FoodItem) : SheetLine
+
+    /** "<name> poistettu · Kumoa", after Poista in the editor opened from the sheet. */
+    data class Deleted(val item: FoodItem) : SheetLine
+
+    /** "Tallennus epäonnistui". */
+    data object Failed : SheetLine
+}
 
 data class FoodUiState(
     val access: FoodAccess = FoodAccess.CHECKING,
@@ -50,10 +62,12 @@ data class FoodUiState(
     /** The add sheet adds to this day; null = closed. */
     val sheetDay: LocalDate? = null,
     val query: String = "",
-    /** The latest add (the Muuta · Kumoa line), until the next add or the sheet closes. */
-    val lastAdded: FoodItem? = null,
+    /** The sheet's line, until the next add or the sheet closes. */
+    val line: SheetLine? = null,
     /** The item editor is open on this item. */
     val editing: FoodItem? = null,
+    /** The editor was opened from the add sheet on this day: leaving it reopens the sheet (food-widget design 4). */
+    val editReturn: LocalDate? = null,
     /** Järjestä: the working order of the day. */
     val ordering: List<FoodItem>? = null,
     /** The AI import preview, null = closed. */
@@ -61,13 +75,21 @@ data class FoodUiState(
     /** The clipboard line (food-ai-import), null = none. */
     val clipOffer: ClipOffer? = null,
 ) {
+    /** The latest add (the Muuta · Kumoa line). */
+    val lastAdded: FoodItem? get() = (line as? SheetLine.Added)?.item
+
     fun dayItems(day: LocalDate): List<FoodItem> = FoodDay.ordered(items.orEmpty().filter { it.day == day })
 }
 
-/** The food log's state and writes (food-log); Health Connect holds the log, app storage the products. */
+/**
+ * The food log's state and writes (food-log); Health Connect holds the log, app storage the
+ * products. Used by the main screen and the Lisää annos dialog; writes run in the app scope so a
+ * closed screen never cancels one (food-widget design 6).
+ */
 class FoodViewModel(app: Application) : AndroidViewModel(app) {
     private val terveys = app as TerveysApp
-    val foods = HealthConnectFoods(app)
+    val foods: FoodRecords get() = terveys.foodRecords
+    val permissions: Set<String> = HealthConnectFoods.PERMISSIONS
     private val store get() = terveys.products
     val base get() = terveys.baseProducts
 
@@ -77,15 +99,39 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 4)
     val messages: SharedFlow<UiMessage> = _messages
 
-    /** Writes run one at a time, so an undo finds the record its add wrote. */
-    private val writes = Mutex()
+    /** Writes run one at a time (app-wide), so an undo finds the record its add wrote. */
+    private val writes get() = terveys.foodWrites
+
+    /** Where adds come from, for the log: app, widget or shortcut. */
+    var source: String = "app"
+        private set
+
+    /** The dialog's writes tell the app's screens (food-widget design 14). */
+    private var notifyApp = false
+
+    /** The dialog opened its sheet once; a recreated dialog keeps its state (design 11). */
+    private var dialogStarted = false
 
     var permissionAsked = false
         private set
 
     init {
-        // An import wrote foods or products (MainViewModel).
-        viewModelScope.launch { terveys.foodSignal.changes.collect { if (_state.value.access == FoodAccess.GRANTED) load() else refresh() } }
+        // An import (MainViewModel) or the Lisää annos dialog wrote foods or products.
+        viewModelScope.launch {
+            terveys.foodSignal.changes.collect {
+                if (notifyApp) return@collect
+                if (_state.value.access == FoodAccess.GRANTED) load() else refresh()
+            }
+        }
+    }
+
+    /** The Lisää annos dialog (food-widget): adds go to today's sheet, writes tell the app. */
+    fun startDialog(from: String) {
+        source = from
+        notifyApp = true
+        if (dialogStarted) return
+        dialogStarted = true
+        openSheet(LocalDate.now())
     }
 
     /** On every resume: the permission may have changed in Health Connect's settings. */
@@ -109,7 +155,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onPermissionResult(granted: Set<String>) {
         permissionAsked = true
-        val ok = granted.containsAll(foods.permissions)
+        val ok = granted.containsAll(permissions)
         AppLog.i("hc.permission.nutrition", if (ok) "granted" else "denied")
         refresh()
     }
@@ -129,9 +175,10 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setDay(day: LocalDate) = _state.update { it.copy(day = minOf(day, LocalDate.now()), ordering = null) }
 
-    fun openSheet(day: LocalDate) = _state.update { it.copy(sheetDay = day, query = "", lastAdded = null) }
+    fun openSheet(day: LocalDate) = _state.update { it.copy(sheetDay = day, query = "", line = null, editReturn = null) }
 
-    fun closeSheet() = _state.update { it.copy(sheetDay = null, query = "", lastAdded = null) }
+    /** Closing drops the line, a pending delete Kumoa included (design 7). */
+    fun closeSheet() = _state.update { it.copy(sheetDay = null, query = "", line = null, editReturn = null) }
 
     fun onQuery(text: String) = _state.update { it.copy(query = text) }
 
@@ -150,28 +197,44 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(query = "") }
     }
 
-    private fun add(pick: Suggestion?, quickKcal: Int?, from: String) {
-        val current = _state.value
-        val day = current.sheetDay ?: LocalDate.now()
-        val zone = ZoneId.systemDefault()
-        val (item, product) = FoodEdits.add(day, current.dayItems(day), pick, quickKcal, Instant.now(), zone, UUID.randomUUID().toString())
-        // The product is learnt even when the write fails (review decision).
-        product?.let { p -> if (store.find(p.name) == null) store.put(p) }
-        _state.update { it.copy(items = it.items.orEmpty() + item, lastAdded = item, products = store.all()) }
-        write("food.add", "from" to from, "kcal" to (item.kcal != null), "past" to !item.timed) {
-            foods.insert(listOf(item))
+    /**
+     * Adds at the end of the sheet's day. Before the day has been read (or after a failed read) the
+     * add waits for a read in the write queue, so it still lands at the end (food-widget design 8).
+     */
+    private fun add(pick: Suggestion?, quickKcal: Int?, kind: String) {
+        val day = _state.value.sheetDay ?: LocalDate.now()
+        val now = Instant.now()
+        val uuid = UUID.randomUUID().toString()
+        val fields = arrayOf<Pair<String, Any?>>("from" to source, "kind" to kind)
+        terveys.appScope.launch {
+            writes.withLock {
+                if (_state.value.items == null) load()
+                if (_state.value.items == null) {
+                    AppLog.w("food.add", "failed", *fields, "reason" to "read")
+                    failed()
+                    return@withLock
+                }
+                val (item, product) = FoodEdits.add(day, _state.value.dayItems(day), pick, quickKcal, now, ZoneId.systemDefault(), uuid)
+                // The product is learnt even when the write fails (review decision).
+                product?.let { p -> if (store.find(p.name) == null) store.put(p) }
+                _state.update { it.copy(items = it.items.orEmpty() + item, line = SheetLine.Added(item), products = store.all()) }
+                runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) { foods.insert(listOf(item)) }
+            }
         }
     }
 
     /** Kumoa of the latest add. */
     fun undoAdd() {
         val added = _state.value.lastAdded ?: return
-        _state.update { it.copy(lastAdded = null) }
-        viewModelScope.launch {
+        _state.update { it.copy(line = null) }
+        terveys.appScope.launch {
             writes.withLock {
                 val record = _state.value.items.orEmpty().firstOrNull { it.uuid == added.uuid }?.recordId
                 runCatching { if (record != null) foods.delete(listOf(record)) }
-                    .onSuccess { AppLog.i("food.delete", "ok", "undo" to "add") }
+                    .onSuccess {
+                        AppLog.i("food.delete", "ok", "undo" to "add")
+                        changed()
+                    }
                     .onFailure { AppLog.e("food.delete", it, "failed", "undo" to "add") }
                 load()
             }
@@ -184,7 +247,10 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             is AiResult.Ok -> {
                 val p = r.parsed
                 AppLog.i("food.import", "ok", "from" to from, "count" to p.items.size, "products" to p.products.size, "skipped" to p.skipped)
-                _state.update { it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now()), sheetDay = null, query = "", lastAdded = null) }
+                // Any open sheet or editor closes (food-widget design 5).
+                _state.update {
+                    it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now()), sheetDay = null, query = "", line = null, editing = null, editReturn = null)
+                }
             }
             is AiResult.Failed -> {
                 AppLog.i("food.import", "failed", "from" to from, "reason" to r.reason.name.lowercase())
@@ -206,11 +272,17 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(clipOffer = offer) }
     }
 
-    /** Näytä: the offered text opens the preview. */
-    fun openClipOffer() {
-        val offer = _state.value.clipOffer ?: return
+    /** Näytä in the dialog: the offered text, handed to the app (food-widget design 5). */
+    fun takeClipOffer(): ClipOffer? {
+        val offer = _state.value.clipOffer ?: return null
         AppLog.i("food.import.offer", "open", "count" to offer.count)
         _state.update { it.copy(clipOffer = null) }
+        return offer
+    }
+
+    /** Näytä: the offered text opens the preview. */
+    fun openClipOffer() {
+        val offer = takeClipOffer() ?: return
         openAi(offer.text, "paste")
     }
 
@@ -253,7 +325,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun undoAi(plan: AiImportPlan) {
-        viewModelScope.launch {
+        terveys.appScope.launch {
             writes.withLock {
                 val records = _state.value.items.orEmpty().filter { i -> plan.items.any { it.uuid == i.uuid } }.mapNotNull { it.recordId }
                 runCatching { if (records.isNotEmpty()) foods.delete(records) }
@@ -267,26 +339,46 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, sheetDay = null, lastAdded = null) }
+    /** Muuta: from the sheet's line the editor replaces the sheet and leaving it reopens the sheet (design 4). */
+    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, editReturn = it.sheetDay, sheetDay = null) }
 
-    fun closeEditor() = _state.update { it.copy(editing = null) }
+    /** Peruuta: back to the sheet (its line as it was) when the editor came from there. */
+    fun closeEditor() = _state.update { leaveEditor(it, it.line) }
 
     fun saveEdit(item: FoodItem, input: EditInput) {
         val current = _state.value
         val plan = FoodEdits.edit(item, input, current.items.orEmpty(), store.all(), base)
-        _state.update { it.copy(editing = null) }
+        val edited = plan.new.firstOrNull { it.uuid == item.uuid } ?: item
+        _state.update { leaveEditor(it, SheetLine.Added(edited)) }
         apply(plan, "food.edit", oldKey = null)
     }
 
     fun delete(item: FoodItem) {
-        _state.update { it.copy(editing = null, items = it.items?.filter { i -> i.uuid != item.uuid }) }
-        _messages.tryEmit(UiMessage(R.string.food_deleted, listOf(item.name), UiAction(R.string.undo) { restore(item) }))
-        write("food.delete") { withRecordIds(listOf(item)).single().recordId?.let { foods.delete(listOf(it)) } }
+        val toSheet = _state.value.editReturn != null
+        // The record id before the item leaves the list (the Muuta line's item has none of its own).
+        val known = withRecordIds(listOf(item)).single()
+        _state.update { leaveEditor(it, SheetLine.Deleted(item)).copy(items = it.items?.filter { i -> i.uuid != item.uuid }) }
+        // In the sheet the Kumoa is its line (design 7); elsewhere a snackbar as before.
+        if (!toSheet) _messages.tryEmit(UiMessage(R.string.food_deleted, listOf(item.name), UiAction(R.string.undo) { restore(item) }))
+        write("food.delete") { (known.recordId ?: withRecordIds(listOf(item)).single().recordId)?.let { foods.delete(listOf(it)) } }
+    }
+
+    /** The sheet line's Kumoa of a delete. */
+    fun undoDelete() {
+        val deleted = (_state.value.line as? SheetLine.Deleted)?.item ?: return
+        _state.update { it.copy(line = null) }
+        restore(deleted)
+    }
+
+    /** The editor closes; it reopens the sheet with [line] when it came from there, else the list stays. */
+    private fun leaveEditor(s: FoodUiState, line: SheetLine?): FoodUiState {
+        val back = s.editReturn
+        return s.copy(editing = null, editReturn = null, sheetDay = back ?: s.sheetDay, line = if (back != null) line else s.line)
     }
 
     /** Undo of a delete: the old record id back, so its place and values return. */
     private fun restore(item: FoodItem) {
-        write("food.add", "from" to "undo") { foods.insert(listOf(item)) }
+        write("food.add", "from" to source, "kind" to "undo") { foods.insert(listOf(item)) }
     }
 
     fun startOrder() = _state.update { it.copy(ordering = it.dayItems(it.day)) }
@@ -347,22 +439,37 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         return old.map { o -> o.copy(recordId = o.recordId ?: read[o.uuid]?.recordId) }
     }
 
-    /** Runs a write, then reads the log again; a failure reads the day back and says so. */
-    private fun write(event: String, vararg fields: Pair<String, Any?>, block: suspend () -> Unit) = viewModelScope.launch {
-        writes.withLock {
-            val started = System.nanoTime()
-            runCatching { block() }
-                .onSuccess {
-                    AppLog.i(event, "ok", *fields, "ms" to msSince(started))
-                    terveys.backup.request("food")
-                }
-                .onFailure { e ->
-                    AppLog.e(event, e, "failed", *fields, "ms" to msSince(started))
-                    _messages.tryEmit(UiMessage(R.string.food_write_failed))
-                    _state.update { it.copy(lastAdded = null) }
-                }
-            load()
-        }
+    /** Runs a write in the app scope, one at a time, then reads the log again. */
+    private fun write(event: String, vararg fields: Pair<String, Any?>, block: suspend () -> Unit) = terveys.appScope.launch {
+        writes.withLock { runWrite(event, *fields, block = block) }
+    }
+
+    /** A write under the lock; a failure says so (the sheet's line when the sheet is open) and reads the day back. */
+    private suspend fun runWrite(event: String, vararg fields: Pair<String, Any?>, block: suspend () -> Unit) {
+        val started = System.nanoTime()
+        runCatching { block() }
+            .onSuccess {
+                AppLog.i(event, "ok", *fields, "ms" to msSince(started))
+                terveys.backup.request("food")
+                changed()
+            }
+            .onFailure { e ->
+                AppLog.e(event, e, "failed", *fields, "ms" to msSince(started))
+                failed()
+            }
+        load()
+    }
+
+    /** A failed write: the line in an open sheet (which stays open), else the snackbar. */
+    private fun failed() {
+        val inSheet = _state.value.sheetDay != null
+        _state.update { it.copy(line = if (inSheet) SheetLine.Failed else null) }
+        if (!inSheet) _messages.tryEmit(UiMessage(R.string.food_write_failed))
+    }
+
+    /** The dialog's writes reach the app's screens (food-widget design 14). */
+    private fun changed() {
+        if (notifyApp) terveys.foodSignal.emit()
     }
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000

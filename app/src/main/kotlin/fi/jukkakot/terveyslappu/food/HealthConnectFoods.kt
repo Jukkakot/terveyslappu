@@ -16,10 +16,7 @@ import androidx.health.connect.client.units.Energy as HcEnergy
 /** Nutrition records this app writes and reads (food-log "Food in Health Connect", design 5–7). */
 class HealthConnectFoods(private val context: Context) : FoodRecords {
 
-    val permissions: Set<String> = setOf(
-        HealthPermission.getReadPermission(NutritionRecord::class),
-        HealthPermission.getWritePermission(NutritionRecord::class),
-    )
+    val permissions: Set<String> get() = PERMISSIONS
 
     private val client by lazy { HealthConnectClient.getOrCreate(context) }
 
@@ -54,18 +51,7 @@ class HealthConnectFoods(private val context: Context) : FoodRecords {
         client.insertRecords(items.map { it.toRecord(version) })
     }
 
-    /**
-     * Rewrites changed items (design "Identity is the uuid"): inserts the new versions first, then
-     * deletes the old records whose client id changed (an unchanged id was upserted in place).
-     */
-    suspend fun replace(old: List<FoodItem>, new: List<FoodItem>) {
-        insert(new)
-        val newIds = new.map { FoodRecordId.encode(it) }.toSet()
-        val stale = old.filter { it.recordId != null && (it.pos == null || FoodRecordId.encode(it) !in newIds) }.mapNotNull { it.recordId }
-        delete(stale)
-    }
-
-    suspend fun delete(recordIds: List<String>) {
+    override suspend fun delete(recordIds: List<String>) {
         if (recordIds.isEmpty()) return
         client.deleteRecords(NutritionRecord::class, recordIdsList = recordIds, clientRecordIdsList = emptyList())
     }
@@ -99,7 +85,13 @@ class HealthConnectFoods(private val context: Context) : FoodRecords {
         )
     }
 
-    private companion object {
-        const val PAGE_SIZE = 1000
+    companion object {
+        private const val PAGE_SIZE = 1000
+
+        /** Read and write nutrition: the food log's permission (food-log design 8). */
+        val PERMISSIONS: Set<String> = setOf(
+            HealthPermission.getReadPermission(NutritionRecord::class),
+            HealthPermission.getWritePermission(NutritionRecord::class),
+        )
     }
 }

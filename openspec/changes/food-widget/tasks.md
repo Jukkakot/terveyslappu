@@ -4,15 +4,15 @@ Implementer: an opus agent (device lifecycle that cannot be tested in the cloud)
 
 ## 1. Writes and editor flow (app and dialog)
 
-- [ ] 1.1 Move food add, undo, edit and delete to an app-level scope in `TerveysApp` (like the
+- [x] 1.1 Move food add, undo, edit and delete to an app-level scope in `TerveysApp` (like the
   auto-save) so closing the sheet never cancels a Health Connect write; emit the food-changed
   signal the app listens to (or reload on resume) and request the backup as for in-app adds.
-- [ ] 1.2 Editor return: leaving the editor by Tallenna, Peruuta or Poista reopens the add field
+- [x] 1.2 Editor return: leaving the editor by Tallenna, Peruuta or Poista reopens the add field
   on the same day (change `openEditor`/`closeEditor`); the Muuta line shows the edited item, none
   after Poista. Applies in the app too; update the existing view model tests.
-- [ ] 1.3 Sheet messages: failed write ("Tallennus epäonnistui") and delete Kumoa as a line in the
+- [x] 1.3 Sheet messages: failed write ("Tallennus epäonnistui") and delete Kumoa as a line in the
   Muuta/Kumoa slot; a failure keeps the sheet open; closing drops a pending Kumoa.
-- [ ] 1.4 Loading: field and keyboard at once, "Ladataan…" until the day is read, enter/tap waits
+- [x] 1.4 Loading: field and keyboard at once, "Ladataan…" until the day is read, enter/tap waits
   for the load and appends at the end, read failure line and re-read before the append.
 
 ## 2. Add sheet outside the main screen

@@ -103,6 +103,20 @@ class TerveysApp : Application() {
     /** "Foods changed outside the food screens" (an import). */
     val foodSignal = WeightsSignal()
 
+    /** The food log's Health Connect records; tests put a fake here before a screen opens. */
+    var foodRecords: fi.jukkakot.terveyslappu.food.FoodRecords
+        get() = records ?: fi.jukkakot.terveyslappu.food.HealthConnectFoods(this).also { records = it }
+        set(value) {
+            records = value
+        }
+    private var records: fi.jukkakot.terveyslappu.food.FoodRecords? = null
+
+    /**
+     * Food writes run one at a time across the app and the Lisää annos dialog, in [appScope], so
+     * closing a sheet never cancels a write (food-widget design 6).
+     */
+    val foodWrites = kotlinx.coroutines.sync.Mutex()
+
     /** The own food products (food-log), in app storage and Android backup. */
     val products: fi.jukkakot.terveyslappu.food.ProductStore by lazy { fi.jukkakot.terveyslappu.food.ProductStore(File(filesDir, "products.json")) }
 

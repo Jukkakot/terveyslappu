@@ -67,81 +67,111 @@ internal fun energyText(energy: Energy?): String = when {
  * The add field (food-log "Adding an item"): keyboard up, suggestion buttons at the empty field,
  * up to five matches while typing, one tap adds, enter adds the typed text; the field stays open.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun AddFoodSheet(food: FoodUiState, base: List<BaseProduct>, actions: FoodActions) {
     val day = food.sheetDay ?: return
+    FoodSheetFrame(actions.onCloseSheet) { AddFoodContent(food, day, base, actions) }
+}
+
+/** The add sheet's frame: a bottom sheet with the standard scrim; a tap outside, back or a swipe closes it. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun FoodSheetFrame(onClose: () -> Unit, content: @Composable () -> Unit) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val focus = remember { FocusRequester() }
-    ModalBottomSheet(onDismissRequest = actions.onCloseSheet, sheetState = sheet, modifier = Modifier.testTag("addSheet")) {
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = sheet, modifier = Modifier.testTag("addSheet")) {
         Column(
             Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            val today = LocalDate.now()
-            if (day != today) {
-                Text(stringResource(R.string.food_add_for_day, dayTitle(day, today)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            OutlinedTextField(
-                value = food.query,
-                onValueChange = actions.onQuery,
-                label = { Text(stringResource(R.string.food_add_field)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { actions.onEnter() }),
-                modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
-            )
-            LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-            food.clipOffer?.let { ClipOfferLine(it, actions) }
-            food.lastAdded?.let { LastAddedLine(it, actions) }
-            val items = food.items.orEmpty()
-            if (FoodNames.normalize(food.query).isEmpty()) {
-                val picks = remember(items, food.products) { Suggestions.atEmpty(items, food.products, ZonedDateTime.now()) }
-                if (picks.isEmpty()) {
-                    Text(stringResource(R.string.food_add_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("addHint"))
-                } else {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.testTag("addSuggestions")) {
-                        picks.forEach { p ->
-                            SuggestionChip(onClick = { actions.onPick(Suggestion.Own(p)) }, label = { Text(p.name) }, modifier = Modifier.heightIn(min = 48.dp).testTag("pick-${p.name}"))
-                        }
-                    }
-                }
-            } else {
-                val matches = remember(food.query, items, food.products) { Suggestions.typing(food.query, food.products, base, items) }
-                Column(Modifier.testTag("addMatches")) {
-                    matches.forEach { s ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable { actions.onPick(s) }.heightIn(min = 52.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("match-${s.name}"),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(s.name, style = MaterialTheme.typography.bodyLarge)
-                                Text(energyText(s.product.energy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            if (s.product.treat) TreatSign()
-                        }
-                    }
-                }
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
-                TextButton(onClick = actions.onCopyAiPrompt, modifier = Modifier.heightIn(min = 48.dp).testTag("aiCopyPrompt")) { Text(stringResource(R.string.ai_copy_prompt)) }
-            }
-        }
+        ) { content() }
     }
 }
 
-/** "Rahka 200 g · 130 kcal · Muuta · Kumoa" for the latest add. */
+/** The sheet's add field, its line, the suggestions and the import buttons. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LastAddedLine(item: FoodItem, actions: FoodActions) {
-    Row(Modifier.fillMaxWidth().testTag("lastAdded"), verticalAlignment = Alignment.CenterVertically) {
-        val text = listOfNotNull(
-            listOfNotNull(item.name, item.amount?.let(::formatAmount)).joinToString(" "),
-            item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal),
-        ).joinToString(" · ")
-        Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        TextButton(onClick = { actions.onEdit(item) }, modifier = Modifier.testTag("lastChange")) { Text(stringResource(R.string.food_change)) }
-        TextButton(onClick = actions.onUndoAdd, modifier = Modifier.testTag("lastUndo")) { Text(stringResource(R.string.undo)) }
+internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BaseProduct>, actions: FoodActions) {
+    val focus = remember { FocusRequester() }
+    val today = LocalDate.now()
+    if (day != today) {
+        Text(stringResource(R.string.food_add_for_day, dayTitle(day, today)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    OutlinedTextField(
+        value = food.query,
+        onValueChange = actions.onQuery,
+        label = { Text(stringResource(R.string.food_add_field)) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { actions.onEnter() }),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
+    )
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    food.clipOffer?.let { ClipOfferLine(it, actions) }
+    food.line?.let { SheetLineRow(it, actions) }
+    val items = food.items
+    if (FoodNames.normalize(food.query).isEmpty()) {
+        val picks = remember(items, food.products) { Suggestions.atEmpty(items.orEmpty(), food.products, ZonedDateTime.now()) }
+        when {
+            // Until the day is read: a quiet line, no empty hint (food-widget design 8).
+            items == null -> Text(
+                stringResource(if (food.loadFailed) R.string.food_sheet_read_failed else R.string.food_sheet_loading),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag(if (food.loadFailed) "addReadFailed" else "addLoading"),
+            )
+            picks.isEmpty() -> Text(stringResource(R.string.food_add_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("addHint"))
+            else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.testTag("addSuggestions")) {
+                picks.forEach { p ->
+                    SuggestionChip(onClick = { actions.onPick(Suggestion.Own(p)) }, label = { Text(p.name) }, modifier = Modifier.heightIn(min = 48.dp).testTag("pick-${p.name}"))
+                }
+            }
+        }
+    } else {
+        val matches = remember(food.query, items, food.products) { Suggestions.typing(food.query, food.products, base, items.orEmpty()) }
+        Column(Modifier.testTag("addMatches")) {
+            matches.forEach { s ->
+                Row(
+                    Modifier.fillMaxWidth().clickable { actions.onPick(s) }.heightIn(min = 52.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("match-${s.name}"),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(s.name, style = MaterialTheme.typography.bodyLarge)
+                        Text(energyText(s.product.energy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (s.product.treat) TreatSign()
+                }
+            }
+        }
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
+        TextButton(onClick = actions.onCopyAiPrompt, modifier = Modifier.heightIn(min = 48.dp).testTag("aiCopyPrompt")) { Text(stringResource(R.string.ai_copy_prompt)) }
+    }
+}
+
+/** The line under the field: "Rahka 200 g · 130 kcal · Muuta · Kumoa", a delete's Kumoa, or a failed write. */
+@Composable
+private fun SheetLineRow(line: SheetLine, actions: FoodActions) {
+    when (line) {
+        is SheetLine.Added -> Row(Modifier.fillMaxWidth().testTag("lastAdded"), verticalAlignment = Alignment.CenterVertically) {
+            val item = line.item
+            val text = listOfNotNull(
+                listOfNotNull(item.name, item.amount?.let(::formatAmount)).joinToString(" "),
+                item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal),
+            ).joinToString(" · ")
+            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = { actions.onEdit(item) }, modifier = Modifier.testTag("lastChange")) { Text(stringResource(R.string.food_change)) }
+            TextButton(onClick = actions.onUndoAdd, modifier = Modifier.testTag("lastUndo")) { Text(stringResource(R.string.undo)) }
+        }
+        is SheetLine.Deleted -> Row(Modifier.fillMaxWidth().testTag("sheetDeleted"), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.food_deleted, line.item.name), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            TextButton(onClick = actions.onUndoDelete, modifier = Modifier.testTag("deletedUndo")) { Text(stringResource(R.string.undo)) }
+        }
+        SheetLine.Failed -> Text(
+            stringResource(R.string.food_sheet_failed),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("sheetFailed"),
+        )
     }
 }
 
