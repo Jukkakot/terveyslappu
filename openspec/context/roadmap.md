@@ -23,10 +23,10 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**home-compact**~~ done 2026-11-14 (v1.27, user 2026-11-14): the front page fits one screen: weight card with Punnitse inside, food card full width (number → Ruoka, bars → Energia), no BMI or automatic weigh-in card; Ruoka gets Viikko; the clipboard food offer also on the front page; import wording without the AI.
 - ~~**home-overview**~~ done 2026-11-14 (v1.26, user 2026-11-14): the front page as one card per feature (Paino; Ruoka with its own bars and period; Automaattinen punnitus while on), the latest-weights rows go. Parity rule: every feature gets the same parts on the front page and in its details unless a part means nothing for it.
 - ~~**food-ai-import**~~ done 2026-11-14 (v1.25, user 2026-11-14): share or paste the AI chat's day estimate as JSON into the food log (today by default, calendar for another day), preview with fine-tuning, append only.
-- **Reorder the front page cards** (user 2026-11-14, later): an edit mode where the feature cards are dragged into the user's order.
+- **Reorder the front page cards** (user 2026-11-14, later): an edit mode where the feature cards are dragged into the user's order. **Proposed (`home-card-order`), questions Q8-Q10 open.**
 - **food widget** (user 2026-11-14, plan separately): a home-screen widget for adding the day's meals quickly.
 - ~~**steps**~~ done 2026-11-14 (v1.28, user 2026-11-14): read-only steps from Health Connect's merged daily totals; the front page row holds the food card and the steps card side by side; Historia's fourth tab Askeleet (bars, 7-day line, weight under them, stats, day list); not in the data file or backup; no goal.
-- **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis.
+- **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis. **Proposed (`combined-chart`), questions Q11-Q13 open.**
 
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
   (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current
