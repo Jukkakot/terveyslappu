@@ -11,7 +11,7 @@ the habit. Long term the app may grow into a small personal health app.
 
 ```
 scale (BLE broadcast) -> terveyslappu -> Health Connect -> terveyslappu chart (own weights), Samsung Health
-Garmin watch -> Garmin Connect -> Health Connect (steps, later)
+Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
 ```
 
 - **Health Connect is the interface.** It survives a phone or watch brand change: any new device
@@ -213,6 +213,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   - As built (home-overview, v1.26): the front page is one card per feature (Paino, Ruoka with
     its own period, Automaattinen punnitus while it is on); every feature gets the same parts on
     the front page and in its details unless a part means nothing for it.
+  - As built (steps, v1.28): steps are read only, from Health Connect's merged daily aggregate
+    (no origin filter: two writers are merged by the user's app priority, never summed); a day
+    without data is a gap, never zero; the front page row is the food card and the steps card
+    side by side at half width; Historia's Askeleet tab after Energia. Decided: no step goal or
+    target line; steps are not in the data file or the backup (they are Garmin's and live in
+    Health Connect and Garmin Connect); the permission is asked only from the steps card or tab.
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.

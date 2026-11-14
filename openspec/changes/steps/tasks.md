@@ -10,7 +10,7 @@
 - [x] 2.1b Check on the device whether the aggregate call throws or clamps past the readable history limit and log it; fallback: chunked reads from the first readable day, or catch the failure and show the readable part
   - Done as (apply): reads go in chunks of at most 366 days; a failed read whose start is the first readable day is retried once from the next day; `steps.read ok ... fallback=none|later-start back=` (and `steps.read failed cause= retry=true` before a retry) tells on the device which happened.
 - [x] 2.2 `StepsViewModel`: `StepsAccess` states, refresh on resume and on entering the home screen or the tab (re-read the whole shown range, no live updates), failed read: message only when nothing was read yet, else last numbers with a quiet "ei päivitetty" line, daily list cache sliced per period, permission request and result; singleton wiring next to the food one
-- [ ] 2.3 Log events `steps.read ok|failed`, `hc.permission.steps request|granted|denied`, `home.period card=steps` (counts and timings, never step counts); add them to the event list in `.claude/CLAUDE.md`
+- [x] 2.3 Log events `steps.read ok|failed`, `hc.permission.steps request|granted|denied`, `home.period card=steps` (counts and timings, never step counts); add them to the event list in `.claude/CLAUDE.md`
 - [x] 2.4 Tests: access state mapping (needs, denied, granted, unavailable) as a pure rule; a read failure leaves `loadFailed` and a log line; a manifest/lint test that `WRITE_STEPS` is absent
 
 ## 3. Front page
@@ -29,6 +29,6 @@
 ## 5. Help, version, context
 
 - [x] 5.1 Ohje section on steps (source, read only, how to rank the watch first in Health Connect's priority, Garmin sync, the phone's own count starts only from the grant, permission from the card); help smoke test still green
-- [ ] 5.2 `./gradlew test lint assembleDebug`
-- [ ] 5.3 Bump MINOR in `gradle.properties` (`appVersion`)
-- [ ] 5.4 Update context files: product.md (steps as built, decisions: Health Connect merged total, no data file, no goal), roadmap.md (steps done, combined chart stays open), `.claude/CLAUDE.md` map (`steps/` package, events), questions.md (steps questions answered, remove them); mark the roadmap items done
+- [x] 5.2 `./gradlew test lint assembleDebug`
+- [x] 5.3 Bump MINOR in `gradle.properties` (`appVersion`)
+- [x] 5.4 Update context files: product.md (steps as built, decisions: Health Connect merged total, no data file, no goal), roadmap.md (steps done, combined chart stays open), `.claude/CLAUDE.md` map (`steps/` package, events), questions.md (steps questions answered, remove them); mark the roadmap items done

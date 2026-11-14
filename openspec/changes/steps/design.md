@@ -152,3 +152,20 @@ without scrolling" by one Robolectric layout smoke test at about 360 dp width.
 - [Time zone of travel changes a day's bucket] -> accept: request bounds are the phone's current local dates.
 - [Aggregate over Kaikki is large] -> one request, buckets are small; the first load runs off the main
   thread and the tab shows a spinner like Energia.
+
+## Apply notes (choices the spec left open, simplest option taken)
+
+- The Askeleet tab never asks by itself: it shows the reason and Anna lupa (Energia asks on opening;
+  steps follow the "No steps permission" scenario). A card tap in NEEDS only asks; the user stays home.
+- A weekly bar leaves today out; a week holding only today shows today's value.
+- Half-width food card: the average reads "keskim. 1 900/pv" (kcal dropped, as the steps one);
+  + Annos is a full-width outlined button on its own row at the card's bottom.
+- Thousands separator: narrow no-break space (U+202F).
+- Reads go in chunks of at most 366 days; the 2.1b fallback retries once from the day after the
+  first readable day and logs `fallback=later-start`.
+- A tapped bar shows "pv: n askelta" under the legend (a weekly bar: its Monday and the week's average).
+- Read range: the widest start asked in this app run; the home screen (and its period) and the
+  Askeleet tab (and its period) ask, every resume re-reads it.
+- Stale line "ei päivitetty" under the card's average row and under the tab's chart.
+- Card icon: Material directions_walk. Ohje names the priority setting without a menu path.
+- The weights under the bars are one shared composable `PeriodWeights` (Energia and Askeleet), clipped to the chart.

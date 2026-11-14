@@ -25,7 +25,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**food-ai-import**~~ done 2026-11-14 (v1.25, user 2026-11-14): share or paste the AI chat's day estimate as JSON into the food log (today by default, calendar for another day), preview with fine-tuning, append only.
 - **Reorder the front page cards** (user 2026-11-14, later): an edit mode where the feature cards are dragged into the user's order.
 - **food widget** (user 2026-11-14, plan separately): a home-screen widget for adding the day's meals quickly.
-- **steps** (user 2026-11-14, after home-overview): steps from Garmin through Health Connect as its own change.
+- ~~**steps**~~ done 2026-11-14 (v1.28, user 2026-11-14): read-only steps from Health Connect's merged daily totals; the front page row holds the food card and the steps card side by side; Historia's fourth tab Askeleet (bars, 7-day line, weight under them, stats, day list); not in the data file or backup; no goal.
 - **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis.
 
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
@@ -98,7 +98,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**history-list-groups**~~: done 2026-11-09 (Historia list grouped year → month → week → day,
   single-child levels skipped, lists of up to 14 weights flat, newest path open, gap rows over 30
   days; no change across a gap).
-- Steps from Garmin through Health Connect next to weight: back for the food log (product.md, "Food log: why").
+- ~~Steps from Garmin through Health Connect next to weight~~: done 2026-11-14 (steps, v1.28); the combined chart stays in the backlog.
 - ~~Readable CSV export~~: done 2026-11-08 (weight-export, menu ⋮ → Vie painot; the import reads
   it back, so it also works as a manual move to a new phone until phase 4 is decided).
 - ~~Body composition from impedance~~: dropped (user 2026-11-09, Q4: not needed).
