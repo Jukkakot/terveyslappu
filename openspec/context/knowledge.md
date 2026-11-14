@@ -16,6 +16,7 @@ the source. No configuration, versions or other things that go stale.
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung, Health Connect from the background, widget updates |
+| Steps in Health Connect | aggregate dedupe by app priority, daily buckets, on-device steps, history limit, Garmin gaps |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
@@ -77,3 +78,26 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   Android 17): a filtered PendingIntent scan delivered packets only when the screen came on while
   the app was "Optimoitu"; after "Rajoittamaton" packets arrived with the screen off and locked.
   Android's "Restricted" is not the only blocker: warn unless the app ignores battery optimisation.
+
+## Steps in Health Connect
+
+- **Read steps with `aggregate`, not raw records.** Steps are cumulative; the aggregate API removes
+  duplicates when several apps write the same steps (Garmin Connect and Samsung Health) and keeps
+  the app with the highest priority in the user's Health Connect priority list (only the user can
+  change it). Raw records summed by hand double count. `aggregateGroupByPeriod` with a one-day
+  period and `LocalDateTime` bounds (an `Instant` range throws) gives daily totals; the bucket list
+  is sparse, a day without data is missing.
+  ([aggregate data](https://developer.android.com/health-and-fitness/guides/health-connect/develop/aggregate-data),
+  [read data](https://developer.android.com/health-and-fitness/guides/health-connect/develop/read-data))
+- **On-device steps:** from Android 14, once any app holds the steps read permission, Health Connect
+  counts the phone's own steps (batched about once a minute) as one more source in the priority
+  dedupe. From the June 2026 update their origin is a device-specific synthetic package name instead
+  of `android`; an aggregate without an origin filter includes them unchanged. (read data page)
+- **Reads reach 30 days before the app's first permission grant**; older data needs
+  `READ_HEALTH_DATA_HISTORY`, otherwise the read throws. Reads are foreground-only without the
+  background-read permission.
+- **Garmin Connect writes steps to Health Connect** when the user enables the link in Garmin
+  Connect (connected partners), per data type; a Garmin forum thread reports hourly blocks missing
+  intermittently, days undercounted by 10-20 %. Garmin's own support page was not verified.
+  ([Android Central](https://www.androidcentral.com/wearables/garmin/heres-everything-garmin-will-and-wont-share-with-google-health-connect),
+  [Garmin forum](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-mobile-andriod/442637/android-health-connect---missing-steps-intermittently-during-sync-no-reconciliation))
