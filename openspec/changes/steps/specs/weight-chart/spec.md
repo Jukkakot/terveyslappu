@@ -47,36 +47,59 @@ Energia list); on Askeleet it SHALL be the list of days with steps (see Askeleet
 ## ADDED Requirements
 
 ### Requirement: Askeleet chart
-The Askeleet tab SHALL show, for the chosen period, one bar per day with steps, in one tone, and a
+The Askeleet tab SHALL show, for the chosen period, one bar per day with steps in one tone, and a
 line of the 7-day average over the days with steps of the 7 days ending on each day (drawn only
-where those 7 days hold at least 3 days with steps). Days without steps data SHALL be gaps, never
-zero bars. For 1 v, Kaikki and an Oma range over 90 days the bars SHALL be one per week (average
-per day with steps of the week). Under it, on the same time axis, a small chart SHALL show the
-period's weights with the weight scale, as on Energia. There SHALL be no goal line, target or second
-y-axis on the same plot. Tapping a bar SHALL show its day and steps, as the point details of the
-other charts.
+where those 7 days hold at least 3 days with steps; today left out). Days without steps data SHALL
+be gaps, never zero bars. Kaikki SHALL start at the first day with steps or today. There SHALL be
+no goal line, target or second y-axis. Tapping a bar SHALL show its day and steps.
 
 #### Scenario: Week with a gap
 - **GIVEN** 1 vk with five days with steps and Wednesday and Thursday without data
 - **WHEN** the Askeleet tab is shown
 - **THEN** five bars are drawn, Wednesday and Thursday are empty, and the weight line runs under them on the same days
 
-#### Scenario: Year view
-- **WHEN** the period is 1 v
-- **THEN** one bar per week is drawn
-
 #### Scenario: Day details
 - **WHEN** the user taps a bar
 - **THEN** its date and step count are shown
 
+### Requirement: Askeleet weekly bars
+When the period is over 90 days the Askeleet bars SHALL be one per week (average per day with steps
+of the week, today left out), as on Energia; 3 kk and shorter stay daily.
+
+#### Scenario: Year view
+- **WHEN** the period is 1 v
+- **THEN** one bar per week is drawn
+
+#### Scenario: Three months
+- **WHEN** the period is 3 kk
+- **THEN** one bar per day is drawn
+
+### Requirement: Weight line under the Askeleet bars
+Under the Askeleet bars, on the same time axis, a small chart SHALL show the period's weights with
+the weight scale, clipped to the steps axis; with no weights in the range that lower area stays
+empty, as on Energia.
+
+#### Scenario: No weights
+- **GIVEN** no weights in the period
+- **THEN** the lower area is empty and the bars are shown as usual
+
 ### Requirement: Askeleet statistics
 Under the Askeleet chart the app SHALL show for the period: the average steps per day with steps
 (today left out, since it is not over), and the number of days with steps of the period's days
-("26 / 30 päivää"). It SHALL NOT show a goal, a difference to a goal, distance or calories.
+("26 / 30 päivää"; today counts as a day with steps when it has steps, as on Energia).
+It SHALL NOT show a goal, a difference to a goal, distance or calories.
 
 #### Scenario: Partial month
 - **GIVEN** 1 kk with 26 days with steps averaging 7 800
 - **THEN** the statistics show 7 800 askelta/pv and 26 / 30 päivää
+
+### Requirement: Askeleet without data
+When the chosen period holds no step days at all, the Askeleet tab SHALL show one line telling the
+user to connect Garmin Connect to Health Connect, instead of an empty chart.
+
+#### Scenario: No step days
+- **GIVEN** the steps permission is granted and Health Connect holds no steps in the period
+- **THEN** the tab shows one line about connecting Garmin Connect to Health Connect and no empty chart
 
 ### Requirement: Askeleet list
 On the Askeleet tab the list under the statistics SHALL show the period's days with steps, newest

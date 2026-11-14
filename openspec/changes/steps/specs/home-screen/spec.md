@@ -21,7 +21,8 @@ Asetukset.
 Feature cards SHALL follow one pattern (parity, user 2026-11-14): the latest value, a small chart of
 the card's own chosen period, the feature's own quick action inside the card when it has one, and a
 tap that opens its details; a part that means nothing for a quantity is left out. The order SHALL
-be fixed for now.
+be fixed for now. The steps card opens Askeleet from anywhere except its period label, unlike the
+food card's split taps (food has a quick action; steps have nothing to add).
 
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
@@ -52,6 +53,7 @@ be fixed for now.
 - **GIVEN** weights, food and steps today and the "?" notice shown, on a phone of about 6 inches in portrait
 - **WHEN** the home screen is shown
 - **THEN** the weight card, the food and steps cards side by side and the notice are fully visible without scrolling
+- Covered by design: one Robolectric layout smoke test at about 360 dp width.
 
 #### Scenario: Automatic weigh-in off
 - **GIVEN** automatic weigh-in is switched on or off
@@ -105,7 +107,7 @@ logged day (today left out, as on Energia). Inside the card SHALL be an outlined
 opens the add field for today. A tap on the card's title or today's number SHALL open Ruoka on
 today; a tap on the bars or what is under them (not the period label) SHALL open Historia on
 Energia. There SHALL be no change arrow from the previous day and no separate button for today.
-Nothing on the card SHALL be a filled button. Its parts SHALL stay readable and tappable in half the width (44 dp touch targets, the average line may wrap or shorten), and it SHALL be as tall as the steps card. The card SHALL be shown also when no weights exist
+Nothing on the card SHALL be a filled button. At half width the period label and the average SHALL share one row (the average may shorten to "7 800/pv" style) and "+ Annos" SHALL sit on its own row under it; all parts SHALL stay readable and tappable (44 dp touch targets). The card SHALL fill the row's height (the taller card sets it). The card SHALL be shown also when no weights exist
 yet; without the nutrition permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask
 for it.
 
@@ -141,18 +143,15 @@ for it.
 ## ADDED Requirements
 
 ### Requirement: Steps card on the home screen
-The steps card SHALL fill the right half of the food card's row, as tall as the food card, and be
-built like the food card: "Askeleet tänään" with today's steps large, small daily bars of the card's
-own period (7, 30 or 90 days ending today, chosen from its own menu, remembered, 7 by default and
-separate from the weight and food periods) in one tone, and under them the period's first and last
-day and its average steps per day with steps (today left out, as on Askeleet). Today's number is
-what Health Connect holds so far and SHALL NOT be judged against a goal. The card has no quick
-action and no change arrow from the previous day. A tap anywhere on the card except its period
-label SHALL open Historia on Askeleet; back SHALL return to the home screen. The card SHALL be shown
-also when no weights exist yet. Without the steps permission it SHALL read "Askeleet: anna lupa" and
-a tap SHALL ask for it; when Health Connect holds no steps for today it SHALL read "Askeleet tänään:
-ei tietoa" without a warning tone. The card SHALL reload when the app is resumed and when the home
-screen is shown, since steps arrive from another app.
+The steps card SHALL fill the right half of the food card's row, built like the food card: the
+title "Askeleet tänään", today's steps large (thin-space thousands, "6 420"), small daily bars of the
+card's own period (7, 30 or 90 days ending today, chosen from its own menu, remembered, 7 by
+default and separate from the weight and food periods) in one tone, and under them the period's
+first and last day and the average ("keskim. 7 800 askelta/pv", "keskim. 7 800/pv" at half width)
+of days with steps, today left out. The card has no quick action, no change arrow and no goal. A
+tap anywhere on the card except its period label SHALL open Historia on Askeleet; back SHALL
+return to the home screen. The card SHALL be shown also when no weights exist yet and SHALL reload
+when the app is resumed and when the home screen is shown.
 
 #### Scenario: Steps today
 - **GIVEN** Health Connect holds 6 420 steps for today
@@ -168,9 +167,31 @@ screen is shown, since steps arrive from another app.
 - **THEN** Historia opens on Askeleet; back returns to the home screen
 
 #### Scenario: No steps yet today
-- **GIVEN** Health Connect holds no steps for today
-- **THEN** the card reads "Askeleet tänään: ei tietoa" and the earlier days' bars are still shown
+- **GIVEN** Health Connect holds steps for earlier days but none for today
+- **THEN** the card shows "ei tietoa" in the number slot and the earlier days' bars and average
+
+#### Scenario: No steps data at all
+- **GIVEN** Health Connect holds no steps
+- **THEN** the card keeps the title "Askeleet tänään", shows "ei tietoa" in the number slot and
+  "ei vielä keskiarvoa" for the average
+
+### Requirement: Steps card height
+The steps card SHALL fill the row's height (the taller of the two cards sets it), with its free
+space under its bars so the bottoms of both cards line up.
+
+#### Scenario: Equal height
+- **GIVEN** the food card is taller than the steps card
+- **THEN** both cards end at the same line and the steps card's extra space is under its bars
+
+### Requirement: Steps card without access
+Without the steps permission the steps card SHALL read "Askeleet: anna lupa" and a tap SHALL ask
+for it (or, after a denial, open Askeleet as described in the steps capability). When Health
+Connect is unavailable it SHALL read "Askeleet: ei saatavilla" and have no tap action.
 
 #### Scenario: No permission
 - **GIVEN** the steps permission is not granted
 - **THEN** the card reads "Askeleet: anna lupa" and the food card is unchanged
+
+#### Scenario: Unavailable
+- **GIVEN** Health Connect is unavailable
+- **THEN** the card reads "Askeleet: ei saatavilla" and tapping it does nothing

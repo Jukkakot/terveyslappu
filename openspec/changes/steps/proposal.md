@@ -15,19 +15,19 @@ details (parity rule).
   phone's own counter by the user's data-source priority (no summing of raw records).
 - **Front page:** a steps card "Askeleet tänään" in the right half of the food card's row (the food
   card becomes the left half): today's steps large, small daily bars of the card's own period
-  (7, 30 or 90 days, remembered, own menu), first and last day, the period's average. A tap opens
-  Historia on Askeleet. No quick action (steps have nothing to add).
-- **Historia:** a fourth tab **Askeleet** after Energia: daily bars (weekly from 90 days up), the
+  (7, 30 or 90 days, remembered, own menu), first and last day, the period's average. A tap anywhere
+  but the period label opens Historia on Askeleet. No quick action (steps have nothing to add).
+- **Historia:** a fourth tab **Askeleet** after Energia: daily bars (weekly only over 90 days), the
   7-day average line, the weight line under it on the same time axis, statistics (average per day
   with data, days with data) and the list of days, newest first.
 - **Permission:** the steps read permission is asked only from the steps card or the Askeleet tab,
   never from a weigh-in or at start-up; without it both show the reason and a grant button, and the
-  rest of the app works as before. Older than 30 days uses the history permission the app already
-  asks for weights.
+  rest of the app works as before. A denial leads to Askeleet with ask-again and Health Connect settings buttons. Older
+  than 30 days uses the history permission the app already asks for weights.
 - **Data file and backup do not carry steps** (decision: the data is Garmin's, it lives in Health
   Connect and Garmin Connect).
-- Ohje gets a section on steps (including where the numbers come from and how to fix a wrong
-  source). Log events with counts and timings only. Version MINOR bump.
+- Ohje gets a section on steps (including where the numbers come from and how to rank the
+  watch first in Health Connect's priority). Log events with counts and timings only. Version MINOR bump.
 - Not here: the combined chart (backlog "combined chart"), a step goal or target line, distance,
   floors, heart rate or workouts, writing steps, a steps widget or notification.
 

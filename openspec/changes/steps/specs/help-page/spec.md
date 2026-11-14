@@ -7,7 +7,7 @@ feature, each with a title and one to three sentences: weighing from the widget,
 tile and the launcher shortcut; manual entry; Historia (chart, periods, list); the food log (adding,
 products, Herkku, the Energia tab, the base products' sources); steps (they are read from Health Connect and
 never written, where the numbers come from, that two apps writing steps are merged by Health Connect's
-app priority and a wrong source is fixed there, and that the permission is asked from the steps card); owner details and BMI; import and export
+app priority and how to rank the watch first there to fix a wrong source, that the phone's own count starts only from the permission grant, and that the permission is asked from the steps card); owner details and BMI; import and export
 (including OKOK .xls); the automatic backup; Jaa loki. It SHALL NOT describe automatic weigh-in.
 Back from Ohje SHALL return to the home screen.
 
