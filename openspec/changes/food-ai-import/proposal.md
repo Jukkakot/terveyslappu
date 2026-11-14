@@ -12,6 +12,8 @@ fine-tuning, and logs every item with its kcal.
 - **Share to the app**: in the AI chat, share the answer → Terveyslappu opens a preview. Also
   **Liitä tekoälyltä** in the Lisää annos sheet reads the clipboard. The JSON is found also inside
   a code block or with chat text around it.
+- **Clipboard offer** (user 2026-11-14): when the Ruoka screen or the Lisää annos sheet opens and
+  newly copied text holds food JSON, a line offers to show it; each copy is offered once.
 - **Kopioi ohje tekoälylle**: copies a short Finnish instruction with the JSON shape and an
   example, to paste into the chat or the user's own calorie skill.
 - The JSON shape (the interface; the prompt file `app/src/main/assets/ai-food-prompt.txt` documents each

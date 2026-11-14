@@ -19,6 +19,29 @@ Text with no usable JSON SHALL show a short reason and add nothing.
 - **GIVEN** the text holds only chat text
 - **THEN** a short reason is shown and nothing is added
 
+### Requirement: Clipboard offer
+When the Ruoka screen or the Lisää annos sheet opens and the clipboard holds text copied after the
+last offer, the app SHALL read it once, and when it holds usable food JSON SHALL show a line
+"Leikepöydällä ruoka-arvio: <N> annosta · Näytä · Ohita". Näytä SHALL open the preview; Ohita SHALL
+hide the line. The same clipboard content SHALL be offered only once, whatever the answer, and
+clipboard text without food JSON SHALL show nothing. The app SHALL NOT read the clipboard anywhere
+else or in the background.
+
+#### Scenario: Copied in the chat
+- **GIVEN** the user copied the chat's answer with food JSON
+- **WHEN** they open the Ruoka screen
+- **THEN** the line offers the 6 portions, and Näytä opens the preview
+
+#### Scenario: Offered once
+- **GIVEN** the user tapped Ohita on the offer
+- **WHEN** they open the Lisää annos sheet without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Other text
+- **GIVEN** the clipboard holds a web address
+- **WHEN** the Ruoka screen opens
+- **THEN** no offer is shown
+
 ### Requirement: AI food JSON shape
 The JSON SHALL be an object with an `items` list (what was eaten) and/or a `products` list
 (products to keep), or a bare list of items. An item SHALL
