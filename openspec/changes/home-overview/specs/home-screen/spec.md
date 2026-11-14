@@ -23,6 +23,10 @@ details, which opens Asetukset at Omat tiedot. Without weights they SHALL NOT be
 The automatic weigh-in card SHALL show the same state line as its Asetukset row and open its
 Asetukset page.
 
+Feature cards SHALL follow one pattern (parity, user 2026-11-14): the latest value, a small chart of
+the card's own chosen period, what the user does with the feature, and a tap that opens its
+details; a part that means nothing for a quantity is left out. The order SHALL be fixed for now.
+
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
 - **WHEN** the home screen is shown
@@ -45,15 +49,25 @@ Asetukset page.
 - **THEN** only the weight and food cards are shown
 
 ### Requirement: Food row on the home screen
-The food card SHALL show "Syöty tänään" with today's total kcal and the treats' share (or "ei
-kirjauksia" when nothing is logged) and, inside the card, an outlined "Lisää annos" that opens the
-add field for today. Tapping the card elsewhere SHALL open the Ruoka screen on today. Neither SHALL
-be a filled button. The card SHALL be shown also when no weights exist yet.
+The food card SHALL be built like the weight card: "Syöty tänään" with today's total kcal large and
+the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
+days ending today, chosen from its own menu and remembered, 7 by default) with the treats' share in
+its tone as on Energia, and under them the period's first and last day and its average kcal per
+logged day (today left out, as on Energia). Inside the card SHALL be an outlined "Lisää annos" that
+opens the add field for today and a "Tänään" button that opens Ruoka on today; a tap elsewhere on
+the card SHALL open Historia on Energia. There SHALL be no change arrow from the previous day.
+Nothing on the card SHALL be a filled button. The card SHALL be shown also when no weights exist
+yet; without the nutrition permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask
+for it.
 
 #### Scenario: Something eaten
 - **GIVEN** today 1 240 kcal is logged, 230 of it Herkku
 - **WHEN** the front page is shown
-- **THEN** the food card reads "Syöty tänään 1 240 kcal · herkkuja 230" and tapping it opens Ruoka on today
+- **THEN** the food card shows 1 240 kcal and "herkkuja 230", and a bar per logged day of the last 7 days
+
+#### Scenario: Own period
+- **WHEN** the user picks 30 pv in the food card's menu
+- **THEN** the bars span 30 days, the weight card keeps its own period, and the choice stays after a restart
 
 #### Scenario: Add from the front page
 - **WHEN** the user taps Lisää annos

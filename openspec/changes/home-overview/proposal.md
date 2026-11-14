@@ -4,29 +4,36 @@
 
 The front page grew a feature at a time: the weight card, the derived-values row, the three latest
 weights, and now the food row and Lisää annos. The user (2026-11-14) wants the front page to show
-each feature clearly at a glance. The weight rows repeat what the card's line already shows and
-what Historia lists per day, so they can go.
+each feature clearly at a glance, every feature in the same way: a card with its latest value and
+a small chart of a chosen period, opening its details. The weight rows repeat what the card's line
+already shows and what Historia lists per day, so they go.
 
 ## What Changes
 
-- The three latest weights are removed from the front page. The weight card keeps its value,
-  change, line and derived values, and a tap still opens Historia, where the weights are listed
-  per day.
-- The front page is one card per feature, in a fixed order:
-  1. **Paino**: the current card, with the derived-values row inside it.
-  2. **Ruoka**: today's kcal with the treats' share, and the outlined Lisää annos inside the card.
-     A tap on the card opens Ruoka.
-  3. **Automaattinen punnitus** (only when it is switched on): its state line, as on the
-     Asetukset row. A tap opens its Asetukset page.
-- The "?" notice and the backup notice stay above the cards. Punnitse vaa'alla stays the only
-  filled action, at the bottom.
-- Not here: steps (own change next), which will become one more card.
+- **Parity rule** (user 2026-11-14): what one feature has on the front page and in its details,
+  the others get too, unless it means nothing for that quantity. Weight and food now follow it;
+  steps will.
+- The three latest weights are removed. The weight card keeps value, change, line, derived values
+  and its period menu, and opens Historia on Paino.
+- A **food card** built like the weight card: today's kcal large with the treats' share, small
+  daily kcal bars of its own chosen period (7 / 30 / 90 pv, own menu, remembered), under them the
+  first and last day and the period's average kcal per logged day, then the outlined Lisää annos
+  and "Tänään" (today's items on Ruoka) inside the card. A tap elsewhere opens Historia on Energia.
+  What weight has and food does not: no change arrow from the previous day (a day's kcal is not a
+  trend), bars instead of a line (daily amounts, as on Energia).
+- An **automatic weigh-in card** only while it is switched on: its state line as on the Asetukset
+  row; a tap opens its Asetukset page.
+- Order fixed for now: Paino, Ruoka, Automaattinen punnitus. Reordering the cards by dragging in an
+  edit mode goes to the backlog.
+- The "?" and backup notices stay above the cards; Punnitse vaa'alla stays the only filled action.
 
 ## Capabilities
 
 ### Modified Capabilities
-- `home-screen`: the front page is feature cards; the latest-weights list is removed.
+- `home-screen`: the front page is feature cards with the parity rule; the latest-weights list is
+  removed; the food card gets bars and its own period.
 
 ## Impact
 
-`ui/HomeScreen.kt` (and its smoke tests); no data, Health Connect or storage changes.
+`ui/HomeScreen.kt`, `chart/PeriodPrefs` (the food card's period), a pure home food summary next to
+`chart/HomeSummary`, smoke tests. No data, Health Connect or storage format changes.
