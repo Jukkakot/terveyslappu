@@ -74,6 +74,8 @@ data class MainUiState(
     val period: Period = Period.DEFAULT,
     /** The home card's chart period in days (home-screen "Home chart period"). */
     val homeDays: Long = HomeSummary.DEFAULT_DAYS,
+    /** The front page food card's own chart period in days. */
+    val foodDays: Long = HomeSummary.DEFAULT_DAYS,
     /** Whether weights older than 30 days can be read; null until checked. */
     val history: HistoryAccess? = null,
     val loadFailed: Boolean = false,
@@ -161,7 +163,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays()))
+    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays()))
     val state: StateFlow<MainUiState> = _state
 
     fun onPeriod(period: Period) {
@@ -172,9 +174,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onHomePeriod(days: Long) {
         val chosen = HomeSummary.homeDays(days)
-        AppLog.i("home.period", "", "days" to chosen)
+        AppLog.i("home.period", "", "card" to "weight", "days" to chosen)
         periodPrefs.saveHomeDays(chosen)
         _state.update { it.copy(homeDays = chosen) }
+    }
+
+    fun onFoodPeriod(days: Long) {
+        val chosen = HomeSummary.homeDays(days)
+        AppLog.i("home.period", "", "card" to "food", "days" to chosen)
+        periodPrefs.saveFoodDays(chosen)
+        _state.update { it.copy(foodDays = chosen) }
     }
 
     /** The history permission screen returned (chart notice): read again with what is now allowed. */
@@ -226,6 +235,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
     fun openFood() = _state.update { it.copy(screen = Screen.FOOD, foodOrigin = if (it.screen == Screen.HISTORY) Screen.HISTORY else Screen.HOME) }
+
+    /** The front page food card: Historia on Energia; back returns home. */
+    fun openEnergy() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = true) }
+
+    /** The front page automatic weigh-in card: its Asetukset page; back returns home. */
+    fun openListen() = _state.update { it.withSettings(SettingsPage.LISTEN, Screen.HOME) }
 
     /** Historia has opened its Energia page. */
     fun energyShown() = _state.update { it.copy(historyOnEnergy = false) }

@@ -312,6 +312,9 @@ class MainActivity : ComponentActivity() {
                         onDismissImport = viewModel::dismissImport,
                         onPeriod = viewModel::onPeriod,
                         onHomePeriod = viewModel::onHomePeriod,
+                        onFoodPeriod = viewModel::onFoodPeriod,
+                        onOpenEnergy = viewModel::openEnergy,
+                        onOpenListen = viewModel::openListen,
                         onListenEnabled = { on ->
                             listen.setEnabled(on)
                             WeighInWidget.update(this)

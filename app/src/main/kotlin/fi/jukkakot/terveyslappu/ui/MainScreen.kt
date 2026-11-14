@@ -66,6 +66,11 @@ class MainActions(
     val onDismissImport: () -> Unit = {},
     val onPeriod: (Period) -> Unit = {},
     val onHomePeriod: (Long) -> Unit = {},
+    val onFoodPeriod: (Long) -> Unit = {},
+    /** The food card: Historia on Energia. */
+    val onOpenEnergy: () -> Unit = {},
+    /** The automatic weigh-in card: its Asetukset page. */
+    val onOpenListen: () -> Unit = {},
     val onGrantHistory: () -> Unit = {},
     val onTheme: (ThemeMode) -> Unit = {},
     val onProfile: (OwnerProfile) -> Unit = {},
@@ -104,7 +109,7 @@ fun MainScreen(
     val screen = if ((state.screen == Screen.HISTORY || state.screen == Screen.FOOD) && !granted) Screen.HOME else state.screen
     BackHandler(enabled = screen != Screen.HOME) { actions.onBack() }
     when (screen) {
-        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile, food, foodActions)
+        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile, food, foodActions, listen)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions)
         Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions)
         Screen.HELP -> HelpScreen(actions)

@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -58,12 +59,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.ChartDots
+import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
+import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import fi.jukkakot.terveyslappu.derived.LatestDerived
@@ -71,8 +73,9 @@ import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 
-/** The simple home screen (mockup B): latest card, three latest weights, Punnitse vaa'alla. */
+/** The home screen: one card per feature (weight, food, automatic weigh-in), Punnitse vaa'alla. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreen(
@@ -83,6 +86,7 @@ internal fun HomeScreen(
     profile: OwnerProfile = OwnerProfile(),
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
+    listen: ListenUi = ListenUi(),
 ) {
     Scaffold(
         topBar = {
@@ -108,14 +112,14 @@ internal fun HomeScreen(
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup, profile, food, foodActions)
+                Access.GRANTED -> HomeContent(state, actions, backup, profile, food, foodActions, listen)
             }
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions) {
+private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions, listen: ListenUi) {
     val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
     val summary = remember(state.weights, state.homeDays, state.questioned) {
         state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
@@ -127,53 +131,144 @@ private fun HomeContent(state: MainUiState, actions: MainActions, backup: Backup
     ) {
         if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed, actions.onOpenBackupSettings)
         if (state.newestQuestioned != null) CheckNotice(actions.onOpenQuestioned)
-        LatestCard(state, summary, today, actions.onHomePeriod) { actions.onScreen(Screen.HISTORY) }
         // Recomputed whenever the weights or the owner details change (derived-values).
         val derived = remember(summary?.latest, profile) { summary?.let { LatestDerived.of(it.latest, profile, ZoneId.systemDefault()) } }
-        derived?.let { DerivedRow(it, actions.onOpenProfile) }
-        summary?.let { RecentList(it.recent, today, state.questioned) }
-        FoodRowAndAdd(food, today, foodActions)
+        LatestCard(state, summary, derived, today, actions.onHomePeriod, actions.onOpenProfile) { actions.onScreen(Screen.HISTORY) }
+        FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions)
+        if (listen.settings.enabled) ListenCard(listen, actions.onOpenListen)
     }
 }
 
 /**
- * "Syöty tänään" and the outlined Lisää annos (home-screen "Food row on the home screen"); neither
- * is filled, so Punnitse vaa'alla stays the only filled action. Today is read at every composition,
- * so a resume after midnight shows the new day.
+ * The food card (home-screen "Food row on the home screen"), built like the weight card: today's
+ * kcal, daily bars of its own period, the period's dates and average, outlined Lisää annos and
+ * Tänään inside; a tap elsewhere opens Historia on Energia. Nothing on it is filled. Today is read at
+ * every composition, so a resume after midnight shows the new day.
  */
 @Composable
-private fun FoodRowAndAdd(food: FoodUiState, today: LocalDate, actions: FoodActions) {
+private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions) {
     val colors = MaterialTheme.colorScheme
-    val text = when {
-        food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED -> stringResource(R.string.food_today_permission)
-        else -> food.items?.filter { it.day == today }?.takeIf { it.isNotEmpty() }
-            ?.let { stringResource(R.string.food_today_row, formatKcal(fi.jukkakot.terveyslappu.food.DaySum.of(it).total)) }
-            ?: stringResource(R.string.food_today_none)
+    val needsPermission = food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED
+    val summary = remember(food.items, days, today) { HomeFood.of(food.items.orEmpty(), days, today) }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(cardShape)
+            .background(colors.surfaceContainer)
+            .clickable(onClickLabel = stringResource(R.string.home_open_energy)) { if (needsPermission) actions.onOpenDay(today) else onOpenEnergy() }
+            .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+            .testTag("foodCard"),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.home_food_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        }
+        if (needsPermission) {
+            Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp).testTag("foodToday"))
+            return@Column
+        }
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (summary.todayLogged) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displayMedium, modifier = Modifier.alignByBaseline())
+                    Spacer(Modifier.width(6.dp))
+                    Text("kcal", style = MaterialTheme.typography.titleLarge, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
+                }
+                if (summary.todayTreat > 0) {
+                    Text(
+                        stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                    )
+                }
+            } else {
+                Text(stringResource(R.string.home_food_none), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+        if (summary.bars.isNotEmpty()) {
+            val description = stringResource(R.string.home_food_bars, summary.bars.size)
+            FoodBars(summary, colors.primary, colors.tertiary, Modifier.padding(top = 8.dp).fillMaxWidth().height(72.dp).semantics { contentDescription = description })
+        }
+        val small = MaterialTheme.typography.labelSmall
+        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+            Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            HomePeriodLabel(days, onPeriod, "foodPeriod")
+            Text(
+                summary.averageKcal?.let { stringResource(R.string.home_food_average, formatKcal(it)) } ?: stringResource(R.string.home_food_no_average),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f).padding(start = 8.dp).testTag("foodAverage"),
+            )
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = { actions.onAdd(today) },
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("homeFoodAdd"),
+            ) {
+                Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.food_add))
+            }
+            OutlinedButton(
+                onClick = { actions.onOpenDay(today) },
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.heightIn(min = 48.dp).testTag("foodToday"),
+            ) { Text(stringResource(R.string.food_today)) }
+        }
     }
+}
+
+/** Daily kcal bars of the period without axes, in Energia's tones (food, treats stacked). */
+@Composable
+private fun FoodBars(summary: HomeFood, food: Color, treat: Color, modifier: Modifier) {
+    Canvas(modifier) {
+        val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
+        val max = summary.bars.maxOf { it.total }.coerceAtLeast(1).toFloat()
+        val dayW = size.width / days
+        for (bar in summary.bars) {
+            val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
+            val width = maxOf(dayW * 0.7f, 1.dp.toPx())
+            val baseTop = size.height * (1 - (bar.total - bar.treat) / max)
+            drawRect(food, Offset(left, baseTop), Size(width, size.height - baseTop))
+            if (bar.treat > 0) {
+                val treatTop = size.height * (1 - bar.total / max)
+                drawRect(treat, Offset(left, treatTop), Size(width, baseTop - treatTop))
+            }
+        }
+        drawLine(food.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+    }
+}
+
+/** The automatic weigh-in card, only while it is on: the Asetukset row's state line; opens its page. */
+@Composable
+private fun ListenCard(listen: ListenUi, onOpen: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(groupShape)
+            .clip(cardShape)
             .background(colors.surfaceContainer)
-            .clickable(onClickLabel = stringResource(R.string.food_title)) { actions.onOpenDay(today) }
+            .clickable(onClickLabel = stringResource(R.string.listen_section), onClick = onOpen)
             .heightIn(min = 56.dp)
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .testTag("foodToday"),
+            .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
+            .testTag("listenCard"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Icon(painterResource(R.drawable.ic_scale), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.listen_section), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            ListenState(SettingsSummary.listen(listen), listen.status)
+        }
         Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-    }
-    OutlinedButton(
-        onClick = { actions.onAdd(today) },
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("homeFoodAdd"),
-    ) {
-        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(stringResource(R.string.food_add))
     }
 }
 
@@ -182,7 +277,15 @@ internal val groupShape = RoundedCornerShape(20.dp)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDate, onHomePeriod: (Long) -> Unit, onOpen: () -> Unit) {
+private fun LatestCard(
+    state: MainUiState,
+    summary: HomeSummary?,
+    derived: LatestDerived?,
+    today: LocalDate,
+    onHomePeriod: (Long) -> Unit,
+    onOpenProfile: () -> Unit,
+    onOpen: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     Column(
         Modifier
@@ -201,7 +304,7 @@ private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDa
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         when {
-            summary != null -> LatestValues(summary, state.homeDays, onHomePeriod)
+            summary != null -> LatestValues(summary, derived, state.homeDays, onHomePeriod, onOpenProfile)
             state.loadFailed -> Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge)
             state.weights == null -> Box(Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             else -> Column(Modifier.padding(vertical = 8.dp).testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -214,7 +317,7 @@ private fun LatestCard(state: MainUiState, summary: HomeSummary?, today: LocalDa
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) -> Unit) {
+private fun LatestValues(summary: HomeSummary, derived: LatestDerived?, days: Long, onHomePeriod: (Long) -> Unit, onOpenProfile: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     FlowRow(
         Modifier.fillMaxWidth(),
@@ -256,18 +359,19 @@ private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) 
             ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
         }
     }
+    derived?.let { DerivedRow(it, onOpenProfile) }
 }
 
-/** The home chart's period (home-screen "Home chart period"): its own tap opens a menu, not Historia. */
+/** A card's chart period (home-screen "Home chart period"): its own tap opens a menu, not the card's details. */
 @Composable
-private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit) {
+private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit, tag: String = "homePeriod") {
     var open by remember { mutableStateOf(false) }
     Box {
         Surface(
             onClick = { open = true },
             shape = CircleShape,
             color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.heightIn(min = 32.dp).testTag("homePeriod"),
+            modifier = Modifier.heightIn(min = 32.dp).testTag(tag),
         ) {
             Row(Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
@@ -282,7 +386,7 @@ private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit) {
                         open = false
                         onHomePeriod(option)
                     },
-                    modifier = Modifier.testTag("homePeriod-$option"),
+                    modifier = Modifier.testTag("$tag-$option"),
                 )
             }
         }
@@ -340,34 +444,6 @@ private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
             points.dropLast(1).forEach { drawCircle(color, radius = small, center = at(it)) }
         }
         drawCircle(color, radius = dot, center = at(points.last()))
-    }
-}
-
-@Composable
-private fun RecentList(recent: List<WeightEntry>, today: LocalDate, questioned: Set<String>) {
-    Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer).testTag("recent")) {
-        recent.forEach { entry ->
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(formatRowTime(entry.time, today, ZoneId.systemDefault()), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                val kg = stringResource(R.string.kg_value, formatKg(entry.kg))
-                if (entry.id in questioned) {
-                    // A "?" weight: its sign, no change (home-screen "Questioned weights on the home screen").
-                    val description = stringResource(R.string.check_row_description, formatKg(entry.kg))
-                    Text(
-                        kg + " " + stringResource(R.string.check_mark),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.semantics { contentDescription = description }.testTag("recentQuestioned"),
-                    )
-                } else {
-                    Text(kg, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
     }
 }
 

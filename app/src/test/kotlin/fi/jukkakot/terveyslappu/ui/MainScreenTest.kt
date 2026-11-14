@@ -25,6 +25,8 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.listen.ListenSettings
+import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import fi.jukkakot.terveyslappu.weight.HistoryAccess
@@ -90,10 +92,9 @@ class MainScreenTest {
 
     @Test
     fun `a questioned weight is listed whatever the period, accepted from its row, and the home notice opens Historia`() {
-        // 61,3 kg a month old and marked "?": out of the week, still listed; the chart and the home card skip it.
+        // 61,3 kg a month old and marked "?": out of the week, still listed in Historia; the home card skips it.
         val list = weights + weight("q", 40, 61.3)
         show(MainUiState(access = Access.GRANTED, weights = list, questioned = setOf("q"), period = Period.WEEK))
-        compose.onNodeWithTag("recentQuestioned", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("checkNotice").performClick()
         compose.onNodeWithTag("questioned-q").assertExists()
         compose.onNode(hasText("tarkista") and hasAnyAncestor(hasTestTag("questioned-q")), useUnmergedTree = true).assertExists()
@@ -104,10 +105,10 @@ class MainScreenTest {
     }
 
     @Test
-    fun `the home list shows the latest questioned weight with its sign and the card skips it`() {
+    fun `a questioned latest weight is not listed on the home screen, only the notice shows`() {
         val list = weights + weight("q", 0, 61.3).copy(time = now)
         show(MainUiState(access = Access.GRANTED, weights = list, questioned = setOf("q")))
-        compose.onNodeWithTag("recentQuestioned", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("recentQuestioned", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("checkNotice").assertExists()
     }
 
@@ -129,7 +130,7 @@ class MainScreenTest {
     @Test
     fun `card opens Historia, gear opens Asetukset, back returns home`() {
         show(MainUiState(access = Access.GRANTED, weights = weights))
-        compose.onNodeWithTag("recent").assertExists()
+        compose.onNodeWithTag("recent").assertDoesNotExist()
         compose.onNodeWithTag("change", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("weighIn").assertExists()
         compose.onNodeWithTag("latestCard").performClick()
@@ -180,6 +181,33 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()))
         compose.onNodeWithTag("homeEmpty", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("recent").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the automatic weigh-in card shows only while it is on and opens its page`() {
+        var state by mutableStateOf(MainUiState(access = Access.GRANTED, weights = weights))
+        var listen by mutableStateOf(ListenUi())
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(
+                    state,
+                    "0.1.1-test",
+                    MainActions(
+                        onOpenListen = { state = state.withSettings(SettingsPage.LISTEN, Screen.HOME) },
+                        onBack = { state = state.back() },
+                    ),
+                    listen = listen,
+                )
+            }
+        }
+        compose.onNodeWithTag("listenCard").assertDoesNotExist()
+        compose.runOnIdle { listen = ListenUi(settings = ListenSettings(enabled = true)) }
+        compose.onNodeWithTag("listenCard").assertExists()
+        compose.onNodeWithTag("foodCard").assertExists()
+        compose.onNodeWithTag("listenCard").performClick()
+        compose.onNodeWithTag("listenPage").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
     }
 
     @Test

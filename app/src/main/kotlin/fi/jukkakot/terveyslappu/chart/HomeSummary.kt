@@ -4,7 +4,7 @@ import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Duration
 import java.time.Instant
 
-/** What the home screen card and list show (home-screen spec, "Simple home screen"). */
+/** What the home screen's weight card shows (home-screen spec, "Simple home screen"). */
 data class HomeSummary(
     val latest: WeightEntry,
     /** Latest minus the weight before it, kg; null with a single weight. */
@@ -13,8 +13,6 @@ data class HomeSummary(
     val spark: List<WeightEntry>,
     /** Last minus first of [spark]; null with fewer than two points. */
     val sparkChange: Double?,
-    /** The three latest weights, newest first, "?" weights included. */
-    val recent: List<WeightEntry>,
     /** The sparkline's x range: the whole period ending at [sparkTo]. */
     val sparkFrom: Instant,
     val sparkTo: Instant,
@@ -31,7 +29,7 @@ data class HomeSummary(
 
         /**
          * Summary of [weights] in any order over the last [days], or null when none is accepted.
-         * Weights in [questioned] (entry ids, marked "?") are left out of everything but [recent].
+         * Weights in [questioned] (entry ids, marked "?") are left out.
          */
         fun of(weights: List<WeightEntry>, now: Instant, days: Long = DEFAULT_DAYS, questioned: Set<String> = emptySet()): HomeSummary? {
             val all = weights.sortedByDescending { it.time }
@@ -45,7 +43,6 @@ data class HomeSummary(
                 change = newest.getOrNull(1)?.let { latest.kg - it.kg },
                 spark = spark,
                 sparkChange = if (spark.size > 1) spark.last().kg - spark.first().kg else null,
-                recent = all.take(3),
                 sparkFrom = since,
                 sparkTo = maxOf(now, latest.time),
                 sparkScale = if (spark.isEmpty()) null else WeightScale.of(spark.map { it.kg }),

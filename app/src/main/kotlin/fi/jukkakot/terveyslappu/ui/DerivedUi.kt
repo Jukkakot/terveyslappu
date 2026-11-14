@@ -111,11 +111,11 @@ internal fun DerivedRow(row: LatestDerived, onOpenProfile: () -> Unit) {
         if (row.rangeState != Availability.Ok && row.rangeState != row.bmiState) add(reasonText(R.string.quantity_range, row.rangeState))
     }.distinct()
     Column(
-        Modifier.fillMaxWidth().clip(groupShape).background(colors.surfaceContainer).padding(vertical = 4.dp).testTag("derived"),
+        Modifier.fillMaxWidth().testTag("derived"),
     ) {
         if (row.bmi != null || row.normalRange != null) {
             FlowRow(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
@@ -148,7 +148,7 @@ internal fun ReasonLine(text: String, onOpenProfile: () -> Unit) {
             .fillMaxWidth()
             .clickable(onClickLabel = stringResource(R.string.derived_open_profile), onClick = onOpenProfile)
             .heightIn(min = 44.dp)
-            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .padding(vertical = 6.dp)
             .testTag("derivedReason"),
         verticalAlignment = Alignment.CenterVertically,
     ) {

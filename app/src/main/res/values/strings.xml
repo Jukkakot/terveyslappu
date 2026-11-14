@@ -277,8 +277,12 @@
     <!-- food-log -->
     <string name="food_title">Ruoka</string>
     <string name="food_add">Lisää annos</string>
-    <string name="food_today_row">Syöty tänään %1$s kcal</string>
-    <string name="food_today_none">Syöty tänään: ei kirjauksia</string>
+    <string name="home_food_title">Syöty tänään</string>
+    <string name="home_food_none">ei kirjauksia</string>
+    <string name="home_food_bars">Päivittäiset kilokalorit jaksolla, %1$d kirjattua päivää</string>
+    <string name="home_food_average">keskim. %1$s kcal/pv</string>
+    <string name="home_food_no_average">ei vielä keskiarvoa</string>
+    <string name="home_open_energy">Avaa energia</string>
     <string name="food_today_permission">Ruokakirjaus: anna lupa</string>
     <string name="food_permission_reason">Ruokakirjaus tallentaa syömäsi Health Connectiin ravintotietoina, ja sovellus näyttää vain itse kirjaamansa. Siksi se tarvitsee luvan lukea ja kirjoittaa ravintotietoja. Punnitus toimii ilmankin.</string>
     <string name="food_permission_grant">Anna lupa</string>

@@ -15,8 +15,14 @@ class PeriodPrefs(context: Context) {
 
     fun saveHomeDays(days: Long) = prefs.edit().putLong(HOME_KEY, days).apply()
 
+    /** The food card's own period in days (home-screen "Food row on the home screen"). */
+    fun loadFoodDays(): Long = HomeSummary.homeDays(prefs.getLong(FOOD_KEY, HomeSummary.DEFAULT_DAYS))
+
+    fun saveFoodDays(days: Long) = prefs.edit().putLong(FOOD_KEY, days).apply()
+
     private companion object {
         const val KEY = "period"
         const val HOME_KEY = "homeDays"
+        const val FOOD_KEY = "foodDays"
     }
 }

@@ -47,7 +47,6 @@ class QuestionedDataTest {
         assertEquals("b", summary.latest.id)
         assertEquals(0.4, summary.change!!, 1e-9)
         assertEquals(listOf("a", "b"), summary.spark.map { it.id })
-        assertEquals(listOf("b", "q", "a"), summary.recent.map { it.id })
         assertEquals(KgRange(80.0, 85.0), summary.sparkScale)
     }
 

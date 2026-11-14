@@ -21,7 +21,7 @@ class HomeSummaryTest {
         val summary = HomeSummary.of(listOf(weight("b", 1, 82.9), weight("c", 2, 82.5), weight("a", 0, 82.4), weight("d", 3, 82.7)), now)!!
         assertEquals("a", summary.latest.id)
         assertEquals(-0.5, summary.change!!, 1e-9)
-        assertEquals(listOf("a", "b", "c"), summary.recent.map { it.id })
+        
     }
 
     @Test

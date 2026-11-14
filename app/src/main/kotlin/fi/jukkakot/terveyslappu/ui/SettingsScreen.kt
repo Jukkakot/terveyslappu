@@ -261,7 +261,7 @@ private fun StateLine(text: String, warn: Boolean = false, symbol: StatusSymbol?
 }
 
 @Composable
-private fun ListenState(line: ListenLine, status: ListenStatus?) {
+internal fun ListenState(line: ListenLine, status: ListenStatus?) {
     when (line) {
         ListenLine.Off -> StateLine(stringResource(R.string.settings_listen_off))
         is ListenLine.Pending -> StateLine(stringResource(R.string.listen_pending, line.count), warn = true)

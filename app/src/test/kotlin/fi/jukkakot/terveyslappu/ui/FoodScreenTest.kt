@@ -60,6 +60,8 @@ class FoodScreenTest {
                     MainActions(
                         onBack = { state = state.back() },
                         onScreen = { state = state.copy(screen = it) },
+                        onOpenEnergy = { state = state.copy(screen = Screen.HISTORY, historyOnEnergy = true) },
+                        onFoodPeriod = { state = state.copy(foodDays = it) },
                     ),
                     food = food,
                     foodActions = FoodActions(
@@ -86,6 +88,17 @@ class FoodScreenTest {
         compose.onNodeWithTag("addField").assertExists()
         compose.onNodeWithTag("pick-Rahka").performClick()
         assertEquals("Rahka", picked?.name)
+    }
+
+    @Test
+    fun `front page food card shows bars, its own period, and opens Energia`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
+        compose.onNodeWithTag("foodCard").assertExists()
+        compose.onNodeWithTag("foodPeriod").performScrollTo().performClick()
+        compose.onNodeWithTag("foodPeriod-30").performClick()
+        compose.onNodeWithTag("homePeriod").assertDoesNotExist()
+        compose.onNodeWithTag("foodCard").performScrollTo().performClick()
+        compose.onNodeWithTag("energyChart").assertExists()
     }
 
     @Test
