@@ -88,6 +88,12 @@ class FoodActions(
     val onGrant: () -> Unit = {},
     val onSaveProduct: (String, Product) -> Boolean = { _, _ -> true },
     val onRemoveProduct: (String) -> Unit = {},
+    /** AI import (food-ai-import): paste, copy the instruction, edit the preview, add, cancel. */
+    val onPasteAi: () -> Unit = {},
+    val onCopyAiPrompt: () -> Unit = {},
+    val onAiEdit: (AiPreview) -> Unit = {},
+    val onAiAdd: () -> Unit = {},
+    val onAiCancel: () -> Unit = {},
 )
 
 private val finnish = Locale.forLanguageTag("fi")

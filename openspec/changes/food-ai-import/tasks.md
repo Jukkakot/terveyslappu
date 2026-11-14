@@ -8,25 +8,25 @@
       order, product matching by name key, energy learnt only by products without one, known
       Herkku wins, `products` list creates or replaces, Pikalisäys never a product; the plan keeps
       the products' previous state for Kumoa. Append only: no existing item in the plan's changes.
-- [ ] 1.3 Unit tests: fence + surrounding text, bare list, no JSON, nameless item, unit default,
+- [x] 1.3 Unit tests: fence + surrounding text, bare list, no JSON, nameless item, unit default,
       `annos` as kpl, learnt energy, known product untouched by an item, product list replaces,
       undo restores products, existing items untouched (made-up foods).
 
 ## 2. Share, sheet and preview
 
-- [ ] 2.1 Share target for `text/plain` (`ACTION_SEND`) that opens the app on the import preview;
+- [x] 2.1 Share target for `text/plain` (`ACTION_SEND`) that opens the app on the import preview;
       text without JSON shows the reason.
-- [ ] 2.2 Lisää annos sheet: Liitä tekoälyltä (clipboard) and Kopioi ohje tekoälylle: copies
+- [x] 2.2 Lisää annos sheet: Liitä tekoälyltä (clipboard) and Kopioi ohje tekoälylle: copies
       `assets/ai-food-prompt.txt` as is (already written); a test that its example parses.
-- [ ] 2.3 Preview: day row (today by default; tap opens a single-day calendar, no future days),
+- [x] 2.3 Preview: day row (today by default; tap opens a single-day calendar, no future days),
       items and products
       editable and removable, sum, skipped count; Lisää / Peruuta; "N annosta lisätty · Kumoa".
-- [ ] 2.4 Log `food.import from=share|paste ok count= products= skipped=` / `food.import failed
+- [x] 2.4 Log `food.import from=share|paste ok count= products= skipped=` / `food.import failed
       reason=` (never names or kcal).
-- [ ] 2.5 One smoke test of the preview.
+- [x] 2.5 One smoke test of the preview.
 
 ## 3. Docs and release
 
-- [ ] 3.1 One line in Ohje; bump MINOR in `gradle.properties`.
-- [ ] 3.2 Update `.claude/CLAUDE.md` map (AiPaste, share target) and log events; roadmap backlog
+- [x] 3.1 One line in Ohje; bump MINOR in `gradle.properties`.
+- [x] 3.2 Update `.claude/CLAUDE.md` map (AiPaste, share target) and log events; roadmap backlog
       line done.

@@ -330,6 +330,23 @@
     <string name="food_product_usual">Tavallinen määrä</string>
     <string name="food_product_remove">Poista tuote</string>
     <string name="food_product_remove_note">Poisto vie tuotteen ehdotuksista; kirjaukset säilyvät.</string>
+    <string name="ai_paste">Liitä tekoälyltä</string>
+    <string name="ai_copy_prompt">Kopioi ohje tekoälylle</string>
+    <string name="ai_prompt_copied">Ohje kopioitu. Liitä se tekoälylle.</string>
+    <string name="ai_prompt_failed">Ohjetta ei voitu kopioida.</string>
+    <string name="ai_no_json">Tekstistä ei löytynyt ruokia. Pyydä tekoälyltä JSON-koodilohko ohjeen mukaan.</string>
+    <string name="ai_empty">Tekstissä oli JSON, mutta ei yhtään käyttökelpoista ruokaa.</string>
+    <string name="ai_title">Tuo tekoälyltä</string>
+    <string name="ai_day">Päivälle</string>
+    <string name="ai_items">Annokset</string>
+    <string name="ai_products">Tallennettavat tuotteet</string>
+    <string name="ai_skipped">%1$d riviä ohitettu (ei nimeä tai luvut käyttökelvottomia)</string>
+    <string name="ai_sum">Yhteensä %1$s</string>
+    <string name="ai_add">Lisää</string>
+    <string name="ai_remove">Poista %1$s</string>
+    <string name="ai_added">%1$d annosta lisätty</string>
+    <string name="ai_products_saved">%1$d tuotetta tallennettu</string>
+    <string name="ai_product_edit">Muokkaa tuotetta</string>
     <string name="settings_food">Ruokakirjaus</string>
     <string name="settings_food_line">%1$d omaa tuotetta</string>
     <string name="quantity_energy">Energia</string>
@@ -350,5 +367,5 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d ruokaa ja %3$d tuotetta</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d ruokaa jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruokakirjaus</string>
-    <string name="help_food_body">Lisää annos etusivulta tai Ruoka-näkymästä: ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja yksi napautus kirjaa. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Energia-välilehti näyttää päivät painon rinnalla. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
+    <string name="help_food_body">Lisää annos etusivulta tai Ruoka-näkymästä: ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja yksi napautus kirjaa. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Energia-välilehti näyttää päivät painon rinnalla. Tekoälyn arvion voi tuoda jakamalla vastauksen sovellukselle tai Lisää annos -ikkunan Liitä tekoälyltä -napilla; Kopioi ohje tekoälylle antaa tekoälylle oikean muodon. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
 </resources>

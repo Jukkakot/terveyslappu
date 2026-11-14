@@ -122,6 +122,10 @@ internal fun AddFoodSheet(food: FoodUiState, base: List<BaseProduct>, actions: F
                     }
                 }
             }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
+                TextButton(onClick = actions.onCopyAiPrompt, modifier = Modifier.heightIn(min = 48.dp).testTag("aiCopyPrompt")) { Text(stringResource(R.string.ai_copy_prompt)) }
+            }
         }
     }
 }

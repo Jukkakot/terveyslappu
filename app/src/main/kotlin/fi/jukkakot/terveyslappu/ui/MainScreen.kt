@@ -112,6 +112,7 @@ fun MainScreen(
     }
     if (food.sheetDay != null) AddFoodSheet(food, baseProducts, foodActions)
     food.editing?.let { FoodEditor(it, food.products, foodActions) }
+    food.ai?.let { AiImportPreview(it, foodActions) }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
 }
 

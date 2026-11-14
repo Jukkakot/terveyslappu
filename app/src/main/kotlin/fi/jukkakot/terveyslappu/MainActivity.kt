@@ -234,6 +234,18 @@ class MainActivity : ComponentActivity() {
                         onGrant = { grantFood() },
                         onSaveProduct = foodModel::saveProduct,
                         onRemoveProduct = foodModel::removeProduct,
+                        onPasteAi = ::pasteAiFood,
+                        onCopyAiPrompt = ::copyAiPrompt,
+                        onAiEdit = foodModel::setAi,
+                        onAiCancel = foodModel::cancelAi,
+                        onAiAdd = {
+                            val addNow = {
+                                foodModel.state.value.ai?.day?.let { foodModel.setDay(it) }
+                                viewModel.openFood()
+                                foodModel.addAi()
+                            }
+                            if (foodModel.state.value.access == FoodAccess.GRANTED) addNow() else grantFood(addNow)
+                        },
                     ),
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
@@ -334,6 +346,32 @@ class MainActivity : ComponentActivity() {
     /** A weigh-in notification's tap opens Historia (background-weigh-in). */
     private fun openFrom(intent: Intent?) {
         if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HISTORY) viewModel.onScreen(Screen.HISTORY)
+        // food-ai-import: text shared from an AI chat opens the import preview.
+        if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true) {
+            foodModel.openAi(intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty(), "share")
+        }
+    }
+
+    /** Liitä tekoälyltä: the clipboard text goes to the import preview. */
+    private fun pasteAiFood() {
+        val clip = getSystemService(ClipboardManager::class.java).primaryClip
+        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this).toString() else ""
+        foodModel.closeSheet()
+        foodModel.openAi(text, "paste")
+    }
+
+    /** Kopioi ohje tekoälylle: assets/ai-food-prompt.txt as is. */
+    private fun copyAiPrompt() {
+        runCatching { assets.open("ai-food-prompt.txt").bufferedReader().use { it.readText() } }
+            .onSuccess {
+                getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("terveyslappu ai prompt", it))
+                AppLog.i("food.prompt.copy", "", "chars" to it.length)
+                Toast.makeText(this, R.string.ai_prompt_copied, Toast.LENGTH_SHORT).show()
+            }
+            .onFailure {
+                AppLog.e("food.prompt.copy", it, "failed")
+                Toast.makeText(this, R.string.ai_prompt_failed, Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun shareLog() {

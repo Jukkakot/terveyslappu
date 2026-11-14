@@ -6,6 +6,11 @@ import androidx.lifecycle.viewModelScope
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.food.AddInput
+import fi.jukkakot.terveyslappu.food.AiFailure
+import fi.jukkakot.terveyslappu.food.AiImport
+import fi.jukkakot.terveyslappu.food.AiImportPlan
+import fi.jukkakot.terveyslappu.food.AiPaste
+import fi.jukkakot.terveyslappu.food.AiResult
 import fi.jukkakot.terveyslappu.food.EditInput
 import fi.jukkakot.terveyslappu.food.FoodDay
 import fi.jukkakot.terveyslappu.food.FoodEdits
@@ -49,6 +54,8 @@ data class FoodUiState(
     val editing: FoodItem? = null,
     /** Järjestä: the working order of the day. */
     val ordering: List<FoodItem>? = null,
+    /** The AI import preview, null = closed. */
+    val ai: AiPreview? = null,
 ) {
     fun dayItems(day: LocalDate): List<FoodItem> = FoodDay.ordered(items.orEmpty().filter { it.day == day })
 }
@@ -162,6 +169,67 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 runCatching { if (record != null) foods.delete(listOf(record)) }
                     .onSuccess { AppLog.i("food.delete", "ok", "undo" to "add") }
                     .onFailure { AppLog.e("food.delete", it, "failed", "undo" to "add") }
+                load()
+            }
+        }
+    }
+
+    /** AI import: reads [text] (shared or pasted); a text with no usable JSON says why and adds nothing. */
+    fun openAi(text: String, from: String) {
+        when (val r = AiPaste.parse(text)) {
+            is AiResult.Ok -> {
+                val p = r.parsed
+                AppLog.i("food.import", "ok", "from" to from, "count" to p.items.size, "products" to p.products.size, "skipped" to p.skipped)
+                _state.update { it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now()), sheetDay = null, query = "", lastAdded = null) }
+            }
+            is AiResult.Failed -> {
+                AppLog.i("food.import", "failed", "from" to from, "reason" to r.reason.name.lowercase())
+                _messages.tryEmit(UiMessage(if (r.reason == AiFailure.NO_JSON) R.string.ai_no_json else R.string.ai_empty))
+            }
+        }
+    }
+
+    fun setAi(preview: AiPreview) = _state.update { it.copy(ai = preview.copy(day = minOf(preview.day, LocalDate.now()))) }
+
+    fun cancelAi() = _state.update { it.copy(ai = null) }
+
+    /** Lisää of the preview: items at the end of the day, products kept; Kumoa takes both back. */
+    fun addAi() {
+        val preview = _state.value.ai ?: return
+        _state.update { it.copy(ai = null) }
+        viewModelScope.launch {
+            if (_state.value.items == null) load()
+            val current = _state.value
+            val plan = AiImport.plan(
+                preview.items, preview.products, preview.day, current.dayItems(preview.day), store.all(), base,
+                Instant.now(), ZoneId.systemDefault(),
+            ) { UUID.randomUUID().toString() }
+            plan.products.forEach { store.put(it) }
+            _state.update { it.copy(items = it.items.orEmpty() + plan.items, products = store.all()) }
+            val undo = UiAction(R.string.undo) { undoAi(plan) }
+            _messages.tryEmit(
+                if (plan.items.isEmpty()) UiMessage(R.string.ai_products_saved, listOf(plan.products.size), undo)
+                else UiMessage(R.string.ai_added, listOf(plan.items.size), undo),
+            )
+            if (plan.items.isEmpty()) {
+                AppLog.i("food.import.save", "ok", "count" to 0, "products" to plan.products.size)
+                terveys.backup.request("food")
+            } else {
+                write("food.import.save", "count" to plan.items.size, "products" to plan.products.size) { foods.insert(plan.items) }
+            }
+        }
+    }
+
+    private fun undoAi(plan: AiImportPlan) {
+        viewModelScope.launch {
+            writes.withLock {
+                val records = _state.value.items.orEmpty().filter { i -> plan.items.any { it.uuid == i.uuid } }.mapNotNull { it.recordId }
+                runCatching { if (records.isNotEmpty()) foods.delete(records) }
+                    .onSuccess { AppLog.i("food.import.undo", "ok", "count" to records.size) }
+                    .onFailure { AppLog.e("food.import.undo", it, "failed") }
+                store.restore(plan.before)
+                _state.update { it.copy(products = store.all()) }
+                terveys.backup.request("food")
                 load()
             }
         }
