@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.listen.ListenSettings
+import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.LocalDateTime
 
@@ -62,6 +64,9 @@ class MainActions(
     val onTheme: (ThemeMode) -> Unit = {},
     val onProfile: (OwnerProfile) -> Unit = {},
     val onOpenProfile: () -> Unit = {},
+    val onListenEnabled: (Boolean) -> Unit = {},
+    val onListenSettings: (ListenSettings) -> Unit = {},
+    val onListenFix: (ListenFix) -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */
@@ -75,6 +80,7 @@ fun MainScreen(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     profile: OwnerProfile = OwnerProfile(),
     heightInHealthConnect: Boolean = true,
+    listen: ListenUi = ListenUi(),
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
@@ -83,7 +89,7 @@ fun MainScreen(
     when (screen) {
         Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile)
-        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, state.profileFocus)
+        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, state.profileFocus, listen)
         Screen.HELP -> HelpScreen(actions)
     }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }

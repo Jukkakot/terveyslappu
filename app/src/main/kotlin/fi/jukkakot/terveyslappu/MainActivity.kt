@@ -33,7 +33,12 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.log.shareLogIntent
+import android.provider.Settings
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import fi.jukkakot.terveyslappu.ui.ListenFix
 import fi.jukkakot.terveyslappu.ui.MainActions
+import kotlinx.coroutines.delay
 import fi.jukkakot.terveyslappu.ui.MainScreen
 import fi.jukkakot.terveyslappu.ui.MainViewModel
 import fi.jukkakot.terveyslappu.ui.TerveysTheme
@@ -60,6 +65,17 @@ class MainActivity : ComponentActivity() {
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> if (HEIGHT_WRITE_PERMISSION in granted) viewModel.writeHeight() else viewModel.heightDenied() }
                 val snackbar = remember { SnackbarHostState() }
+                // The listen trial's section: re-read on every change, on resume and every minute (background-weigh-in).
+                val listen = (application as TerveysApp).listen
+                val listenVersion by listen.changes.collectAsStateWithLifecycle()
+                var listenTick by remember { mutableIntStateOf(0) }
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        delay(60_000)
+                        listenTick++
+                    }
+                }
+                val listenUi = remember(listenVersion, listenTick) { listen.ui() }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted -> viewModel.onPermissionResult(granted) }
@@ -108,6 +124,7 @@ class MainActivity : ComponentActivity() {
 
                 LifecycleResumeEffect(Unit) {
                     viewModel.refreshAccess()
+                    listenTick++
                     onPauseOrDispose {}
                 }
                 LaunchedEffect(Unit) {
@@ -129,6 +146,7 @@ class MainActivity : ComponentActivity() {
                     themeMode = themeMode,
                     profile = profile,
                     heightInHealthConnect = heightInHc,
+                    listen = listenUi,
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
                         onOpenProfile = viewModel::openProfile,
@@ -185,6 +203,18 @@ class MainActivity : ComponentActivity() {
                         onDismissImport = viewModel::dismissImport,
                         onPeriod = viewModel::onPeriod,
                         onHomePeriod = viewModel::onHomePeriod,
+                        onListenEnabled = listen::setEnabled,
+                        onListenSettings = listen::updateSettings,
+                        onListenFix = { fix ->
+                            open(
+                                when (fix) {
+                                    ListenFix.BLUETOOTH -> Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+                                    ListenFix.POWER_SAVE -> Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+                                    ListenFix.PERMISSION, ListenFix.BATTERY ->
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
+                                },
+                            )
+                        },
                         onGrantHistory = {
                             afterHistory = viewModel::onHistoryResult
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }

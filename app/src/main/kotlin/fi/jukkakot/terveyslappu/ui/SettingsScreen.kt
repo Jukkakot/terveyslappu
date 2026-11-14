@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.data.DataFormat
+import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 
@@ -66,6 +67,7 @@ internal fun SettingsScreen(
     actions: MainActions,
     snackbar: SnackbarHostState,
     profileFocus: Boolean = false,
+    listen: ListenUi = ListenUi(),
 ) {
     val profileView = remember { BringIntoViewRequester() }
     LaunchedEffect(profileFocus) { if (profileFocus) profileView.bringIntoView() }
@@ -109,6 +111,7 @@ internal fun SettingsScreen(
                 }
                 Section(R.string.settings_backup) { BackupGroup(backup, Instant.now(), actions) }
             }
+            Section(R.string.listen_section) { ListenGroup(listen, actions, snackbar) }
             Section(R.string.settings_support) {
                 SettingsRow(
                     R.drawable.ic_share,

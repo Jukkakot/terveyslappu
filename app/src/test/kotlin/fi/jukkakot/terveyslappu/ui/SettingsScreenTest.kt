@@ -3,6 +3,14 @@ package fi.jukkakot.terveyslappu.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import fi.jukkakot.terveyslappu.listen.ListenSettings
+import fi.jukkakot.terveyslappu.listen.ListenStatus
+import fi.jukkakot.terveyslappu.listen.ListenUi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -110,6 +118,24 @@ class SettingsScreenTest {
         compose.onNodeWithTag("backupChange").assertExists()
         compose.onNodeWithTag("backupDisable").performScrollTo().performClick()
         assertTrue(retried && off)
+    }
+
+    @Test
+    fun `listen trial needs a known scale, then shows its status and fix`() {
+        var enabled: Boolean? = null
+        var fix: ListenFix? = null
+        var ui by mutableStateOf(ListenUi())
+        val actions = MainActions(onListenEnabled = { enabled = it }, onListenFix = { fix = it })
+        compose.setContent {
+            TerveysTheme { SettingsScreen(false, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", actions, SnackbarHostState(), listen = ui) }
+        }
+        compose.onNodeWithTag("listenSwitch").performScrollTo().assertIsNotEnabled()
+        ui = ListenUi(ListenSettings(enabled = true), hasScale = true, status = ListenStatus.BluetoothOff, batteryRestricted = true)
+        compose.onNodeWithTag("listenSwitch").performScrollTo().assertIsEnabled().performClick()
+        assertEquals(false, enabled)
+        compose.onNodeWithTag("listenStatus-fix").performScrollTo().performClick()
+        assertEquals(ListenFix.BLUETOOTH, fix)
+        compose.onNodeWithTag("listenBattery").assertExists()
     }
 
     @Test

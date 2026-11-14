@@ -34,7 +34,7 @@
 
 ## 4. Asetukset section
 
-- [ ] 4.1 Section "Automaattinen punnitus (kokeilu)": switch (disabled with the hint before a scale
+- [x] 4.1 Section "Automaattinen punnitus (kokeilu)": switch (disabled with the hint before a scale
       is remembered), start/end pickers, mode Säästö/Tasapaino, "Kuuntele myös
       virransäästötilassa", status line with its fix button, battery warning line with its button,
       last-heard line refreshing every minute. Finnish strings, light/dark. One smoke test.

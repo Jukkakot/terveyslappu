@@ -204,4 +204,28 @@
         <item quantity="one">Sulkeutuu %1$d sekunnin kuluttua</item>
         <item quantity="other">Sulkeutuu %1$d sekunnin kuluttua</item>
     </plurals>
+    <!-- background-weigh-in: the listen trial in Asetukset. -->
+    <string name="listen_section">Automaattinen punnitus (kokeilu)</string>
+    <string name="listen_switch">Kuuntele vaakaa taustalla</string>
+    <string name="listen_switch_hint">Sovellus kuuntelee vaakaa valitsemanasi aikana eikä vielä tallenna painoa.</string>
+    <string name="listen_no_scale">Punnitse kerran widgetistä tai sovelluksesta, niin sovellus oppii vaakasi.</string>
+    <string name="listen_start">Alkaa</string>
+    <string name="listen_end">Päättyy</string>
+    <string name="listen_mode">Kuuntelutapa</string>
+    <string name="listen_mode_save">Säästö</string>
+    <string name="listen_mode_balanced">Tasapaino</string>
+    <string name="listen_power_save">Kuuntele myös virransäästötilassa</string>
+    <string name="listen_same_time">Alku ja loppu eivät voi olla sama aika.</string>
+    <string name="listen_status_no_scale">Estetty: vaakaa ei vielä tunneta</string>
+    <string name="listen_status_permission">Estetty: Bluetooth-lupa puuttuu</string>
+    <string name="listen_status_bluetooth">Estetty: Bluetooth pois päältä</string>
+    <string name="listen_status_stopped">Pysäytetty: avaa sovellus kerran</string>
+    <string name="listen_status_power_save">Tauolla: virransäästötila</string>
+    <string name="listen_status_listening">Kuuntelee nyt</string>
+    <string name="listen_status_resting">Lepää, alkaa klo %1$s</string>
+    <string name="listen_battery_warning">Akunkäyttö rajoitettu: kuuntelu voi katketa</string>
+    <string name="listen_fix_permission">Anna lupa</string>
+    <string name="listen_fix_bluetooth">Laita päälle</string>
+    <string name="listen_fix_power_save">Asetukset</string>
+    <string name="listen_fix_battery">Akkuasetus</string>
 </resources>
