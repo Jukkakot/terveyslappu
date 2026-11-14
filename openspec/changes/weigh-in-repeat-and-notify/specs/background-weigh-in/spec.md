@@ -83,7 +83,7 @@ off the widget SHALL show no symbol.
 - **WHEN** the morning's weight is saved at 07.12 without a mark
 - **THEN** the widget shows Valmis, still at 20.00, and Kuuntelee from the next 06:00
 
-#### Scenario: Night without a weight
+#### Scenario: Night
 - **WHEN** the time is outside the window and no weight of the window was saved
 - **THEN** the widget shows Lepää, also when Bluetooth is off
 
