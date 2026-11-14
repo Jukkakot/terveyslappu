@@ -98,7 +98,7 @@ class ListenCoreTest {
     fun `lingering broadcast is logged once raw and once as a repeat count`() {
         val repeats = (1..20).map { heard(1_000L + it * 100, 825, true, rssi = -90 - it % 3) }
         var (s, events) = feed(heard(1_000, 825, true), *repeats.toTypedArray())
-        val (closed, last) = HeardPackets.close(s, s.startedMs + 10_000)
+        val (closed, last) = HeardPackets.close(s)
         s = closed
         events = (events + last).filterNot { it is HeardEvent.Decided }
         assertEquals(2, events.size)
@@ -119,7 +119,7 @@ class ListenCoreTest {
     }
 
     @Test
-    fun `stable weights follow the dialog rule once per weighing`() {
+    fun `the first stable packet of a weighing decides, once per weighing`() {
         val (s, events) = feed(
             heard(100, 800, false),
             heard(300, 825, true),
@@ -139,10 +139,11 @@ class ListenCoreTest {
     }
 
     @Test
-    fun `a pending stable reading survives saving and settles at the end`() {
-        val (s, _) = feed(heard(100, 790, true))
-        val restored = kotlinx.serialization.json.Json.decodeFromString<ListenSession>(kotlinx.serialization.json.Json.encodeToString(s))
-        assertEquals(listOf(79.0), HeardPackets.close(restored, restored.startedMs + 5_000).first.stable)
+    fun `a session stored by 1_21 with a pending reading still decodes`() {
+        val old = """{"windowStartMs":0,"windowEndMs":1,"startedMs":2,"startElapsedNanos":3,"batteryStart":80,"mode":"save","pendingKg":79.0,"pendingAtMs":100,"pendingKey":24000,"pendingData":"00"}"""
+        val s = kotlinx.serialization.json.Json.decodeFromString<ListenSession>(old)
+        assertEquals(emptyList(), s.stable)
+        assertEquals(emptyList(), HeardPackets.close(s).second)
     }
 
     @Test

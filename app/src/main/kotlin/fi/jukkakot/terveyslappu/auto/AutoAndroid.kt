@@ -88,7 +88,11 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
             .setWhen(note.timeMs)
             .setShowWhen(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        if (note.questioned) builder.addAction(0, context.getString(R.string.auto_accept), action(note, AutoActionReceiver.ACTION_ACCEPT))
+        if (note.questioned) {
+            builder.addAction(0, context.getString(R.string.auto_accept), action(note, AutoActionReceiver.ACTION_ACCEPT))
+        } else {
+            builder.addAction(0, context.getString(R.string.auto_ok), action(note, AutoActionReceiver.ACTION_OK))
+        }
         builder.addAction(0, context.getString(R.string.auto_delete), action(note, AutoActionReceiver.ACTION_DELETE))
         return try {
             manager.notify(note.id.hashCode(), builder.build())
@@ -140,7 +144,7 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
     }
 }
 
-/** Poista and Hyväksy from a weigh-in notification (not exported: only our PendingIntents reach it). */
+/** OK, Poista punnitus and Hyväksy from a weigh-in notification (not exported: only our PendingIntents reach it). */
 class AutoActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as TerveysApp
@@ -157,7 +161,7 @@ class AutoActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        /** Poista or Hyväksy for the weight the intent names. */
+        /** OK, Poista punnitus or Hyväksy for the weight the intent names. */
         suspend fun handle(auto: AutoWeights, notifier: AutoNotifier, intent: Intent) {
             val id = intent.getStringExtra(EXTRA_ID) ?: return
             val timeMs = intent.getLongExtra(EXTRA_TIME, 0)
@@ -165,6 +169,10 @@ class AutoActionReceiver : BroadcastReceiver() {
             val questioned = intent.getBooleanExtra(EXTRA_QUESTIONED, false)
             when (intent.action) {
                 ACTION_DELETE -> auto.delete(id, timeMs, kg, questioned)
+                ACTION_OK -> {
+                    AppLog.i("auto.action", "ok")
+                    notifier.cancel(id)
+                }
                 ACTION_ACCEPT -> {
                     val accepted = auto.accept(id, AutoWeights.FROM_NOTIFICATION)
                     AppLog.i("auto.action", if (accepted.isEmpty()) "confirm failed" else "confirm ok")
@@ -175,6 +183,7 @@ class AutoActionReceiver : BroadcastReceiver() {
         }
 
         const val ACTION_DELETE = "fi.jukkakot.terveyslappu.auto.DELETE"
+        const val ACTION_OK = "fi.jukkakot.terveyslappu.auto.OK"
         const val ACTION_ACCEPT = "fi.jukkakot.terveyslappu.auto.ACCEPT"
         const val EXTRA_ID = "id"
         const val EXTRA_TIME = "time"

@@ -62,7 +62,7 @@ class AutoAndroidTest {
 
         val normal = note.copy(id = "terveyslappu-scale-2", questioned = false, text = NoteText("82,5 kg tallennettu", null))
         notifications.post(normal)
-        assertEquals(1, shadowOf(system).getNotification(normal.id.hashCode()).actions.size)
+        assertEquals(2, shadowOf(system).getNotification(normal.id.hashCode()).actions.size)
         assertEquals(AutoNotifications.CHANNEL_NORMAL, shadowOf(system).getNotification(normal.id.hashCode()).channelId)
     }
 
@@ -104,6 +104,15 @@ class AutoAndroidTest {
         AutoActionReceiver.handle(auto, notifications, intent(AutoActionReceiver.ACTION_DELETE, delete))
         assertTrue(delete.id !in writer.ids)
         assertTrue(shown().none { it.extras.getString("android.title") == "82,5 kg tallennettu" })
+
+        // OK only closes the notification: the weight and its mark state stay.
+        val third = PendingWeight(80.0, 3_000_000, 7200, 0x63C0, "00")
+        writer.write(third)
+        val ok = AutoNote(AutoWeights.clientId(third), 80.0, third.timeMs, false, NoteText("80,0 kg tallennettu", null))
+        notifications.post(ok)
+        AutoActionReceiver.handle(auto, notifications, intent(AutoActionReceiver.ACTION_OK, ok))
+        assertTrue(ok.id in writer.ids)
+        assertTrue(shown().none { it.extras.getString("android.title") == "80,0 kg tallennettu" })
     }
 
     @Test

@@ -131,6 +131,7 @@ class TerveysApp : Application() {
             "device" to "${Build.MANUFACTURER} ${Build.MODEL}",
             "android" to Build.VERSION.RELEASE,
         )
+        AndroidListenAlarm(this).cancelLegacyTick()
         listen.onAppStart()
         WeighInWidget.update(this)
     }

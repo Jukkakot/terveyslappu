@@ -24,10 +24,6 @@ class ListenReceiver : BroadcastReceiver() {
                 listen.replan(action)
                 action
             }
-            ACTION_TICK -> {
-                listen.onTick()
-                AutoWeights.WEIGHIN
-            }
             ACTION_SCAN -> {
                 val error = intent.getIntExtra(BluetoothLeScanner.EXTRA_ERROR_CODE, 0)
                 if (error != 0) listen.onScanError(error)
@@ -72,7 +68,6 @@ class ListenReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_ALARM = "fi.jukkakot.terveyslappu.listen.ALARM"
-        const val ACTION_TICK = "fi.jukkakot.terveyslappu.listen.TICK"
         const val ACTION_SCAN = "fi.jukkakot.terveyslappu.listen.SCAN"
         const val EXTRA_ACTION = "action"
     }

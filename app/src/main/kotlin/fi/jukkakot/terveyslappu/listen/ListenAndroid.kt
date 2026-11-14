@@ -144,7 +144,7 @@ class AndroidListenRadio(private val context: Context) : ListenRadio {
     private fun allowed() = context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
 
     @SuppressLint("MissingPermission") // allowed() checks BLUETOOTH_SCAN.
-    override fun start(scale: KnownScale, mode: ListenMode, batch: Boolean): Int? {
+    override fun start(scale: KnownScale, mode: ListenMode): Int? {
         if (!allowed()) return NO_PERMISSION
         val le = scanner ?: return NO_SCANNER
         val filters = buildList {
@@ -157,7 +157,7 @@ class AndroidListenRadio(private val context: Context) : ListenRadio {
         val settings = ScanSettings.Builder()
             .setScanMode(if (mode == ListenMode.BALANCED) ScanSettings.SCAN_MODE_BALANCED else ScanSettings.SCAN_MODE_LOW_POWER)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-            .setReportDelay(if (batch) BATCH_MS else 0)
+            .setReportDelay(0) // each packet at once: the weight is notified while the user still stands on the scale
             .build()
         return try {
             runCatching { le.stopScan(intent()) }
@@ -178,7 +178,6 @@ class AndroidListenRadio(private val context: Context) : ListenRadio {
 
     companion object {
         private const val SCAN_REQUEST = 1
-        private const val BATCH_MS = 5_000L
         /** Our own codes: Bluetooth off or no LE scanner, permission missing, no usable filter. */
         const val NO_SCANNER = -1
         const val NO_PERMISSION = -2
@@ -190,19 +189,13 @@ class AndroidListenRadio(private val context: Context) : ListenRadio {
 class AndroidListenAlarm(private val context: Context) : ListenAlarm {
     private val manager: AlarmManager? get() = context.getSystemService(AlarmManager::class.java)
 
-    private fun tickIntent(flags: Int): PendingIntent? = PendingIntent.getBroadcast(
-        context, TICK_REQUEST,
-        Intent(context, ListenReceiver::class.java).setAction(ListenReceiver.ACTION_TICK),
-        PendingIntent.FLAG_IMMUTABLE or flags,
-    )
-
-    override fun setTick(atMs: Long) {
-        val pending = tickIntent(PendingIntent.FLAG_UPDATE_CURRENT) ?: return
-        manager?.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMs, pending)
-    }
-
-    override fun cancelTick() {
-        val pending = tickIntent(PendingIntent.FLAG_NO_CREATE) ?: return
+    /** Cancels the tick alarm v1.21 may have left armed (request code 3, action `...listen.TICK`); the tick itself is gone. */
+    fun cancelLegacyTick() {
+        val pending = PendingIntent.getBroadcast(
+            context, LEGACY_TICK_REQUEST,
+            Intent(context, ListenReceiver::class.java).setAction(LEGACY_TICK_ACTION),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE,
+        ) ?: return
         manager?.cancel(pending)
         pending.cancel()
     }
@@ -221,7 +214,6 @@ class AndroidListenAlarm(private val context: Context) : ListenAlarm {
     }
 
     override fun cancel() {
-        cancelTick()
         val pending = intent(null, PendingIntent.FLAG_NO_CREATE) ?: return
         manager?.cancel(pending)
         pending.cancel()
@@ -231,6 +223,7 @@ class AndroidListenAlarm(private val context: Context) : ListenAlarm {
 
     private companion object {
         const val ALARM_REQUEST = 2
-        const val TICK_REQUEST = 3
+        const val LEGACY_TICK_REQUEST = 3
+        const val LEGACY_TICK_ACTION = "fi.jukkakot.terveyslappu.listen.TICK"
     }
 }

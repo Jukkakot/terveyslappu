@@ -32,7 +32,7 @@ class ListenControllerTest {
     private class FakeRadio : ListenRadio {
         var running: ListenMode? = null
         var starts = 0
-        override fun start(scale: KnownScale, mode: ListenMode, batch: Boolean): Int? {
+        override fun start(scale: KnownScale, mode: ListenMode): Int? {
             running = mode
             starts++
             return null
@@ -199,24 +199,19 @@ class ListenControllerTest {
     }
 
     @Test
-    fun `a lone stable reading is decided by the tick alarm without a further packet`() {
+    fun `a lone stable reading is decided at once, with no tick alarm`() {
         val decided = mutableListOf<HeardEvent.Decided>()
         listen = ListenController(store, device, radio, AndroidListenAlarm(context), sink = { decided += it })
         listen.setEnabled(true)
         val start = store.session()!!.startedMs
         listen.onResults(listOf(HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", device.elapsed + 1_000_000_000)))
-        assertTrue(decided.isEmpty())
-        val alarms = shadowOf(context.getSystemService(AlarmManager::class.java))
-        assertTrue(start + 1_000 + 2_000 + ListenController.TICK_MARGIN_MS in alarms.scheduledAlarms.map { it.triggerAtTime })
-        device.now = start + 8_000
-        listen.onTick()
         assertEquals(listOf(82.5), decided.map { it.kg })
         assertEquals("00:11:22:33:44:55", decided.single().address)
         assertEquals(start + 1_000, decided.single().atWallMs)
-        assertNull(store.session()!!.pendingKg)
-        // Decided: no tick left, only the hourly check.
-        assertEquals(1, alarms.scheduledAlarms.size)
-        listen.onTick()
+        // Only the hourly check is armed.
+        assertEquals(1, shadowOf(context.getSystemService(AlarmManager::class.java)).scheduledAlarms.size)
+        // The scale's later broadcast of the same weighing is ignored.
+        listen.onResults(listOf(HeardResult(0x12C0, packet(825, 1), -80, "Yoda1", "00:11:22:33:44:55", device.elapsed + 4_000_000_000)))
         assertEquals(1, decided.size)
     }
 

@@ -250,7 +250,8 @@
     <string name="auto_channel_normal">Punnitukset</string>
     <string name="auto_channel_check">Tarkistettavat punnitukset</string>
     <string name="auto_accept">Hyväksy</string>
-    <string name="auto_delete">Poista</string>
+    <string name="auto_delete">Poista punnitus</string>
+    <string name="auto_ok">OK</string>
     <string name="auto_summary">Automaattiset punnitukset</string>
     <string name="widget_state_on">Kuuntelee</string>
     <string name="widget_state_done">Valmis</string>
