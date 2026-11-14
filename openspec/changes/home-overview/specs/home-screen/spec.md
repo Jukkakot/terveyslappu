@@ -68,7 +68,7 @@ details; a part that means nothing for a quantity is left out. The order SHALL b
 #### Scenario: No weights yet
 - **WHEN** the app has written no weights
 - **THEN** the card invites to weigh with the scale instead of showing a number, the food card is still shown, and no
-  derived-values row are shown
+  derived-values row is shown
 
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
