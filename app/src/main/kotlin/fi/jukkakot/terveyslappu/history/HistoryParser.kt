@@ -2,6 +2,8 @@ package fi.jukkakot.terveyslappu.history
 
 import fi.jukkakot.terveyslappu.data.CsvData
 import fi.jukkakot.terveyslappu.data.DataFile
+import fi.jukkakot.terveyslappu.data.FoodData
+import fi.jukkakot.terveyslappu.data.FoodParts
 import fi.jukkakot.terveyslappu.raw.RawEntry
 import fi.jukkakot.terveyslappu.raw.RawFormat
 import fi.jukkakot.terveyslappu.weight.MAX_KG
@@ -40,6 +42,8 @@ data class ParsedHistory(
     val skipped: List<SkippedRow>,
     val layout: Layout?,
     val unknownKinds: List<String> = emptyList(),
+    /** The data file's foods and products (data-file "Food parts"). */
+    val foods: FoodParts = FoodParts(),
 ) {
     fun skippedCounts(): Map<SkipReason, Int> = skipped.groupingBy { it.reason }.eachCount()
 }
@@ -85,13 +89,13 @@ object HistoryParser {
             val line = lines[i].trim()
             if (line.startsWith("#")) {
                 kind = line.takeIf { it.startsWith(CsvData.TABLE_PREFIX) }?.removePrefix(CsvData.TABLE_PREFIX)?.trim()
-                if (kind != null && kind != DataFile.WEIGHTS && kind !in unknown) unknown += kind
+                if (kind != null && kind != DataFile.WEIGHTS && kind != FoodData.FOODS && kind != FoodData.PRODUCTS && kind !in unknown) unknown += kind
                 lines[i] = ""
             } else if (kind != DataFile.WEIGHTS) {
                 lines[i] = ""
             }
         }
-        return parseLines(lines, zone, now).copy(unknownKinds = unknown)
+        return parseLines(lines, zone, now).copy(unknownKinds = unknown, foods = FoodData.readCsv(text, zone))
     }
 
     private fun parseLines(lines: List<String>, zone: ZoneId, now: Instant): ParsedHistory {

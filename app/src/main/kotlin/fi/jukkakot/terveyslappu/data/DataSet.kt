@@ -21,7 +21,11 @@ data class ExportRow(
  * Everything the data file carries (data-file "Data kinds"): one field per data kind. A new kind
  * gets a field here and a part in [CsvData] and [JsonData]; export, import and backup follow.
  */
-data class DataSet(val weights: List<ExportRow>)
+data class DataSet(
+    val weights: List<ExportRow>,
+    val foods: List<fi.jukkakot.terveyslappu.food.FoodItem> = emptyList(),
+    val products: List<fi.jukkakot.terveyslappu.food.Product> = emptyList(),
+)
 
 /** The data file's formats (Vie tiedot asks which one; the backup uses CSV). */
 enum class DataFormat(val extension: String, val mimeType: String) {

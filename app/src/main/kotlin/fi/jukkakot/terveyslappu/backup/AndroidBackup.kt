@@ -11,6 +11,10 @@ import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.data.DataFormat
 import fi.jukkakot.terveyslappu.data.DataSet
 import fi.jukkakot.terveyslappu.data.ExportRow
+import fi.jukkakot.terveyslappu.data.FoodData
+import fi.jukkakot.terveyslappu.data.JsonData
+import fi.jukkakot.terveyslappu.food.FoodItem
+import fi.jukkakot.terveyslappu.food.HealthConnectFoods
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.weight.HealthConnectWeights
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +79,30 @@ suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<Ex
 }
 
 /**
+ * This app's foods for the data file. Without the nutrition permission (or when the read fails) the
+ * foods part of the file at [uri] is kept, so a backup never writes an empty part over foods it
+ * could not read (food-log review decision).
+ */
+private suspend fun exportFoods(context: Context, uri: Uri, zone: ZoneId): List<FoodItem> {
+    val hc = HealthConnectFoods(context)
+    val read = runCatching { if (hc.granted()) hc.own(Instant.now()) else null }
+        .onFailure { AppLog.e("food.read", it, "export") }
+        .getOrNull()
+    if (read != null) return read
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val text = input.readBytes().decodeToString()
+                when (DataFormat.detect(text)) {
+                    DataFormat.JSON -> JsonData.read(text, Instant.now(), zone).foods.foods
+                    DataFormat.CSV -> FoodData.readCsv(text, zone).foods
+                }
+            }
+        }.getOrNull().orEmpty()
+    }
+}
+
+/**
  * Writes the data file in [format] to [uri] (rewrites the whole file); returns the weight count,
  * or null without writing when [accept] refuses that count.
  */
@@ -87,7 +115,10 @@ suspend fun writeExport(
 ): Int? {
     val rows = exportRows(context, weights)
     if (!accept(rows.size)) return null
-    val text = format.write(DataSet(rows), ZoneId.systemDefault())
+    val zone = ZoneId.systemDefault()
+    val foods = exportFoods(context, uri, zone)
+    val products = (context.applicationContext as TerveysApp).products.all()
+    val text = format.write(DataSet(rows, foods, products), zone)
     withContext(Dispatchers.IO) {
         context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             ?: error("no output stream")

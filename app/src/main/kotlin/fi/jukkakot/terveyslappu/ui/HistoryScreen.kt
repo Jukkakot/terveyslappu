@@ -69,6 +69,7 @@ import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.derived.Availability
 import fi.jukkakot.terveyslappu.derived.Derived
 import fi.jukkakot.terveyslappu.derived.Quantity
+import fi.jukkakot.terveyslappu.food.EnergySeries
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -76,7 +77,14 @@ import java.time.ZoneId
 
 /** Historia: period chips, chart, stats tiles and the period's weights; + opens manual entry. */
 @Composable
-internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, profile: OwnerProfile = OwnerProfile()) {
+internal fun HistoryScreen(
+    state: MainUiState,
+    actions: MainActions,
+    snackbar: SnackbarHostState,
+    profile: OwnerProfile = OwnerProfile(),
+    food: FoodUiState = FoodUiState(),
+    foodActions: FoodActions = FoodActions(),
+) {
     Scaffold(
         topBar = {
             SubScreenBar(stringResource(R.string.history_title), onBack = actions.onBack) {
@@ -92,7 +100,7 @@ internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: S
             when {
                 state.loadFailed && all == null -> Notice(stringResource(R.string.recent_failed))
                 all == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> PeriodList(state, all, actions, profile)
+                else -> PeriodList(state, all, actions, profile, food, foodActions)
             }
         }
     }
@@ -101,7 +109,7 @@ internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: S
 
 /** Chips, chart and stats scroll away above the period's weights, so the list keeps room on a small phone. */
 @Composable
-private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions, profile: OwnerProfile) {
+private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions, profile: OwnerProfile, food: FoodUiState, foodActions: FoodActions) {
     val zone = ZoneId.systemDefault()
     val now = remember(state.loadedAt, state.period) { state.loadedAt ?: Instant.now() }
     val today = LocalDate.now(zone)
@@ -147,7 +155,13 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
         )
     }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
-    val pager = rememberPagerState { Quantity.entries.size }
+    // Paino, BMI, then Energia (food-log); back from Ruoka opened from Energia returns to it.
+    val pager = rememberPagerState(initialPage = if (state.historyOnEnergy) ENERGY_PAGE else 0) { ENERGY_PAGE + 1 }
+    LaunchedEffect(Unit) { if (state.historyOnEnergy) actions.onEnergyShown() }
+    val onEnergy = pager.currentPage == ENERGY_PAGE
+    // The nutrition permission is asked when Energia is first opened (review decision).
+    LaunchedEffect(onEnergy) { if (onEnergy && food.access == FoodAccess.NEEDS) foodActions.onGrant() }
+    val series = remember(food.items, state.period, today) { EnergySeries.of(food.items.orEmpty(), state.period, today) }
     val scope = rememberCoroutineScope()
     LazyColumn(Modifier.fillMaxSize().testTag("weights"), state = listState) {
         item(key = "chips") {
@@ -177,14 +191,33 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
                         modifier = Modifier.testTag("tab-${quantity.name}"),
                     )
                 }
+                Tab(
+                    selected = onEnergy,
+                    onClick = { scope.launch { pager.animateScrollToPage(ENERGY_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_energy), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-ENERGY"),
+                )
             }
         }
         item(key = "pager") {
             HorizontalPager(pager, verticalAlignment = Alignment.Top) { page ->
-                QuantityPage(Quantity.entries[page], state.period, shown, now, zone, profile, actions.onOpenProfile)
+                if (page == ENERGY_PAGE) {
+                    when {
+                        food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
+                        food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                        else -> EnergyPage(series, shown, zone) { foodActions.onOpenDay(it) }
+                    }
+                } else {
+                    QuantityPage(Quantity.entries[page], state.period, shown, now, zone, profile, actions.onOpenProfile)
+                }
             }
         }
-        items(rows, key = { it.node.key }) { row ->
+        if (onEnergy) {
+            items(if (food.access == FoodAccess.GRANTED) series.days else emptyList(), key = { "energy-${it.day}" }) { day ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                EnergyDayRow(day, today) { foodActions.onOpenDay(it) }
+            }
+        } else items(rows, key = { it.node.key }) { row ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             when (val node = row.node) {
                 is ListNode.Weight -> if (node.questioned) {
@@ -198,6 +231,23 @@ private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: Main
                 is ListNode.Gap -> GapRowItem(node, today, row.depth)
             }
         }
+    }
+}
+
+private val ENERGY_PAGE = Quantity.entries.size
+
+/** Energia without the nutrition permission: the reason and a button to grant it (weight-chart). */
+@Composable
+private fun EnergyReason(onGrant: () -> Unit) {
+    Box(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+            .clip(groupShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .fillMaxWidth()
+            .testTag("energyReason"),
+    ) {
+        FoodPermissionNotice(stringResource(R.string.energy_reason), onGrant)
     }
 }
 

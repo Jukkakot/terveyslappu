@@ -19,8 +19,8 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **food-log** (user 2026-11-14): saved meals per slot, calories to Health Connect, Energia tab next to Paino/BMI; adds a Ruokakirjaus row to Asetukset (the list itself: settings-list, done 2026-11-14). Requirements in product.md "Food log: why". Specified (spec review done 2026-11-14), not yet implemented.
-- **steps** (user 2026-11-14, after food-log): steps from Garmin through Health Connect as its own change.
+- ~~**food-log**~~ done 2026-11-14 (v1.24): Lisää annos with learnt products and base products, Ruoka day screen, nutrition records in Health Connect, Energia tab next to Paino/BMI, Ruokakirjaus in Asetukset, foods and products in the data file.
+- **steps** (user 2026-11-14, next): steps from Garmin through Health Connect as its own change.
 - **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis.
 
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09

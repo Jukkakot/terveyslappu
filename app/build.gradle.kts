@@ -16,16 +16,24 @@ val gitSha: String = providers.environmentVariable("GITHUB_SHA").map { it.take(7
     )
     .get()
 
-fun gitCount(vararg paths: String): Int = providers.exec {
-    commandLine("git", "rev-list", "--count", "HEAD", "--", *paths)
+fun gitCount(vararg paths: String, range: String = "HEAD"): Int = providers.exec {
+    commandLine("git", "rev-list", "--count", range, "--", *paths)
     isIgnoreExitValue = true
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }.get()
+
+// The commit that last changed MAJOR.MINOR: the build number starts again from 0 there (version-build-reset).
+val versionCommit: String = providers.exec {
+    commandLine("git", "log", "-1", "--format=%H", "-G^appVersion=", "--", "gradle.properties")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map { it.trim() }.get()
 
 // The version code is the number of all commits, so every pushed build installs over the previous one.
 val commitCount: Int = gitCount()
 
-// The build number counts only commits that build something: CI ignores these same paths (ci.yml).
-val buildNumber: Int = gitCount(".", ":!openspec", ":!.claude", ":!*.md")
+// The build number counts only commits that build something since MAJOR.MINOR last changed: CI
+// ignores these same paths (ci.yml). Without that commit (no history), all such commits.
+val appPaths = arrayOf(".", ":!openspec", ":!.claude", ":!*.md")
+val buildNumber: Int = if (versionCommit.isEmpty()) gitCount(*appPaths) else gitCount(*appPaths, range = "$versionCommit..HEAD")
 
 // MAJOR.MINOR from gradle.properties, then the build number, e.g. 1.0.24 (app-version-numbers).
 val appVersionName = "${providers.gradleProperty("appVersion").get()}.$buildNumber"

@@ -1,0 +1,2822 @@
+[
+ {
+  "name": "Ahven",
+  "per": "100g",
+  "kcal": 85,
+  "portion": 150
+ },
+ {
+  "name": "Alkoholiton olut",
+  "aliases": [
+   "Alkoholiton"
+  ],
+  "per": "kpl",
+  "kcal": 60,
+  "portion": 1
+ },
+ {
+  "name": "Ananas",
+  "per": "100g",
+  "kcal": 50,
+  "portion": 100
+ },
+ {
+  "name": "Appelsiini",
+  "per": "kpl",
+  "kcal": 60,
+  "portion": 1
+ },
+ {
+  "name": "Appelsiinimehu",
+  "aliases": [
+   "Mehu"
+  ],
+  "per": "100g",
+  "kcal": 45,
+  "portion": 200
+ },
+ {
+  "name": "Aprikoosi",
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 2
+ },
+ {
+  "name": "Auringonkukansiemen",
+  "aliases": [
+   "Auringonkukansiemenet"
+  ],
+  "per": "100g",
+  "kcal": 580,
+  "portion": 20
+ },
+ {
+  "name": "Avokado",
+  "per": "kpl",
+  "kcal": 230,
+  "portion": 1
+ },
+ {
+  "name": "Banaani",
+  "aliases": [
+   "Banaanit"
+  ],
+  "per": "kpl",
+  "kcal": 100,
+  "portion": 1
+ },
+ {
+  "name": "Bataatti (keitetty)",
+  "aliases": [
+   "Bataatti"
+  ],
+  "per": "100g",
+  "kcal": 90,
+  "portion": 200
+ },
+ {
+  "name": "Bataattikeitto",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 300
+ },
+ {
+  "name": "Berliininmunkki",
+  "per": "kpl",
+  "kcal": 280,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Bologna",
+  "aliases": [
+   "Bolognan makkara"
+  ],
+  "per": "100g",
+  "kcal": 220,
+  "portion": 30
+ },
+ {
+  "name": "Brie",
+  "per": "100g",
+  "kcal": 335,
+  "portion": 30
+ },
+ {
+  "name": "Bulgur (keitetty)",
+  "aliases": [
+   "Bulgur"
+  ],
+  "per": "100g",
+  "kcal": 85,
+  "portion": 200
+ },
+ {
+  "name": "Caesarsalaatti",
+  "per": "100g",
+  "kcal": 140,
+  "portion": 250
+ },
+ {
+  "name": "Cappuccino",
+  "per": "kpl",
+  "kcal": 80,
+  "portion": 1
+ },
+ {
+  "name": "Cashewpähkinä",
+  "per": "100g",
+  "kcal": 570,
+  "portion": 30
+ },
+ {
+  "name": "Cheddar",
+  "per": "100g",
+  "kcal": 400,
+  "portion": 25
+ },
+ {
+  "name": "Chiasiemen",
+  "per": "100g",
+  "kcal": 480,
+  "portion": 15
+ },
+ {
+  "name": "Chili con carne",
+  "aliases": [
+   "Chili"
+  ],
+  "per": "100g",
+  "kcal": 120,
+  "portion": 350
+ },
+ {
+  "name": "Ciabatta",
+  "per": "100g",
+  "kcal": 260,
+  "portion": 60
+ },
+ {
+  "name": "Coleslaw",
+  "aliases": [
+   "Kaalisalaatti"
+  ],
+  "per": "100g",
+  "kcal": 130,
+  "portion": 100
+ },
+ {
+  "name": "Couscous (keitetty)",
+  "aliases": [
+   "Couscous"
+  ],
+  "per": "100g",
+  "kcal": 115,
+  "portion": 200
+ },
+ {
+  "name": "Croissant",
+  "per": "kpl",
+  "kcal": 230,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Drinkki",
+  "aliases": [
+   "Cocktail"
+  ],
+  "per": "kpl",
+  "kcal": 180,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Edam-juusto",
+  "aliases": [
+   "Edam"
+  ],
+  "per": "100g",
+  "kcal": 270,
+  "portion": 25
+ },
+ {
+  "name": "Emmental",
+  "aliases": [
+   "Emmental-juusto"
+  ],
+  "per": "100g",
+  "kcal": 360,
+  "portion": 25
+ },
+ {
+  "name": "Energiajuoma",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 250,
+  "treat": true
+ },
+ {
+  "name": "Espresso",
+  "per": "kpl",
+  "kcal": 3,
+  "portion": 1
+ },
+ {
+  "name": "Falafel",
+  "per": "kpl",
+  "kcal": 55,
+  "portion": 4
+ },
+ {
+  "name": "Fetajuusto",
+  "aliases": [
+   "Feta"
+  ],
+  "per": "100g",
+  "kcal": 260,
+  "portion": 40
+ },
+ {
+  "name": "Gin tonic",
+  "aliases": [
+   "Gin & tonic"
+  ],
+  "per": "kpl",
+  "kcal": 160,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Glögi",
+  "per": "kpl",
+  "kcal": 110,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Graavilohi",
+  "per": "100g",
+  "kcal": 185,
+  "portion": 80
+ },
+ {
+  "name": "Granaattiomena",
+  "per": "kpl",
+  "kcal": 120,
+  "portion": 1
+ },
+ {
+  "name": "Granola",
+  "per": "100g",
+  "kcal": 450,
+  "portion": 50
+ },
+ {
+  "name": "Greippi",
+  "per": "kpl",
+  "kcal": 80,
+  "portion": 1
+ },
+ {
+  "name": "Grillimakkara",
+  "per": "100g",
+  "kcal": 260,
+  "portion": 100
+ },
+ {
+  "name": "Halloumi",
+  "aliases": [
+   "Leipäjuusto"
+  ],
+  "per": "100g",
+  "kcal": 320,
+  "portion": 80
+ },
+ {
+  "name": "Hampurilainen",
+  "aliases": [
+   "Burgeri"
+  ],
+  "per": "kpl",
+  "kcal": 450,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Hapankorppu",
+  "aliases": [
+   "Korppu"
+  ],
+  "per": "kpl",
+  "kcal": 35,
+  "portion": 2
+ },
+ {
+  "name": "Hedelmäjogurtti",
+  "aliases": [
+   "Maustettu jogurtti"
+  ],
+  "per": "100g",
+  "kcal": 85,
+  "portion": 150
+ },
+ {
+  "name": "Hedelmäkarkki",
+  "aliases": [
+   "Fruittarit"
+  ],
+  "per": "100g",
+  "kcal": 330,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Hedelmäsalaatti",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 150
+ },
+ {
+  "name": "Herne sokeriherne",
+  "per": "100g",
+  "kcal": 40,
+  "portion": 100
+ },
+ {
+  "name": "Herneet (keitetyt)",
+  "aliases": [
+   "Herneet"
+  ],
+  "per": "100g",
+  "kcal": 70,
+  "portion": 100
+ },
+ {
+  "name": "Hernekeitto",
+  "aliases": [
+   "Hernekeitto lihalla"
+  ],
+  "per": "100g",
+  "kcal": 70,
+  "portion": 350
+ },
+ {
+  "name": "Hodari",
+  "aliases": [
+   "Hot dog",
+   "Nakkisämpylä"
+  ],
+  "per": "kpl",
+  "kcal": 300,
+  "portion": 1
+ },
+ {
+  "name": "Hummus",
+  "per": "100g",
+  "kcal": 230,
+  "portion": 40
+ },
+ {
+  "name": "Hunaja",
+  "per": "100g",
+  "kcal": 320,
+  "portion": 20
+ },
+ {
+  "name": "Hunajameloni",
+  "per": "100g",
+  "kcal": 35,
+  "portion": 200
+ },
+ {
+  "name": "Jauheliha 10 %",
+  "aliases": [
+   "Jauheliha 10%"
+  ],
+  "per": "100g",
+  "kcal": 175,
+  "portion": 150
+ },
+ {
+  "name": "Jauheliha 17 %",
+  "aliases": [
+   "Jauheliha 17%"
+  ],
+  "per": "100g",
+  "kcal": 235,
+  "portion": 150
+ },
+ {
+  "name": "Jauheliha 4 %",
+  "aliases": [
+   "Jauheliha 4%"
+  ],
+  "per": "100g",
+  "kcal": 120,
+  "portion": 150
+ },
+ {
+  "name": "Jauheliha 9,5 %",
+  "aliases": [
+   "Jauheliha 9,5%"
+  ],
+  "per": "100g",
+  "kcal": 170,
+  "portion": 150
+ },
+ {
+  "name": "Jauhelihakastike",
+  "aliases": [
+   "Lihakastike"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 250
+ },
+ {
+  "name": "Jauhelihakeitto",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 350
+ },
+ {
+  "name": "Jauhelihapihvi",
+  "aliases": [
+   "Hampurilaispihvi"
+  ],
+  "per": "100g",
+  "kcal": 220,
+  "portion": 150
+ },
+ {
+  "name": "Jauhelihapizza",
+  "per": "100g",
+  "kcal": 255,
+  "portion": 300
+ },
+ {
+  "name": "Jogurtti",
+  "aliases": [
+   "Luonnonjogurtti"
+  ],
+  "per": "100g",
+  "kcal": 60,
+  "portion": 150
+ },
+ {
+  "name": "Juustohampurilainen",
+  "per": "kpl",
+  "kcal": 500,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Juustokakku",
+  "per": "100g",
+  "kcal": 330,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Juustoraaste",
+  "aliases": [
+   "Pizzajuusto"
+  ],
+  "per": "100g",
+  "kcal": 300,
+  "portion": 30
+ },
+ {
+  "name": "Juustovoileipä",
+  "per": "kpl",
+  "kcal": 220,
+  "portion": 1
+ },
+ {
+  "name": "Jäätelö",
+  "aliases": [
+   "Vaniljajäätelö"
+  ],
+  "per": "100g",
+  "kcal": 200,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Jäätelöpuikko",
+  "aliases": [
+   "Mehujää"
+  ],
+  "per": "kpl",
+  "kcal": 110,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Jäätelötuutti",
+  "per": "kpl",
+  "kcal": 200,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kaakao",
+  "aliases": [
+   "Kaakaojuoma"
+  ],
+  "per": "kpl",
+  "kcal": 130,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kaali",
+  "aliases": [
+   "Valkokaali"
+  ],
+  "per": "100g",
+  "kcal": 30,
+  "portion": 100
+ },
+ {
+  "name": "Kaalikääryleet",
+  "aliases": [
+   "Kaalikääryle"
+  ],
+  "per": "100g",
+  "kcal": 125,
+  "portion": 250
+ },
+ {
+  "name": "Kahvi",
+  "aliases": [
+   "Musta kahvi",
+   "Kuppi kahvia"
+  ],
+  "per": "kpl",
+  "kcal": 2,
+  "portion": 1
+ },
+ {
+  "name": "Kahvi maidolla",
+  "aliases": [
+   "Maitokahvi"
+  ],
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 1
+ },
+ {
+  "name": "Kalakeitto",
+  "aliases": [
+   "Lohikeitto maidolla"
+  ],
+  "per": "100g",
+  "kcal": 60,
+  "portion": 350
+ },
+ {
+  "name": "Kalapuikko",
+  "per": "kpl",
+  "kcal": 45,
+  "portion": 3
+ },
+ {
+  "name": "Kalapuikot",
+  "per": "100g",
+  "kcal": 185,
+  "portion": 100
+ },
+ {
+  "name": "Kalkkunaleikele",
+  "aliases": [
+   "Kalkkunaleike"
+  ],
+  "per": "100g",
+  "kcal": 90,
+  "portion": 30
+ },
+ {
+  "name": "Kalkkunan jauheliha",
+  "per": "100g",
+  "kcal": 130,
+  "portion": 150
+ },
+ {
+  "name": "Kalkkunan rintafilee",
+  "aliases": [
+   "Kalkkunafilee"
+  ],
+  "per": "100g",
+  "kcal": 105,
+  "portion": 150
+ },
+ {
+  "name": "Kalkkunapepperoni",
+  "aliases": [
+   "Pepperoni"
+  ],
+  "per": "100g",
+  "kcal": 150,
+  "portion": 30
+ },
+ {
+  "name": "Kana-riisivuoka",
+  "aliases": [
+   "Kanavuoka"
+  ],
+  "per": "100g",
+  "kcal": 130,
+  "portion": 350
+ },
+ {
+  "name": "Kanakastike",
+  "per": "100g",
+  "kcal": 110,
+  "portion": 250
+ },
+ {
+  "name": "Kanakeitto",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 350
+ },
+ {
+  "name": "Kanan jauheliha",
+  "per": "100g",
+  "kcal": 150,
+  "portion": 150
+ },
+ {
+  "name": "Kanankoipi",
+  "aliases": [
+   "Kanan koipi"
+  ],
+  "per": "100g",
+  "kcal": 210,
+  "portion": 150
+ },
+ {
+  "name": "Kananmuna",
+  "aliases": [
+   "Muna",
+   "Kananmunat"
+  ],
+  "per": "kpl",
+  "kcal": 70,
+  "portion": 1
+ },
+ {
+  "name": "Kananrintafilee (raaka)",
+  "aliases": [
+   "Kananrinta"
+  ],
+  "per": "100g",
+  "kcal": 110,
+  "portion": 150
+ },
+ {
+  "name": "Kananugetit",
+  "aliases": [
+   "Nugetit",
+   "Kanansuikaleet"
+  ],
+  "per": "100g",
+  "kcal": 245,
+  "portion": 150
+ },
+ {
+  "name": "Kanasalaatti",
+  "per": "100g",
+  "kcal": 110,
+  "portion": 300
+ },
+ {
+  "name": "Kanawokki",
+  "aliases": [
+   "Wokki"
+  ],
+  "per": "100g",
+  "kcal": 115,
+  "portion": 350
+ },
+ {
+  "name": "Kanelipulla",
+  "per": "kpl",
+  "kcal": 300,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Karjalanpaisti",
+  "per": "100g",
+  "kcal": 130,
+  "portion": 300
+ },
+ {
+  "name": "Karjalanpiirakka",
+  "aliases": [
+   "Riisipiirakka"
+  ],
+  "per": "kpl",
+  "kcal": 140,
+  "portion": 1
+ },
+ {
+  "name": "Karkki",
+  "aliases": [
+   "Pehmeä karkki"
+  ],
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 3,
+  "treat": true
+ },
+ {
+  "name": "Karkkipussi",
+  "aliases": [
+   "Irtokarkit",
+   "Karkit"
+  ],
+  "per": "100g",
+  "kcal": 380,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Karpalo",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 100
+ },
+ {
+  "name": "Kasviscurry",
+  "aliases": [
+   "Curry"
+  ],
+  "per": "100g",
+  "kcal": 100,
+  "portion": 300
+ },
+ {
+  "name": "Kasviskeitto",
+  "per": "100g",
+  "kcal": 40,
+  "portion": 350
+ },
+ {
+  "name": "Kasvispihvi",
+  "per": "100g",
+  "kcal": 190,
+  "portion": 100
+ },
+ {
+  "name": "Kasviöljy",
+  "aliases": [
+   "Rypsiöljy",
+   "Ruokaöljy"
+  ],
+  "per": "100g",
+  "kcal": 900,
+  "portion": 10
+ },
+ {
+  "name": "Katkarapu",
+  "aliases": [
+   "Katkaravut"
+  ],
+  "per": "100g",
+  "kcal": 85,
+  "portion": 100
+ },
+ {
+  "name": "Kaurahiutaleet",
+  "aliases": [
+   "Kaura"
+  ],
+  "per": "100g",
+  "kcal": 370,
+  "portion": 50
+ },
+ {
+  "name": "Kaurajuoma",
+  "aliases": [
+   "Kaurajuoma kaurapohjainen"
+  ],
+  "per": "100g",
+  "kcal": 45,
+  "portion": 200
+ },
+ {
+  "name": "Kaurakeksi",
+  "per": "kpl",
+  "kcal": 70,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kaurapuuro",
+  "aliases": [
+   "Puuro",
+   "Kaurahiutalepuuro"
+  ],
+  "per": "100g",
+  "kcal": 60,
+  "portion": 300
+ },
+ {
+  "name": "Kaurasämpylä",
+  "per": "kpl",
+  "kcal": 180,
+  "portion": 1
+ },
+ {
+  "name": "Kebab",
+  "aliases": [
+   "Kebablautanen"
+  ],
+  "per": "100g",
+  "kcal": 200,
+  "portion": 350
+ },
+ {
+  "name": "Kebabrulla",
+  "per": "kpl",
+  "kcal": 650,
+  "portion": 1
+ },
+ {
+  "name": "Kefiiri",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 200
+ },
+ {
+  "name": "Keitetty kananmuna",
+  "per": "kpl",
+  "kcal": 75,
+  "portion": 1
+ },
+ {
+  "name": "Keitetty peruna",
+  "aliases": [
+   "Peruna",
+   "Perunat",
+   "Keitetyt perunat"
+  ],
+  "per": "100g",
+  "kcal": 75,
+  "portion": 200
+ },
+ {
+  "name": "Keitetty riisi",
+  "aliases": [
+   "Riisi"
+  ],
+  "per": "100g",
+  "kcal": 130,
+  "portion": 200
+ },
+ {
+  "name": "Keksi",
+  "aliases": [
+   "Keksit"
+  ],
+  "per": "kpl",
+  "kcal": 50,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kerma",
+  "aliases": [
+   "Kuohukerma",
+   "Ruokakerma"
+  ],
+  "per": "100g",
+  "kcal": 195,
+  "portion": 20
+ },
+ {
+  "name": "Kermajuusto",
+  "aliases": [
+   "Tuorejuusto"
+  ],
+  "per": "100g",
+  "kcal": 250,
+  "portion": 20
+ },
+ {
+  "name": "Kermaviili",
+  "aliases": [
+   "Kermaviili 10 %"
+  ],
+  "per": "100g",
+  "kcal": 190,
+  "portion": 50
+ },
+ {
+  "name": "Kermaviilikana",
+  "aliases": [
+   "Kana kermaviilikastikkeessa"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 300
+ },
+ {
+  "name": "Keskiolut",
+  "aliases": [
+   "Kalja"
+  ],
+  "per": "kpl",
+  "kcal": 100,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kesäkurpitsa",
+  "per": "100g",
+  "kcal": 20,
+  "portion": 150
+ },
+ {
+  "name": "Ketsuppi",
+  "per": "100g",
+  "kcal": 110,
+  "portion": 15
+ },
+ {
+  "name": "Kidneypavut",
+  "aliases": [
+   "Pavut"
+  ],
+  "per": "100g",
+  "kcal": 100,
+  "portion": 150
+ },
+ {
+  "name": "Kiisseli",
+  "per": "100g",
+  "kcal": 70,
+  "portion": 200
+ },
+ {
+  "name": "Kiivi",
+  "per": "kpl",
+  "kcal": 45,
+  "portion": 1
+ },
+ {
+  "name": "Kikherneet (keitetyt)",
+  "aliases": [
+   "Kikherneet"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 150
+ },
+ {
+  "name": "Kinkkukiusaus",
+  "per": "100g",
+  "kcal": 135,
+  "portion": 300
+ },
+ {
+  "name": "Kinkkuleike",
+  "aliases": [
+   "Kinkku",
+   "Kinkkuleikkele"
+  ],
+  "per": "100g",
+  "kcal": 105,
+  "portion": 30
+ },
+ {
+  "name": "Kinkkuvoileipä",
+  "per": "kpl",
+  "kcal": 200,
+  "portion": 1
+ },
+ {
+  "name": "Kinuskikastike",
+  "per": "100g",
+  "kcal": 330,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Kirjolohi",
+  "per": "100g",
+  "kcal": 160,
+  "portion": 150
+ },
+ {
+  "name": "Kirsikka",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 100
+ },
+ {
+  "name": "Kirsikkatomaatti",
+  "per": "100g",
+  "kcal": 20,
+  "portion": 100
+ },
+ {
+  "name": "Kola",
+  "per": "100g",
+  "kcal": 42,
+  "portion": 330,
+  "treat": true
+ },
+ {
+  "name": "Kola Zero",
+  "aliases": [
+   "Light-juoma",
+   "Sokeriton limsa"
+  ],
+  "per": "100g",
+  "kcal": 1,
+  "portion": 330
+ },
+ {
+  "name": "Korvapuusti",
+  "per": "kpl",
+  "kcal": 330,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kreikkalainen jogurtti",
+  "per": "100g",
+  "kcal": 100,
+  "portion": 150
+ },
+ {
+  "name": "Kreikkalainen salaatti",
+  "per": "100g",
+  "kcal": 90,
+  "portion": 250
+ },
+ {
+  "name": "Kuha",
+  "per": "100g",
+  "kcal": 85,
+  "portion": 150
+ },
+ {
+  "name": "Kuivattu aprikoosi",
+  "per": "100g",
+  "kcal": 240,
+  "portion": 30
+ },
+ {
+  "name": "Kukkakaali",
+  "per": "100g",
+  "kcal": 28,
+  "portion": 150
+ },
+ {
+  "name": "Kukkakaalikeitto",
+  "per": "100g",
+  "kcal": 50,
+  "portion": 300
+ },
+ {
+  "name": "Kuohuviini",
+  "aliases": [
+   "Skumppa"
+  ],
+  "per": "kpl",
+  "kcal": 90,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kurkku",
+  "per": "100g",
+  "kcal": 15,
+  "portion": 100
+ },
+ {
+  "name": "Kurpitsa",
+  "per": "100g",
+  "kcal": 30,
+  "portion": 150
+ },
+ {
+  "name": "Kuuma suklaa",
+  "per": "kpl",
+  "kcal": 180,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Kvinoa (keitetty)",
+  "aliases": [
+   "Kvinoa"
+  ],
+  "per": "100g",
+  "kcal": 120,
+  "portion": 200
+ },
+ {
+  "name": "Kääretorttu",
+  "per": "100g",
+  "kcal": 300,
+  "portion": 80,
+  "treat": true
+ },
+ {
+  "name": "Lakritsi",
+  "per": "100g",
+  "kcal": 350,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Laktoositon maito",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 200
+ },
+ {
+  "name": "Lanttu",
+  "per": "100g",
+  "kcal": 35,
+  "portion": 100
+ },
+ {
+  "name": "Lanttulaatikko",
+  "per": "100g",
+  "kcal": 100,
+  "portion": 200
+ },
+ {
+  "name": "Lasagne",
+  "aliases": [
+   "Lasagnet"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 350
+ },
+ {
+  "name": "Lasagnette",
+  "aliases": [
+   "Lasagnette jauhelihalla"
+  ],
+  "per": "100g",
+  "kcal": 150,
+  "portion": 350
+ },
+ {
+  "name": "Latte",
+  "aliases": [
+   "Caffe latte"
+  ],
+  "per": "kpl",
+  "kcal": 120,
+  "portion": 1
+ },
+ {
+  "name": "Leivonnainen",
+  "aliases": [
+   "Kakkupala"
+  ],
+  "per": "kpl",
+  "kcal": 300,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Lenkkimakkara",
+  "aliases": [
+   "Makkara"
+  ],
+  "per": "100g",
+  "kcal": 280,
+  "portion": 100
+ },
+ {
+  "name": "Lettu",
+  "aliases": [
+   "Letut"
+  ],
+  "per": "kpl",
+  "kcal": 90,
+  "portion": 2
+ },
+ {
+  "name": "Lihakeitto",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 350
+ },
+ {
+  "name": "Lihaliemikuutio",
+  "per": "kpl",
+  "kcal": 15,
+  "portion": 1
+ },
+ {
+  "name": "Lihamureke",
+  "aliases": [
+   "Jauhelihamureke"
+  ],
+  "per": "100g",
+  "kcal": 200,
+  "portion": 150
+ },
+ {
+  "name": "Lihaperunavuoka",
+  "per": "100g",
+  "kcal": 140,
+  "portion": 300
+ },
+ {
+  "name": "Lihapiirakka",
+  "aliases": [
+   "Lihis"
+  ],
+  "per": "kpl",
+  "kcal": 270,
+  "portion": 1
+ },
+ {
+  "name": "Lihapullat",
+  "aliases": [
+   "Jauhelihapullat",
+   "Lihapullat kermaviilillä"
+  ],
+  "per": "100g",
+  "kcal": 190,
+  "portion": 150
+ },
+ {
+  "name": "Limsa",
+  "aliases": [
+   "Limonadi",
+   "Kolajuoma"
+  ],
+  "per": "100g",
+  "kcal": 42,
+  "portion": 330,
+  "treat": true
+ },
+ {
+  "name": "Linssikeitto",
+  "per": "100g",
+  "kcal": 70,
+  "portion": 300
+ },
+ {
+  "name": "Linssit (keitetyt)",
+  "aliases": [
+   "Linssit"
+  ],
+  "per": "100g",
+  "kcal": 115,
+  "portion": 150
+ },
+ {
+  "name": "Lohifilee (raaka)",
+  "aliases": [
+   "Lohi"
+  ],
+  "per": "100g",
+  "kcal": 200,
+  "portion": 150
+ },
+ {
+  "name": "Lohikeitto",
+  "per": "100g",
+  "kcal": 70,
+  "portion": 350
+ },
+ {
+  "name": "Lonkero",
+  "per": "kpl",
+  "kcal": 140,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Luumu",
+  "per": "kpl",
+  "kcal": 30,
+  "portion": 2
+ },
+ {
+  "name": "Maapähkinä",
+  "aliases": [
+   "Maapähkinät"
+  ],
+  "per": "100g",
+  "kcal": 600,
+  "portion": 30
+ },
+ {
+  "name": "Maissi (säilyke)",
+  "aliases": [
+   "Maissi"
+  ],
+  "per": "100g",
+  "kcal": 85,
+  "portion": 100
+ },
+ {
+  "name": "Maissihiutaleet",
+  "per": "100g",
+  "kcal": 370,
+  "portion": 30
+ },
+ {
+  "name": "Maissinaksut",
+  "per": "100g",
+  "kcal": 500,
+  "portion": 40,
+  "treat": true
+ },
+ {
+  "name": "Maito",
+  "aliases": [
+   "Kevytmaito",
+   "Maito 1,5 %"
+  ],
+  "per": "100g",
+  "kcal": 45,
+  "portion": 200
+ },
+ {
+  "name": "Maitosuklaa",
+  "aliases": [
+   "Suklaa"
+  ],
+  "per": "100g",
+  "kcal": 540,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Majoneesi",
+  "per": "100g",
+  "kcal": 650,
+  "portion": 15
+ },
+ {
+  "name": "Makaroni (keitetty)",
+  "aliases": [
+   "Makaroni",
+   "Makaronit"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 200
+ },
+ {
+  "name": "Makaronijauhelihakastike",
+  "per": "100g",
+  "kcal": 130,
+  "portion": 350
+ },
+ {
+  "name": "Makaronilaatikko",
+  "aliases": [
+   "Makkaralaatikko"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 350
+ },
+ {
+  "name": "Makkarakeitto",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 350
+ },
+ {
+  "name": "Maksalaatikko",
+  "per": "100g",
+  "kcal": 150,
+  "portion": 200
+ },
+ {
+  "name": "Maksamakkara",
+  "per": "100g",
+  "kcal": 260,
+  "portion": 40
+ },
+ {
+  "name": "Maksapihvit",
+  "per": "100g",
+  "kcal": 150,
+  "portion": 150
+ },
+ {
+  "name": "Mandariini",
+  "aliases": [
+   "Klementiini"
+  ],
+  "per": "kpl",
+  "kcal": 35,
+  "portion": 1
+ },
+ {
+  "name": "Mango",
+  "per": "kpl",
+  "kcal": 150,
+  "portion": 1
+ },
+ {
+  "name": "Mannapuuro",
+  "aliases": [
+   "Mannaryynipuuro"
+  ],
+  "per": "100g",
+  "kcal": 70,
+  "portion": 300
+ },
+ {
+  "name": "Mansikka",
+  "aliases": [
+   "Mansikat"
+  ],
+  "per": "100g",
+  "kcal": 32,
+  "portion": 100
+ },
+ {
+  "name": "Mansikkahillo",
+  "aliases": [
+   "Hillo",
+   "Marmeladi"
+  ],
+  "per": "100g",
+  "kcal": 250,
+  "portion": 15
+ },
+ {
+  "name": "Manteli",
+  "aliases": [
+   "Mantelit"
+  ],
+  "per": "100g",
+  "kcal": 600,
+  "portion": 30
+ },
+ {
+  "name": "Mantelijuoma",
+  "per": "100g",
+  "kcal": 20,
+  "portion": 200
+ },
+ {
+  "name": "Margariini",
+  "aliases": [
+   "Levite"
+  ],
+  "per": "100g",
+  "kcal": 540,
+  "portion": 10
+ },
+ {
+  "name": "Marjakeitto",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 200
+ },
+ {
+  "name": "Marjapiirakka",
+  "per": "100g",
+  "kcal": 220,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Maustettu rahka",
+  "per": "100g",
+  "kcal": 90,
+  "portion": 200
+ },
+ {
+  "name": "Mehujuoma",
+  "per": "100g",
+  "kcal": 40,
+  "portion": 200
+ },
+ {
+  "name": "Mehutiiviste laimennettu",
+  "aliases": [
+   "Mehu laimennettu"
+  ],
+  "per": "100g",
+  "kcal": 20,
+  "portion": 200
+ },
+ {
+  "name": "Mokkapala",
+  "per": "kpl",
+  "kcal": 290,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Mozzarella",
+  "per": "100g",
+  "kcal": 250,
+  "portion": 50
+ },
+ {
+  "name": "Munakas",
+  "aliases": [
+   "Omeletti"
+  ],
+  "per": "100g",
+  "kcal": 165,
+  "portion": 150
+ },
+ {
+  "name": "Munakoiso",
+  "per": "100g",
+  "kcal": 25,
+  "portion": 150
+ },
+ {
+  "name": "Munkki",
+  "aliases": [
+   "Donitsi"
+  ],
+  "per": "kpl",
+  "kcal": 250,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Murot",
+  "aliases": [
+   "Aamiaismurot"
+  ],
+  "per": "100g",
+  "kcal": 380,
+  "portion": 40
+ },
+ {
+  "name": "Mustat pavut",
+  "per": "100g",
+  "kcal": 95,
+  "portion": 150
+ },
+ {
+  "name": "Mustikka",
+  "aliases": [
+   "Mustikat"
+  ],
+  "per": "100g",
+  "kcal": 45,
+  "portion": 100
+ },
+ {
+  "name": "Mustikkapiirakka",
+  "per": "kpl",
+  "kcal": 250,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Mysli",
+  "per": "100g",
+  "kcal": 380,
+  "portion": 50
+ },
+ {
+  "name": "Nakit",
+  "aliases": [
+   "Nakkimakkara",
+   "Nakkimakkarat"
+  ],
+  "per": "100g",
+  "kcal": 250,
+  "portion": 150
+ },
+ {
+  "name": "Naudan sisäfilee",
+  "per": "100g",
+  "kcal": 140,
+  "portion": 150
+ },
+ {
+  "name": "Nautajauheliha",
+  "per": "100g",
+  "kcal": 200,
+  "portion": 150
+ },
+ {
+  "name": "Nektariini",
+  "per": "kpl",
+  "kcal": 60,
+  "portion": 1
+ },
+ {
+  "name": "Nuudelit (keitetty)",
+  "aliases": [
+   "Nuudelit"
+  ],
+  "per": "100g",
+  "kcal": 135,
+  "portion": 200
+ },
+ {
+  "name": "Näkkileipä",
+  "aliases": [
+   "Näkkäri"
+  ],
+  "per": "kpl",
+  "kcal": 40,
+  "portion": 2
+ },
+ {
+  "name": "Ohra (keitetty)",
+  "aliases": [
+   "Ohrasuurimot"
+  ],
+  "per": "100g",
+  "kcal": 120,
+  "portion": 200
+ },
+ {
+  "name": "Ohrahiutalepuuro",
+  "per": "100g",
+  "kcal": 65,
+  "portion": 300
+ },
+ {
+  "name": "Oliivi",
+  "aliases": [
+   "Oliivit"
+  ],
+  "per": "100g",
+  "kcal": 150,
+  "portion": 30
+ },
+ {
+  "name": "Oliiviöljy",
+  "per": "100g",
+  "kcal": 900,
+  "portion": 10
+ },
+ {
+  "name": "Olut",
+  "aliases": [
+   "Olut 0,33 l",
+   "Kaljapullo"
+  ],
+  "per": "kpl",
+  "kcal": 140,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Olut 0,5 l",
+  "aliases": [
+   "Tuoppi olutta"
+  ],
+  "per": "kpl",
+  "kcal": 210,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Omena",
+  "aliases": [
+   "Omenat"
+  ],
+  "per": "kpl",
+  "kcal": 70,
+  "portion": 1
+ },
+ {
+  "name": "Omenamehu",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 200
+ },
+ {
+  "name": "Omenapiirakka",
+  "per": "100g",
+  "kcal": 240,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Omenasose",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 100
+ },
+ {
+  "name": "Paahtoleipäviipale",
+  "per": "kpl",
+  "kcal": 75,
+  "portion": 1
+ },
+ {
+  "name": "Paistettu kala",
+  "aliases": [
+   "Kalapuikot paistettu"
+  ],
+  "per": "100g",
+  "kcal": 190,
+  "portion": 150
+ },
+ {
+  "name": "Paistettu kananmuna",
+  "aliases": [
+   "Paistettu muna"
+  ],
+  "per": "kpl",
+  "kcal": 95,
+  "portion": 1
+ },
+ {
+  "name": "Paistettu kananrinta",
+  "aliases": [
+   "Kananrintafilee kypsä"
+  ],
+  "per": "100g",
+  "kcal": 165,
+  "portion": 150
+ },
+ {
+  "name": "Paistetut perunat",
+  "aliases": [
+   "Paistinperunat"
+  ],
+  "per": "100g",
+  "kcal": 150,
+  "portion": 200
+ },
+ {
+  "name": "Pakastepizza",
+  "aliases": [
+   "Pakastepitsa"
+  ],
+  "per": "100g",
+  "kcal": 245,
+  "portion": 350
+ },
+ {
+  "name": "Pakastevihannekset",
+  "aliases": [
+   "Wokkivihannekset"
+  ],
+  "per": "100g",
+  "kcal": 50,
+  "portion": 150
+ },
+ {
+  "name": "Palsternakka",
+  "per": "100g",
+  "kcal": 70,
+  "portion": 100
+ },
+ {
+  "name": "Palvikinkku",
+  "per": "100g",
+  "kcal": 120,
+  "portion": 30
+ },
+ {
+  "name": "Pannukakku",
+  "aliases": [
+   "Uunipannukakku"
+  ],
+  "per": "100g",
+  "kcal": 175,
+  "portion": 150
+ },
+ {
+  "name": "Pannukakkuvanukas",
+  "per": "100g",
+  "kcal": 190,
+  "portion": 100
+ },
+ {
+  "name": "Paprika",
+  "per": "kpl",
+  "kcal": 40,
+  "portion": 1
+ },
+ {
+  "name": "Parmesaani",
+  "per": "100g",
+  "kcal": 400,
+  "portion": 10
+ },
+ {
+  "name": "Parsakaali",
+  "per": "100g",
+  "kcal": 35,
+  "portion": 150
+ },
+ {
+  "name": "Pastasalaatti",
+  "per": "100g",
+  "kcal": 140,
+  "portion": 250
+ },
+ {
+  "name": "Pastilli",
+  "per": "100g",
+  "kcal": 340,
+  "portion": 20,
+  "treat": true
+ },
+ {
+  "name": "Patonki",
+  "per": "100g",
+  "kcal": 270,
+  "portion": 60
+ },
+ {
+  "name": "Pavut vihreät",
+  "aliases": [
+   "Vihreät pavut"
+  ],
+  "per": "100g",
+  "kcal": 30,
+  "portion": 100
+ },
+ {
+  "name": "Pehmytjäätelö",
+  "per": "kpl",
+  "kcal": 180,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Pekoni",
+  "aliases": [
+   "Pekonit"
+  ],
+  "per": "100g",
+  "kcal": 300,
+  "portion": 40
+ },
+ {
+  "name": "Pekonimuna",
+  "per": "100g",
+  "kcal": 210,
+  "portion": 150
+ },
+ {
+  "name": "Pellavansiemen",
+  "per": "100g",
+  "kcal": 530,
+  "portion": 10
+ },
+ {
+  "name": "Persikka",
+  "per": "kpl",
+  "kcal": 55,
+  "portion": 1
+ },
+ {
+  "name": "Perunalaatikko",
+  "per": "100g",
+  "kcal": 120,
+  "portion": 200
+ },
+ {
+  "name": "Perunalastut",
+  "aliases": [
+   "Sipsit",
+   "Chipsit"
+  ],
+  "per": "100g",
+  "kcal": 540,
+  "portion": 40,
+  "treat": true
+ },
+ {
+  "name": "Perunamuusi",
+  "aliases": [
+   "Muusi"
+  ],
+  "per": "100g",
+  "kcal": 95,
+  "portion": 200
+ },
+ {
+  "name": "Perunasalaatti",
+  "per": "100g",
+  "kcal": 130,
+  "portion": 150
+ },
+ {
+  "name": "Piimä",
+  "per": "100g",
+  "kcal": 40,
+  "portion": 200
+ },
+ {
+  "name": "Piimäjuusto",
+  "per": "100g",
+  "kcal": 280,
+  "portion": 30
+ },
+ {
+  "name": "Pikanuudelit",
+  "per": "100g",
+  "kcal": 150,
+  "portion": 250
+ },
+ {
+  "name": "Pinaatti",
+  "per": "100g",
+  "kcal": 25,
+  "portion": 50
+ },
+ {
+  "name": "Pinaattikeitto",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 300
+ },
+ {
+  "name": "Pinaattilätyt",
+  "per": "100g",
+  "kcal": 175,
+  "portion": 150
+ },
+ {
+  "name": "Pipari",
+  "aliases": [
+   "Piparkakku"
+  ],
+  "per": "kpl",
+  "kcal": 40,
+  "portion": 2,
+  "treat": true
+ },
+ {
+  "name": "Pizza",
+  "aliases": [
+   "Pitsa"
+  ],
+  "per": "100g",
+  "kcal": 250,
+  "portion": 300
+ },
+ {
+  "name": "Pizzakastike",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 50
+ },
+ {
+  "name": "Pizzapohja",
+  "per": "100g",
+  "kcal": 270,
+  "portion": 100
+ },
+ {
+  "name": "Popcorn",
+  "per": "100g",
+  "kcal": 400,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Porkkana",
+  "aliases": [
+   "Porkkanat"
+  ],
+  "per": "kpl",
+  "kcal": 25,
+  "portion": 1
+ },
+ {
+  "name": "Porkkanalaatikko",
+  "per": "100g",
+  "kcal": 105,
+  "portion": 200
+ },
+ {
+  "name": "Possun jauheliha",
+  "aliases": [
+   "Sian jauheliha"
+  ],
+  "per": "100g",
+  "kcal": 230,
+  "portion": 150
+ },
+ {
+  "name": "Possun ulkofilee",
+  "per": "100g",
+  "kcal": 120,
+  "portion": 150
+ },
+ {
+  "name": "Possunkyljys",
+  "per": "100g",
+  "kcal": 250,
+  "portion": 150
+ },
+ {
+  "name": "Proteiinipatukka",
+  "per": "kpl",
+  "kcal": 200,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Proteiinipirtelö",
+  "per": "100g",
+  "kcal": 80,
+  "portion": 300
+ },
+ {
+  "name": "Proteiinirahka",
+  "per": "100g",
+  "kcal": 80,
+  "portion": 200
+ },
+ {
+  "name": "Pulla",
+  "aliases": [
+   "Pullat"
+  ],
+  "per": "kpl",
+  "kcal": 200,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Punajuuri",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 100
+ },
+ {
+  "name": "Punasipuli",
+  "per": "100g",
+  "kcal": 40,
+  "portion": 50
+ },
+ {
+  "name": "Puolukka",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 100
+ },
+ {
+  "name": "Purjo",
+  "per": "100g",
+  "kcal": 30,
+  "portion": 100
+ },
+ {
+  "name": "Pyttipannu",
+  "per": "100g",
+  "kcal": 150,
+  "portion": 300
+ },
+ {
+  "name": "Pähkinäsekoitus",
+  "per": "100g",
+  "kcal": 600,
+  "portion": 30
+ },
+ {
+  "name": "Pähkinävoi",
+  "aliases": [
+   "Maapähkinävoi"
+  ],
+  "per": "100g",
+  "kcal": 600,
+  "portion": 15
+ },
+ {
+  "name": "Päärynä",
+  "per": "kpl",
+  "kcal": 80,
+  "portion": 1
+ },
+ {
+  "name": "Raejuusto",
+  "per": "100g",
+  "kcal": 95,
+  "portion": 100
+ },
+ {
+  "name": "Rahka",
+  "aliases": [
+   "Maitorahka"
+  ],
+  "per": "100g",
+  "kcal": 65,
+  "portion": 200
+ },
+ {
+  "name": "Ranskalaiset perunat",
+  "aliases": [
+   "Ranskalaiset",
+   "Ranskalaiset uuni"
+  ],
+  "per": "100g",
+  "kcal": 290,
+  "portion": 150,
+  "treat": true
+ },
+ {
+  "name": "Ranskankerma",
+  "per": "100g",
+  "kcal": 170,
+  "portion": 30
+ },
+ {
+  "name": "Rapea kananrinta",
+  "per": "100g",
+  "kcal": 230,
+  "portion": 150
+ },
+ {
+  "name": "Rasvaton maito",
+  "aliases": [
+   "Rasvaton"
+  ],
+  "per": "100g",
+  "kcal": 33,
+  "portion": 200
+ },
+ {
+  "name": "Reikäleipä",
+  "per": "kpl",
+  "kcal": 120,
+  "portion": 1
+ },
+ {
+  "name": "Retiisi",
+  "per": "100g",
+  "kcal": 15,
+  "portion": 50
+ },
+ {
+  "name": "Riisikakku",
+  "per": "kpl",
+  "kcal": 35,
+  "portion": 2
+ },
+ {
+  "name": "Riisipuuro",
+  "aliases": [
+   "Riisipuuro maidolla"
+  ],
+  "per": "100g",
+  "kcal": 100,
+  "portion": 300
+ },
+ {
+  "name": "Rosolli",
+  "per": "100g",
+  "kcal": 90,
+  "portion": 150
+ },
+ {
+  "name": "Ruisjauho",
+  "per": "100g",
+  "kcal": 330,
+  "portion": 20
+ },
+ {
+  "name": "Ruisleipä",
+  "aliases": [
+   "Ruisleipä viipale"
+  ],
+  "per": "100g",
+  "kcal": 210,
+  "portion": 60
+ },
+ {
+  "name": "Ruisleipäviipale",
+  "aliases": [
+   "Ruisleipä viipaleena"
+  ],
+  "per": "kpl",
+  "kcal": 85,
+  "portion": 1
+ },
+ {
+  "name": "Ruisleipävoileipä juustolla",
+  "per": "kpl",
+  "kcal": 190,
+  "portion": 2
+ },
+ {
+  "name": "Ruokakerma 15 %",
+  "per": "100g",
+  "kcal": 160,
+  "portion": 50
+ },
+ {
+  "name": "Rusina",
+  "aliases": [
+   "Rusinat"
+  ],
+  "per": "100g",
+  "kcal": 300,
+  "portion": 30
+ },
+ {
+  "name": "Ruusukaali",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 100
+ },
+ {
+  "name": "Rypäleet",
+  "aliases": [
+   "Viinirypäle"
+  ],
+  "per": "100g",
+  "kcal": 70,
+  "portion": 100
+ },
+ {
+  "name": "Räiskäleet",
+  "per": "100g",
+  "kcal": 210,
+  "portion": 150
+ },
+ {
+  "name": "Rührei",
+  "aliases": [
+   "Munakokkeli"
+  ],
+  "per": "100g",
+  "kcal": 170,
+  "portion": 150
+ },
+ {
+  "name": "Saksanpähkinä",
+  "per": "100g",
+  "kcal": 650,
+  "portion": 30
+ },
+ {
+  "name": "Salaatinkastike",
+  "per": "100g",
+  "kcal": 300,
+  "portion": 20
+ },
+ {
+  "name": "Salaatti jäävuori",
+  "aliases": [
+   "Jäävuorisalaatti"
+  ],
+  "per": "100g",
+  "kcal": 15,
+  "portion": 50
+ },
+ {
+  "name": "Salami",
+  "per": "100g",
+  "kcal": 400,
+  "portion": 30
+ },
+ {
+  "name": "Salmiakki",
+  "per": "100g",
+  "kcal": 350,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Savukala",
+  "per": "100g",
+  "kcal": 190,
+  "portion": 80
+ },
+ {
+  "name": "Savulohi",
+  "aliases": [
+   "Kylmäsavulohi"
+  ],
+  "per": "100g",
+  "kcal": 175,
+  "portion": 80
+ },
+ {
+  "name": "Selleri",
+  "per": "100g",
+  "kcal": 15,
+  "portion": 50
+ },
+ {
+  "name": "Sieni",
+  "aliases": [
+   "Herkkusieni",
+   "Sienet"
+  ],
+  "per": "100g",
+  "kcal": 25,
+  "portion": 100
+ },
+ {
+  "name": "Sienikeitto",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 300
+ },
+ {
+  "name": "Siideri",
+  "aliases": [
+   "Siideri 0,33 l"
+  ],
+  "per": "kpl",
+  "kcal": 150,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Siika",
+  "per": "100g",
+  "kcal": 100,
+  "portion": 150
+ },
+ {
+  "name": "Siirappi",
+  "per": "100g",
+  "kcal": 300,
+  "portion": 20
+ },
+ {
+  "name": "Silakka",
+  "per": "100g",
+  "kcal": 175,
+  "portion": 100
+ },
+ {
+  "name": "Silakkapihvit",
+  "per": "100g",
+  "kcal": 215,
+  "portion": 150
+ },
+ {
+  "name": "Sinappi",
+  "per": "100g",
+  "kcal": 80,
+  "portion": 10
+ },
+ {
+  "name": "Sinihomejuusto",
+  "per": "100g",
+  "kcal": 350,
+  "portion": 30
+ },
+ {
+  "name": "Sipuli",
+  "aliases": [
+   "Keltasipuli"
+  ],
+  "per": "kpl",
+  "kcal": 40,
+  "portion": 1
+ },
+ {
+  "name": "Sipulikeittoaines",
+  "per": "100g",
+  "kcal": 330,
+  "portion": 20
+ },
+ {
+  "name": "Sitruuna",
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 1
+ },
+ {
+  "name": "Smetana",
+  "per": "100g",
+  "kcal": 190,
+  "portion": 50
+ },
+ {
+  "name": "Smoothie",
+  "per": "100g",
+  "kcal": 55,
+  "portion": 250
+ },
+ {
+  "name": "Soijajuoma",
+  "per": "100g",
+  "kcal": 38,
+  "portion": 200
+ },
+ {
+  "name": "Soijakastike",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 10
+ },
+ {
+  "name": "Sokeri",
+  "per": "100g",
+  "kcal": 400,
+  "portion": 5
+ },
+ {
+  "name": "Spagetti (keitetty)",
+  "aliases": [
+   "Spagetti",
+   "Pasta"
+  ],
+  "per": "100g",
+  "kcal": 140,
+  "portion": 200
+ },
+ {
+  "name": "Spagetti bolognese",
+  "aliases": [
+   "Bolognese",
+   "Spagetti jauhelihakastikkeella"
+  ],
+  "per": "100g",
+  "kcal": 130,
+  "portion": 350
+ },
+ {
+  "name": "Spagetti carbonara",
+  "aliases": [
+   "Carbonara"
+  ],
+  "per": "100g",
+  "kcal": 180,
+  "portion": 350
+ },
+ {
+  "name": "Suklaakakku",
+  "per": "100g",
+  "kcal": 390,
+  "portion": 80,
+  "treat": true
+ },
+ {
+  "name": "Suklaakeksi",
+  "per": "kpl",
+  "kcal": 90,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Suklaalevy",
+  "per": "kpl",
+  "kcal": 540,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Suklaamaito",
+  "per": "100g",
+  "kcal": 75,
+  "portion": 250,
+  "treat": true
+ },
+ {
+  "name": "Suklaapala",
+  "per": "kpl",
+  "kcal": 30,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Sulatejuusto",
+  "per": "100g",
+  "kcal": 250,
+  "portion": 20
+ },
+ {
+  "name": "Suolakurkku",
+  "per": "100g",
+  "kcal": 15,
+  "portion": 30
+ },
+ {
+  "name": "Sushi",
+  "aliases": [
+   "Makisushi",
+   "Sushipala"
+  ],
+  "per": "kpl",
+  "kcal": 45,
+  "portion": 8
+ },
+ {
+  "name": "Sämpylä",
+  "aliases": [
+   "Sämpylät"
+  ],
+  "per": "kpl",
+  "kcal": 170,
+  "portion": 1
+ },
+ {
+  "name": "Taateli",
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 3
+ },
+ {
+  "name": "Taco",
+  "aliases": [
+   "Tacot"
+  ],
+  "per": "kpl",
+  "kcal": 180,
+  "portion": 2
+ },
+ {
+  "name": "Tee",
+  "aliases": [
+   "Musta tee"
+  ],
+  "per": "kpl",
+  "kcal": 2,
+  "portion": 1
+ },
+ {
+  "name": "Tee sokerilla",
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 1
+ },
+ {
+  "name": "Tomaatti",
+  "aliases": [
+   "Tomaatit"
+  ],
+  "per": "kpl",
+  "kcal": 20,
+  "portion": 1
+ },
+ {
+  "name": "Tomaattikeitto",
+  "per": "100g",
+  "kcal": 45,
+  "portion": 300
+ },
+ {
+  "name": "Tomaattimurska",
+  "aliases": [
+   "Tomaattisurve"
+  ],
+  "per": "100g",
+  "kcal": 25,
+  "portion": 100
+ },
+ {
+  "name": "Tomaattipyree",
+  "per": "100g",
+  "kcal": 80,
+  "portion": 20
+ },
+ {
+  "name": "Tonnikala (säilyke vedessä)",
+  "aliases": [
+   "Tonnikala"
+  ],
+  "per": "100g",
+  "kcal": 110,
+  "portion": 100
+ },
+ {
+  "name": "Tonnikalasalaatti",
+  "per": "100g",
+  "kcal": 120,
+  "portion": 250
+ },
+ {
+  "name": "Tortilla",
+  "aliases": [
+   "Tortillalätty"
+  ],
+  "per": "kpl",
+  "kcal": 140,
+  "portion": 1
+ },
+ {
+  "name": "Tortilla täytteillä",
+  "aliases": [
+   "Wrap",
+   "Tortillarulla"
+  ],
+  "per": "kpl",
+  "kcal": 380,
+  "portion": 1
+ },
+ {
+  "name": "Tortillapizza",
+  "aliases": [
+   "Tortillapizza kalkkunapepperonilla"
+  ],
+  "per": "100g",
+  "kcal": 215,
+  "portion": 250
+ },
+ {
+  "name": "Tumma suklaa",
+  "per": "100g",
+  "kcal": 560,
+  "portion": 30,
+  "treat": true
+ },
+ {
+  "name": "Täysjyväleipä",
+  "per": "100g",
+  "kcal": 230,
+  "portion": 60
+ },
+ {
+  "name": "Täysjyväriisi (keitetty)",
+  "aliases": [
+   "Täysjyväriisi"
+  ],
+  "per": "100g",
+  "kcal": 120,
+  "portion": 200
+ },
+ {
+  "name": "Täysmaito",
+  "aliases": [
+   "Täysmaito 3,5 %"
+  ],
+  "per": "100g",
+  "kcal": 63,
+  "portion": 200
+ },
+ {
+  "name": "Täytekakku",
+  "aliases": [
+   "Kakku"
+  ],
+  "per": "100g",
+  "kcal": 280,
+  "portion": 100,
+  "treat": true
+ },
+ {
+  "name": "Täytekeksi",
+  "per": "kpl",
+  "kcal": 60,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Urheilujuoma",
+  "per": "100g",
+  "kcal": 25,
+  "portion": 500
+ },
+ {
+  "name": "Uunilohi",
+  "aliases": [
+   "Lohifilee uunissa"
+  ],
+  "per": "100g",
+  "kcal": 195,
+  "portion": 150
+ },
+ {
+  "name": "Uuniperuna",
+  "per": "100g",
+  "kcal": 95,
+  "portion": 200
+ },
+ {
+  "name": "Uuniranskalaiset",
+  "aliases": [
+   "Ranskalaiset uunissa",
+   "Uuniperunat ranskalaiset"
+  ],
+  "per": "100g",
+  "kcal": 130,
+  "portion": 250
+ },
+ {
+  "name": "Vadelma",
+  "aliases": [
+   "Vadelmat"
+  ],
+  "per": "100g",
+  "kcal": 50,
+  "portion": 100
+ },
+ {
+  "name": "Valkoiset pavut",
+  "per": "100g",
+  "kcal": 90,
+  "portion": 150
+ },
+ {
+  "name": "Valkosipuli",
+  "per": "kpl",
+  "kcal": 4,
+  "portion": 1
+ },
+ {
+  "name": "Vanukas",
+  "per": "100g",
+  "kcal": 115,
+  "portion": 125,
+  "treat": true
+ },
+ {
+  "name": "Vehnäjauho",
+  "aliases": [
+   "Jauho"
+  ],
+  "per": "100g",
+  "kcal": 350,
+  "portion": 20
+ },
+ {
+  "name": "Vehnäleipä",
+  "aliases": [
+   "Paahtoleipä"
+  ],
+  "per": "100g",
+  "kcal": 250,
+  "portion": 60
+ },
+ {
+  "name": "Vesimeloni",
+  "aliases": [
+   "Meloni"
+  ],
+  "per": "100g",
+  "kcal": 30,
+  "portion": 200
+ },
+ {
+  "name": "Vihersalaatti",
+  "aliases": [
+   "Salaatti"
+  ],
+  "per": "100g",
+  "kcal": 20,
+  "portion": 100
+ },
+ {
+  "name": "Viili",
+  "per": "100g",
+  "kcal": 60,
+  "portion": 200
+ },
+ {
+  "name": "Viina",
+  "aliases": [
+   "Viinaryyppy",
+   "Vodka",
+   "Shotti"
+  ],
+  "per": "kpl",
+  "kcal": 65,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Viini",
+  "aliases": [
+   "Lasi viiniä",
+   "Punaviini",
+   "Valkoviini"
+  ],
+  "per": "kpl",
+  "kcal": 120,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Voi",
+  "per": "100g",
+  "kcal": 740,
+  "portion": 10
+ },
+ {
+  "name": "Voisilmäpulla",
+  "per": "kpl",
+  "kcal": 280,
+  "portion": 1,
+  "treat": true
+ },
+ {
+  "name": "Wafer",
+  "per": "kpl",
+  "kcal": 100,
+  "portion": 1,
+  "treat": true
+ }
+]

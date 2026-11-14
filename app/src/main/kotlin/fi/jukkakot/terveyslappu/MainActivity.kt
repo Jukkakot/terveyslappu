@@ -50,11 +50,20 @@ import fi.jukkakot.terveyslappu.ui.MainActions
 import kotlinx.coroutines.delay
 import fi.jukkakot.terveyslappu.ui.MainScreen
 import fi.jukkakot.terveyslappu.ui.MainViewModel
+import fi.jukkakot.terveyslappu.ui.FoodAccess
+import fi.jukkakot.terveyslappu.ui.FoodActions
+import fi.jukkakot.terveyslappu.ui.FoodViewModel
+import kotlinx.coroutines.flow.merge
+import java.time.LocalDate
 import fi.jukkakot.terveyslappu.ui.TerveysTheme
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+    private val foodModel: FoodViewModel by viewModels()
+
+    /** What to do once the nutrition permission screen returns granted (food-log design 8). */
+    private var afterFoodGrant: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -87,6 +96,30 @@ class MainActivity : ComponentActivity() {
                     // A denial keeps the switch on: weights are still saved, Asetukset warns (background-weigh-in).
                     AppLog.i("auto.notify", if (granted) "granted" else "denied")
                     listenTick++
+                }
+                val food by foodModel.state.collectAsStateWithLifecycle()
+                val foodLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                ) { granted ->
+                    foodModel.onPermissionResult(granted)
+                    val then = afterFoodGrant
+                    afterFoodGrant = null
+                    if (granted.containsAll(foodModel.foods.permissions)) then?.invoke()
+                }
+                /** Asks the nutrition permission (or opens Health Connect once it was denied), then [then]. */
+                fun grantFood(then: (() -> Unit)? = null) {
+                    if (foodModel.state.value.access == FoodAccess.DENIED) {
+                        open(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName))
+                    } else {
+                        afterFoodGrant = then
+                        foodModel.onPermissionRequested()
+                        launchSafely("hc.permission.nutrition") { foodLauncher.launch(foodModel.foods.permissions) }
+                    }
+                }
+                fun openFoodDay(day: LocalDate) {
+                    foodModel.setDay(day)
+                    viewModel.openFood()
+                    if (foodModel.state.value.access == FoodAccess.NEEDS) grantFood()
                 }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -146,12 +179,13 @@ class MainActivity : ComponentActivity() {
 
                 LifecycleResumeEffect(Unit) {
                     viewModel.refreshAccess()
+                    foodModel.refresh()
                     listenTick++
                     WeighInWidget.update(this@MainActivity)
                     onPauseOrDispose {}
                 }
                 LaunchedEffect(Unit) {
-                    viewModel.messages.collect { message ->
+                    merge(viewModel.messages, foodModel.messages).collect { message ->
                         val result = snackbar.showSnackbar(
                             message = getString(message.text, *message.args.toTypedArray()),
                             actionLabel = message.action?.let { getString(it.label) },
@@ -170,6 +204,37 @@ class MainActivity : ComponentActivity() {
                     profile = profile,
                     heightInHealthConnect = heightInHc,
                     listen = listenUi,
+                    food = food,
+                    baseProducts = (application as TerveysApp).baseProducts,
+                    foodActions = FoodActions(
+                        onOpenDay = ::openFoodDay,
+                        onAdd = { day ->
+                            if (foodModel.state.value.access == FoodAccess.GRANTED) {
+                                foodModel.openSheet(day)
+                            } else if (foodModel.state.value.access == FoodAccess.NEEDS) {
+                                grantFood { foodModel.openSheet(day) }
+                            } else {
+                                // Denied: Ruoka explains why and offers the grant (food-log "Permission denied").
+                                openFoodDay(day)
+                            }
+                        },
+                        onCloseSheet = foodModel::closeSheet,
+                        onQuery = foodModel::onQuery,
+                        onPick = foodModel::addSuggestion,
+                        onEnter = foodModel::addTyped,
+                        onUndoAdd = foodModel::undoAdd,
+                        onEdit = foodModel::openEditor,
+                        onCloseEditor = foodModel::closeEditor,
+                        onSave = foodModel::saveEdit,
+                        onDelete = foodModel::delete,
+                        onDay = foodModel::setDay,
+                        onStartOrder = foodModel::startOrder,
+                        onMove = foodModel::move,
+                        onFinishOrder = foodModel::finishOrder,
+                        onGrant = { grantFood() },
+                        onSaveProduct = foodModel::saveProduct,
+                        onRemoveProduct = foodModel::removeProduct,
+                    ),
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
                         onBack = viewModel::back,
@@ -250,6 +315,7 @@ class MainActivity : ComponentActivity() {
                         onAccept = viewModel::accept,
                         onOpenQuestioned = viewModel::openQuestioned,
                         onTargetShown = viewModel::targetShown,
+                        onEnergyShown = viewModel::energyShown,
                         onGrantHistory = {
                             viewModel.afterHistory = AfterHistory.RELOAD
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }

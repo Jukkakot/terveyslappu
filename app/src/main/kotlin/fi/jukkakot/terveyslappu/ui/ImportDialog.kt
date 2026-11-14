@@ -61,9 +61,15 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
         },
         confirmButton = {
             when (state) {
-                is ImportState.Preview -> if (state.parsed.weights.isNotEmpty()) {
+                is ImportState.Preview -> if (state.parsed.hasData()) {
                     Button(onClick = onConfirm, modifier = Modifier.testTag("importConfirm")) {
-                        Text(stringResource(R.string.import_confirm, state.parsed.weights.size))
+                        Text(
+                            if (state.parsed.weights.isNotEmpty()) {
+                                stringResource(R.string.import_confirm, state.parsed.weights.size)
+                            } else {
+                                stringResource(R.string.import_confirm_foods)
+                            },
+                        )
                     }
                 }
                 is ImportState.Failed -> Button(onClick = onConfirm) { Text(stringResource(R.string.import_retry)) }
@@ -72,7 +78,7 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
         },
         dismissButton = {
             if (!writing) {
-                val label = if (state is ImportState.Preview && state.parsed.weights.isNotEmpty()) R.string.cancel else R.string.close
+                val label = if (state is ImportState.Preview && state.parsed.hasData()) R.string.cancel else R.string.close
                 TextButton(onClick = onDismiss) { Text(stringResource(label)) }
             }
         },
@@ -82,8 +88,12 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
 @Composable
 private fun Preview(parsed: ParsedHistory) {
     val weights = parsed.weights
+    val foods = parsed.foods
+    if (foods.foods.isNotEmpty() || foods.products.isNotEmpty()) {
+        Text(stringResource(R.string.import_found_foods, foods.foods.size, foods.products.size), modifier = Modifier.testTag("importFoods"))
+    }
     if (weights.isEmpty()) {
-        Text(stringResource(R.string.import_none))
+        if (!parsed.hasData()) Text(stringResource(R.string.import_none))
     } else {
         val zone = ZoneId.systemDefault()
         Text(
@@ -112,6 +122,9 @@ private fun Preview(parsed: ParsedHistory) {
         Text(stringResource(R.string.import_note), style = MaterialTheme.typography.bodySmall)
     }
 }
+
+/** Weights, foods or products to write. */
+private fun ParsedHistory.hasData() = weights.isNotEmpty() || foods.foods.isNotEmpty() || foods.products.isNotEmpty()
 
 @Composable
 private fun ExampleRow(weight: ImportedWeight, zone: ZoneId) {

@@ -100,6 +100,19 @@ class TerveysApp : Application() {
         )
     }
 
+    /** "Foods changed outside the food screens" (an import). */
+    val foodSignal = WeightsSignal()
+
+    /** The own food products (food-log), in app storage and Android backup. */
+    val products: fi.jukkakot.terveyslappu.food.ProductStore by lazy { fi.jukkakot.terveyslappu.food.ProductStore(File(filesDir, "products.json")) }
+
+    /** The shipped base products (food-log design 3), read once. */
+    val baseProducts: List<fi.jukkakot.terveyslappu.food.BaseProduct> by lazy {
+        runCatching { assets.open("base-products.json").use { fi.jukkakot.terveyslappu.food.BaseProducts.parse(it.readBytes().decodeToString()) } }
+            .onFailure { AppLog.e("food.base", it, "read") }
+            .getOrDefault(emptyList())
+    }
+
     /** The theme choice (app-appearance), read by every activity's theme. */
     val appearance: AppearancePrefs by lazy { AppearancePrefs(this) }
 
