@@ -43,7 +43,8 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
 
 - Map: `app/src/main/kotlin/fi/jukkakot/terveyslappu/` — `weight/` (input rules, Health Connect
   read/write/delete), `scale/` (scale packet decoding, stable-weight rule, packet log + replay,
-  BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`), `history/` (history file
+  BLE scanner, `WeighIn` flow; all pure except `ScaleScanner`; `LastWeighIn` also remembers the scale for listening), `listen/` (background listen trial:
+  `ListenWindow`, `ListenStatusRule`, `HeardPackets` accumulator, `LastHeardText`, `ListenController` (all pure); `ListenAndroid` = prefs file `listen`, PendingIntent scan, alarm, device state; `ListenReceiver` / `ListenBootReceiver`; singleton in `TerveysApp`), `history/` (history file
   parser: separator, columns, date order, CSV data-file sections; batch writer; `.xls` reader `XlsTable` (Apache POI) and `OkokLayout`; all pure), `data/` (the data file of Vie/Tuo tiedot and the backup: `DataSet` with one field per data kind, `CsvData`, `JsonData`, export file name; pure), `chart/` (periods, period stats, chart axes, Historia list tree `ListGroups`; pure except `PeriodPrefs`), `derived/` (BMI, class and tone, normal range,
   `Quantity` for Historia's tabs, the home row's `LatestDerived`; pure), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `profile/` (owner details: rules, `#profile;` export line (pure), `ProfilePrefs` singleton in
@@ -74,7 +75,7 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
   `hc.permission.*`, `weight.save|read|delete`, `log.share`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),
-  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.discard ok|failed`, `scale.ignore key=` (previous weigh-in's lingering broadcast), `weighin.raw` / `raw.archive` (archive errors), `tile.click`; import: `import.pick`, `import.read` (`format=text|json|xls`, `unknown=` data kinds not read, `okok=`, detected layout and
+  `scale.stable kg= t=`, `weighin.save ms=`, `weighin.total ms=`, `weighin.timeout`, `weighin.discard ok|failed`, `scale.ignore key=` (previous weigh-in's lingering broadcast), `weighin.raw` / `raw.archive` (archive errors), `tile.click`; listen trial: `listen.enable|disable`, `listen.settings window= mode= powerSave=`, `listen.arm next= action=start|check|end` (`rearm` at app start), `listen.start late= mode= offloadFilter= offloadBatch=`, `listen.stop reason=`, `listen.check bt= powerSave= restricted=`, `listen.failed code=` (-1 no scanner/Bluetooth off, -2 no permission), `scale.packet ... src=bg screen=on|off`, `listen.repeat count= rssiMin= rssiMax=`, `listen.other addr= name= rssi=`, `listen.summary reason=end|off|stale ...`; import: `import.pick`, `import.read` (`format=text|json|xls`, `unknown=` data kinds not read, `okok=`, detected layout and
   counts), `import.skip line= reason= raw=` (max 20), `import.write ok|failed`; export: `export.pick format=`, `export.history granted|denied`,
   `export.write ok format= count= history= ms=`; backup: `backup.enable|disable|pick`,
   `backup.run reason= ok count= ms=` / `backup.run failed`; owner details: `profile.set fields=` (field names, never values),

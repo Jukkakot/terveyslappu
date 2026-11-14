@@ -5,6 +5,7 @@ import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.core.util.size
 import fi.jukkakot.terveyslappu.TerveysApp
 
 /** The trial's scan results and alarms (not exported: only our own PendingIntents reach it). */
@@ -25,7 +26,7 @@ class ListenReceiver : BroadcastReceiver() {
     private fun heard(result: ScanResult): List<HeardResult> {
         val record = result.scanRecord ?: return emptyList()
         val data = record.manufacturerSpecificData ?: return emptyList()
-        return (0 until data.size()).map { i ->
+        return (0 until data.size).map { i ->
             HeardResult(data.keyAt(i), data.valueAt(i), result.rssi, record.deviceName, result.device?.address, result.timestampNanos)
         }
     }

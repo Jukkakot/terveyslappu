@@ -63,6 +63,27 @@ limits (phase 2).
     `listen.summary reason= mode= packets= distinct= rssiMax= rssiMin= first= last= stable=
     batteryStart= batteryEnd=`. `ScaleReplayTest` and the replay routine skip `src=bg` lines.
 
+## Implementation notes (choices the spec left open)
+
+- One alarm PendingIntent carries the next action (start, check, end); every wake-up re-plans from
+  the window, so a late or lost alarm heals on the next one.
+- A saved session continues while its window's end is ahead and `elapsedRealtime` has not gone
+  back (no reboot); otherwise it is closed as `stale`. Outside the window a session is closed as
+  `end`, or `stale` when its end passed over an hour ago (missed end).
+- Power saving pause inside the window keeps the session and the alarms (logged
+  `listen.stop reason=powerSave`); the hourly check restarts the scan when power saving ends.
+- Status order: no scale, permission, Bluetooth, force-stopped ("Pysäytetty: avaa sovellus kerran",
+  shown when on but no alarm is armed), power saving, listening, resting. No status line while off.
+  Resting time as `H.mm` ("Lepää, alkaa klo 6.00"), like the app's other times.
+- Battery warning = `ActivityManager.isBackgroundRestricted` (the "Restricted" battery setting);
+  its button and the permission button open the app's system settings page, Bluetooth opens the
+  Bluetooth settings, power saving the battery saver settings.
+- Section labels not in the spec: the switch row reads "Kuuntele vaakaa taustalla", with a one-line
+  hint; mode row "Kuuntelutapa"; start/end rows "Alkaa" / "Päättyy". The section sits after
+  Varmuuskopio and is shown also without Health Connect access.
+- Same start and end refused with the snackbar "Alku ja loppu eivät voi olla sama aika."
+- A late scan delivery with no open session is dropped; `listen.repeat`/`listen.other` are DEBUG.
+
 ## Risks / Trade-offs
 
 - [Samsung stops the scan or the alarm] → the summary (or its absence) and `listen.check` lines

@@ -41,7 +41,7 @@
 
 ## 5. Finish
 
-- [ ] 5.1 `./gradlew test lint assembleDebug` green.
-- [ ] 5.2 Update `.claude/CLAUDE.md` (map: the new code's place; log events), `product.md`
+- [x] 5.1 `./gradlew test lint assembleDebug` green.
+- [x] 5.2 Update `.claude/CLAUDE.md` (map: the new code's place; log events), `product.md`
       (decision: PendingIntent scan, listen-only trial), roadmap (phase 1 implemented, waiting for
       the trial's mornings incl. one morning next to the scale); bump `appVersion` MINOR to 1.19.

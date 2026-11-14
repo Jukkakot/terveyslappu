@@ -51,6 +51,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   design): tile, widget and launcher shortcut open a small dialog that scans, saves the stable
   weight and closes; no background service. Stable = the scale's own flag, confirmed by a second
   equal packet or 2 s quiet.
+- **Background listening: PendingIntent scan, listen-only trial first** (weigh-in-listen-trial,
+  2026-11-14): a hardware-filtered (address, plus name) low-power scan whose results the Bluetooth
+  stack delivers to a manifest receiver, so the app process may die; an inexact Doze-safe alarm
+  starts, checks hourly and ends the user's time window. No foreground service (it would need a
+  permanent notification). Phase 1 saves nothing and only logs what it heard, to measure range,
+  scan survival on Samsung and battery cost before the feature.
 - **Interim phone-move answer: visible backup file** (autopilot 2026-11-08, weight-backup):
   the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
   and on the first opening of each day, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the

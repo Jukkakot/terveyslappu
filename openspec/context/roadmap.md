@@ -35,7 +35,9 @@ Phases in order; one OpenSpec change each unless noted.
     The scale address stayed the same over all weigh-ins.
   - Phase 1, listen-only (small change): background scan with the real settings, screen off,
     time window from Asetukset, saves nothing, logs what it heard and the rssi. A few mornings show
-    range, whether Samsung stops the scan, and battery use.
+    range, whether Samsung stops the scan, and battery use. Implemented 2026-11-14
+    (weigh-in-listen-trial, v1.19); waiting for the trial's mornings, including one morning with
+    the phone next to the scale.
   - Phase 2, the feature: time window in Asetukset (no hard-coded values); listens to the scale
     of the last manual weigh-in; widget shows on / resting (outside the window) / blocked (battery
     optimisation, Bluetooth, permission); a notification after every automatic weigh-in; Health

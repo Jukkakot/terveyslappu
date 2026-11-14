@@ -1,6 +1,7 @@
 package fi.jukkakot.terveyslappu.scale
 
 import android.content.Context
+import androidx.core.content.edit
 import java.time.Instant
 
 /** The user's scale as heard in the deciding packet of the latest saved weigh-in (background-weigh-in). */
@@ -42,14 +43,14 @@ class LastWeighInPrefs(context: Context, private val onScale: () -> Unit = {}) :
     }
 
     override fun save(key: Int, at: Instant) {
-        prefs.edit().putInt(KEY, key).putLong(AT, at.toEpochMilli()).apply()
+        prefs.edit { putInt(KEY, key).putLong(AT, at.toEpochMilli()) }
     }
 
     override fun scale(): KnownScale? = prefs.getString(ADDRESS, null)?.let { KnownScale(it, prefs.getString(NAME, null)) }
 
     override fun saveScale(scale: KnownScale) {
         val changed = scale != this.scale()
-        prefs.edit().putString(ADDRESS, scale.address).putString(NAME, scale.name).apply()
+        prefs.edit { putString(ADDRESS, scale.address).putString(NAME, scale.name) }
         if (changed) onScale()
     }
 
