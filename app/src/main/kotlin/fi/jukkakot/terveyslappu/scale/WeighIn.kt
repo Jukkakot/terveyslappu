@@ -75,6 +75,7 @@ class WeighIn(
     private var decided: Pair<Double, Instant>? = null
     private var decidedRaw: RawEntry? = null
     private var decidedKey: Int? = null
+    private var decidedScale: KnownScale? = null
     private var saved: WeighInState.Saved? = null
 
     fun show(state: WeighInState) {
@@ -120,6 +121,16 @@ class WeighIn(
         }
     }
 
+    /** A saved weigh-in's scale becomes the one background listening follows (scale-weigh-in). */
+    private fun rememberScale() {
+        val scale = decidedScale ?: return
+        try {
+            last.saveScale(scale)
+        } catch (e: Exception) {
+            AppLog.e("weighin.last", e, "scale")
+        }
+    }
+
     /** The previous weigh-in's company id while its broadcast may still linger, else null. */
     private fun ignoredKey(): Int? = try {
         last.load()?.takeIf { (_, at) -> at.plusMillis(IGNORE_MS).isAfter(now()) }?.first
@@ -132,6 +143,7 @@ class WeighIn(
         decided = null
         decidedRaw = null
         decidedKey = null
+        decidedScale = null
         val ignored = ignoredKey()
         run {
             val scanStartMs = elapsedMs()
@@ -175,6 +187,7 @@ class WeighIn(
             val time = scanStartWall.plusMillis(result.atMs)
             decided = result.kg to time
             decidedKey = result.packet?.companyId
+            decidedScale = result.packet?.let { p -> p.address?.let { KnownScale(it, p.name?.ifEmpty { null }) } }
             decidedRaw = result.packet?.let { RawEntry(time.epochSecond, SOURCE, ScalePacket.rawFields(it.companyId, it.data)) }
             saveDecided()
         }
@@ -209,6 +222,7 @@ class WeighIn(
                 null
             }
             remember()
+            rememberScale()
             saved = WeighInState.Saved(kg, change).also { _state.value = it }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e

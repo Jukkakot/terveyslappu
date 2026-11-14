@@ -15,7 +15,7 @@
 
 ## 2. Remember the scale
 
-- [ ] 2.1 On a saved dialog weigh-in store the deciding packet's name and address in the `weighin`
+- [x] 2.1 On a saved dialog weigh-in store the deciding packet's name and address in the `weighin`
       preferences; Poista keeps them. Unit test.
 
 ## 3. Background listening

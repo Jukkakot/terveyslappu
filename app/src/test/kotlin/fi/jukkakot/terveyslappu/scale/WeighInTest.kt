@@ -20,13 +20,13 @@ class WeighInTest {
     private val wallStart = Instant.parse("2026-11-08T05:00:00Z")
 
     /** Emits (ms, raw weight, stable) packets on virtual time, then waits like a quiet scale. */
-    private fun source(vararg steps: Triple<Long, Int, Boolean>, key: Int = 0x12C0) = PacketSource {
+    private fun source(vararg steps: Triple<Long, Int, Boolean>, key: Int = 0x12C0, address: String? = null) = PacketSource {
         flow {
             var at = 0L
             for ((ms, raw, stable) in steps) {
                 delay(ms - at)
                 at = ms
-                emit(RawPacket(ms, key, packet(raw, if (stable) 1 else 0), -60, "Yoda1"))
+                emit(RawPacket(ms, key, packet(raw, if (stable) 1 else 0), -60, "Yoda1", address))
             }
             awaitCancellation()
         }
@@ -247,5 +247,19 @@ class WeighInTest {
         w.stop()
         settle()
         assertEquals(WeighInState.Live(82.5, true), w.state.value)
+    }
+
+    @Test
+    fun `a saved weigh-in remembers its scale and Poista keeps it`() = runTest {
+        val last = MemoryLastWeighIn()
+        val store = Store()
+        val w = storeWeighIn(store, source(Triple(100, 825, true), Triple(200, 825, true), address = "00:11:22:33:44:55"), last)
+        w.start(backgroundScope)
+        settle()
+        assertEquals(KnownScale("00:11:22:33:44:55", "Yoda1"), last.scale())
+        w.discard(backgroundScope)
+        runCurrent()
+        assertEquals(WeighInState.Discarded, w.state.value)
+        assertEquals(KnownScale("00:11:22:33:44:55", "Yoda1"), last.scale())
     }
 }
