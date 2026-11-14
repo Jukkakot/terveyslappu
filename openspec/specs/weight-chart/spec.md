@@ -262,3 +262,16 @@ without weighing. With the permission granted, nothing about it SHALL be shown.
 - **GIVEN** the history permission is granted
 - **WHEN** the user opens Oma
 - **THEN** no text about access is shown
+
+### Requirement: Questioned weights left out
+A weight marked "?" SHALL NOT be drawn on any chart, SHALL NOT count in the period statistics and
+SHALL NOT affect the weight scale or the calendar's days with weights, until it is accepted.
+
+#### Scenario: Questioned weight
+- **GIVEN** the period holds 82,0 kg and 82,4 kg and a 61,3 kg marked "?"
+- **WHEN** the chart is shown
+- **THEN** two dots are drawn, the scale fits 82,0-82,4 kg and the lowest weight is 82,0 kg
+
+#### Scenario: Accepted
+- **WHEN** the user accepts 61,3 kg
+- **THEN** it is drawn and counted like any weight
