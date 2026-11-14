@@ -30,10 +30,10 @@ private val helpSections = listOf(
     R.string.help_log_title to R.string.help_log_body,
 )
 
-/** Ohje: a light, scrollable presentation of the features (help-page spec); back returns to Asetukset. */
+/** Ohje: a light, scrollable presentation of the features (help-page spec); back returns Home. */
 @Composable
 internal fun HelpScreen(actions: MainActions) {
-    Scaffold(topBar = { SubScreenBar(stringResource(R.string.help_title), onBack = { actions.onScreen(Screen.SETTINGS) }) }) { padding ->
+    Scaffold(topBar = { SubScreenBar(stringResource(R.string.help_title), onBack = actions.onBack) }) { padding ->
         Column(
             Modifier
                 .padding(padding)

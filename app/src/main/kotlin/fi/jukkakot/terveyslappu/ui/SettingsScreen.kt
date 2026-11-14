@@ -29,9 +29,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,23 +40,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.data.DataFormat
+import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
 import java.time.Instant
 
 /**
- * Asetukset (home-screen spec): Ulkoasu, Omat tiedot (owner-profile), Painot, Varmuuskopio and Tuki. Painot and Varmuuskopio need
- * Health Connect and are shown only with access; Jaa loki is always reachable.
+ * Asetukset (settings-list): a list of rows with a state line each; a row opens its sub-screen, which
+ * holds what was the section. DATA needs Health Connect access and falls back to the list without it.
  */
 @Composable
 internal fun SettingsScreen(
+    page: SettingsPage,
     granted: Boolean,
     themeMode: ThemeMode,
     profile: OwnerProfile,
@@ -68,16 +69,51 @@ internal fun SettingsScreen(
     versionName: String,
     actions: MainActions,
     snackbar: SnackbarHostState,
-    profileFocus: Boolean = false,
     listen: ListenUi = ListenUi(),
 ) {
-    val profileView = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
-    val copiedText = stringResource(R.string.log_copied)
-    val logEmpty = stringResource(R.string.log_empty)
-    LaunchedEffect(profileFocus) { if (profileFocus) profileView.bringIntoView() }
+    val shown = if (page == SettingsPage.DATA && !granted) SettingsPage.LIST else page
+    when (shown) {
+        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen)
+        SettingsPage.PROFILE -> SubPage(R.string.profile_section, actions, snackbar, "profilePage") {
+            Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
+        }
+        SettingsPage.LISTEN -> SubPage(R.string.listen_section, actions, snackbar, "listenPage") {
+            Section(R.string.listen_section) { ListenGroup(listen, actions, snackbar) }
+        }
+        SettingsPage.DATA -> SubPage(R.string.settings_data_backup, actions, snackbar, "dataPage") {
+            var choosingFormat by remember { mutableStateOf(false) }
+            Section(R.string.settings_data) {
+                SettingsRow(R.drawable.ic_import, stringResource(R.string.menu_import), actions.onImportHistory, "import")
+                SettingsRow(R.drawable.ic_export, stringResource(R.string.menu_export), { choosingFormat = true }, "export")
+            }
+            if (choosingFormat) {
+                ExportFormatDialog(
+                    onPick = {
+                        choosingFormat = false
+                        actions.onExport(it)
+                    },
+                    onDismiss = { choosingFormat = false },
+                )
+            }
+            Section(R.string.settings_backup) { BackupGroup(backup, Instant.now(), actions) }
+        }
+        SettingsPage.APPEARANCE -> SubPage(R.string.settings_appearance, actions, snackbar, "appearancePage") {
+            Section(R.string.settings_appearance) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge)
+                    ThemeChoice(themeMode, actions.onTheme)
+                }
+            }
+        }
+        SettingsPage.SUPPORT -> SupportPage(versionName, actions, snackbar)
+    }
+}
+
+/** A sub-screen: its own Scaffold with the shared snackbar host, title = the row name. */
+@Composable
+private fun SubPage(title: Int, actions: MainActions, snackbar: SnackbarHostState, tag: String, content: @Composable ColumnScope.() -> Unit) {
     Scaffold(
-        topBar = { SubScreenBar(stringResource(R.string.settings_title), onBack = { actions.onScreen(Screen.HOME) }) },
+        topBar = { SubScreenBar(stringResource(title), onBack = actions.onBack) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
@@ -88,60 +124,157 @@ internal fun SettingsScreen(
                 .padding(horizontal = 16.dp)
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp)
+                .testTag(tag),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun SupportPage(versionName: String, actions: MainActions, snackbar: SnackbarHostState) {
+    val scope = rememberCoroutineScope()
+    val copiedText = stringResource(R.string.log_copied)
+    val logEmpty = stringResource(R.string.log_empty)
+    SubPage(R.string.settings_support, actions, snackbar, "supportPage") {
+        Section(R.string.settings_support) {
+            SettingsRow(
+                R.drawable.ic_share,
+                stringResource(R.string.menu_share_log),
+                actions.onShareLog,
+                "shareLog",
+                trailing = stringResource(R.string.settings_version, versionName),
+            )
+            SettingsRow(
+                R.drawable.ic_copy,
+                stringResource(R.string.menu_copy_log),
+                {
+                    val count = actions.onCopyLog()
+                    scope.launch {
+                        snackbar.showSnackbar(if (count > 0) copiedText.format(count) else logEmpty)
+                    }
+                },
+                "copyLog",
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsList(
+    granted: Boolean,
+    themeMode: ThemeMode,
+    profile: OwnerProfile,
+    backup: BackupStatus,
+    versionName: String,
+    actions: MainActions,
+    snackbar: SnackbarHostState,
+    listen: ListenUi,
+) {
+    val none = stringResource(R.string.settings_none)
+    val male = stringResource(R.string.gender_male)
+    val female = stringResource(R.string.gender_female)
+    val profileLine = SettingsSummary.profile(profile, { if (it == Gender.MALE) male else female }, none)
+    Scaffold(
+        topBar = { SubScreenBar(stringResource(R.string.settings_title), onBack = actions.onBack) },
+        snackbarHost = { SnackbarHost(snackbar) },
+    ) { padding ->
+        Column(
+            Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 16.dp)
                 .testTag("settingsList"),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Section(R.string.settings_appearance) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge)
-                    ThemeChoice(themeMode, actions.onTheme)
+            Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer)) {
+                PageRow(R.drawable.ic_person, R.string.profile_section, "rowProfile", { actions.onSettingsPage(SettingsPage.PROFILE) }) {
+                    StateLine(profileLine)
                 }
-            }
-            Column(Modifier.bringIntoViewRequester(profileView)) {
-                Section(R.string.profile_section) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
-            }
-            if (granted) {
-                var choosingFormat by remember { mutableStateOf(false) }
-                Section(R.string.settings_data) {
-                    SettingsRow(R.drawable.ic_import, stringResource(R.string.menu_import), actions.onImportHistory, "import")
-                    SettingsRow(R.drawable.ic_export, stringResource(R.string.menu_export), { choosingFormat = true }, "export")
+                PageRow(R.drawable.ic_scale, R.string.listen_section, "rowListen", { actions.onSettingsPage(SettingsPage.LISTEN) }) {
+                    ListenState(SettingsSummary.listen(listen), listen.status)
                 }
-                if (choosingFormat) {
-                    ExportFormatDialog(
-                        onPick = {
-                            choosingFormat = false
-                            actions.onExport(it)
-                        },
-                        onDismiss = { choosingFormat = false },
-                    )
+                if (granted) {
+                    PageRow(R.drawable.ic_backup, R.string.settings_data_backup, "rowData", { actions.onSettingsPage(SettingsPage.DATA) }) {
+                        BackupState(SettingsSummary.backup(backup, Instant.now()))
+                    }
                 }
-                Section(R.string.settings_backup) { BackupGroup(backup, Instant.now(), actions) }
-            }
-            Section(R.string.listen_section) { ListenGroup(listen, actions, snackbar) }
-            Section(R.string.settings_support) {
-                SettingsRow(
-                    R.drawable.ic_share,
-                    stringResource(R.string.menu_share_log),
-                    actions.onShareLog,
-                    "shareLog",
-                    trailing = stringResource(R.string.settings_version, versionName),
-                )
-                SettingsRow(
-                    R.drawable.ic_copy,
-                    stringResource(R.string.menu_copy_log),
-                    {
-                        val count = actions.onCopyLog()
-                        scope.launch {
-                            snackbar.showSnackbar(
-                                if (count > 0) copiedText.format(count) else logEmpty,
-                            )
-                        }
-                    },
-                    "copyLog",
-                )
-                SettingsRow(R.drawable.ic_help, stringResource(R.string.menu_help), { actions.onScreen(Screen.HELP) }, "help")
+                PageRow(R.drawable.ic_palette, R.string.settings_appearance, "rowAppearance", { actions.onSettingsPage(SettingsPage.APPEARANCE) }) {
+                    StateLine(stringResource(R.string.settings_theme_line, stringResource(themeMode.label())))
+                }
+                PageRow(R.drawable.ic_file, R.string.settings_support, "rowSupport", { actions.onSettingsPage(SettingsPage.SUPPORT) }) {
+                    StateLine(stringResource(R.string.settings_support_line, versionName))
+                }
             }
         }
     }
+}
+
+/** One row of the list: icon, name, state line, decorative chevron; one click target. */
+@Composable
+private fun PageRow(@DrawableRes icon: Int, name: Int, tag: String, onClick: () -> Unit, state: @Composable () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .testTag(tag),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(name), style = MaterialTheme.typography.bodyLarge)
+            state()
+        }
+        Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** A state line; a warning is in the error colour and starts with a warning icon (not colour alone). */
+@Composable
+private fun StateLine(text: String, warn: Boolean = false, symbol: StatusSymbol? = null) {
+    val colors = MaterialTheme.colorScheme
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (symbol != null) {
+            Icon(painterResource(symbol.icon), contentDescription = null, tint = colorResource(symbol.color), modifier = Modifier.size(16.dp))
+        } else if (warn) {
+            Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = colors.error, modifier = Modifier.size(16.dp))
+        }
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = if (warn) colors.error else colors.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun ListenState(line: ListenLine, status: ListenStatus?) {
+    when (line) {
+        ListenLine.Off -> StateLine(stringResource(R.string.settings_listen_off))
+        is ListenLine.Pending -> StateLine(stringResource(R.string.listen_pending, line.count), warn = true)
+        is ListenLine.Blocked -> StateLine(statusText(line.status).first, warn = true)
+        ListenLine.Battery -> StateLine(stringResource(R.string.listen_battery_warning), warn = true)
+        ListenLine.Notifications -> StateLine(stringResource(R.string.listen_notifications_warning), warn = true)
+        is ListenLine.On -> StateLine(
+            stringResource(R.string.settings_listen_on, clockFormat.format(line.start), clockFormat.format(line.end)),
+            symbol = status?.symbol(),
+        )
+    }
+}
+
+@Composable
+private fun BackupState(line: BackupLine) {
+    val text = when (line) {
+        BackupLine.Off -> stringResource(R.string.settings_backup_off)
+        BackupLine.Running -> stringResource(R.string.backup_running)
+        BackupLine.Never -> stringResource(R.string.backup_never)
+        is BackupLine.Failed -> stringResource(if (line.refused) R.string.backup_refused else R.string.backup_failed, formatDateTime(line.at))
+        is BackupLine.Stale -> stringResource(R.string.backup_stale, formatDateTime(line.at), line.count)
+        is BackupLine.Ok -> stringResource(R.string.backup_ok, formatDateTime(line.at), line.count)
+    }
+    StateLine(text, warn = line.warn)
 }
 
 @Composable

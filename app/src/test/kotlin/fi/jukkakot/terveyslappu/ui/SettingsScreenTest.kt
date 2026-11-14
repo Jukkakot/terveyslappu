@@ -50,16 +50,17 @@ class SettingsScreenTest {
         actions: MainActions = MainActions(),
         profile: OwnerProfile = OwnerProfile(),
         heightInHc: Boolean = true,
+        page: SettingsPage = SettingsPage.LIST,
     ) {
         compose.setContent {
-            TerveysTheme { SettingsScreen(granted, ThemeMode.SYSTEM, profile, heightInHc, backup, "0.1.1-test", actions, SnackbarHostState()) }
+            TerveysTheme { SettingsScreen(page, granted, ThemeMode.SYSTEM, profile, heightInHc, backup, "0.1.1-test", actions, SnackbarHostState()) }
         }
     }
 
     @Test
     fun `owner details keep a valid height and refuse an implausible one`() {
         var kept: OwnerProfile? = null
-        show(granted = false, actions = MainActions(onProfile = { kept = it }))
+        show(granted = false, actions = MainActions(onProfile = { kept = it }), page = SettingsPage.PROFILE)
         compose.onNodeWithTag("height").performTextInput("25")
         compose.onNodeWithTag("height").performImeAction()
         assertEquals(null, kept)
@@ -73,37 +74,49 @@ class SettingsScreenTest {
 
     @Test
     fun `a saved height that is not in Health Connect says so`() {
-        show(granted = false, profile = OwnerProfile(birthYear = 1990, heightCm = 180), heightInHc = false)
+        show(granted = false, profile = OwnerProfile(birthYear = 1990, heightCm = 180), heightInHc = false, page = SettingsPage.PROFILE)
         compose.onNodeWithText("Ei tallennettu Health Connectiin", substring = true).assertExists()
     }
 
     @Test
-    fun `groups import, export, backup and log with the version`() {
+    fun `Tiedot ja varmuuskopio page groups import and export`() {
         var imported = false
         var exported: DataFormat? = null
-        show(actions = MainActions(onImportHistory = { imported = true }, onExport = { exported = it }))
+        show(actions = MainActions(onImportHistory = { imported = true }, onExport = { exported = it }), page = SettingsPage.DATA)
         compose.onNodeWithTag("import").performClick()
         compose.onNodeWithTag("export").performClick()
         compose.onNodeWithTag("format-JSON").performClick()
         assertTrue(imported)
         assertEquals(DataFormat.JSON, exported)
-        compose.onNodeWithTag("shareLog").performScrollTo()
+    }
+
+    @Test
+    fun `Tuki page has the log actions and the version`() {
+        show(page = SettingsPage.SUPPORT)
+        compose.onNodeWithTag("shareLog").assertExists()
         compose.onNodeWithTag("copyLog").assertExists()
         compose.onNodeWithText("v0.1.1-test").assertExists()
     }
 
     @Test
-    fun `without Health Connect only the theme and the log are offered`() {
+    fun `without Health Connect the data row is missing and its page falls back to the list`() {
         show(granted = false)
+        compose.onNodeWithTag("rowData").assertDoesNotExist()
+        compose.onNodeWithTag("rowSupport").assertExists()
         compose.onNodeWithTag("import").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the data page without Health Connect shows the list`() {
+        show(granted = false, page = SettingsPage.DATA)
+        compose.onNodeWithTag("settingsList").assertExists()
         compose.onNodeWithTag("backupStatus").assertDoesNotExist()
-        compose.onNodeWithTag("shareLog").assertExists()
     }
 
     @Test
     fun `backup off offers to turn it on`() {
         var enabled = false
-        show(actions = MainActions(onBackupEnable = { enabled = true }))
+        show(actions = MainActions(onBackupEnable = { enabled = true }), page = SettingsPage.DATA)
         compose.onNodeWithTag("backupEnable").performScrollTo().performClick()
         assertTrue(enabled)
         compose.onNodeWithTag("backupDisable").assertDoesNotExist()
@@ -114,7 +127,7 @@ class SettingsScreenTest {
         var retried = false
         var off = false
         val failed = BackupStatus(uri = "content://x", lastOkAt = now.minusSeconds(7200), lastFailedAt = now.minusSeconds(60))
-        show(failed, actions = MainActions(onBackupNow = { retried = true }, onBackupDisable = { off = true }))
+        show(failed, actions = MainActions(onBackupNow = { retried = true }, onBackupDisable = { off = true }), page = SettingsPage.DATA)
         compose.onNodeWithTag("backupNow").performScrollTo().performClick()
         compose.onNodeWithTag("backupChange").assertExists()
         compose.onNodeWithTag("backupDisable").performScrollTo().performClick()
@@ -133,10 +146,10 @@ class SettingsScreenTest {
         )
         compose.setContent {
             TerveysTheme {
-                SettingsScreen(true, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onListenSettings = { limit = it.limit }), SnackbarHostState(), listen = ui)
+                SettingsScreen(SettingsPage.LISTEN, true, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onListenSettings = { limit = it.limit }), SnackbarHostState(), listen = ui)
             }
         }
-        compose.onNodeWithText("Automaattinen punnitus").assertExists()
+        compose.onNodeWithTag("listenPage").assertExists()
         compose.onNodeWithTag("listenStatus-fix").performScrollTo().assertExists()
         compose.onNodeWithTag("listenNotifications-fix").performScrollTo().assertExists()
         compose.onNodeWithTag("listenPending").performScrollTo().assertExists()
@@ -151,7 +164,7 @@ class SettingsScreenTest {
         var ui by mutableStateOf(ListenUi())
         val actions = MainActions(onListenEnabled = { enabled = it }, onListenFix = { fix = it })
         compose.setContent {
-            TerveysTheme { SettingsScreen(false, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", actions, SnackbarHostState(), listen = ui) }
+            TerveysTheme { SettingsScreen(SettingsPage.LISTEN, false, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", actions, SnackbarHostState(), listen = ui) }
         }
         compose.onNodeWithTag("listenSwitch").performScrollTo().assertIsNotEnabled()
         ui = ListenUi(ListenSettings(enabled = true), hasScale = true, status = ListenStatus.BluetoothOff, batteryRestricted = true)
@@ -169,7 +182,7 @@ class SettingsScreenTest {
         compose.setContent {
             TerveysTheme {
                 background = MaterialTheme.colorScheme.background
-                SettingsScreen(true, app.appearance.mode.collectAsState().value, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onTheme = app.appearance::set), SnackbarHostState())
+                SettingsScreen(SettingsPage.APPEARANCE, true, app.appearance.mode.collectAsState().value, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onTheme = app.appearance::set), SnackbarHostState())
             }
         }
         compose.onNodeWithTag("theme-LIGHT").performClick()

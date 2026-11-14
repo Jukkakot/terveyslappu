@@ -39,6 +39,10 @@ import java.time.LocalDateTime
 /** Everything the screens can ask for; the activity wires these to the view model and intents. */
 class MainActions(
     val onScreen: (Screen) -> Unit = {},
+    /** The one back rule (MainUiState.back). */
+    val onBack: () -> Unit = {},
+    val onSettingsPage: (SettingsPage) -> Unit = {},
+    val onOpenBackupSettings: () -> Unit = {},
     val onOpenEntry: () -> Unit = {},
     val onCloseEntry: () -> Unit = {},
     val onWeightText: (String) -> Unit = {},
@@ -93,11 +97,11 @@ fun MainScreen(
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
     val screen = if (state.screen == Screen.HISTORY && !granted) Screen.HOME else state.screen
-    BackHandler(enabled = state.screen != Screen.HOME) { actions.onScreen(if (state.screen == Screen.HELP) Screen.SETTINGS else Screen.HOME) }
+    BackHandler(enabled = screen != Screen.HOME) { actions.onBack() }
     when (screen) {
         Screen.HOME -> HomeScreen(state, actions, snackbar, backup, profile)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile)
-        Screen.SETTINGS -> SettingsScreen(granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, state.profileFocus, listen)
+        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen)
         Screen.HELP -> HelpScreen(actions)
     }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }

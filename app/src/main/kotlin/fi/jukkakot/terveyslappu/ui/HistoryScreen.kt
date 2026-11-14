@@ -79,7 +79,7 @@ import java.time.ZoneId
 internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: SnackbarHostState, profile: OwnerProfile = OwnerProfile()) {
     Scaffold(
         topBar = {
-            SubScreenBar(stringResource(R.string.history_title), onBack = { actions.onScreen(Screen.HOME) }) {
+            SubScreenBar(stringResource(R.string.history_title), onBack = actions.onBack) {
                 IconButton(onClick = actions.onOpenEntry, modifier = Modifier.testTag("addWeight")) {
                     Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.entry_title))
                 }

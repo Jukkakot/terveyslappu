@@ -28,3 +28,31 @@ class MainUiStateTest {
         for (format in DataFormat.entries) assertEquals(format, AfterHistory.export(format).format)
     }
 }
+
+class SettingsBackRuleTest {
+    private val settings = MainUiState(screen = Screen.SETTINGS)
+
+    @Test
+    fun `list goes home, help and history go home`() {
+        assertEquals(Screen.HOME, settings.back().screen)
+        assertEquals(Screen.HOME, MainUiState(screen = Screen.HELP).back().screen)
+        assertEquals(Screen.HOME, MainUiState(screen = Screen.HISTORY).back().screen)
+    }
+
+    @Test
+    fun `a sub-screen opened from the list returns to the list`() {
+        val back = MainUiState().withSettings(SettingsPage.DATA, Screen.SETTINGS).back()
+        assertEquals(Screen.SETTINGS, back.screen)
+        assertEquals(SettingsPage.LIST, back.settingsPage)
+        assertEquals(Screen.HOME, back.back().screen)
+    }
+
+    @Test
+    fun `a deep-linked sub-screen returns to its origin`() {
+        for (from in listOf(Screen.HOME, Screen.HISTORY)) {
+            val back = MainUiState(screen = from).withSettings(SettingsPage.PROFILE, from).back()
+            assertEquals(from, back.screen)
+            assertEquals(SettingsPage.LIST, back.settingsPage)
+        }
+    }
+}

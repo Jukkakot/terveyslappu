@@ -65,13 +65,16 @@ class MainScreenTest {
                     state,
                     "0.1.1-test",
                     MainActions(
-                        onScreen = { state = state.copy(screen = it) },
+                        onScreen = { state = if (it == Screen.SETTINGS) state.withSettings(SettingsPage.LIST, Screen.HOME) else state.copy(screen = it) },
                         onPeriod = { state = state.copy(period = it) },
                         onHomePeriod = { state = state.copy(homeDays = it) },
                         onWeightText = { state = state.copy(weightText = it) },
                         onDelete = onDelete,
                         onGrantHistory = onGrantHistory,
-                        onOpenProfile = { state = state.copy(screen = Screen.SETTINGS, profileFocus = true) },
+                        onBack = { state = state.back() },
+                        onSettingsPage = { state = state.withSettings(it, Screen.SETTINGS) },
+                        onOpenBackupSettings = { state = state.withSettings(SettingsPage.DATA, Screen.HOME) },
+                        onOpenProfile = { state = state.withSettings(SettingsPage.PROFILE, state.screen) },
                         onAccept = { entry -> accepted = entry.id; state = state.copy(questioned = state.questioned - entry.id) },
                         onOpenQuestioned = { state = state.copy(screen = Screen.HISTORY, historyTarget = state.newestQuestioned?.id) },
                         onTargetShown = { state = state.copy(historyTarget = null) },
@@ -134,19 +137,31 @@ class MainScreenTest {
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("latestCard").assertExists()
         compose.onNodeWithTag("settings").performClick()
-        compose.onNodeWithTag("shareLog").assertExists()
+        compose.onNodeWithTag("settingsList").assertExists()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("latestCard").assertExists()
     }
 
     @Test
-    fun `Ohje opens from Asetukset, shows a section and back returns to Asetukset`() {
-        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.SETTINGS))
-        compose.onNodeWithTag("help").performScrollTo().performClick()
+    fun `Ohje opens from the home help button, shows a section and back returns home`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights))
+        compose.onNodeWithTag("help").performClick()
         compose.onNodeWithTag("helpList").assertExists()
         compose.onNodeWithText("Historia").assertExists()
         compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
+    }
+
+    @Test
+    fun `an Asetukset row opens its sub-screen and back returns to the list`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.SETTINGS))
+        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowAppearance", "rowSupport")) compose.onNodeWithTag(tag).assertExists()
+        compose.onNodeWithTag("rowSupport").performClick()
+        compose.onNodeWithTag("shareLog").assertExists()
+        compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("settingsList").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
     }
 
     @Test
@@ -173,6 +188,8 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights), backup = failed)
         compose.onNodeWithTag("backupNotice").performClick()
         compose.onNodeWithTag("backupNow").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
     }
 
     @Test
@@ -262,7 +279,9 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights), profile = OwnerProfile(birthYear = 1990))
         compose.onNodeWithTag("derivedBmi", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("derivedReason").performClick()
-        compose.onNodeWithTag("shareLog").assertExists()
+        compose.onNodeWithTag("height").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("latestCard").assertExists()
     }
 
     @Test
@@ -289,7 +308,9 @@ class MainScreenTest {
         compose.onNodeWithTag("tab-BMI").performClick()
         compose.onNodeWithTag("quantityReason").assertExists()
         compose.onNodeWithTag("openProfile").performClick()
-        compose.onNodeWithTag("shareLog").assertExists()
+        compose.onNodeWithTag("height").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("chart").assertExists()
     }
 
     @Test

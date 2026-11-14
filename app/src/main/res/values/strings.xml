@@ -38,6 +38,13 @@
     <string name="settings_data">Tiedot</string>
     <string name="settings_backup">Varmuuskopio</string>
     <string name="settings_support">Tuki</string>
+    <string name="settings_data_backup">Tiedot ja varmuuskopio</string>
+    <string name="settings_none">Ei asetettu</string>
+    <string name="settings_listen_off">Pois</string>
+    <string name="settings_listen_on">Päällä %1$s–%2$s</string>
+    <string name="settings_backup_off">Varmuuskopio pois</string>
+    <string name="settings_theme_line">Teema: %1$s</string>
+    <string name="settings_support_line">Loki · v%1$s</string>
     <string name="settings_version">v%1$s</string>
     <string name="menu_help">Ohje</string>
     <string name="help_title">Ohje</string>

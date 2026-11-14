@@ -53,6 +53,9 @@ enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIE
 /** The main activity's three screens (home-screen); back from Historia or Asetukset returns Home. */
 enum class Screen { HOME, HISTORY, SETTINGS, HELP }
 
+/** Asetukset' list and its five sub-screens (settings-list design 1). */
+enum class SettingsPage { LIST, PROFILE, LISTEN, DATA, APPEARANCE, SUPPORT }
+
 data class MainUiState(
     val access: Access = Access.CHECKING,
     val screen: Screen = Screen.HOME,
@@ -73,8 +76,10 @@ data class MainUiState(
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
     val import: ImportState? = null,
-    /** Asetukset was opened from a derived value's reason: show Omat tiedot. */
-    val profileFocus: Boolean = false,
+    /** The Asetukset page shown while [screen] is SETTINGS. */
+    val settingsPage: SettingsPage = SettingsPage.LIST,
+    /** Where a sub-screen was opened from: HOME, HISTORY, or SETTINGS (= the list). */
+    val settingsOrigin: Screen = Screen.SETTINGS,
     /** When [weights] were last read; the charts take their "now" from it so a reload moves them on. */
     val loadedAt: Instant? = null,
     /** Ids of read weights marked "?" (only marks that match a read weight). */
@@ -87,6 +92,19 @@ data class MainUiState(
 
     /** The newest weight marked "?", if any. */
     val newestQuestioned: WeightEntry? get() = weights?.filter { it.id in questioned }?.maxByOrNull { it.time }
+
+    /** The one back rule, for the top-bar arrow and system back (settings-list design 2). */
+    fun back(): MainUiState = when {
+        screen == Screen.HOME -> this
+        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null)
+        settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
+        settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
+        else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
+    }
+
+    /** A sub-screen (or the list) of Asetukset, opened from [from]. */
+    fun withSettings(page: SettingsPage, from: Screen): MainUiState =
+        copy(screen = Screen.SETTINGS, settingsPage = page, settingsOrigin = from, historyTarget = null)
 
     /** The state after a successful read at [at]. */
     fun loaded(entries: List<WeightEntry>, history: HistoryAccess, at: Instant) =
@@ -194,10 +212,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         refreshAccess()
     }
 
-    fun onScreen(screen: Screen) = _state.update { it.copy(screen = screen, profileFocus = false, historyTarget = null) }
+    fun onScreen(screen: Screen) = _state.update {
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null)
+    }
+
+    fun back() = _state.update { it.back() }
+
+    /** A row of the Asetukset list. */
+    fun openSettingsPage(page: SettingsPage) = _state.update { it.withSettings(page, Screen.SETTINGS) }
+
+    /** The home backup notice: Tiedot ja varmuuskopio. */
+    fun openBackupSettings() = _state.update { it.withSettings(SettingsPage.DATA, Screen.HOME) }
 
     /** The home notice: Historia with the newest "?" weight shown (home-screen). */
-    fun openQuestioned() = _state.update { it.copy(screen = Screen.HISTORY, profileFocus = false, historyTarget = it.newestQuestioned?.id) }
+    fun openQuestioned() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = it.newestQuestioned?.id) }
 
     /** Historia has scrolled to its target. */
     fun targetShown() = _state.update { it.copy(historyTarget = null) }
@@ -213,7 +241,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** A derived value's reason: Asetukset at Omat tiedot (derived-values). */
-    fun openProfile() = _state.update { it.copy(screen = Screen.SETTINGS, profileFocus = true) }
+    fun openProfile() = _state.update { it.withSettings(SettingsPage.PROFILE, it.screen) }
 
     fun openEntry() = _state.update { it.copy(entryOpen = true, saveFailed = false) }
 

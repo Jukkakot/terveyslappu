@@ -52,7 +52,7 @@ import java.time.format.DateTimeFormatter
 /** Which system screen a status or warning button opens. */
 enum class ListenFix { PERMISSION, HEALTH, BLUETOOTH, POWER_SAVE, BATTERY, NOTIFICATIONS }
 
-private val clockFormat = DateTimeFormatter.ofPattern("H.mm")
+internal val clockFormat = DateTimeFormatter.ofPattern("H.mm")
 
 /**
  * "Automaattinen punnitus" (background-weigh-in): the switch, the status with its fix, the battery
@@ -125,7 +125,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
 }
 
 @Composable
-private fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (status) {
+internal fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (status) {
     ListenStatus.NoScale -> stringResource(R.string.listen_status_no_scale) to null
     ListenStatus.PermissionMissing -> stringResource(R.string.listen_status_permission) to ListenFix.PERMISSION
     ListenStatus.HealthMissing -> stringResource(R.string.listen_status_health) to ListenFix.HEALTH
@@ -140,12 +140,10 @@ private fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (s
     ) to null
 }
 
-private fun ListenStatus.isBlocked() = this != ListenStatus.Listening && this !is ListenStatus.Resting && this !is ListenStatus.Done
-
 /** The widget's symbol for the status, in its colour (same drawable and colour resources). */
-private class StatusSymbol(val icon: Int, val color: Int, val label: Int)
+internal class StatusSymbol(val icon: Int, val color: Int, val label: Int)
 
-private fun ListenStatus.symbol(): StatusSymbol = when (this) {
+internal fun ListenStatus.symbol(): StatusSymbol = when (this) {
     ListenStatus.Listening -> StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
     is ListenStatus.Done -> StatusSymbol(R.drawable.ic_state_done, R.color.widget_state_done, R.string.widget_state_done)
     is ListenStatus.Resting -> StatusSymbol(R.drawable.ic_state_rest, R.color.widget_state_rest, R.string.widget_state_rest)

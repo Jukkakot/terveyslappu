@@ -8,6 +8,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.weight.weightEntry
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,13 +53,23 @@ class LargeTextTest {
     }
 
     @Test
-    fun `Asetukset reaches every group`() {
+    fun `Asetukset reaches every row and its sub-screens`() {
+        var page by androidx.compose.runtime.mutableStateOf(SettingsPage.LIST)
         compose.setContent {
-            TerveysTheme { SettingsScreen(true, ThemeMode.SYSTEM, fi.jukkakot.terveyslappu.profile.OwnerProfile(birthYear = 1990), false, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState()) }
+            TerveysTheme {
+                SettingsScreen(page, true, ThemeMode.SYSTEM, fi.jukkakot.terveyslappu.profile.OwnerProfile(birthYear = 1990), false, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState())
+            }
         }
+        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowAppearance", "rowSupport")) {
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+        }
+        page = SettingsPage.APPEARANCE
         compose.onNodeWithTag("theme-SYSTEM").assertIsDisplayed()
+        page = SettingsPage.PROFILE
         compose.onNodeWithTag("gender-NONE").performScrollTo().assertIsDisplayed()
+        page = SettingsPage.DATA
         compose.onNodeWithTag("backupEnable").performScrollTo().assertIsDisplayed()
+        page = SettingsPage.SUPPORT
         compose.onNodeWithTag("shareLog").performScrollTo().assertIsDisplayed()
     }
 

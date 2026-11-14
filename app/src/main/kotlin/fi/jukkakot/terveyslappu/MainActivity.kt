@@ -172,6 +172,9 @@ class MainActivity : ComponentActivity() {
                     listen = listenUi,
                     actions = MainActions(
                         onScreen = viewModel::onScreen,
+                        onBack = viewModel::back,
+                        onSettingsPage = viewModel::openSettingsPage,
+                        onOpenBackupSettings = viewModel::openBackupSettings,
                         onOpenProfile = viewModel::openProfile,
                         onOpenEntry = viewModel::openEntry,
                         onCloseEntry = viewModel::closeEntry,

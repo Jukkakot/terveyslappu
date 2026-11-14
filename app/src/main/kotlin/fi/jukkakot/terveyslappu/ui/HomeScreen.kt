@@ -80,6 +80,9 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    IconButton(onClick = { actions.onScreen(Screen.HELP) }, modifier = Modifier.testTag("help")) {
+                        Icon(painterResource(R.drawable.ic_help), contentDescription = stringResource(R.string.menu_help))
+                    }
                     IconButton(onClick = { actions.onScreen(Screen.SETTINGS) }, modifier = Modifier.testTag("settings")) {
                         Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings_title))
                     }
@@ -113,7 +116,7 @@ private fun HomeContent(state: MainUiState, actions: MainActions, backup: Backup
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed) { actions.onScreen(Screen.SETTINGS) }
+        if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed, actions.onOpenBackupSettings)
         if (state.newestQuestioned != null) CheckNotice(actions.onOpenQuestioned)
         LatestCard(state, summary, today, actions.onHomePeriod) { actions.onScreen(Screen.HISTORY) }
         // Recomputed whenever the weights or the owner details change (derived-values).
