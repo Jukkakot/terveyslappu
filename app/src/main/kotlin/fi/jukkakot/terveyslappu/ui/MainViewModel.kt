@@ -72,7 +72,26 @@ data class MainUiState(
     val import: ImportState? = null,
     /** Asetukset was opened from a derived value's reason: show Omat tiedot. */
     val profileFocus: Boolean = false,
-)
+    /** When [weights] were last read; the charts take their "now" from it so a reload moves them on. */
+    val loadedAt: Instant? = null,
+) {
+    /** The state after a successful read at [at]. */
+    fun loaded(entries: List<WeightEntry>, history: HistoryAccess, at: Instant) =
+        copy(weights = entries, history = history, loadFailed = false, loadedAt = at)
+}
+
+/** What the activity does once the history permission screen returns; kept here so recreation does not lose it. */
+enum class AfterHistory(val format: DataFormat? = null) {
+    RELOAD,
+    BACKUP_FILE,
+    EXPORT_CSV(DataFormat.CSV),
+    EXPORT_JSON(DataFormat.JSON),
+    ;
+
+    companion object {
+        fun export(format: DataFormat): AfterHistory = entries.first { it.format == format }
+    }
+}
 
 /** A snackbar action, e.g. Kumoa. */
 class UiAction(@param:StringRes val label: Int, val run: () -> Unit)
@@ -363,6 +382,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Whether the export can and may read the whole history; asked once per screen session. */
     var historyAsked = false
 
+    /** The action waiting for the history permission screen (survives activity recreation). */
+    var afterHistory: AfterHistory? = null
+
     suspend fun historyAccess(): HistoryAccess = runCatching { weights.historyAccess() }
         .onFailure { AppLog.e("export.history", it) }
         .getOrDefault(HistoryAccess.UNSUPPORTED)
@@ -372,7 +394,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val started = System.nanoTime()
             val history = historyAccess()
-            val result = runCatching { writeExport(getApplication(), weights, uri, format) }
+            val result = runCatching { requireNotNull(writeExport(getApplication(), weights, uri, format)) }
             result.onSuccess { count ->
                 AppLog.i("export.write", "ok", "format" to format.extension, "count" to count, "history" to history.name, "ms" to msSince(started))
                 val text = if (history == HistoryAccess.GRANTED) R.string.export_done else R.string.export_done_recent
@@ -387,10 +409,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun load() {
         val started = System.nanoTime()
         val history = historyAccess()
-        runCatching { weights.own(Instant.now()).newestFirst() }
+        val at = Instant.now()
+        runCatching { weights.own(at).newestFirst() }
             .onSuccess { entries ->
                 AppLog.i("weight.read", "ok", "ms" to msSince(started), "count" to entries.size, "history" to history.name)
-                _state.update { it.copy(weights = entries, history = history, loadFailed = false) }
+                _state.update { it.loaded(entries, history, at) }
             }
             .onFailure { error ->
                 AppLog.e("weight.read", error, "failed", "ms" to msSince(started))

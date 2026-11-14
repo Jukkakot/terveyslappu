@@ -164,6 +164,8 @@
     <string name="backup_enable">Ota käyttöön</string>
     <string name="backup_running">Varmuuskopioidaan…</string>
     <string name="backup_failed">Epäonnistui %1$s</string>
+    <string name="backup_refused">Ohitettu %1$s: painoja olisi jäänyt alle puolet, tiedosto ennallaan</string>
+    <string name="backup_recent_only">Vain viimeiset 30 päivää: salli koko historian luku, niin kopioon tulee kaikki.</string>
     <string name="backup_retry">Yritä uudelleen</string>
     <string name="backup_never">Ei vielä tehty</string>
     <string name="backup_now">Varmuuskopioi nyt</string>

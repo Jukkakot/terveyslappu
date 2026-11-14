@@ -37,6 +37,7 @@ import android.provider.Settings
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import fi.jukkakot.terveyslappu.ui.ListenFix
+import fi.jukkakot.terveyslappu.ui.AfterHistory
 import fi.jukkakot.terveyslappu.ui.MainActions
 import kotlinx.coroutines.delay
 import fi.jukkakot.terveyslappu.ui.MainScreen
@@ -46,9 +47,6 @@ import fi.jukkakot.terveyslappu.ui.TerveysTheme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
-
-    /** What to do once the history permission screen returns (export or backup). */
-    private var afterHistory: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -97,26 +95,36 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                fun perform(action: AfterHistory) {
+                    when {
+                        action == AfterHistory.RELOAD -> viewModel.onHistoryResult()
+                        action == AfterHistory.BACKUP_FILE -> launchSafely("backup.pick") { backupLauncher.launch(BACKUP_FILE_NAME) }
+                        action.format != null -> launchSafely("export.pick") {
+                            exportLaunchers.getValue(action.format!!).launch(DataFile.exportName(action.format!!, LocalDateTime.now()))
+                        }
+                    }
+                }
                 val historyLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
                 ) { granted ->
                     AppLog.i("export.history", if (HISTORY_PERMISSION in granted) "granted" else "denied")
-                    afterHistory?.invoke()
-                    afterHistory = null
+                    val pending = viewModel.afterHistory
+                    viewModel.afterHistory = null
+                    if (pending != null) perform(pending)
                 }
-                /** Asks for the history permission once when it is missing, then runs [then] (export, backup). */
-                fun withHistory(then: () -> Unit) {
+                /** Asks for the history permission once when it is missing, then does [action] (export, backup). */
+                fun withHistory(action: AfterHistory) {
                     lifecycleScope.launch {
                         if (viewModel.historyAccess() == HistoryAccess.NOT_GRANTED && !viewModel.historyAsked) {
                             viewModel.historyAsked = true
-                            afterHistory = then
+                            viewModel.afterHistory = action
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
                         } else {
-                            then()
+                            perform(action)
                         }
                     }
                 }
-                val pickBackupFile = { withHistory { launchSafely("backup.pick") { backupLauncher.launch(BACKUP_FILE_NAME) } } }
+                val pickBackupFile = { withHistory(AfterHistory.BACKUP_FILE) }
                 val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     AppLog.i("import.pick", if (uri == null) "cancelled" else "picked")
                     if (uri != null) viewModel.onImportFile(uri)
@@ -187,11 +195,7 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this, R.string.open_failed, Toast.LENGTH_LONG).show()
                             }
                         },
-                        onExport = { format ->
-                            withHistory {
-                                launchSafely("export.pick") { exportLaunchers.getValue(format).launch(DataFile.exportName(format, LocalDateTime.now())) }
-                            }
-                        },
+                        onExport = { format -> withHistory(AfterHistory.export(format)) },
                         onBackupEnable = pickBackupFile,
                         onBackupChangeFile = pickBackupFile,
                         onBackupNow = { viewModel.backup.request("manual") },
@@ -216,7 +220,7 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         onGrantHistory = {
-                            afterHistory = viewModel::onHistoryResult
+                            viewModel.afterHistory = AfterHistory.RELOAD
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
                         },
                     ),

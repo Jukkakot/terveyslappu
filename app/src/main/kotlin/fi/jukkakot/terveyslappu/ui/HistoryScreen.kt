@@ -96,7 +96,7 @@ internal fun HistoryScreen(state: MainUiState, actions: MainActions, snackbar: S
 @Composable
 private fun PeriodList(state: MainUiState, all: List<WeightEntry>, actions: MainActions, profile: OwnerProfile) {
     val zone = ZoneId.systemDefault()
-    val now = remember(all, state.period) { Instant.now() }
+    val now = remember(state.loadedAt, state.period) { state.loadedAt ?: Instant.now() }
     val today = LocalDate.now(zone)
     val shown = remember(all, state.period) { state.period.filter(all, now, zone) }
     val tree = remember(shown) { ListGroups.build(shown, zone) }

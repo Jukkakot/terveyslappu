@@ -23,6 +23,7 @@ import fi.jukkakot.terveyslappu.raw.RawArchive
 import fi.jukkakot.terveyslappu.scale.LastWeighInPrefs
 import fi.jukkakot.terveyslappu.ui.AppearancePrefs
 import fi.jukkakot.terveyslappu.weight.HealthConnectWeights
+import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -61,7 +62,13 @@ class TerveysApp : Application() {
         }
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(Thread.getDefaultUncaughtExceptionHandler()))
         val weights = HealthConnectWeights(this)
-        backup = WeightBackup(PrefsBackupStore(this), { uri -> writeExport(this, weights, uri.toUri()) }, Instant::now, appScope)
+        backup = WeightBackup(
+            PrefsBackupStore(this),
+            { uri, accept -> writeExport(this, weights, uri.toUri(), accept = accept) },
+            Instant::now,
+            appScope,
+            recentOnly = { runCatching { weights.historyAccess() == HistoryAccess.NOT_GRANTED }.getOrDefault(false) },
+        )
         // The widget and tile no longer show the latest weight; drop the old cache (weigh-in-button-redo).
         deleteSharedPreferences("last_weight")
         AppLog.i(

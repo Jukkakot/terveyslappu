@@ -225,10 +225,10 @@ private fun BackupGroup(status: BackupStatus, now: Instant, actions: MainActions
     val detail = when {
         !status.enabled -> stringResource(R.string.backup_off_hint)
         status.running -> stringResource(R.string.backup_running)
-        status.failed -> stringResource(R.string.backup_failed, formatDateTime(status.lastFailedAt!!))
+        status.failed -> stringResource(if (status.refused) R.string.backup_refused else R.string.backup_failed, formatDateTime(status.lastFailedAt!!))
         status.lastOkAt == null -> stringResource(R.string.backup_never)
         else -> stringResource(if (warn) R.string.backup_stale else R.string.backup_ok, formatDateTime(status.lastOkAt), status.lastCount)
-    }
+    }.let { if (status.enabled && status.recentOnly) it + "\n" + stringResource(R.string.backup_recent_only) else it }
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).testTag("backupStatus"),
         verticalAlignment = Alignment.CenterVertically,

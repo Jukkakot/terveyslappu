@@ -103,7 +103,7 @@ internal fun HomeScreen(state: MainUiState, actions: MainActions, snackbar: Snac
 
 @Composable
 private fun HomeContent(state: MainUiState, actions: MainActions, backup: BackupStatus, profile: OwnerProfile) {
-    val now = remember(state.weights) { Instant.now() }
+    val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
     val summary = remember(state.weights, state.homeDays) { state.weights?.let { HomeSummary.of(it, now, state.homeDays) } }
     val today = LocalDate.now()
     Column(

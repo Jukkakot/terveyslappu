@@ -27,6 +27,8 @@ class PrefsBackupStore(context: Context) : BackupStore {
         lastOkAt = prefs.getLong(OK_AT, 0).takeIf { it > 0 }?.let(Instant::ofEpochMilli),
         lastCount = prefs.getInt(COUNT, 0),
         lastFailedAt = prefs.getLong(FAILED_AT, 0).takeIf { it > 0 }?.let(Instant::ofEpochMilli),
+        recentOnly = prefs.getBoolean(RECENT_ONLY, false),
+        refused = prefs.getBoolean(REFUSED, false),
     )
 
     override fun save(status: BackupStatus) = prefs.edit {
@@ -34,6 +36,8 @@ class PrefsBackupStore(context: Context) : BackupStore {
         putLong(OK_AT, status.lastOkAt?.toEpochMilli() ?: 0)
         putInt(COUNT, status.lastCount)
         putLong(FAILED_AT, status.lastFailedAt?.toEpochMilli() ?: 0)
+        putBoolean(RECENT_ONLY, status.recentOnly)
+        putBoolean(REFUSED, status.refused)
     }
 
     private companion object {
@@ -41,6 +45,8 @@ class PrefsBackupStore(context: Context) : BackupStore {
         const val OK_AT = "okAt"
         const val COUNT = "count"
         const val FAILED_AT = "failedAt"
+        const val RECENT_ONLY = "recentOnly"
+        const val REFUSED = "refused"
     }
 }
 
@@ -65,9 +71,19 @@ suspend fun exportRows(context: Context, weights: HealthConnectWeights): List<Ex
     }
 }
 
-/** Writes the data file in [format] to [uri] (rewrites the whole file); returns the weight count. */
-suspend fun writeExport(context: Context, weights: HealthConnectWeights, uri: Uri, format: DataFormat = DataFormat.CSV): Int {
+/**
+ * Writes the data file in [format] to [uri] (rewrites the whole file); returns the weight count,
+ * or null without writing when [accept] refuses that count.
+ */
+suspend fun writeExport(
+    context: Context,
+    weights: HealthConnectWeights,
+    uri: Uri,
+    format: DataFormat = DataFormat.CSV,
+    accept: (count: Int) -> Boolean = { true },
+): Int? {
     val rows = exportRows(context, weights)
+    if (!accept(rows.size)) return null
     val text = format.write(DataSet(rows), ZoneId.systemDefault())
     withContext(Dispatchers.IO) {
         context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray(Charsets.UTF_8)) }

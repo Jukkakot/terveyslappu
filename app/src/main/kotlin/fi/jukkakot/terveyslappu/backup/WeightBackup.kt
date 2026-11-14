@@ -18,6 +18,10 @@ data class BackupStatus(
     val lastOkAt: Instant? = null,
     val lastCount: Int = 0,
     val lastFailedAt: Instant? = null,
+    /** The last run had no history permission: the copy holds recent weights only. */
+    val recentOnly: Boolean = false,
+    /** The latest failure was a refused shrink (the file was left as it was), not an error. */
+    val refused: Boolean = false,
     val running: Boolean = false,
 ) {
     val enabled: Boolean get() = uri != null
@@ -37,6 +41,9 @@ data class BackupStatus(
 
     companion object {
         val STALE_AFTER: Duration = Duration.ofDays(3)
+
+        /** An automatic write of [count] weights after [last] is a shrink to refuse: under half. */
+        fun shrinks(last: Int, count: Int): Boolean = last > 0 && count * 2 < last
     }
 }
 
@@ -49,13 +56,17 @@ interface BackupStore {
 /**
  * Rewrites the backup file after changes and when due (design decisions 1, 3, 4). Runs never
  * overlap: a request during a run makes one more run afterwards, so the file always ends up with
- * the latest weights. [write] writes all weights to the file and returns how many.
+ * the latest weights. [write] reads all weights, asks [accept] with their count and, when it says
+ * yes, writes them to the file; it returns how many, or null when [accept] refused. An automatic
+ * run that would drop the count by more than half is refused (weight-backup "does not silently
+ * shrink"); a manual one is not. [recentOnly] tells whether the history permission is missing.
  */
 class WeightBackup(
     private val store: BackupStore,
-    private val write: suspend (uri: String) -> Int,
+    private val write: suspend (uri: String, accept: (count: Int) -> Boolean) -> Int?,
     private val now: () -> Instant,
     private val scope: CoroutineScope,
+    private val recentOnly: suspend () -> Boolean = { false },
 ) {
     private val _status = MutableStateFlow(store.load().copy(running = false))
     val status: StateFlow<BackupStatus> = _status
@@ -106,15 +117,25 @@ class WeightBackup(
         _status.update { it.copy(running = true) }
         val started = System.nanoTime()
         try {
-            val count = write(uri)
-            AppLog.i("backup.run", "ok", "reason" to reason, "count" to count, "ms" to (System.nanoTime() - started) / 1_000_000)
+            val recent = recentOnly()
+            val last = _status.value.lastCount
+            val count = write(uri) { reason == "manual" || !BackupStatus.shrinks(last, it) }
+            val ms = (System.nanoTime() - started) / 1_000_000
             // A disable or file change during the run wins over this result.
-            if (_status.value.uri == uri) set(_status.value.copy(lastOkAt = now(), lastCount = count, running = false))
+            if (count == null) {
+                AppLog.w("backup.run", "refused", "reason" to "shrink", "trigger" to reason, "last" to last, "history" to !recent)
+                if (_status.value.uri == uri) set(_status.value.copy(lastFailedAt = now(), recentOnly = recent, refused = true, running = false))
+            } else {
+                AppLog.i("backup.run", "ok", "reason" to reason, "count" to count, "history" to !recent, "ms" to ms)
+                if (_status.value.uri == uri) {
+                    set(_status.value.copy(lastOkAt = now(), lastCount = count, recentOnly = recent, refused = false, running = false))
+                }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             AppLog.e("backup.run", e, "failed", "reason" to reason)
-            if (_status.value.uri == uri) set(_status.value.copy(lastFailedAt = now(), running = false))
+            if (_status.value.uri == uri) set(_status.value.copy(lastFailedAt = now(), refused = false, running = false))
         }
     }
 
