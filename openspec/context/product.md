@@ -207,6 +207,12 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
     type unknown in Health Connect); every typed name is learnt as a product; about 370 generic
     base products (Open Food Facts style averages and generic estimates, `scripts/base_products.py`)
     so nothing starts from zero; a whole day can be one bare number (Pikalisäys).
+  - As built (food-ai-import, v1.25): still no AI inside the app; the AI chat's estimate comes in
+    as JSON by sharing or pasting (the app copies the prompt for the chat), shown as a preview
+    to fine-tune, then appended to the chosen day (today by default); never replaces items.
+  - As built (home-overview, v1.26): the front page is one card per feature (Paino, Ruoka with
+    its own period, Automaattinen punnitus while it is on); every feature gets the same parts on
+    the front page and in its details unless a part means nothing for it.
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.
