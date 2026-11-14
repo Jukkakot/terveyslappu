@@ -34,24 +34,10 @@ archive); a `UserPromptSubmit` hook repeats this.
 - Summaries: what the user will notice and every decision taken on their behalf; no "how to
   check" lists.
 
-## Master session (user 2026-11-14, from kauppalappu)
+## Master session
 
-Development runs from one master session that talks with the user and starts subagents; every
-session is the master unless the user says otherwise. Subagents run in the background, so the user
-can plan with the master while they work:
-
-- One subagent per task (an OpenSpec change to apply, research), started with
-  `isolation: "worktree"`; it works and commits on its own worktree branch, never pushes, and
-  reports back: what it did, decisions taken, questions for the user (subagents cannot ask).
-- Run in parallel only tasks that touch different files; tasks on the same change, the same code
-  area or the same `openspec/context/` files run one after another.
-- The master merges each finished branch into `main` (rebase onto current `main` first; rerun
-  `./gradlew test lint assembleDebug` only when the merge needed conflict resolution), pushes,
-  deletes the branch, and relays the questions to the user.
-- The master keeps its own context small: it reads reports, not transcripts, and does no
-  implementation itself.
-- Each worktree has its own Gradle build output; mind the session's disk allowance with more than
-  two at once.
+The global CLAUDE.md's master-session rule applies; worktree checks here are
+`./gradlew test lint assembleDebug`.
 
 ## Build, release, logs
 
