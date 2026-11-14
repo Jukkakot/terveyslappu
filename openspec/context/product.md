@@ -139,8 +139,9 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
   Android's own picker). Without the history permission the calendar says why old days are empty.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
-- **Weigh-in without any tap: dropped** (user 2026-11-09: a background scan costs battery); the
-  redo that deletes the previous result was done in weigh-in-discard.
+- **Weigh-in without any tap: reopened** (user 2026-11-14, after dropping it 2026-11-09 for
+  battery): planned in phases in `roadmap.md`. The redo that deletes the previous result was done
+  in weigh-in-discard.
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 - **Step on first, tap later is fine** (user 2026-11-09, Q5): a stable weight the scale is

@@ -27,8 +27,26 @@ Phases in order; one OpenSpec change each unless noted.
   or for a while in the widget itself) and from there the user can delete it, i.e. start the
   weigh-in again. Same change family as the redo in the next item; do this first.
 
-- ~~**Weigh-in without any tap**~~: dropped (user 2026-11-09: a background scan costs battery;
-  not worth it).
+- **Weigh-in without any tap** (reopened by the user 2026-11-14; dropped 2026-11-09 on an
+  unmeasured battery guess). A hardware-filtered background scan (PendingIntent, name/address
+  filter, low power) in a time window. Each phase only if the previous one looked good:
+  - Phase 0 done 2026-11-14 (phone in the bedroom, one wall, 5-10 m): only 2 packets in 18 s,
+    rssi -98 (at the receiver's edge; next to the scale -50...-68, 17-58 packets per weigh-in).
+    The scale address stayed the same over all weigh-ins.
+  - Phase 1, listen-only (small change): background scan with the real settings, screen off,
+    time window from Asetukset, saves nothing, logs what it heard and the rssi. A few mornings show
+    range, whether Samsung stops the scan, and battery use.
+  - Phase 2, the feature: time window in Asetukset (no hard-coded values); listens to the scale
+    of the last manual weigh-in; widget shows on / resting (outside the window) / blocked (battery
+    optimisation, Bluetooth, permission); a notification after every automatic weigh-in; Health
+    Connect recording method "automatically recorded", the "?" mark and its confirmation in our own
+    storage and the export. Check Health Connect's background write limits first.
+  - Plausibility vs. the previous weight, d = days since it (at least 1): ok if
+    |change| <= 1 kg + 0.1 kg x (d-1); rejected if > 2 kg + 0.3 kg x (d-1); in between saved
+    with "?". The user confirms "?" weights in Historia or from the notification. A rejected
+    weight is not saved; its notification offers "Tallenna silti".
+- **Help page** (user 2026-11-14): a light in-app guide that presents the features; its own
+  small change.
 
 - ~~**Before scale-reading-archive: decode the unknown scale bytes**~~: done 2026-11-09 from
   openScale's decoders (bytes 4-5 product id, 7-12 the scale's address; see product.md). Log 2026-11-09:
