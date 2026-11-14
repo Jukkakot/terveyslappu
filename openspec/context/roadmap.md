@@ -38,7 +38,9 @@ Phases in order; one OpenSpec change each unless noted.
     range, whether Samsung stops the scan, and battery use. Implemented 2026-11-14
     (weigh-in-listen-trial, v1.19); waiting for the trial's mornings, including one morning with
     the phone next to the scale.
-  - Phase 2, the feature: time window in Asetukset (no hard-coded values); listens to the scale
+  - Phase 2 implemented 2026-11-14 (background-weigh-in-save, v1.20): the scan receiver saves
+    the weight itself, "?" marks, notifications with Poista/Hyväksy, widget state. The feature:
+    time window in Asetukset (no hard-coded values); listens to the scale
     of the last manual weigh-in; widget shows on / resting (outside the window) / blocked (battery
     optimisation, Bluetooth, permission); a notification after every automatic weigh-in; Health
     Connect recording method "automatically recorded", the "?" mark and its confirmation in our own

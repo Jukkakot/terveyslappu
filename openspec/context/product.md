@@ -148,6 +148,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, later)
 - **Weigh-in without any tap: reopened** (user 2026-11-14, after dropping it 2026-11-09 for
   battery): planned in phases in `roadmap.md`. The redo that deletes the previous result was done
   in weigh-in-discard.
+- **Automatic weigh-in saves in the scan receiver** (background-weigh-in-save, 2026-11-14): the
+  decided weight is written from the manifest receiver with `goAsync()` (no WorkManager, no
+  foreground service), within an 8 s budget; a failed or slow write waits in a pending queue in
+  app storage and is retried at the next weigh-in, the hourly check and the first foreground read.
+  The background never reads Health Connect (reads are foreground-only): the reference for the
+  "?" rule comes from our own list of the latest ten accepted weights, and the backup of a change
+  made while the app was closed runs at the next app start. The "?" mark lives in our own storage
+  (`marks.json`, keyed by `clientRecordId`), since Health Connect has no field for it, and travels
+  in the data file's `check` field.
 - **Phased** (user 2026-11-08): first a proof of concept with manual weight entry, then the scale
   and the widget. See `roadmap.md`.
 - **Step on first, tap later is fine** (user 2026-11-09, Q5): a stable weight the scale is

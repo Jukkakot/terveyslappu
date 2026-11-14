@@ -150,6 +150,33 @@ passed.
     `widget.state state=`, `backup.due`, `marks.orphans dropped=`. Weights only appear as kg, like
     `scale.stable`.
 
+## Implementation notes (left open by the spec; simplest option taken, 2026-11-14)
+
+- Status order keeps phase 1's (Pysäytetty before Tauolla and Kuuntelee); "Health Connect -lupa
+  puuttuu" comes right after the Bluetooth permission.
+- `listen.start late=` is measured for alarm starts and hourly checks; any other start logs 0.
+- "Optimoitu" = the app does not ignore battery optimisation (`isIgnoringBatteryOptimizations`).
+- The saved time is the first stable reading of the deciding pair (as the dialog); the raw entry
+  is the latest stable packet. A tick runs before every background packet, as the dialog's ticker.
+- A decided weight is claimed and put in the pending queue first, then written (so a killed
+  receiver loses nothing); a late save = a weight whose earlier write failed or timed out. A late
+  "?" title reads "61,3 kg klo 7.12 – tarkista".
+- The reference is taken at write time (latest accepted pair before the weight's time). Accepting
+  while it is unknown keeps it unknown until the first foreground read. The app has no edit, so
+  nothing hooks "edit".
+- Without the history permission a foreground read sees 30 days: only marks of that span can be
+  orphans, and an empty read keeps the old reference pairs.
+- The view model reloads itself after its own changes; the dialog, the background save and the
+  notification actions emit the weights-changed signal.
+- The widget recomputes its state at every own redraw; the stored state and window end are used
+  only when the status cannot be read. The mark is a small badge on the plate's corner; the
+  content description is "Punnitse, automaattinen punnitus: <state>".
+- Hyväksyntäraja is a row with − / + buttons and its value. The notification tap also closes it;
+  a silent summary notification holds the group. Notification texts come from `AutoText` in code.
+- The home card with only "?" weights shows as with no weights; a group of only "?" weights shows
+  its count only. The check notice and the backup notice can both show.
+- The backup-due flag is cleared when the app-start backup is requested.
+
 ## Risks / Trade-offs
 
 - [Health Connect refuses background writes on this phone] → pending queue + log; fallback in a

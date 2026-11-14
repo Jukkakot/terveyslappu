@@ -227,6 +227,19 @@ class WeighInTest {
     }
 
     @Test
+    fun `a weighing the background saved meanwhile is not saved again`() = runTest {
+        val store = Store()
+        val last = MemoryLastWeighIn()
+        // The dialog is open (nothing lingering at its start); the background claims 61c0 a moment later.
+        val w = storeWeighIn(store, source(Triple(1_000, 825, true), Triple(1_100, 825, true), key = 0x61C0), last)
+        w.start(backgroundScope)
+        runCurrent()
+        assertTrue(WeighingKeys(last) { wallStart.plusMillis(500) }.claim(0x61C0))
+        settle()
+        assertEquals(emptyMap(), store.weights)
+    }
+
+    @Test
     fun `a new weighing is saved right after the previous one`() = runTest {
         val store = Store()
         val w = afterPrevious(store, 10_000, stable(821, key = 0x62C0))

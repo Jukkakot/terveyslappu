@@ -15,7 +15,7 @@ the source. No configuration, versions or other things that go stale.
 |---|---|
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
-| Android | background work on Samsung |
+| Android | background work on Samsung, Health Connect from the background, widget updates |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
@@ -61,6 +61,18 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
 - **Background work is unreliable on Samsung** (battery optimisation stops scheduled jobs); prefer
   doing work when the app is opened or right after the change that needs it.
+- **Health Connect from the background** ([read data](https://developer.android.com/guide/health-and-fitness/health-connect/develop/read-data),
+  [rate limiting](https://developer.android.com/health-and-fitness/health-connect/rate-limiting)):
+  reads are foreground-only unless the user grants `READ_HEALTH_DATA_IN_BACKGROUND`; inserts and
+  deletes are not listed as foreground-only, so a BroadcastReceiver may write. Background quotas
+  are stricter and unpublished; a quota error is an exception like any failed write. From Android
+  14 the Health Connect permissions are platform permissions, so `checkSelfPermission` answers
+  without a Health Connect call.
+- **Widget updates**: `AppWidgetManager.updateAppWidget` works from any receiver;
+  `updatePeriodMillis` wakes the phone and is at least 30 min, so the widget is redrawn at the
+  app's own alarms and events instead. Bluetooth on/off and power-saving changes are not
+  implicit-broadcast exceptions, and battery restriction has no broadcast at all, so a widget
+  showing them lags until the next own redraw.
 - **Samsung "Optimoitu" battery setting stops screen-off BLE scans** (own test 2026-11-14, S24,
   Android 17): a filtered PendingIntent scan delivered packets only when the screen came on while
   the app was "Optimoitu"; after "Rajoittamaton" packets arrived with the screen off and locked.
