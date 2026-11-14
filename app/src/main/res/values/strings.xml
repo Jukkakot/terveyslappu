@@ -336,6 +336,10 @@
     <string name="ai_prompt_failed">Ohjetta ei voitu kopioida.</string>
     <string name="ai_no_json">Tekstistä ei löytynyt ruokia. Pyydä tekoälyltä JSON-koodilohko ohjeen mukaan.</string>
     <string name="ai_empty">Tekstissä oli JSON, mutta ei yhtään käyttökelpoista ruokaa.</string>
+    <string name="ai_clip_items">Leikepöydällä ruoka-arvio: %1$d annosta</string>
+    <string name="ai_clip_products">Leikepöydällä ruoka-arvio: %1$d tuotetta</string>
+    <string name="ai_clip_show">Näytä</string>
+    <string name="ai_clip_skip">Ohita</string>
     <string name="ai_title">Tuo tekoälyltä</string>
     <string name="ai_day">Päivälle</string>
     <string name="ai_items">Annokset</string>

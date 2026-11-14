@@ -94,6 +94,8 @@ class FoodActions(
     val onAiEdit: (AiPreview) -> Unit = {},
     val onAiAdd: () -> Unit = {},
     val onAiCancel: () -> Unit = {},
+    val onClipOpen: () -> Unit = {},
+    val onClipSkip: () -> Unit = {},
 )
 
 private val finnish = Locale.forLanguageTag("fi")
@@ -195,6 +197,7 @@ internal fun FoodScreen(
                 food.items == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).testTag("foodDay")) {
                     DayBar(food.day, today, enabled = ordering == null, actions.onDay)
+                    if (ordering == null) food.clipOffer?.let { ClipOfferLine(it, actions) }
                     if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) HistoryNotice(onGrantHistory)
                     val items = ordering ?: food.dayItems(food.day)
                     if (items.isEmpty()) {

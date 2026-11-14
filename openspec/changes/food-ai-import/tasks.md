@@ -27,12 +27,12 @@
 
 ## 4. Clipboard offer (user 2026-11-14)
 
-- [ ] 4.1 Pure rule: offer only for a clip newer than the last offered one (clip description
+- [x] 4.1 Pure rule: offer only for a clip newer than the last offered one (clip description
       timestamp, remembered in prefs) whose text parses as food JSON; unit tests.
-- [ ] 4.2 Ruoka screen and Lisää annos sheet: on open (resume), check the clip description first
+- [x] 4.2 Ruoka screen and Lisää annos sheet: on open (resume), check the clip description first
       and read the text only when it is new text; show "Leikepöydällä ruoka-arvio: N annosta ·
       Näytä · Ohita"; Näytä opens the preview; any answer marks the clip offered.
-- [ ] 4.3 Log `food.import.offer shown|open|skip count=`; CLAUDE.md log events; one smoke test.
+- [x] 4.3 Log `food.import.offer shown|open|skip count=`; CLAUDE.md log events; one smoke test.
 
 ## 3. Docs and release
 

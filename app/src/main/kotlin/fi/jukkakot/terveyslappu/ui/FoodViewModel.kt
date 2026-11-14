@@ -10,6 +10,8 @@ import fi.jukkakot.terveyslappu.food.AiFailure
 import fi.jukkakot.terveyslappu.food.AiImport
 import fi.jukkakot.terveyslappu.food.AiImportPlan
 import fi.jukkakot.terveyslappu.food.AiPaste
+import fi.jukkakot.terveyslappu.food.ClipOffer
+import fi.jukkakot.terveyslappu.food.ClipOffers
 import fi.jukkakot.terveyslappu.food.AiResult
 import fi.jukkakot.terveyslappu.food.EditInput
 import fi.jukkakot.terveyslappu.food.FoodDay
@@ -56,6 +58,8 @@ data class FoodUiState(
     val ordering: List<FoodItem>? = null,
     /** The AI import preview, null = closed. */
     val ai: AiPreview? = null,
+    /** The clipboard line (food-ai-import), null = none. */
+    val clipOffer: ClipOffer? = null,
 ) {
     fun dayItems(day: LocalDate): List<FoodItem> = FoodDay.ordered(items.orEmpty().filter { it.day == day })
 }
@@ -187,6 +191,34 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 _messages.tryEmit(UiMessage(if (r.reason == AiFailure.NO_JSON) R.string.ai_no_json else R.string.ai_empty))
             }
         }
+    }
+
+    private val clipPrefs = app.getSharedPreferences("foodclip", android.content.Context.MODE_PRIVATE)
+
+    /** Timestamp of the clip last offered; the activity asks before it reads any clip text. */
+    fun lastOfferedClip(): Long = clipPrefs.getLong("offered", 0L)
+
+    /** The activity read a new clip: it is marked offered whatever it holds; food JSON shows the line. */
+    fun offerClip(clipTime: Long, text: String) {
+        clipPrefs.edit().putLong("offered", clipTime).apply()
+        val offer = ClipOffers.from(text) ?: return
+        AppLog.i("food.import.offer", "shown", "count" to offer.count)
+        _state.update { it.copy(clipOffer = offer) }
+    }
+
+    /** Näytä: the offered text opens the preview. */
+    fun openClipOffer() {
+        val offer = _state.value.clipOffer ?: return
+        AppLog.i("food.import.offer", "open", "count" to offer.count)
+        _state.update { it.copy(clipOffer = null) }
+        openAi(offer.text, "paste")
+    }
+
+    /** Ohita: the line goes away. */
+    fun skipClipOffer() {
+        val offer = _state.value.clipOffer ?: return
+        AppLog.i("food.import.offer", "skip", "count" to offer.count)
+        _state.update { it.copy(clipOffer = null) }
     }
 
     fun setAi(preview: AiPreview) = _state.update { it.copy(ai = preview.copy(day = minOf(preview.day, LocalDate.now()))) }

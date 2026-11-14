@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.food.AiItem
 import fi.jukkakot.terveyslappu.food.AiProduct
+import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.Energy
@@ -57,5 +58,19 @@ class AiImportPreviewTest {
         compose.onNodeWithTag("aiAdd").performClick()
         assertEquals(1, added)
         assertEquals(0, cancelled)
+    }
+
+    @Test
+    fun `clip offer line opens or skips`() {
+        var opened = 0
+        var skipped = 0
+        compose.setContent {
+            TerveysTheme { ClipOfferLine(ClipOffer("x", 6, false), FoodActions(onClipOpen = { opened++ }, onClipSkip = { skipped++ })) }
+        }
+        compose.onNodeWithTag("clipOffer").assertExists()
+        compose.onNodeWithTag("clipOpen").performClick()
+        compose.onNodeWithTag("clipSkip").performClick()
+        assertEquals(1, opened)
+        assertEquals(1, skipped)
     }
 }

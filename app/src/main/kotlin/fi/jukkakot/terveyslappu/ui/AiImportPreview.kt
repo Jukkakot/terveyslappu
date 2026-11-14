@@ -46,6 +46,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.AiItem
+import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.AiProduct
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
@@ -271,4 +272,18 @@ private fun AiProductEditor(product: AiProduct, onDismiss: () -> Unit, onSave: (
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** "Leikepöydällä ruoka-arvio: 6 annosta · Näytä · Ohita" (food-ai-import "Clipboard offer"). */
+@Composable
+internal fun ClipOfferLine(offer: ClipOffer, actions: FoodActions) {
+    Row(Modifier.fillMaxWidth().testTag("clipOffer"), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            if (offer.productsOnly) stringResource(R.string.ai_clip_products, offer.count) else stringResource(R.string.ai_clip_items, offer.count),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = actions.onClipOpen, modifier = Modifier.heightIn(min = 48.dp).testTag("clipOpen")) { Text(stringResource(R.string.ai_clip_show)) }
+        TextButton(onClick = actions.onClipSkip, modifier = Modifier.heightIn(min = 48.dp).testTag("clipSkip")) { Text(stringResource(R.string.ai_clip_skip)) }
+    }
 }

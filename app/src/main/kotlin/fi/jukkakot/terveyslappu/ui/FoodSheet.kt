@@ -92,6 +92,7 @@ internal fun AddFoodSheet(food: FoodUiState, base: List<BaseProduct>, actions: F
                 modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
             )
             LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+            food.clipOffer?.let { ClipOfferLine(it, actions) }
             food.lastAdded?.let { LastAddedLine(it, actions) }
             val items = food.items.orEmpty()
             if (FoodNames.normalize(food.query).isEmpty()) {

@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.pm.PackageManager
 import fi.jukkakot.terveyslappu.ui.Screen
+import fi.jukkakot.terveyslappu.food.ClipOffers
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -184,6 +185,12 @@ class MainActivity : ComponentActivity() {
                     WeighInWidget.update(this@MainActivity)
                     onPauseOrDispose {}
                 }
+                // Clipboard offer: only while Ruoka or Lisää annos is shown, on open and on every resume.
+                val clipShown = state.screen == Screen.FOOD || food.sheetDay != null
+                LifecycleResumeEffect(clipShown) {
+                    if (clipShown) checkClipOffer()
+                    onPauseOrDispose {}
+                }
                 LaunchedEffect(Unit) {
                     merge(viewModel.messages, foodModel.messages).collect { message ->
                         val result = snackbar.showSnackbar(
@@ -236,6 +243,8 @@ class MainActivity : ComponentActivity() {
                         onRemoveProduct = foodModel::removeProduct,
                         onPasteAi = ::pasteAiFood,
                         onCopyAiPrompt = ::copyAiPrompt,
+                        onClipOpen = foodModel::openClipOffer,
+                        onClipSkip = foodModel::skipClipOffer,
                         onAiEdit = foodModel::setAi,
                         onAiCancel = foodModel::cancelAi,
                         onAiAdd = {
@@ -358,6 +367,20 @@ class MainActivity : ComponentActivity() {
         val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this).toString() else ""
         foodModel.closeSheet()
         foodModel.openAi(text, "paste")
+    }
+
+    /**
+     * The clipboard offer (food-ai-import): called only while Ruoka or Lisää annos is shown. The description is checked
+     * first (no paste toast); the text is read only for a text clip newer than the last offered one.
+     */
+    private fun checkClipOffer() {
+        val manager = getSystemService(ClipboardManager::class.java)
+        val description = manager.primaryClipDescription ?: return
+        val time = description.timestamp
+        if (!ClipOffers.shouldRead(description.hasMimeType("text/*"), time, foodModel.lastOfferedClip())) return
+        val clip = manager.primaryClip
+        val text = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this).toString() else ""
+        foodModel.offerClip(time, text)
     }
 
     /** Kopioi ohje tekoälylle: assets/ai-food-prompt.txt as is. */
