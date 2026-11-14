@@ -21,8 +21,11 @@ once the day's weight is in, to save battery.
   raise an existing channel's importance).
 - Once a weight not marked "?" is saved inside the current listening window, by the dialog, a
   manual entry or the background, listening stops for the rest of that window. Deleting that
-  weight starts listening again if the window is still on. Asetukset and the widget show the
-  stopped state as "Tämän päivän paino tallennettu".
+  weight starts listening again if the window is still on. Asetukset and the widget show it as
+  Valmis (green check).
+- Widget symbols (1x1, symbol only): Kuuntelee green dot, Valmis green check, Lepää grey moon,
+  Estetty amber triangle; none while the feature is off. Asetukset's status line starts with the
+  same symbol.
 - `appVersion` 1.21.
 
 ## Capabilities

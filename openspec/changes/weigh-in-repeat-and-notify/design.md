@@ -38,8 +38,10 @@ forwarding; no scanning after the window's weight is in.
    removed by any delete or unmark of that id. `ListenController.replan` treats a non-empty
    record for the current window as Outside-until-next-start (`listen.stop reason=done`); a change
    to the record calls `replan("done")`. A record of an older window is ignored.
-5. **Status and widget**: `ListenStatusRule` gets a `Done(nextStart)` state ahead of "Kuuntelee
-   nyt" and after the blocked reasons; `WidgetStateRule` maps it to "Lepää".
+5. **Status and widget**: `ListenStatusRule` gets a `Done(nextStart)` state after the blocked
+   reasons, ahead of "Kuuntelee nyt" and "Lepää"; it holds from the save until the next window
+   start (outside the window too). `WidgetState` gets `DONE`; the 1x1 widget shows only a symbol
+   (dot, check, moon, triangle) and the Asetukset status line reuses the same drawable.
 
 ## Risks / Trade-offs
 

@@ -17,7 +17,8 @@
 
 - [ ] 4.1 `ListenPrefs` window-done record; add/remove from dialog save, manual entry save, background `check=ok` save, accept, delete and unmark
 - [ ] 4.2 `ListenController.replan`: done record for the current window stops listening till the next start (`listen.stop reason=done`); record change replans; tests
-- [ ] 4.3 `ListenStatusRule` `Done` state "Tämän päivän paino tallennettu, kuuntelee taas klo HH.MM", `WidgetStateRule` → Lepää; tests
+- [ ] 4.3 `ListenStatusRule` `Done` state "Valmis: tämän päivän paino tallennettu, kuuntelee taas [huomenna] klo HH.MM" (after blocked reasons; holds from the save until the next window start); `WidgetState.DONE`; tests
+- [ ] 4.4 Widget symbols: Kuuntelee green dot, Valmis green check, Lepää grey moon, Estetty amber triangle (vector drawables, both themes, content descriptions); the same symbol before the Asetukset status text
 
 ## 5. Finish
 

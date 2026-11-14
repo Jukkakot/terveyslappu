@@ -7,15 +7,12 @@ that window and SHALL start again at the next window's start. When that weight i
 (dialog Poista, notification Poista, Historia) or later marked "?", and no other such weight of
 this app remains in the window, listening SHALL start again at once if the window is still on.
 Accepting a "?" weight of the window SHALL count as saving it. Weights written by other apps SHALL
-NOT count. While stopped, the status SHALL say "Tämän päivän paino tallennettu, kuuntelee taas klo
-HH.MM" (the next window start) and the widget SHALL show "Lepää". Stopping SHALL be logged
-(`listen.stop reason=done`).
+NOT count. Stopping SHALL be logged (`listen.stop reason=done`).
 
 #### Scenario: Morning weight saved
 - **GIVEN** a 06:00-10:00 window
 - **WHEN** 82.5 kg is saved automatically at 07.12 without a mark
-- **THEN** the scan stops, the status says "Tämän päivän paino tallennettu, kuuntelee taas klo
-  6.00", and the widget shows "Lepää"
+- **THEN** the scan stops, and the status and the widget show Valmis
 
 #### Scenario: Weighed from the widget
 - **WHEN** the user saves a weigh-in from the dialog at 07.12 inside the window
@@ -50,7 +47,62 @@ own packet time.
 - **WHEN** the scale's stable 99.05 kg is heard once at 16.23.02 and nothing after it
 - **THEN** the weight is saved and notified by about 16.23.30, at the time 16.23.02
 
+### Requirement: Status symbol in Asetukset
+The status line of "Automaattinen punnitus" SHALL start with the same symbol and colour as the
+widget's state (no symbol while the feature is off). While the window's weight is saved the status
+SHALL read "Valmis: tämän päivän paino tallennettu, kuuntelee taas klo HH.MM", with "huomenna"
+before "klo" when the next start is tomorrow; it comes after the blocked reasons and before
+"Kuuntelee nyt" and "Lepää".
+
+#### Scenario: Weighed this morning
+- **GIVEN** a 06:00-10:00 window and the weight saved at 07.12
+- **WHEN** Asetukset is opened at 08.00
+- **THEN** the status shows the green check and "Valmis: tämän päivän paino tallennettu, kuuntelee
+  taas huomenna klo 6.00"
+
 ## MODIFIED Requirements
+
+### Requirement: Widget status
+While the feature is on, the 1x1 home-screen widget SHALL show the automatic weigh-in's state as a
+small symbol only (no text, no times), each state with its own shape and colour and read out by a
+screen reader by its name: Kuuntelee (green filled dot: inside the window and listening), Valmis
+(green check: the window's weight is saved, from that save until the next window start, also after
+the window has ended), Lepää (grey moon: outside the window with no weight of the window saved)
+and Estetty (amber warning triangle: a blocked reason, Tauolla or Pysäytetty, inside the window).
+The warnings (battery use restricted, notifications off) SHALL NEVER mean Estetty. The state SHALL
+change within about 15 minutes of the window start and end; the widget SHALL store the window end
+and show Lepää instead of Kuuntelee once it has passed when it is next redrawn. With the feature
+off the widget SHALL show no symbol.
+
+#### Scenario: Morning
+- **GIVEN** the window is 06:00-10:00 and nothing blocks
+- **WHEN** the window starts
+- **THEN** the widget shows Kuuntelee within about 15 minutes
+
+#### Scenario: Weighed
+- **WHEN** the morning's weight is saved at 07.12 without a mark
+- **THEN** the widget shows Valmis, still at 20.00, and Kuuntelee from the next 06:00
+
+#### Scenario: Night without a weight
+- **WHEN** the time is outside the window and no weight of the window was saved
+- **THEN** the widget shows Lepää, also when Bluetooth is off
+
+#### Scenario: Battery restricted
+- **WHEN** the phone restricts the app's battery use inside the window
+- **THEN** the status shows its warning and the widget still shows Kuuntelee
+
+#### Scenario: Power saving pause
+- **WHEN** power saving is on and the switch for listening in it is off, inside the window
+- **THEN** the widget shows Estetty
+
+#### Scenario: Window ended
+- **GIVEN** the widget showed Kuuntelee and the window end has passed
+- **WHEN** the widget is next redrawn
+- **THEN** it shows Lepää
+
+#### Scenario: Feature off
+- **WHEN** the feature is off
+- **THEN** the widget shows only Punnitse as before
 
 ### Requirement: Weigh-in notification
 After every automatic weigh-in the app SHALL show a notification with the weight and, when a
