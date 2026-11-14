@@ -15,20 +15,20 @@
 
 ## 3. Front page
 
-- [ ] 3.1 `stepsDays` in `PeriodPrefs` and `MainUiState`, `onStepsPeriod` action (7 by default, separate from weight and food)
-- [ ] 3.2 Steps card in the right half of the row: title, today's number, bars, first/last day, average, period menu, "anna lupa", "ei saatavilla" (no tap action) and "ei tietoa" / "ei vielä keskiarvoa" states; texts "Askeleet tänään", "6 420" (thin space), "keskim. 7 800 askelta/pv" (half width "keskim. 7 800/pv"); tap anywhere but the period label opens Askeleet (in DENIED the tab shows the reason with ask-again and Health Connect settings buttons via `ACTION_MANAGE_HEALTH_PERMISSIONS`; in NEEDS a tap asks)
-- [ ] 3.3 Food card at half width: period label and average on one row (average may shorten), + Annos on its own row under it; both cards fill the row height (taller sets it), the steps card's free space goes under its bars
-- [ ] 3.4 Smoke tests: the steps card shows today's steps and opens Askeleet; the food card and + Annos are present beside it; no-permission text; one Robolectric layout smoke test at about 360 dp width (both cards and + Annos visible)
+- [x] 3.1 `stepsDays` in `PeriodPrefs` and `MainUiState`, `onStepsPeriod` action (7 by default, separate from weight and food)
+- [x] 3.2 Steps card in the right half of the row: title, today's number, bars, first/last day, average, period menu, "anna lupa", "ei saatavilla" (no tap action) and "ei tietoa" / "ei vielä keskiarvoa" states; texts "Askeleet tänään", "6 420" (thin space), "keskim. 7 800 askelta/pv" (half width "keskim. 7 800/pv"); tap anywhere but the period label opens Askeleet (in DENIED the tab shows the reason with ask-again and Health Connect settings buttons via `ACTION_MANAGE_HEALTH_PERMISSIONS`; in NEEDS a tap asks)
+- [x] 3.3 Food card at half width: period label and average on one row (average may shorten), + Annos on its own row under it; both cards fill the row height (taller sets it), the steps card's free space goes under its bars
+- [x] 3.4 Smoke tests: the steps card shows today's steps and opens Askeleet; the food card and + Annos are present beside it; no-permission text; one Robolectric layout smoke test at about 360 dp width (both cards and + Annos visible)
 
 ## 4. Historia: Askeleet tab
 
-- [ ] 4.1 Fourth tab and pager page after Energia (swipe and tab state, `historyOnSteps` for opening from the card); reason view with the grant button
-- [ ] 4.2 Askeleet page: bars, average line, weight line under on the same axis, clipped to the steps axis, empty when no weights (reuse Energia's); Kaikki from the first step day or today; one line about connecting Garmin Connect to Health Connect when the period has no step days, point details on tap, statistics, day list; the history notice for periods beyond the readable range
-- [ ] 4.3 Smoke tests: tab shows bars and the day list; swipe from Energia reaches it; no-permission reason
+- [x] 4.1 Fourth tab and pager page after Energia (swipe and tab state, `historyOnSteps` for opening from the card); reason view with the grant button
+- [x] 4.2 Askeleet page: bars, average line, weight line under on the same axis, clipped to the steps axis, empty when no weights (reuse Energia's); Kaikki from the first step day or today; one line about connecting Garmin Connect to Health Connect when the period has no step days, point details on tap, statistics, day list; the history notice for periods beyond the readable range
+- [x] 4.3 Smoke tests: tab shows bars and the day list; swipe from Energia reaches it; no-permission reason
 
 ## 5. Help, version, context
 
-- [ ] 5.1 Ohje section on steps (source, read only, how to rank the watch first in Health Connect's priority, Garmin sync, the phone's own count starts only from the grant, permission from the card); help smoke test still green
+- [x] 5.1 Ohje section on steps (source, read only, how to rank the watch first in Health Connect's priority, Garmin sync, the phone's own count starts only from the grant, permission from the card); help smoke test still green
 - [ ] 5.2 `./gradlew test lint assembleDebug`
 - [ ] 5.3 Bump MINOR in `gradle.properties` (`appVersion`)
 - [ ] 5.4 Update context files: product.md (steps as built, decisions: Health Connect merged total, no data file, no goal), roadmap.md (steps done, combined chart stays open), `.claude/CLAUDE.md` map (`steps/` package, events), questions.md (steps questions answered, remove them); mark the roadmap items done
