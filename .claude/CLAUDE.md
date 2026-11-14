@@ -50,7 +50,7 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   `Quantity` for Historia's tabs, the home row's `LatestDerived`; pure), `raw/` (raw-data archive behind each weight: `RawArchive` JSON lines in app storage,
   `RawFormat` for the export's `raw` column; the singleton lives in `TerveysApp`), `profile/` (owner details: rules, `#profile;` export line (pure), `ProfilePrefs` singleton in
   `TerveysApp`), `backup/` (automatic backup file: status, triggers, prefs, SAF
-  write; the singleton lives in `TerveysApp`), `ui/` (`RangeCalendarDialog` is Historia's Oma calendar, `MainScreen` switches Home/Historia/Asetukset/Ohje (`HelpScreen`) by `Screen` in `MainViewModel`, manual-entry dialog, weigh-in
+  write; the singleton lives in `TerveysApp`), `ui/` (`RangeCalendarDialog` is Historia's Oma calendar, `MainScreen` switches Home/Historia/Asetukset/Ohje (`HelpScreen`, opened from the home top bar) by `Screen` in `MainViewModel`; Asetukset = list + sub-screens by `SettingsPage` (`SettingsScreen`; row state lines are the pure `SettingsSummary`; `MainUiState.back()` is the one back rule), manual-entry dialog, weigh-in
   dialog, view models, theme + `AppearancePrefs` (singleton in `TerveysApp`), formats; `chart/HomeSummary` is the home card's pure data, `chart/WeightScale` the shared y-scale), `log/` (file log, crash handler, share intent),
   `WeighInActivity` (dialog opened by `WeighInTileService`, `WeighInWidget`, the launcher shortcut
   in `res/xml/shortcuts.xml` and the main screen), `PrivacyActivity` (Health Connect's page).
@@ -72,7 +72,7 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   is enough; SHA-256 `04:01:E0:47:...:FB:6B:B5:8A`). The user keeps the base64 text as the backup;
   losing it means one uninstall. Without the secret CI builds but publishes nothing.
 - Install/update: Obtainium → Add app → `https://github.com/Jukkakot/terveyslappu`.
-- Logs: in the app, Asetukset (gear) → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB); Kopioi loki copies the last 24 h compacted for pasting into chat. Lines are
+- Logs: in the app, Asetukset (gear) → Tuki → Jaa loki (sends `app.log` and `app.log.1`, newest 1 MB); Kopioi loki copies the last 24 h compacted for pasting into chat. Lines are
   `time level event message key=value`; events: `app.start`, `app.crash`, `hc.access`,
   `hc.permission.*`, `weight.save|read|delete`, `log.share`, `log.copy lines= chars=`; weigh-in: `weighin.open from=`,
   `scale.scan start|stop|failed`, `scale.packet t= key= data= rssi= name= addr=` (raw, DEBUG),

@@ -8,7 +8,7 @@ as this app's own records, carried in the data file. Requirements and how the us
 product.md "Food log: why" and "Food log: how it is used". The adding pattern is borrowed from the
 user's shopping-list app kauppalappu (one add field, suggestions while typing and at the empty
 field, one tap adds, enter adds the typed text, undo instead of confirmations, a shipped base
-catalogue). Asetukset is regrouped into sub-screens in the same change (user 2026-11-14).
+catalogue). The Asetukset list itself comes from the change settings-list; this change adds its Ruokakirjaus row.
 
 ## Goals / Non-Goals
 
@@ -69,11 +69,7 @@ notification), a server database.
    weight line on the same x-axis with the shared weight scale; weekly bars from 90 days up. No
    second y-axis.
 
-10. **Asetukset**: a main list of six rows (icon, name, state line, chevron, warning tint) and one
-    composable per sub-screen holding today's section unchanged; `Screen.SETTINGS` gains a
-    sub-screen value and an origin, so a deep link opens the sub-screen and back returns there.
-
-11. **Storage**: the log in Health Connect; products in app storage; both in the data file, so the
+10. **Storage**: the log in Health Connect; products in app storage; both in the data file, so the
     automatic backup file in the user's own cloud and Android backup/Smart Switch carry them. No
     server database (product decision: health data, no backend).
 

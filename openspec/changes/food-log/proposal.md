@@ -25,12 +25,9 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
 - Every item is a Health Connect nutrition record; food and kcal are never shown outside the app.
 - Historia gets a third tab **Energia**: daily bars (base food / Herkku), a 7-day average line, the
   weight line under it on the same time axis, period statistics and a list of logged days.
-- **Asetukset regrouped** into a list of rows (icon, name, state line, chevron) opening
-  sub-screens: Omat tiedot, Automaattinen punnitus, Ruokakirjaus (products), Tiedot ja
-  varmuuskopio, Ulkoasu, Tuki. Warnings on the rows; deep links open the sub-screen and back
-  returns where the user came from.
+- **Ruokakirjaus row** in Asetukset (before Ulkoasu); the list itself comes from settings-list.
 - The data file (export, import, backup) carries the foods and the products. Ohje gets a food log
-  section with the Fineli attribution. Version 1.21.
+  section with the Fineli attribution. Version 1.24.
 - Not here: steps (own change next) and a combined weight/kcal/steps chart (backlog).
 
 ## Capabilities
@@ -41,15 +38,14 @@ eating and weight move together (product.md "Food log: why" and "Food log: how i
 
 ### Modified Capabilities
 - `weight-chart`: Historia's tabs gain Energia with its chart, statistics and list.
-- `home-screen`: the front page gains "Syöty tänään" and Lisää annos; Asetukset becomes a list of
-  sub-screens.
+- `home-screen`: the front page gains "Syöty tänään" and Lisää annos.
 - `data-file`: two new data kinds, `foods` and `food_items`.
 - `help-page`: an Ohje section on the food log.
 
 ## Impact
 
 - App screens: front page row and button, add sheet, Ruoka day screen and item editor, Historia
-  Energia tab, Asetukset main list and six sub-screens, Ohje text.
+  Energia tab, Asetukset Ruokakirjaus row and sub-screen, Ohje text.
 - Health Connect: READ_NUTRITION and WRITE_NUTRITION, asked on first food use only.
 - App storage: own products (`products.json`); a shipped base-product asset built from Fineli.
 - Data file, backup, import: new parts in CSV and JSON, version stays 2.

@@ -34,12 +34,9 @@
 - [ ] 5.2 Energia tab: bars + average line, weight chart under it on the same x-axis, statistics, day list opening Ruoka; reason + grant button without permission
 - [ ] 5.3 Unit tests for 5.1; one smoke test that Energia shows bars and the day list
 
-## 6. Asetukset as a list of sub-screens
+## 6. Ruokakirjaus in Asetukset
 
-- [ ] 6.1 Main list with icon, name, state line, chevron and warning tint; pure state-line rules per row (unit tests)
-- [ ] 6.2 Move today's sections into sub-screens (Omat tiedot, Automaattinen punnitus, Tiedot ja varmuuskopio, Ulkoasu, Tuki) unchanged; deep links open the sub-screen and back returns to the origin
-- [ ] 6.3 Ruokakirjaus sub-screen: own products with edit and remove
-- [ ] 6.4 Smoke tests: list shows six rows; a row opens its sub-screen; the BMI link opens Omat tiedot and back returns to the front page
+- [ ] 6.3 Ruokakirjaus: a sixth row before Ulkoasu in the Asetukset list (from settings-list), its sub-screen with own products, edit and remove
 
 ## 7. Data file
 
@@ -50,4 +47,4 @@
 
 - [ ] 8.1 Ohje section on the food log with the Fineli attribution
 - [ ] 8.2 Update product.md, roadmap (food-log done, steps next), `.claude/CLAUDE.md` map (`food/`, log events)
-- [ ] 8.3 `appVersion=1.21`; `./gradlew test lint assembleDebug` green
+- [ ] 8.3 `appVersion=1.24`; `./gradlew test lint assembleDebug` green

@@ -1,32 +1,3 @@
-## MODIFIED Requirements
-
-### Requirement: Asetukset screen
-Asetukset SHALL be a list of rows, each with an icon, a name, one line of its current state and a
-chevron, and each SHALL open its own sub-screen holding what was its section: Omat tiedot,
-Automaattinen punnitus, Ruokakirjaus, Tiedot ja varmuuskopio (Tuo tiedot, Vie tiedot and the
-backup), Ulkoasu (theme) and Tuki (Ohje, Jaa loki, Kopioi loki, the version). A warning of a
-section (backup in trouble, weighings waiting to be saved, listening blocked) SHALL show on its
-row in the warning tint. A link elsewhere that opens Asetukset at a section SHALL open that
-sub-screen directly; back from a sub-screen SHALL return to where it was opened from.
-
-#### Scenario: Asetukset contents
-- **WHEN** the user opens Asetukset
-- **THEN** six rows are shown with their state lines, e.g. Omat tiedot "180 cm · 1990 · Mies",
-  Automaattinen punnitus "Päällä 6.00–9.00", Ulkoasu "Teema: järjestelmä"
-
-#### Scenario: Open a sub-screen
-- **WHEN** the user taps Tiedot ja varmuuskopio
-- **THEN** its sub-screen shows Tuo tiedot, Vie tiedot and the backup; back returns to Asetukset
-
-#### Scenario: Warning on the row
-- **GIVEN** the backup's last run failed
-- **WHEN** Asetukset is shown
-- **THEN** the Tiedot ja varmuuskopio row says so in the warning tint
-
-#### Scenario: Link from home
-- **WHEN** the user taps "BMI vaatii pituuden" on the home screen
-- **THEN** the Omat tiedot sub-screen opens, and back returns to the home screen
-
 ## ADDED Requirements
 
 ### Requirement: Food row on the home screen
