@@ -19,6 +19,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
@@ -107,6 +109,16 @@ class MainScreenTest {
         compose.onNodeWithTag("shareLog").assertExists()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("latestCard").assertExists()
+    }
+
+    @Test
+    fun `Ohje opens from Asetukset, shows a section and back returns to Asetukset`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.SETTINGS))
+        compose.onNodeWithTag("help").performScrollTo().performClick()
+        compose.onNodeWithTag("helpList").assertExists()
+        compose.onNodeWithText("Historia").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("settingsList").assertExists()
     }
 
     @Test

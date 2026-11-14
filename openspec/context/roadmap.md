@@ -46,7 +46,7 @@ Phases in order; one OpenSpec change each unless noted.
     no time factor) is marked "?"; the user confirms or deletes it in Historia or from the
     notification, and a confirmed one becomes the new reference (re-calibrates after a long
     break). A notification after every automatic weigh-in, with Poista.
-- **Help page** (user 2026-11-14): a light in-app guide that presents the features; its own
+- ~~**Help page**~~ done 2026-11-14 (user 2026-11-14): a light in-app guide that presents the features; its own
   small change.
 
 - ~~**Before scale-reading-archive: decode the unknown scale bytes**~~: done 2026-11-09 from

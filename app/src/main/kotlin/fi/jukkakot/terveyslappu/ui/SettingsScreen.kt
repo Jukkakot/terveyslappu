@@ -117,6 +117,7 @@ internal fun SettingsScreen(
                     "shareLog",
                     trailing = stringResource(R.string.settings_version, versionName),
                 )
+                SettingsRow(R.drawable.ic_help, stringResource(R.string.menu_help), { actions.onScreen(Screen.HELP) }, "help")
             }
         }
     }

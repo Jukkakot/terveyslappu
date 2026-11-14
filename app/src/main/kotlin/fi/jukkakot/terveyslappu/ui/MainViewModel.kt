@@ -48,7 +48,7 @@ import java.time.ZoneId
 enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIED, GRANTED }
 
 /** The main activity's three screens (home-screen); back from Historia or Asetukset returns Home. */
-enum class Screen { HOME, HISTORY, SETTINGS }
+enum class Screen { HOME, HISTORY, SETTINGS, HELP }
 
 data class MainUiState(
     val access: Access = Access.CHECKING,
