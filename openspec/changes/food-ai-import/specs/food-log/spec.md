@@ -21,14 +21,14 @@ Text with no usable JSON SHALL show a short reason and add nothing.
 
 ### Requirement: AI food JSON shape
 The JSON SHALL be an object with an `items` list (what was eaten) and/or a `products` list
-(products to keep), or a bare list of items, optionally with `date` (YYYY-MM-DD). An item SHALL
+(products to keep), or a bare list of items. An item SHALL
 have `name` and MAY have `amount` (> 0), `unit` (`g` or `kpl`, default `g` with an amount), `kcal`
 (the item's total, >= 0) and `herkku` (true/false). A product SHALL have `name` and `kcal` and MAY
 have `per` (`100g`, `kpl` or `annos`; `annos` is kept as a piece), `amount`/`unit` (its usual
-amount) and `herkku`. Unknown keys SHALL be ignored; an item or product without a name or with
+amount) and `herkku`. Unknown keys (also a date) SHALL be ignored; an item or product without a name or with
 unusable numbers SHALL be skipped and counted in the preview. "Kopioi ohje tekoälylle" in the
-Lisää annos sheet SHALL copy a short Finnish instruction that asks for exactly this shape, with an
-example.
+Lisää annos sheet SHALL copy the Finnish instruction for the AI, which states this shape, the
+purpose of every field and an example.
 
 #### Scenario: Items and products
 - **GIVEN** the text holds
@@ -40,10 +40,8 @@ example.
 - **THEN** Kahvi is logged without kcal and counted as "1 ilman kcal"
 
 ### Requirement: Preview and fine-tuning
-Before anything is saved, the preview SHALL show the day the items go to, every item with its
-amount and kcal, the sum, the products to keep, and the number of skipped entries. The day SHALL be
-the JSON's `date` when given, otherwise the day the sheet was opened for (today from a share), and
-the user SHALL be able to change it. The user SHALL be able to edit each item (name, amount, kcal,
+Before anything is saved, the preview SHALL show every item with its amount and kcal, the sum, the
+products to keep, and the number of skipped entries. The items SHALL always go to today. The user SHALL be able to edit each item (name, amount, kcal,
 Herkku) and each product (name, energy, Herkku), and remove items or products, before saving.
 Peruuta SHALL save nothing.
 
@@ -52,12 +50,17 @@ Peruuta SHALL save nothing.
 - **WHEN** the user changes it to 2 kpl 500 kcal and taps Lisää
 - **THEN** Pulla is logged 2 kpl 500 kcal and the sum read 500 kcal more than before
 
+#### Scenario: Shared late in the evening
+- **GIVEN** today already holds Rahka 200 g
+- **WHEN** the user shares the day's estimate at 21.30
+- **THEN** the items are added after Rahka on today
+
 #### Scenario: Cancel
 - **WHEN** the user taps Peruuta in the preview
 - **THEN** nothing is logged and no product changes
 
 ### Requirement: Saving an AI import
-"Lisää" SHALL add the items in their order at the end of the chosen day, as logged items written to
+"Lisää" SHALL add the items in their order at the end of today, as logged items written to
 Health Connect like any item, and SHALL show a line "<N> annosta lisätty · Kumoa"; Kumoa SHALL
 remove the added items and restore the products as they were. An import SHALL only add: it SHALL
 NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the

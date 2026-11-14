@@ -14,10 +14,13 @@ fine-tuning, and logs every item with its kcal.
   a code block or with chat text around it.
 - **Kopioi ohje tekoälylle**: copies a short Finnish instruction with the JSON shape and an
   example, to paste into the chat or the user's own calorie skill.
-- The JSON shape: `{"date", "items": [{"name", "amount", "unit": "g"|"kpl", "kcal", "herkku"}],
+- The JSON shape (the interface; `design.md` documents each field's purpose and holds the prompt
+  Kopioi ohje copies): `{"items": [{"name", "amount", "unit": "g"|"kpl", "kcal", "herkku"}],
   "products": [{"name", "kcal", "per": "100g"|"kpl"|"annos", "herkku"}]}`; a bare array of items
   is accepted too. `products` is the chat's "Sovellukseen" list: meals and foods to keep.
-- **Preview with fine-tuning**: the day, every item and product editable or removable, the sum;
+- The items always go to the end of **today** (user 2026-11-14); choosing another day is later
+  work in the backlog. No portion sizes (pieni/normaali/iso) in this change.
+- **Preview with fine-tuning**: every item and product editable or removable, the sum;
   nothing is saved before Lisää. Kumoa takes the whole import back.
 - **Append only** (user 2026-11-14): an import never changes or deletes logged items and never
   touches weights; only the `products` list may change existing products, and only on Lisää.
