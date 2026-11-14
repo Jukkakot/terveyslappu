@@ -1,8 +1,8 @@
 ## 1. Steps rules (pure, `steps/`)
 
-- [ ] 1.1 `StepsDay` and `StepsSeries.of`: bars (daily, weekly only over 90 days, so 3 kk stays daily, with the average per day with steps without today), 7-day average line (at least 3 days in the window, daily mode only, today left out), statistics (average per day with steps without today, days with steps / period days with today counted as a day with steps), newest-first list; gaps for missing days
-- [ ] 1.2 `HomeSteps.of`: today's steps, bars of the last 7, 30 or 90 days, first and last day, average without today, "no data today" flag
-- [ ] 1.3 Unit tests for 1.1 and 1.2 with made-up numbers (gap week, weekly bars, window rule, today excluded, empty input)
+- [x] 1.1 `StepsDay` and `StepsSeries.of`: bars (daily, weekly only over 90 days, so 3 kk stays daily, with the average per day with steps without today), 7-day average line (at least 3 days in the window, daily mode only, today left out), statistics (average per day with steps without today, days with steps / period days with today counted as a day with steps), newest-first list; gaps for missing days
+- [x] 1.2 `HomeSteps.of`: today's steps, bars of the last 7, 30 or 90 days, first and last day, average without today, "no data today" flag
+- [x] 1.3 Unit tests for 1.1 and 1.2 with made-up numbers (gap week, weekly bars, window rule, today excluded, empty input)
 
 ## 2. Health Connect
 
