@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -20,7 +23,6 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -297,8 +299,11 @@ internal fun clipOfferText(offer: ClipOffer): String {
 @Composable
 internal fun ClipOfferButton(offer: ClipOffer, actions: FoodActions) {
     Row(Modifier.fillMaxWidth().testTag("clipOffer"), verticalAlignment = Alignment.CenterVertically) {
-        FilledTonalButton(onClick = actions.onClipOpen, modifier = Modifier.weight(1f).heightIn(min = 56.dp).testTag("clipOpen")) {
-            Text(clipOfferText(offer), textAlign = TextAlign.Center)
+        // Filled primary: the import is usually the next tap (user, 2026-11-15).
+        Button(onClick = actions.onClipOpen, modifier = Modifier.weight(1f).heightIn(min = 64.dp).testTag("clipOpen")) {
+            Icon(painterResource(R.drawable.ic_import), contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(clipOfferText(offer), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         }
         TextButton(onClick = actions.onClipSkip, modifier = Modifier.heightIn(min = 48.dp).testTag("clipSkip")) { Text(stringResource(R.string.ai_clip_skip)) }
     }

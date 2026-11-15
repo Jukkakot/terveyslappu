@@ -74,6 +74,7 @@ logged items.
   and base products without writing and sum item kcal. Android `plurals`, kcal via `formatKcal`.
 - **Old prefs**: key `offered` is read once as migration: a clip whose timestamp is <= it counts as
   already answered (cached as "no offer"), then the key is removed.
+- **Look**: the offer button is a filled primary `Button` (64 dp, import icon, titleMedium), not tonal: the import is usually the next tap (user, 2026-11-15).
 - **Placement**: Ruoka shows the button under the DayBar only when the day is shown (permission,
   loaded, not in Järjestä). The front page notice is tappable as a whole plus Ohita; no Näytä.
 - **Draft add**: pure `FoodEdits.addEdited(...)` = build the item as `add` does, then apply the
