@@ -127,7 +127,7 @@ internal fun DateAxis(from: LocalDate, to: LocalDate, tag: String, modifier: Mod
 }
 
 /** One legend entry: a bar swatch, a line, or plain text ("viikoittain"). */
-data class LegendEntry(val label: String, val color: Color? = null, val line: Boolean = false)
+data class LegendEntry(val label: String, val color: Color? = null, val line: Boolean = false, val dashed: Boolean = false)
 
 /** The legend under a Historia chart (design 9); wraps on a narrow phone instead of cutting text. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -144,6 +144,9 @@ internal fun ChartLegend(entries: List<LegendEntry>, tag: String, modifier: Modi
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.testTag("$tag-entry")) {
                 when {
                     entry.color == null -> Unit
+                    entry.dashed -> Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        repeat(2) { Box(Modifier.size(width = 5.dp, height = 2.dp).background(entry.color)) }
+                    }
                     entry.line -> Box(Modifier.size(width = 12.dp, height = 2.dp).background(entry.color))
                     else -> Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(entry.color))
                 }

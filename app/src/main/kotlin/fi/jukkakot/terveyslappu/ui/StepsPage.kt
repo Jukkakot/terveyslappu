@@ -199,10 +199,10 @@ private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsAc
 private fun StepsChart(series: StepsSeries) {
     val colors = MaterialTheme.colorScheme
     val barColor = colors.primary
-    val line = colors.onSurface
+    val line = colors.onSurfaceVariant
     val grid = colors.outlineVariant
     val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
-    val top = max(series.bars.maxOf { it.steps }, series.average.maxOfOrNull { it.steps } ?: 0L)
+    val top = max(series.bars.maxOf { it.steps }, series.stats.averageSteps ?: 0L)
     val ticks = AxisTicks.bars(top.toDouble(), STEPS_STEP)
     val maxSteps = ticks.last()
     val description = stringResource(R.string.steps_chart_description, series.bars.size)
@@ -231,7 +231,7 @@ private fun StepsChart(series: StepsSeries) {
                 fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
                 drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.steps.toDouble()) }, ::y, barColor)
-                if (series.average.size > 1) drawValueLine(axis, series.average.map { it.day to it.steps.toDouble() }, ::y, line)
+                series.stats.averageSteps?.let { drawAverageLine(y(it.toDouble()), line) }
             }
         }
         picked?.let {
@@ -248,7 +248,7 @@ private fun StepsChart(series: StepsSeries) {
         ChartLegend(
             buildList {
                 add(LegendEntry(stringResource(R.string.steps_legend), barColor))
-                if (series.average.size > 1) add(LegendEntry(stringResource(R.string.energy_legend_average), line, line = true))
+                if (series.stats.averageSteps != null) add(LegendEntry(stringResource(R.string.energy_legend_average), line, dashed = true))
                 if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
             },
             "stepsLegend",

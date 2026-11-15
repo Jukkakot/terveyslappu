@@ -38,4 +38,27 @@ class ChartCodecTest {
         assertEquals("all", CustomCharts.logPeriod(Period.All))
         assertEquals("custom", CustomCharts.logPeriod(Period.Custom(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 2))))
     }
+
+    @Test
+    fun `the average flag round trips and old JSON reads as off`() {
+        val on = chart(1, Period.MONTH).copy(showAverage = true)
+        val list = ChartList(listOf(on, chart(2, Period.MONTH)), next = 3)
+        val text = ChartCodec.encode(list)
+        assertEquals(list, ChartCodec.decode(text))
+        assertEquals(true, ChartCodec.decode(text)!!.charts[0].showAverage)
+        assertEquals(false, ChartCodec.decode(text)!!.charts[1].showAverage)
+        val old = """{"v":1,"next":2,"charts":[{"id":1,"name":"A","layout":"stacked","period":{"k":"all"},"series":[{"kind":"weight","style":"line"}]}]}"""
+        assertEquals(false, ChartCodec.decode(old)!!.charts.single().showAverage)
+    }
+
+    @Test
+    fun `a draft and an undo keep the average flag`() {
+        val chart = chart(1, Period.MONTH).copy(showAverage = true)
+        assertEquals(true, ChartDraft.of(chart).showAverage)
+        assertEquals(chart, ChartDraft.of(chart).toChart())
+        val list = CustomCharts.restore(ChartList(emptyList(), 2), chart, 0)
+        assertEquals(true, list.charts.single().showAverage)
+        assertEquals(false, CustomCharts.newDraft(emptyList()).showAverage)
+        assertEquals(true, CustomCharts.setShowAverage(CustomCharts.newDraft(emptyList()), true).showAverage)
+    }
 }

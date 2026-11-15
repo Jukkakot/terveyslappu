@@ -36,10 +36,9 @@ class EnergySeriesTest {
     }
 
     @Test
-    fun `average needs three logged days in the window and leaves today out`() {
+    fun `average leaves today out`() {
         val items = listOf(item(today, 5000.0), item(today.minusDays(1), 2000.0), item(today.minusDays(2), 1800.0), item(today.minusDays(4), 2200.0))
         val s = EnergySeries.of(items, Period.WEEK, today)
-        assertEquals(listOf(EnergyPoint(today.minusDays(1), 2000)), s.average)
         assertEquals(2000, s.stats.averageKcal)
         assertEquals(4, s.days.size)
         assertEquals(today, s.days.first().day)
@@ -56,11 +55,10 @@ class EnergySeriesTest {
     }
 
     @Test
-    fun `year view has one bar per week from Monday and no average line`() {
+    fun `year view has one bar per week from Monday`() {
         val items = (0..20).map { item(today.minusDays(it.toLong()), 2000.0 + it) }
         val s = EnergySeries.of(items, Period.YEAR, today)
         assertTrue(s.weekly)
-        assertTrue(s.average.isEmpty())
         assertTrue(s.bars.all { it.from.dayOfWeek == java.time.DayOfWeek.MONDAY && it.days == 7 })
         assertEquals(4, s.bars.size)
     }
@@ -69,5 +67,13 @@ class EnergySeriesTest {
     fun `Kaikki counts days from the first log`() {
         val s = EnergySeries.of(listOf(item(today.minusDays(9), 1000.0)), Period.All, today)
         assertEquals(10, s.stats.periodDays)
+    }
+
+    @Test
+    fun `a weekly bar leaves today out`() {
+        val items = (1..120).map { item(today.minusDays(it.toLong()), 2000.0) } + item(today, 100.0)
+        val s = EnergySeries.of(items, Period.YEAR, today)
+        assertEquals(today.with(java.time.DayOfWeek.MONDAY), s.bars.last().from)
+        assertEquals(2000, s.bars.last().total)
     }
 }

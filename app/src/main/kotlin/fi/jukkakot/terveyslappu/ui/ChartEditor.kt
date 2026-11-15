@@ -50,7 +50,7 @@ internal val EditorTargetSaver = Saver<MutableState<Int?>, Int>(save = { it.valu
 private val DraftSaver = Saver<MutableState<ChartDraft>, List<String>>(
     save = { s ->
         val d = s.value
-        listOf(d.id.toString(), d.name, d.on.joinToString(",") { it.name }, SeriesKind.entries.joinToString(",") { d.styleOf(it).name }, d.layout.name, d.period.encode())
+        listOf(d.id.toString(), d.name, d.on.joinToString(",") { it.name }, SeriesKind.entries.joinToString(",") { d.styleOf(it).name }, d.layout.name, d.period.encode(), d.showAverage.toString())
     },
     restore = { l ->
         mutableStateOf(
@@ -61,6 +61,7 @@ private val DraftSaver = Saver<MutableState<ChartDraft>, List<String>>(
                 styles = SeriesKind.entries.zip(l[3].split(',').map { SeriesStyle.valueOf(it) }).toMap(),
                 layout = ChartLayout.valueOf(l[4]),
                 period = Period.decode(l[5]),
+                showAverage = l.getOrNull(6) == "true",
             ),
         )
     },
@@ -143,6 +144,13 @@ internal fun ChartEditor(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.chart_average), style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.chart_average_line), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Switch(checked = draft.showAverage, onCheckedChange = { draft = CustomCharts.setShowAverage(draft, it) }, modifier = Modifier.testTag("chartAverage"))
+                }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (existing != null) {
                         TextButton(onClick = { onDelete(existing.id) }, modifier = Modifier.testTag("chartDelete")) {

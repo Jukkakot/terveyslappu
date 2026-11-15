@@ -107,4 +107,29 @@ class CustomChartDataTest {
         assertEquals(4, HistoryPages.afterDelete(charts, 5))
         assertEquals(HistoryPages.STEPS, HistoryPages.afterDelete(charts, 3))
     }
+
+    @Test
+    fun `averages leave today out for energy and steps but not for weight`() {
+        val items = listOf(food(today, 400.0), food(today.minusDays(1), 2000.0), food(today.minusDays(2), 2200.0))
+        val steps = listOf(StepsDay(today, 61), StepsDay(today.minusDays(1), 8000), StepsDay(today.minusDays(3), 9000))
+        val weights = listOf(weight("a", today, 8, 80.0), weight("b", today.minusDays(1), 8, 82.0), weight("c", today.minusDays(1), 20, 83.0), weight("q", today.minusDays(2), 8, 99.0))
+        val data = CustomChartData.of(chart(), today, zone, weights, items, steps, questioned = setOf("q"))
+        assertEquals(2100.0, data.of(ENERGY)!!.average)
+        assertEquals(8500.0, data.of(STEPS)!!.average)
+        assertEquals(81.5, data.of(WEIGHT)!!.average)
+    }
+
+    @Test
+    fun `no average when there is nothing to average`() {
+        val data = CustomChartData.of(chart(), today, zone, emptyList(), listOf(food(today, 400.0)), null)
+        assertNull(data.of(WEIGHT)!!.average)
+        assertNull(data.of(ENERGY)!!.average, "only today logged")
+        assertNull(data.of(STEPS)!!.average, "not loaded")
+    }
+
+    @Test
+    fun `one weight averages to itself`() {
+        val data = CustomChartData.of(chart(Period.MONTH, WEIGHT), today, zone, listOf(weight("a", today.minusDays(2), 8, 82.0)), null, null)
+        assertEquals(82.0, data.of(WEIGHT)!!.average)
+    }
 }

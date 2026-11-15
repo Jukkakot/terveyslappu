@@ -43,11 +43,11 @@ class StepsSeriesTest {
     }
 
     @Test
-    fun `the 7-day line needs three days with steps in the window and skips today`() {
-        val input = listOf(day(0, 1000), day(1, 6000), day(2, 8000), day(3, 10000), day(10, 5000))
+    fun `average is the stats average without today`() {
+        val input = listOf(day(0, 1000), day(1, 6000), day(2, 8000), day(3, 10000))
         val s = StepsSeries.of(input, Period.MONTH, today)
-        // Only 3 days ago? window holds 3 and 10 days ago -> too few; 2 days ago: 2,3 -> too few; 1 day ago: 1,2,3 -> ok.
-        assertEquals(listOf(StepsPoint(today.minusDays(1), 8000)), s.average)
+        assertEquals(8000L, s.stats.averageSteps)
+        assertEquals(4, s.stats.stepDays)
     }
 
     @Test
@@ -58,7 +58,6 @@ class StepsSeriesTest {
         assertTrue(quarter.bars.all { it.days == 1 })
         val year = StepsSeries.of(input, Period.YEAR, today)
         assertTrue(year.weekly)
-        assertTrue(year.average.isEmpty())
         assertTrue(year.bars.all { it.days == 7 && it.from.dayOfWeek == java.time.DayOfWeek.MONDAY })
         // A full past week alternates 6000 and 8000 -> average between them.
         assertTrue(year.bars.dropLast(1).drop(1).all { it.steps in 6000..8000 })

@@ -165,14 +165,20 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
 )
 
 /** Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16). */
-private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1) {
+private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true) {
     val values = kind.values.orEmpty()
     fun y(v: Double) = size.height * (1 - kind.fraction(v))
     if (kind.style == SeriesStyle.BARS) {
-        drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
-    } else {
+        if (barsToo) drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
+    } else if (linesToo) {
         drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT)
     }
+}
+
+/** The flat dashed average line of [kind] on its own scale (Keskiarvo on; nothing without an average). */
+private fun DrawScope.drawKindAverage(kind: KindData, color: Color) {
+    val average = kind.average ?: return
+    drawAverageLine(size.height * (1 - kind.fraction(average)), color)
 }
 
 @Composable
@@ -199,7 +205,9 @@ private fun ColumnScope.Stacked(data: CustomChartData, mode: ChartMode, states: 
                     val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) colors.tertiary else null
                     Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
                         drawGuidelines(colors.outlineVariant, kind.ticks.map { size.height * (1 - kind.fraction(it)) })
-                        drawKind(kind, data.axis, tone, treat)
+                        drawKind(kind, data.axis, tone, treat, linesToo = false)
+                        if (data.chart.showAverage) drawKindAverage(kind, colors.onSurfaceVariant)
+                        drawKind(kind, data.axis, tone, treat, barsToo = false)
                     }
                     if (card == CardSize.BIG) ScaleTopLabel(axisLabels(kind).last(), "scaleTop-${kind.kind.name}")
                 } else {
@@ -241,6 +249,7 @@ private fun ColumnScope.Overlaid(data: CustomChartData, mode: ChartMode, states:
             Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-OVERLAID")) {
                 drawGuidelines(colors.outlineVariant, listOf(0f, 0.5f, 1f).map { size.height * (1 - it) })
                 bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size) }
+                if (data.chart.showAverage) drawn.forEach { drawKindAverage(it, tones.getValue(it.kind)) }
                 drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null) }
             }
             if (card == CardSize.BIG) {
@@ -286,7 +295,13 @@ private fun DatesAndLegend(data: CustomChartData, mode: ChartMode, start: Dp, ov
             SeriesKind.STEPS -> listOf(LegendEntry(steps, tone, line))
         }
     }
-    ChartLegend(entries, "chartLegend")
+    val average = stringResource(R.string.energy_legend_average)
+    val withAverage = if (data.chart.showAverage && data.drawn.any { it.average != null }) {
+        entries + LegendEntry(average, colors.onSurfaceVariant, dashed = true)
+    } else {
+        entries
+    }
+    ChartLegend(withAverage, "chartLegend")
 }
 
 /** A plot area; on a tab its gestures place the crosshair, and the line is drawn over it. */

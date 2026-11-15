@@ -13,31 +13,25 @@ data class StepsDay(val day: LocalDate, val steps: Long)
 /** One bar: a day, or a week from Monday ([days] = 7) holding the average per day with steps. */
 data class StepsBar(val from: LocalDate, val days: Int, val steps: Long)
 
-data class StepsPoint(val day: LocalDate, val steps: Long)
-
 data class StepsStats(val averageSteps: Long?, val stepDays: Int, val periodDays: Int)
 
 /**
  * The Askeleet tab's pure data (weight-chart "Askeleet chart", "Askeleet statistics", "Askeleet
- * list"; steps "Days and gaps"): bars for days with steps only (weekly over 90 days), the 7-day
- * average over days with steps (≥3 in the window, daily mode only), statistics and the day list.
- * A missing day is a gap. Today is listed and drawn but left out of the averages and the line; it
- * counts as a day with steps.
+ * list"; steps "Days and gaps"): bars for days with steps only (weekly over 90 days), statistics
+ * (their average is the chart's flat line) and the day list. A missing day is a gap. Today is
+ * listed and drawn but left out of the averages and the line; it counts as a day with steps.
  */
 class StepsSeries(
     val from: LocalDate,
     val to: LocalDate,
     val weekly: Boolean,
     val bars: List<StepsBar>,
-    val average: List<StepsPoint>,
     val stats: StepsStats,
     /** Newest first. */
     val days: List<StepsDay>,
 ) {
     companion object {
         private const val WEEKLY_FROM_DAYS = 90
-        private const val WINDOW = 7
-        private const val MIN_IN_WINDOW = 3
 
         /** Days with steps (more than 0), one per day, oldest first. */
         fun stepDays(input: Collection<StepsDay>): List<StepsDay> = input.filter { it.steps > 0 }.distinctBy { it.day }.sortedBy { it.day }
@@ -58,21 +52,12 @@ class StepsSeries(
             val weekly = periodDays > WEEKLY_FROM_DAYS
             val counted = days.filter { it.day != today }
             val bars = if (weekly) weeks(days, today) else days.map { StepsBar(it.day, 1, it.steps) }
-            val countedAll = all.filter { it.day != today }.associateBy { it.day }
-            val average = if (weekly) {
-                emptyList()
-            } else {
-                counted.mapNotNull { d ->
-                    val window = (0 until WINDOW).mapNotNull { countedAll[d.day.minusDays(it.toLong())] }
-                    if (window.size >= MIN_IN_WINDOW) StepsPoint(d.day, window.map { it.steps }.average().roundToInt().toLong()) else null
-                }
-            }
             val stats = StepsStats(
                 averageSteps = counted.takeIf { it.isNotEmpty() }?.map { it.steps }?.average()?.roundToInt()?.toLong(),
                 stepDays = days.size,
                 periodDays = periodDays,
             )
-            return StepsSeries(from, to, weekly, bars, average, stats, days.reversed())
+            return StepsSeries(from, to, weekly, bars, stats, days.reversed())
         }
 
         /** A week's bar: the average per day with steps, today left out unless it is the week's only day. */

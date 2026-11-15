@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -66,6 +67,12 @@ internal fun DrawScope.drawValueLine(axis: ChartAxis, points: List<Pair<LocalDat
     } else {
         drawCircle(color, radius = 3.dp.toPx(), center = at.last())
     }
+}
+
+/** The flat dashed average line (1 dp, 4 dp dashes, as on the big cards) across the whole plot at [y]. */
+internal fun DrawScope.drawAverageLine(y: Float, color: Color) {
+    val dash = 4.dp.toPx()
+    drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash)))
 }
 
 /** The crosshair: a 1.5 dp vertical line at [day]'s centre. */

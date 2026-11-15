@@ -85,10 +85,10 @@ private fun EnergyChart(series: EnergySeries, onOpenDay: (LocalDate) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val food = colors.primary
     val treat = colors.tertiary
-    val line = colors.onSurface
+    val line = colors.onSurfaceVariant
     val grid = colors.outlineVariant
     val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
-    val top = max(series.bars.maxOf { it.total }, series.average.maxOfOrNull { it.kcal } ?: 0)
+    val top = max(series.bars.maxOf { it.total }, series.stats.averageKcal ?: 0)
     val ticks = AxisTicks.bars(top.toDouble(), KCAL_STEP)
     val maxKcal = ticks.last()
     val description = stringResource(R.string.energy_chart_description, series.bars.size)
@@ -116,7 +116,7 @@ private fun EnergyChart(series: EnergySeries, onOpenDay: (LocalDate) -> Unit) {
                 fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
                 drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.total.toDouble(), it.treat.toDouble()) }, ::y, food, treat)
-                if (series.average.size > 1) drawValueLine(axis, series.average.map { it.day to it.kcal.toDouble() }, ::y, line)
+                series.stats.averageKcal?.let { drawAverageLine(y(it.toDouble()), line) }
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
@@ -127,7 +127,7 @@ private fun EnergyChart(series: EnergySeries, onOpenDay: (LocalDate) -> Unit) {
             buildList {
                 add(LegendEntry(stringResource(R.string.energy_legend_food), food))
                 add(LegendEntry(stringResource(R.string.energy_legend_treat), treat))
-                if (series.average.size > 1) add(LegendEntry(stringResource(R.string.energy_legend_average), line, line = true))
+                if (series.stats.averageKcal != null) add(LegendEntry(stringResource(R.string.energy_legend_average), line, dashed = true))
                 if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
             },
             "energyLegend",

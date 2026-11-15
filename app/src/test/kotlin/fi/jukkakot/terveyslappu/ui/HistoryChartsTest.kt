@@ -342,4 +342,17 @@ class HistoryChartsTest {
         node("chartCancel").performClick()
         assertEquals(ChartLayout.STACKED, list.charts.single().layout)
     }
+
+    @Test
+    fun `the editor's Keskiarvo switch saves the flag`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        assertEquals(false, list.charts.single().showAverage)
+        node("chartEdit").performClick()
+        node("chartAverage").performClick()
+        node("chartSave").performClick()
+        compose.waitForIdle()
+        assertEquals(true, list.charts.single().showAverage)
+    }
 }

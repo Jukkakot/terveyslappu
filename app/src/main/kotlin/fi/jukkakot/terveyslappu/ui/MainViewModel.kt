@@ -227,7 +227,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             chartList.charts.first { it.id == chart.id }
         }
         terveys.charts.save(chartList)
-        AppLog.i("chart.custom", if (isNew) "create" else "edit", *chartFields(saved))
+        AppLog.i("chart.custom", if (isNew) "create" else "edit", *chartFields(saved), "average" to if (saved.showAverage) "on" else "off")
         _state.update { it.copy(charts = chartList.charts) }
         return saved.id
     }

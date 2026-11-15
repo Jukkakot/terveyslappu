@@ -47,7 +47,14 @@ data class DayValue(val day: LocalDate, val value: Double, val treat: Double = 0
  * has no access (the UI tells which); empty when it has nothing in the period. [ticks]: bottom,
  * middle and top of its scale (empty without values).
  */
-class KindData(val kind: SeriesKind, val style: SeriesStyle, val values: List<DayValue>?, val ticks: List<Double>) {
+class KindData(
+    val kind: SeriesKind,
+    val style: SeriesStyle,
+    val values: List<DayValue>?,
+    val ticks: List<Double>,
+    /** The period average for Keskiarvo (see [CustomChartData.average]); null when nothing to average. */
+    val average: Double? = null,
+) {
     val drawn: Boolean get() = !values.isNullOrEmpty()
 
     val min: Double get() = ticks.first()
@@ -109,9 +116,19 @@ class CustomChartData(val chart: CustomChart, val axis: ChartAxis, val kinds: Li
             val axis = ChartAxis(from, to)
             val kinds = chart.series.map { s ->
                 val values = all[s.kind]?.filter { it.day in from..to }
-                KindData(s.kind, s.style, values, ticks(s.kind, values))
+                KindData(s.kind, s.style, values, ticks(s.kind, values), average(s.kind, values, today))
             }
             return CustomChartData(chart, axis, kinds)
+        }
+
+        /**
+         * The period average of [values] (spec "Custom charts"): Energia per logged day and Askeleet
+         * per day with steps, today left out; Paino every day's last weight, today included. Null
+         * when there is nothing to average.
+         */
+        fun average(kind: SeriesKind, values: List<DayValue>?, today: LocalDate): Double? {
+            val counted = if (kind == SeriesKind.WEIGHT) values else values?.filter { it.day != today }
+            return counted?.takeIf { it.isNotEmpty() }?.map { it.value }?.average()
         }
 
         private fun ticks(kind: SeriesKind, values: List<DayValue>?): List<Double> {

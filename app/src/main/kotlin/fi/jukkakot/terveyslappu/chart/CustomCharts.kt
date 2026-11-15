@@ -23,6 +23,8 @@ data class CustomChart(
     val series: List<ChartSeries>,
     val layout: ChartLayout,
     val period: Period,
+    /** Keskiarvo: a flat dashed line per drawn data at its period average (default off). */
+    val showAverage: Boolean = false,
 ) {
     val cardId: String get() = cardId(id)
 
@@ -52,6 +54,7 @@ data class ChartDraft(
     val styles: Map<SeriesKind, SeriesStyle>,
     val layout: ChartLayout,
     val period: Period,
+    val showAverage: Boolean = false,
 ) {
     val isNew: Boolean get() = id == 0
 
@@ -64,6 +67,7 @@ data class ChartDraft(
         series = SeriesKind.entries.filter { it in on }.map { ChartSeries(it, styleOf(it)) },
         layout = layout,
         period = period,
+        showAverage = showAverage,
     )
 
     companion object {
@@ -74,6 +78,7 @@ data class ChartDraft(
             styles = SeriesKind.entries.associateWith { chart.styleOf(it) ?: CustomCharts.defaultStyle(it) },
             layout = chart.layout,
             period = chart.period,
+            showAverage = chart.showAverage,
         )
     }
 }
@@ -104,6 +109,7 @@ object CustomCharts {
         styles = SeriesKind.entries.associateWith(::defaultStyle),
         layout = ChartLayout.STACKED,
         period = DEFAULT_PERIOD,
+        showAverage = false,
     )
 
     /** Grapheme clusters, so an emoji counts as one. */
@@ -139,6 +145,8 @@ object CustomCharts {
     }
 
     fun setStyle(draft: ChartDraft, kind: SeriesKind, style: SeriesStyle): ChartDraft = draft.copy(styles = draft.styles + (kind to style))
+
+    fun setShowAverage(draft: ChartDraft, on: Boolean): ChartDraft = draft.copy(showAverage = on)
 
     fun setPeriod(chart: CustomChart, period: Period): CustomChart = chart.copy(period = period)
 

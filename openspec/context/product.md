@@ -180,6 +180,9 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     other people, no week-to-week comparison features for now. Show facts, never smoothed
     values; a flat period-average line is fine as a reference. Bad news weighs 2-3 times more
     than good, so keep framing neutral (research: knowledge.md "Motivation and feedback").
+  - Period average line (user 2026-11-15): Energia and Askeleet draw one flat dashed line at the
+    period's average (today left out) instead of a rolling 7-day line, as the big cards do; own
+    charts get a Keskiarvo switch (off by default).
   - Food log goal restated (user 2026-11-15): log for a while, now and then, to learn the kcal of
     everyday meals; earlier the same meals every day made counting unnecessary.
   - Chart granularity is the app's choice, not a setting (user 2026-11-15): long periods are not

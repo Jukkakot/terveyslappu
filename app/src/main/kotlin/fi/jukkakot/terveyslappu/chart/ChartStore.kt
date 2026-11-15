@@ -8,7 +8,7 @@ import java.time.LocalDate
 
 /**
  * The own charts as one JSON string (custom-charts design 3):
- * `{"v":1,"next":3,"charts":[{"id":1,"name":"…","layout":"stacked","period":{"k":"last","days":30},"series":[{"kind":"weight","style":"line"},…]}]}`.
+ * `{"v":1,"next":3,"charts":[{"id":1,"name":"…","layout":"stacked","period":{"k":"last","days":30},"average":true,"series":[{"kind":"weight","style":"line"},…]}]}`.
  * Pure; an unreadable value is null (the store then shows no charts and logs it once).
  */
 object ChartCodec {
@@ -21,7 +21,7 @@ object ChartCodec {
     private data class StoredSeries(val kind: String, val style: String)
 
     @Serializable
-    private data class StoredChart(val id: Int, val name: String, val layout: String, val period: StoredPeriod, val series: List<StoredSeries>)
+    private data class StoredChart(val id: Int, val name: String, val layout: String, val period: StoredPeriod, val series: List<StoredSeries>, val average: Boolean = false)
 
     @Serializable
     private data class Stored(val v: Int, val next: Int, val charts: List<StoredChart>)
@@ -30,7 +30,7 @@ object ChartCodec {
 
     fun encode(list: ChartList): String = json.encodeToString(
         Stored.serializer(),
-        Stored(VERSION, list.next, list.charts.map { c -> StoredChart(c.id, c.name, c.layout.name.lowercase(), period(c.period), c.series.map { StoredSeries(it.kind.name.lowercase(), it.style.name.lowercase()) }) }),
+        Stored(VERSION, list.next, list.charts.map { c -> StoredChart(c.id, c.name, c.layout.name.lowercase(), period(c.period), c.series.map { StoredSeries(it.kind.name.lowercase(), it.style.name.lowercase()) }, c.showAverage) }),
     )
 
     /** Null when [text] cannot be read; an empty value is no charts. */
@@ -42,7 +42,7 @@ object ChartCodec {
             val charts = stored.charts.map { c ->
                 val series = c.series.map { ChartSeries(enumOf(it.kind), enumOf(it.style)) }.distinctBy { it.kind }.sortedBy { it.kind }
                 require(series.isNotEmpty() && c.name.isNotBlank())
-                CustomChart(c.id, c.name, series, enumOf(c.layout), period(c.period))
+                CustomChart(c.id, c.name, series, enumOf(c.layout), period(c.period), c.average)
             }.distinctBy { it.id }
             ChartList(charts, maxOf(stored.next, (charts.maxOfOrNull { it.id } ?: 0) + 1))
         }.getOrNull()

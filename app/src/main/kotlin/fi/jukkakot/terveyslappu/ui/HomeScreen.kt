@@ -304,9 +304,7 @@ private fun FoodBars(summary: HomeFood, food: Color, treat: Color, top: Double?,
 
 /** The dashed average line of a big card (design 9): 1 dp, onSurfaceVariant. */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.averageLine(fraction: Float, color: Color) {
-    val y = size.height * (1 - fraction.coerceIn(0f, 1f))
-    val dash = 4.dp.toPx()
-    drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash)))
+    drawAverageLine(size.height * (1 - fraction.coerceIn(0f, 1f)), color)
 }
 
 /**

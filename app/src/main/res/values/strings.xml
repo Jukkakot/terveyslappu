@@ -441,7 +441,9 @@
     <string name="energy_days">%1$d / %2$d päivää</string>
     <string name="energy_legend_food">ruoka</string>
     <string name="energy_legend_treat">herkut</string>
-    <string name="energy_legend_average">7 pv keskiarvo</string>
+    <string name="energy_legend_average">keskiarvo</string>
+    <string name="chart_average">Keskiarvo</string>
+    <string name="chart_average_line">Vaakaviiva jakson keskiarvon kohdalla</string>
     <string name="import_found_foods">Löytyi %1$d ruokakirjausta ja %2$d tuotetta.</string>
     <string name="import_confirm_foods">Tuo</string>
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d ruokaa ja %3$d tuotetta</string>
