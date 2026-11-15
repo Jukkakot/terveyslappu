@@ -8,13 +8,13 @@ through Android's built-in backup and phone-to-phone transfer, next to the weigh
 
 ### Requirement: Carry the app's own data
 The app SHALL let Android's phone-to-phone transfer and cloud backup carry its owner details,
-appearance choice, chart and home periods, and the raw-data archive, and restore them when the
+appearance choice, chart and home periods, the front page layout (order, sizes, hidden cards), and the raw-data archive, and restore them when the
 app is installed on the new phone.
 
 #### Scenario: New Samsung phone with Smart Switch
 - **GIVEN** the old phone has owner details, the dark theme and a raw-data archive
 - **WHEN** the user moves to a new phone with Smart Switch and opens the app there
-- **THEN** Omat tiedot, the theme, the periods and the archive are as on the old phone
+- **THEN** Omat tiedot, the theme, the periods, the front page layout and the archive are as on the old phone
 
 #### Scenario: Weights still come from the backup file
 - **GIVEN** the app data was restored on the new phone
