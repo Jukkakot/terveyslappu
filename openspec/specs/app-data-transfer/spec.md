@@ -8,7 +8,7 @@ through Android's built-in backup and phone-to-phone transfer, next to the weigh
 
 ### Requirement: Carry the app's own data
 The app SHALL let Android's phone-to-phone transfer and cloud backup carry its owner details,
-appearance choice, chart and home periods, the front page layout (order, sizes, hidden cards), and the raw-data archive, and restore them when the
+appearance choice, chart and home periods, the front page layout (order, sizes, hidden cards), the raw-data archive and the imported Garmin step history, and restore them when the
 app is installed on the new phone.
 
 #### Scenario: New Samsung phone with Smart Switch
