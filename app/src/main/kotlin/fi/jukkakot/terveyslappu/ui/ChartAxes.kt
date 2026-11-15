@@ -66,9 +66,17 @@ internal fun axisLabelWidth(labels: List<String>): Dp {
  * guideline ([fractions] 0 = bottom, 1 = top) and clamped inside the plot.
  */
 @Composable
-internal fun YAxisLabels(labels: List<String>, fractions: List<Float>, width: Dp, height: Dp, tag: String) {
+internal fun YAxisLabels(
+    labels: List<String>,
+    fractions: List<Float>,
+    width: Dp,
+    height: Dp,
+    tag: String,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    /** A right-hand axis: labels start-aligned against the plot (custom-charts design 9). */
+    end: Boolean = false,
+) {
     val style = MaterialTheme.typography.labelSmall
-    val color = MaterialTheme.colorScheme.onSurfaceVariant
     Layout(
         content = { labels.forEachIndexed { i, text -> Text(text, style = style, color = color, maxLines = 1, softWrap = false, modifier = Modifier.testTag("$tag-$i")) } },
         modifier = Modifier.width(width).height(height),
@@ -81,7 +89,7 @@ internal fun YAxisLabels(labels: List<String>, fractions: List<Float>, width: Dp
             placeables.forEachIndexed { i, p ->
                 val centre = (1f - fractions[i]) * h
                 val y = (centre - p.height / 2f).roundToInt().coerceIn(0, (h - p.height).coerceAtLeast(0))
-                p.place((w - pad - p.width).coerceAtLeast(0), y)
+                p.place(if (end) pad else (w - pad - p.width).coerceAtLeast(0), y)
             }
         }
     }
