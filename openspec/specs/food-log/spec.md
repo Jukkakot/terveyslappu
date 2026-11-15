@@ -27,7 +27,7 @@ Historia on Energia for 1 vk; back from there SHALL return to the Ruoka screen.
 
 #### Scenario: From the day to the week
 - **WHEN** the user taps Viikko on the Ruoka screen
-- **THEN** Historia opens on Energia with 1 vk, and tapping a day's bar there opens that day on Ruoka
+- **THEN** Historia opens on Energia with 1 vk, and tapping a day's bar there and then "Avaa päivä ›" opens that day on Ruoka
 
 ### Requirement: Adding an item
 "Lisää annos" (on the front page and on the Ruoka screen) SHALL open the add sheet, adding to the

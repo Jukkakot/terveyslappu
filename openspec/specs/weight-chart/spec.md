@@ -112,21 +112,22 @@ statistics SHALL show the same values of the BMI except the change per week; the
 - **THEN** they show latest 25,3 "ylipaino", change −0,3 with an arrow down, and no rate per week
 
 ### Requirement: Point details
-Tapping a dot SHALL show that weight's date, time and value of the shown quantity; the date SHALL
-include the year when the weight is not from the current year.
+A weight's date, time and value SHALL be shown through the chart's crosshair (see "Crosshair on
+every Historia chart"); the date SHALL include the year when the weight is not from the current
+year.
 
 #### Scenario: Tap a dot
-- **WHEN** the user taps the dot of 82.6 kg on 8.11. this year at 7.05
-- **THEN** the chart shows "8.11. 7.05 82,6 kg"
+- **WHEN** the user taps the dot of 82.6 kg on Sunday 8.11. this year at 7.05
+- **THEN** the readout shows "Su 8.11. · 7.05 · 82,6 kg"
 
 #### Scenario: Tap an old dot
-- **WHEN** the user taps the dot of 97.6 kg on 15.9.2024 at 8.33
-- **THEN** the chart shows "15.9.2024 8.33 97,6 kg"
+- **WHEN** the user taps the dot of 97.6 kg on Sunday 15.9.2024 at 8.33
+- **THEN** the readout shows "Su 15.9.2024 · 8.33 · 97,6 kg"
 
 #### Scenario: Tap a BMI dot
 - **GIVEN** the BMI chart is shown and the height is 180 cm
-- **WHEN** the user taps the dot of 82.0 kg on 8.11. this year at 7.05
-- **THEN** the chart shows "8.11. 7.05 BMI 25,3"
+- **WHEN** the user taps the dot of 82.0 kg on Sunday 8.11. this year at 7.05
+- **THEN** the readout shows "Su 8.11. · 7.05 · BMI 25,3"
 
 ### Requirement: Weight scale
 Every weight chart (Historia and the home card) SHALL use one y-scale rule: the lowest and highest
@@ -375,7 +376,7 @@ and the line. There SHALL
 be no moving average line. Days without steps data SHALL
 be gaps, never zero bars. Kaikki SHALL start at the first day with steps or today. The chart SHALL
 show steps only: no weights, goal line, target or second y-axis. Tapping a bar SHALL show its day
-and steps.
+and steps through the crosshair.
 
 #### Scenario: Week with a gap
 - **GIVEN** 1 vk with five days with steps and Wednesday and Thursday without data
@@ -760,7 +761,8 @@ Allekkain layout's single panel. On a Historia tab the plot SHALL be 200 dp high
 - **THEN** the dashed line runs at 82,0 kg through the dot
 
 ### Requirement: Chart crosshair
-On the plot areas of an own chart's tab, tapping, or pressing and holding (released in place or
+On the plot areas of an own chart's tab (and, by "Crosshair on every Historia chart", of every
+Historia chart), tapping, or pressing and holding (released in place or
 followed by a sideways drag), SHALL place one vertical line at that day through the chart and SHALL
 show above it one readout: the date and, for each shown data with access, that day's own value
 (weight in kg, the day's last weight not marked "?", or "ei painoa"; kcal or "ei kirjauksia"; steps
@@ -959,3 +961,43 @@ colour change like any other change.
 #### Scenario: Pick a colour
 - **WHEN** the user taps Askeleet's colour dot and picks vihreä
 - **THEN** the picker closes and the dot shows green; Tallenna keeps it
+
+### Requirement: Crosshair on every Historia chart
+Every chart in Historia (Paino, BMI, Syöty, Askeleet, Kulutus and the own charts) SHALL answer a
+tap, a press-and-hold and a hold-and-drag on its plot the way "Chart crosshair" describes for own
+charts: one vertical line at the chosen day (or week, when the bars are weekly) through the plot,
+a marker on the chosen value (a filled circle on a line or dot, the chosen bar in full tone while
+the other bars dim to 60 %), and one readout above the plot that always starts with the date: the
+weekday and the date, with the year when it is not the current year ("Ma 9.11.", "La 15.9.2024"),
+or for a weekly bar the week ("Vk 46 · 9.–15.11."). The readout SHALL then show:
+- Paino: the time and value of that day's last weight not marked "?" ("7.05 · 82,6 kg"), or "ei
+  painoa"; BMI the same with "BMI 25,3".
+- Syöty: total kcal and "herkut N kcal", or "ei kirjauksia"; a weekly bar its average per logged
+  day ("keskim. 1 900 kcal/pv").
+- Askeleet: steps or "ei tietoa"; weekly: "keskim. 8 200 askelta/pv".
+- Kulutus: as in energy-burn "Kulutus tab".
+The removal rules, the "Napauta päivää nähdäksesi arvot" placeholder, swipe-to-switch-tab, haptic
+tick and TalkBack actions SHALL be those of "Chart crosshair". On Syöty the readout SHALL end with
+"Avaa päivä ›", which opens Ruoka on that day (not for a weekly bar); tapping elsewhere on the
+readout removes the crosshair. Front page cards keep their tap (open Historia) and have no
+crosshair.
+
+#### Scenario: Tap a steps bar
+- **GIVEN** Askeleet with 1 vk
+- **WHEN** the user taps Thursday's bar
+- **THEN** a line crosses Thursday, its bar stays full while the others dim, and the readout reads
+  "To 12.11. · 9 202 askelta"
+
+#### Scenario: Old weight
+- **GIVEN** Paino with Kaikki
+- **WHEN** the user taps 15.9.2024, whose last weight was 97,6 kg at 8.33
+- **THEN** the readout reads "Su 15.9.2024 · 8.33 · 97,6 kg" and a ring marks the dot
+
+#### Scenario: Open a day from Syöty
+- **WHEN** the user taps a day on Syöty and then "Avaa päivä ›"
+- **THEN** Ruoka opens on that day; back returns to Historia on Syöty
+
+#### Scenario: Weekly bar
+- **GIVEN** Syöty with 1 v
+- **WHEN** the user taps a week's bar
+- **THEN** the readout reads "Vk 46 · 9.–15.11. · keskim. 1 900 kcal/pv" and no "Avaa päivä"

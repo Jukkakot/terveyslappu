@@ -63,8 +63,8 @@ full tone of the Kulutus colour (a "kokonais" day in the light tone, an active-o
 tone), bar height the day's total; the flat dashed average line at the period's average total per
 day with data (today left out); weekly bars (average per day with data of the week, today left out)
 for periods over 90 days; the shared axes, period range line and legend ("lepo", "aktiivinen",
-"keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show its day (or week) with total,
-active and lepo kcal. Under the chart: the average total kcal per day, the average active kcal per
+"keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show, through the crosshair, its day (or week) with total, active and lepo
+kcal. Under the chart: the average total kcal per day, the average active kcal per
 day, and "x / y päivää"; then the days newest first, each with its date ("Tänään", "Eilen",
 weekday and date as on Askeleet), total kcal and "aktiivinen N kcal". The tab SHALL show energy
 burned only: no eaten energy, no difference, no target.
