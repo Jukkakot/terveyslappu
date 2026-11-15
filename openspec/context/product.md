@@ -176,6 +176,14 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     items (a dish plus bread).
   - BR4 Treats visible: small frequent treats add up unnoticed, so they stand apart from meals.
   - BR5 No pressure: a missed day is fine; no streaks, red numbers or judgement.
+  - Motivation (user 2026-11-15): logging itself is what works; no gamification, no comparison to
+    other people, no week-to-week comparison features for now. Show facts, never smoothed
+    values; a flat period-average line is fine as a reference. Bad news weighs 2-3 times more
+    than good, so keep framing neutral (research: knowledge.md "Motivation and feedback").
+  - Food log goal restated (user 2026-11-15): log for a while, now and then, to learn the kcal of
+    everyday meals; earlier the same meals every day made counting unnecessary.
+  - Chart granularity is the app's choice, not a setting (user 2026-11-15): long periods are not
+    shown day by day where that makes no sense.
   - BR6 Data in Health Connect (`NutritionRecord`, meal type breakfast/lunch/dinner/snack), as
     weight.
   - No photo AI in the app and no other food app to maintain: the user asks an AI chat for the

@@ -5,7 +5,8 @@
 ### Requirement: Days and gaps
 A day SHALL be the local day as Health Connect's daily aggregate reports it. A day for which Health
 Connect holds no steps SHALL be a gap, never a zero bar, and SHALL be left out of averages and day
-counts. Today SHALL be shown but left out of the averages (it is not over); it SHALL count as a day with steps in "x / y päivää" when it has steps.
+counts. Today SHALL be shown but left out of the averages, the average line and the weekly bar
+averages (it is not over); it SHALL count as a day with steps in "x / y päivää" when it has steps.
 
 #### Scenario: Day without data
 - **GIVEN** Health Connect holds no steps for Tuesday
