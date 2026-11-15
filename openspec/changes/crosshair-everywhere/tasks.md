@@ -15,4 +15,14 @@
 ## 3. Context
 
 - [x] 3.1 Bump MINOR of `appVersion`.
-- [ ] 3.2 Run `./gradlew test lint assembleDebug`.
+- [x] 3.2 Run `./gradlew test lint assembleDebug`.
+
+## Implementation notes (choices the spec left open)
+
+- Marker: a 2 dp ring (6 dp radius) in the data's tone, as tasks 1.2 and the "Old weight" scenario say (the requirement's "filled circle" read as the ring).
+- Own charts get the same weekday date head and markers (the new requirement lists them); gestures, removal rules and TalkBack are unchanged.
+- Paino/BMI are drawn on the shared Canvas axes (`YAxisLabels`, `DateAxis`, 160 dp plot) instead of Vico, so the crosshair maps to the same day slots; the Vico dependency is now unused but left in the build.
+- Week head: the ISO week Monday–Sunday; the year after the Sunday when it is not this year ("Vk 1 · 30.12.–5.1.2025").
+- Syöty readout always shows "herkut N kcal" for a logged day (also 0); "Avaa päivä ›" is shown on empty days too.
+- Kulutus weekly readout: the week bar's values in the day format, no "keskim." (spec: "as in energy-burn").
+- TalkBack on weekly bars steps one week at a time.
