@@ -378,6 +378,11 @@ class MainActivity : ComponentActivity() {
                         onOpenQuestioned = viewModel::openQuestioned,
                         onTargetShown = viewModel::targetShown,
                         onEnergyShown = viewModel::energyShown,
+                        onSaveChart = viewModel::onSaveChart,
+                        onDeleteChart = viewModel::onDeleteChart,
+                        onChartPeriod = viewModel::onChartPeriod,
+                        onOpenChart = viewModel::openChart,
+                        onChartShown = viewModel::chartShown,
                         onGrantHistory = {
                             viewModel.afterHistory = AfterHistory.RELOAD
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }

@@ -95,6 +95,16 @@ class MainActions(
     val onTargetShown: () -> Unit = {},
     /** Historia opened on Energia after Ruoka. */
     val onEnergyShown: () -> Unit = {},
+    /** Tallenna in the chart editor; returns the saved chart's id (a new chart: its new id). */
+    val onSaveChart: (fi.jukkakot.terveyslappu.chart.CustomChart) -> Int = { it.id },
+    /** Poista kaavio, confirmed. */
+    val onDeleteChart: (Int) -> Unit = {},
+    /** An own chart's period chips on its tab. */
+    val onChartPeriod: (Int, Period) -> Unit = { _, _ -> },
+    /** A chart card: Historia on that chart's tab. */
+    val onOpenChart: (Int) -> Unit = {},
+    /** Historia opened on the chart of a card. */
+    val onChartShown: () -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */

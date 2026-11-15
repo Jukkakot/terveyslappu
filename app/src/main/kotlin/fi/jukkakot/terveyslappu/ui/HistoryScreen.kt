@@ -75,6 +75,15 @@ import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsSeries
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextOverflow
+import fi.jukkakot.terveyslappu.chart.CustomCharts
+import fi.jukkakot.terveyslappu.chart.HistoryPage
+import fi.jukkakot.terveyslappu.chart.HistoryPages
+import fi.jukkakot.terveyslappu.chart.SeriesKind
+import fi.jukkakot.terveyslappu.log.AppLog
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -170,21 +179,70 @@ private fun PeriodList(
     }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
     // Paino, BMI, Energia (food-log), then Askeleet (steps); back from Ruoka opened from Energia returns to it.
+    // Fixed tabs, the own charts, then Uusi kaavio (custom-charts design 11).
+    val pages = remember(state.charts) { HistoryPages.of(state.charts) }
+    val pageCount by rememberUpdatedState(pages.size)
     val initialPage = when {
+        state.historyChart != null -> pages.indexOfChart(state.historyChart).coerceAtLeast(0)
         state.historyOnSteps -> STEPS_PAGE
         state.historyOnEnergy -> ENERGY_PAGE
         else -> 0
     }
-    val pager = rememberPagerState(initialPage = initialPage) { STEPS_PAGE + 1 }
+    val pager = rememberPagerState(initialPage = initialPage) { pageCount }
     LaunchedEffect(Unit) {
         if (state.historyOnEnergy) actions.onEnergyShown()
         if (state.historyOnSteps) actions.onStepsShown()
+        if (state.historyChart != null) actions.onChartShown()
     }
-    val onEnergy = pager.currentPage == ENERGY_PAGE
-    val onSteps = pager.currentPage == STEPS_PAGE
+    val page = pages[pager.currentPage]
+    val onEnergy = page == HistoryPage.Energy
+    val onSteps = page == HistoryPage.Steps
+    val chart = (page as? HistoryPage.Custom)?.let { p -> state.charts.firstOrNull { it.id == p.id } }
+    // The period the chips show: the chart's own on its tab, otherwise the shared one.
+    val chipPeriod = chart?.period ?: state.period
+    val onChipPeriod: (Period) -> Unit = if (chart != null) { p -> actions.onChartPeriod(chart.id, p) } else actions.onPeriod
     // Entering Askeleet (or changing its period) reads the shown range again (steps "Refresh and failed reads").
     LaunchedEffect(onSteps, state.period) {
         if (onSteps) stepsActions.onShown(if (state.period == Period.All) null else StepsSeries.dates(state.period, today, null).first)
+    }
+    // An own chart reads what it shows like the fixed tabs, and never asks a permission (design 15).
+    LaunchedEffect(chart?.id, chart?.period) {
+        val shown = chart ?: return@LaunchedEffect
+        AppLog.i("chart.custom", "shown", "id" to shown.id, "period" to CustomCharts.logPeriod(shown.period))
+        if (shown.has(SeriesKind.STEPS)) stepsActions.onShown(if (shown.period == Period.All) null else StepsSeries.dates(shown.period, today, null).first)
+    }
+    // The crosshair of the shown chart page: cleared on a tab or period change and when its day leaves the axis (design 10).
+    var crosshair by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    LaunchedEffect(pager.currentPage, chart?.period) { crosshair = null }
+    // The editor: null closed, 0 a new chart, else the chart's id.
+    var editor by rememberSaveable(saver = EditorTargetSaver) { mutableStateOf(null) }
+    var goTo by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(goTo, pages) {
+        val target = goTo ?: return@LaunchedEffect
+        if (target < pages.size) {
+            pager.animateScrollToPage(target)
+            goTo = null
+        }
+    }
+    editor?.let { target ->
+        val existing = state.charts.firstOrNull { it.id == target }
+        ChartEditor(
+            existing = existing,
+            charts = state.charts,
+            onSave = { saved ->
+                editor = null
+                crosshair = null
+                val id = actions.onSaveChart(saved)
+                if (existing == null) goTo = HistoryPages.of(state.charts.filter { it.id != id } + saved.copy(id = id)).indexOfChart(id)
+            },
+            onDelete = { id ->
+                editor = null
+                crosshair = null
+                goTo = HistoryPages.afterDelete(state.charts, id)
+                actions.onDeleteChart(id)
+            },
+            onDismiss = { editor = null },
+        )
     }
     val stepsSeries = remember(steps.days, state.period, today) { StepsSeries.of(steps.days.orEmpty(), state.period, today) }
     // The nutrition permission is asked when Energia is first opened (review decision).
@@ -194,14 +252,14 @@ private fun PeriodList(
     LazyColumn(Modifier.fillMaxSize().testTag("weights"), state = listState) {
         item(key = "chips") {
             PeriodChips(
-                state.period,
-                actions.onPeriod,
+                chipPeriod,
+                onChipPeriod,
                 dayWeights = dayWeights,
                 historyMissing = state.history == HistoryAccess.NOT_GRANTED,
                 onGrantHistory = actions.onGrantHistory,
             )
         }
-        if (state.history == HistoryAccess.NOT_GRANTED && state.period.needsHistory(now, zone)) {
+        if (state.history == HistoryAccess.NOT_GRANTED && chipPeriod.needsHistory(now, zone)) {
             item(key = "history") { HistoryNotice(actions.onGrantHistory) }
         }
         item(key = "tabs") {
@@ -231,20 +289,53 @@ private fun PeriodList(
                     text = { Text(stringResource(R.string.quantity_steps), maxLines = 1) },
                     modifier = Modifier.testTag("tab-STEPS"),
                 )
+                state.charts.forEach { c ->
+                    val index = pages.indexOfChart(c.id)
+                    Tab(
+                        selected = pager.currentPage == index,
+                        onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                        text = { Text(c.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 160.dp)) },
+                        modifier = Modifier.testTag("tab-chart-${c.id}"),
+                    )
+                }
+                Tab(
+                    selected = page == HistoryPage.NewChart,
+                    onClick = { scope.launch { pager.animateScrollToPage(pages.size - 1) } },
+                    text = { Text(stringResource(R.string.chart_new), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-NEW"),
+                )
             }
         }
         item(key = "pager") {
-            HorizontalPager(pager, verticalAlignment = Alignment.Top) { page ->
-                if (page == STEPS_PAGE) {
+            HorizontalPager(pager, verticalAlignment = Alignment.Top) { index ->
+                val shownPage = pages[index]
+                if (shownPage is HistoryPage.Custom) {
+                    val c = state.charts.firstOrNull { it.id == shownPage.id }
+                    if (c != null) {
+                        val data = rememberChartData(c, state, food, steps, today, zone)
+                        val current = index == pager.currentPage
+                        LaunchedEffect(data.axis, current) { if (current && crosshair?.let { it !in data.axis } == true) crosshair = null }
+                        ChartPage(
+                            data,
+                            chartStates(food, foodActions, steps, stepsActions),
+                            access = { chartAccess(it, food, steps) },
+                            crosshair = crosshair.takeIf { current },
+                            onDay = { crosshair = it },
+                            onEdit = { editor = c.id },
+                        )
+                    }
+                } else if (shownPage == HistoryPage.NewChart) {
+                    NewChartPage { editor = 0 }
+                } else if (index == STEPS_PAGE) {
                     StepsTab(steps, stepsSeries, shown, zone, stepsActions)
-                } else if (page == ENERGY_PAGE) {
+                } else if (index == ENERGY_PAGE) {
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
                         food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                         else -> EnergyPage(series, shown, zone) { foodActions.onOpenDay(it) }
                     }
                 } else {
-                    QuantityPage(Quantity.entries[page], state.period, shown, now, zone, profile, actions.onOpenProfile)
+                    QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile)
                 }
             }
         }
@@ -259,7 +350,7 @@ private fun PeriodList(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 EnergyDayRow(day, today) { foodActions.onOpenDay(it) }
             }
-        } else items(rows, key = { it.node.key }) { row ->
+        } else if (page is HistoryPage.Fixed) items(rows, key = { it.node.key }) { row ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             when (val node = row.node) {
                 is ListNode.Weight -> if (node.questioned) {
@@ -276,8 +367,8 @@ private fun PeriodList(
     }
 }
 
-private val ENERGY_PAGE = Quantity.entries.size
-private val STEPS_PAGE = ENERGY_PAGE + 1
+private val ENERGY_PAGE = HistoryPages.ENERGY
+private val STEPS_PAGE = HistoryPages.STEPS
 
 /** Energia without the nutrition permission: the reason and a button to grant it (weight-chart). */
 @Composable
