@@ -347,6 +347,7 @@ class MainActivity : ComponentActivity() {
                         onPeriod = viewModel::onPeriod,
                         onHomePeriod = viewModel::onHomePeriod,
                         onFoodPeriod = viewModel::onFoodPeriod,
+                        onHomeLayout = viewModel::onHomeLayout,
                         onOpenEnergy = viewModel::openEnergy,
                         onStepsPeriod = viewModel::onStepsPeriod,
                         onOpenSteps = viewModel::openSteps,

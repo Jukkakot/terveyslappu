@@ -143,6 +143,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.vico.compose.m3)
     implementation(libs.calendar.compose)
+    implementation(libs.reorderable)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 

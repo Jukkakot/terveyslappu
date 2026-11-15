@@ -70,6 +70,8 @@ class MainActions(
     val onHomePeriod: (Long) -> Unit = {},
     val onFoodPeriod: (Long) -> Unit = {},
     val onStepsPeriod: (Long) -> Unit = {},
+    /** Valmis in the front page's edit mode saves the edited layout. */
+    val onHomeLayout: (fi.jukkakot.terveyslappu.home.HomeLayout) -> Unit = {},
     /** The steps card: Historia on Askeleet. */
     val onOpenSteps: () -> Unit = {},
     /** Historia opened on Askeleet after the steps card. */

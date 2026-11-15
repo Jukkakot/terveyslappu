@@ -25,6 +25,8 @@ import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.chart.PeriodPrefs
+import fi.jukkakot.terveyslappu.home.HomeLayout
+import fi.jukkakot.terveyslappu.home.HomePrefs
 import fi.jukkakot.terveyslappu.chart.encode
 import fi.jukkakot.terveyslappu.weight.newestFirst
 import fi.jukkakot.terveyslappu.backup.writeExport
@@ -78,6 +80,8 @@ data class MainUiState(
     val foodDays: Long = HomeSummary.DEFAULT_DAYS,
     /** The front page steps card's own chart period in days. */
     val stepsDays: Long = HomeSummary.DEFAULT_DAYS,
+    /** The saved front page layout (home-screen "Card grid"); edit mode works on a draft of it. */
+    val homeLayout: HomeLayout = HomeLayout.DEFAULT,
     /** Whether weights older than 30 days can be read; null until checked. */
     val history: HistoryAccess? = null,
     val loadFailed: Boolean = false,
@@ -169,6 +173,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val periodPrefs = PeriodPrefs(app)
 
+    private val homePrefs = HomePrefs(app)
+
     /** The owner details (owner-profile). */
     val profile = (app as TerveysApp).profile
 
@@ -184,7 +190,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays(), stepsDays = periodPrefs.loadStepsDays()))
+    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays(), stepsDays = periodPrefs.loadStepsDays(), homeLayout = homePrefs.load()))
     val state: StateFlow<MainUiState> = _state
 
     fun onPeriod(period: Period) {
@@ -212,6 +218,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppLog.i("home.period", "", "card" to "steps", "days" to chosen)
         periodPrefs.saveStepsDays(chosen)
         _state.update { it.copy(stepsDays = chosen) }
+    }
+
+    /** Valmis in the front page's edit mode (home-card-layout design 4, 14): only ids and sizes are logged. */
+    fun onHomeLayout(layout: HomeLayout) {
+        if (layout == _state.value.homeLayout) return
+        AppLog.i(
+            "home.layout", "",
+            "set" to layout.shown.joinToString(",") { "${it.id}:${it.size.name.lowercase()}" },
+            "hidden" to layout.hidden.joinToString(",") { it.id },
+        )
+        homePrefs.save(layout)
+        _state.update { it.copy(homeLayout = layout) }
     }
 
     /** The history permission screen returned (chart notice): read again with what is now allowed. */
