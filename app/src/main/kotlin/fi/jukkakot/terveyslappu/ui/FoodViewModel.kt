@@ -66,6 +66,9 @@ sealed interface SheetLine {
 
     /** "Leikepöytä muuttui": the card's content left the clipboard before the tap; nothing saved. */
     data object ClipChanged : SheetLine
+
+    /** Ohita on the clipboard card inside the sheet: "Ohitettu · Kumoa". */
+    data class ClipSkipped(val offer: ClipOffer) : SheetLine
 }
 
 data class FoodUiState(
@@ -387,6 +390,25 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val offer = _state.value.clipOffer ?: return
         AppLog.i("food.import.offer", "skip", "count" to offer.count)
         markDone(offer.key)
+        if (_state.value.sheetDay != null) {
+            _state.update { it.copy(line = SheetLine.ClipSkipped(offer)) }
+        } else {
+            _messages.tryEmit(UiMessage(R.string.ai_clip_skipped, action = UiAction(R.string.undo) { unskip(offer) }))
+        }
+    }
+
+    /** The sheet line's Kumoa of Ohita. */
+    fun undoClipSkip() {
+        val offer = (_state.value.line as? SheetLine.ClipSkipped)?.offer ?: return
+        _state.update { it.copy(line = null) }
+        unskip(offer)
+    }
+
+    /** Kumoa of Ohita: the content counts as never skipped and the card shows it again. */
+    private fun unskip(offer: ClipOffer) {
+        clipPrefs.edit().putString("done", clipJson.encodeToString(doneSerializer, ClipOffers.unmarkDone(doneKeys(), offer.key))).apply()
+        AppLog.i("food.import.offer", "unskip", "count" to offer.count)
+        _state.update { it.copy(clipOffer = offer) }
     }
 
     /** Kopioi tuontiohje: the example JSON in the copied text is never offered. */
@@ -612,10 +634,19 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         return true
     }
 
+    /** Poista tuote under Asetukset → Ruokakirjaus: at once, "<name> poistettu · Kumoa" brings it back as it was. */
     fun removeProduct(key: String) {
+        val product = store.all().firstOrNull { it.key == key } ?: return
         store.remove(key)
-        AppLog.i("food.edit", "product removed")
+        AppLog.i("food.product.delete", "ok", "from" to "settings")
         _state.update { it.copy(products = store.all()) }
+        _messages.tryEmit(
+            UiMessage(R.string.food_deleted, listOf(product.name), UiAction(R.string.undo) {
+                store.restore(mapOf(product.key to product))
+                AppLog.i("food.product.delete", "undo", "from" to "settings")
+                _state.update { it.copy(products = store.all()) }
+            }),
+        )
     }
 
     private fun apply(plan: FoodPlan, event: String, oldKey: String?) {

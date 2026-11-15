@@ -291,6 +291,7 @@ class MainActivity : ComponentActivity() {
                         onCopyAiPrompt = ::copyAiPrompt,
                         onClipOpen = { foodModel.openClipOffer(FoodClipboard.text(this)) },
                         onClipSkip = foodModel::skipClipOffer,
+                        onUndoClipSkip = foodModel::undoClipSkip,
                         onClipAddAll = { day ->
                             val addAll = { foodModel.addAllFromClip(FoodClipboard.text(this), day) }
                             if (foodModel.state.value.access == FoodAccess.GRANTED) addAll() else grantFood(addAll)

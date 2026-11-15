@@ -164,7 +164,7 @@ private fun SupportPage(versionName: String, actions: MainActions, snackbar: Sna
                 {
                     val count = actions.onCopyLog()
                     scope.launch {
-                        snackbar.showSnackbar(if (count > 0) copiedText.format(count) else logEmpty)
+                        snackbar.showTimed(if (count > 0) copiedText.format(count) else logEmpty, null)
                     }
                 },
                 "copyLog",

@@ -110,4 +110,7 @@ object ClipOffers {
 
     /** [key] added to the done list, oldest dropped past [MAX_DONE]. */
     fun markDone(done: List<String>, key: String): List<String> = (done.filter { it != key } + key).takeLast(MAX_DONE)
+
+    /** Kumoa of Ohita: [key] out of the done list, so the content is offered again. */
+    fun unmarkDone(done: List<String>, key: String): List<String> = done.filter { it != key }
 }

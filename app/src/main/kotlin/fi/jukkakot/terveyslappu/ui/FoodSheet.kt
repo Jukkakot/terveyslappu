@@ -287,6 +287,7 @@ private fun SheetLineRow(line: SheetLine, actions: FoodActions) {
             UndoLine(text, actions.onUndoImport, "sheetImported", "importUndo")
         }
         SheetLine.Failed -> NoticeLine(stringResource(R.string.food_sheet_failed), MaterialTheme.colorScheme.error, "sheetFailed")
+        is SheetLine.ClipSkipped -> UndoLine(stringResource(R.string.ai_clip_skipped), actions.onUndoClipSkip, "sheetClipSkipped", "clipSkipUndo")
         SheetLine.ClipChanged -> NoticeLine(stringResource(R.string.ai_clip_changed), MaterialTheme.colorScheme.onSurfaceVariant, "sheetClipChanged")
     }
 }

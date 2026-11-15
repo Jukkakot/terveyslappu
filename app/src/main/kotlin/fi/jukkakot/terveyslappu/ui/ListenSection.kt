@@ -116,7 +116,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
                 if (ListenWindow.valid(next.start, next.end)) {
                     actions.onListenSettings(next)
                 } else {
-                    scope.launch { snackbar.showSnackbar(sameTime) }
+                    scope.launch { snackbar.showTimed(sameTime, null) }
                 }
             },
             onDismiss = { picking = null },

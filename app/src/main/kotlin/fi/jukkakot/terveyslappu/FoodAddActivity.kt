@@ -91,6 +91,7 @@ class FoodAddActivity : ComponentActivity() {
                             }
                         },
                         onClipSkip = model::skipClipOffer,
+                        onUndoClipSkip = model::undoClipSkip,
                         // Lisää kaikki saves in the sheet itself; the sheet stays open (food-log "Import from the home-screen sheet").
                         onClipAddAll = { day -> model.addAllFromClip(FoodClipboard.text(this), day) },
                         onUndoImport = model::undoImport,

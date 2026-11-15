@@ -102,6 +102,7 @@ class FoodActions(
     /** The clipboard card: Muokkaa (the preview), ✕ (Ohita), Lisää kaikki to the given day. */
     val onClipOpen: () -> Unit = {},
     val onClipSkip: () -> Unit = {},
+    val onUndoClipSkip: () -> Unit = {},
     val onClipAddAll: (LocalDate) -> Unit = {},
     /** The sheet line's Kumoa of an import. */
     val onUndoImport: () -> Unit = {},

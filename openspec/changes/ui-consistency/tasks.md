@@ -4,11 +4,11 @@ Start only after `fixed-tabs-single-data` is merged to `main`.
 
 - [x] 1.1 Historia weight rows: remove the long-press delete; trash button tinted `colorScheme.error` (the "?" row's trash too)
 - [x] 1.2 Item editor (`FoodSheet.FoodEditor`) "Poista", product editor (`ProductsPage`) "Poista tuote": error colour, on the left of the dialog's buttons, Peruuta then Tallenna/Lisää on the right
-- [ ] 1.3 Ruokakirjaus product removal: "<name> poistettu · Kumoa" bar; Kumoa restores via `ProductStore.restore` (as the sheet's trash does)
-- [ ] 1.4 Own chart delete: drop the confirm dialog; delete at once with "Kaavio poistettu · Kumoa"; Kumoa restores the chart (same id, name, series, layout, period) and its front page card at its old place and size (`ChartStore`, `HomePrefs`)
-- [ ] 1.5 AI preview: trash in error colour; removing a row shows "<name> poistettu · Kumoa" (in the preview's own snackbar/line); Kumoa puts it back at the same index
-- [ ] 1.6 Clipboard card ✕: "Ohitettu · Kumoa"; Kumoa clears the skip mark so the offer shows again (bar outside the sheet, sheet line inside it)
-- [ ] 1.7 Settings: `SettingsScreen` copy-log message and `ListenSection` messages through `showTimed`
+- [x] 1.3 Ruokakirjaus product removal: "<name> poistettu · Kumoa" bar; Kumoa restores via `ProductStore.restore` (as the sheet's trash does)
+- [x] 1.4 Own chart delete: drop the confirm dialog; delete at once with "Kaavio poistettu · Kumoa"; Kumoa restores the chart (same id, name, series, layout, period) and its front page card at its old place and size (`ChartStore`, `HomePrefs`)
+- [x] 1.5 AI preview: trash in error colour; removing a row shows "<name> poistettu · Kumoa" (in the preview's own snackbar/line); Kumoa puts it back at the same index
+- [x] 1.6 Clipboard card ✕: "Ohitettu · Kumoa"; Kumoa clears the skip mark so the offer shows again (bar outside the sheet, sheet line inside it)
+- [x] 1.7 Settings: `SettingsScreen` copy-log message and `ListenSection` messages through `showTimed`
 - [ ] 1.8 Unit tests for the undo logic (chart restore incl. home layout position, preview row restore, skip undo)
 
 ## 2. Buttons and rows

@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -28,12 +29,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +61,7 @@ import fi.jukkakot.terveyslappu.food.AiProduct
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.Energy
+import fi.jukkakot.terveyslappu.log.AppLog
 import java.time.LocalDate
 import java.time.ZoneOffset
 
@@ -67,7 +73,31 @@ data class AiPreview(
     val day: LocalDate,
     /** The parsed content's key (ClipOffers.key): saving marks it done, so the clipboard offer ends. */
     val sourceKey: String? = null,
-)
+) {
+    fun withoutItem(index: Int): AiPreview = copy(items = items.filterIndexed { j, _ -> j != index })
+
+    fun withoutProduct(index: Int): AiPreview = copy(products = products.filterIndexed { j, _ -> j != index })
+
+    /** Kumoa of a removed row: back at [index] (clamped, in case rows changed since). */
+    fun withItemBack(index: Int, item: AiItem): AiPreview = copy(items = items.insertedAt(index, item))
+
+    fun withProductBack(index: Int, product: AiProduct): AiPreview = copy(products = products.insertedAt(index, product))
+}
+
+private fun <T> List<T>.insertedAt(index: Int, value: T): List<T> = toMutableList().also { it.add(index.coerceIn(0, size), value) }
+
+/** A row removed from the preview, kept for its Kumoa. */
+private sealed interface RemovedRow {
+    val name: String
+
+    data class Item(val index: Int, val item: AiItem) : RemovedRow {
+        override val name get() = item.name
+    }
+
+    data class Product(val index: Int, val product: AiProduct) : RemovedRow {
+        override val name get() = product.name
+    }
+}
 
 private fun number(text: String): Double? = text.trim().replace(',', '.').replace(" ", "").toDoubleOrNull()?.takeIf { it >= 0 }
 
@@ -79,8 +109,28 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
     var editItem by remember { mutableStateOf<Int?>(null) }
     var editProduct by remember { mutableStateOf<Int?>(null) }
     var pickDay by remember { mutableStateOf(false) }
+    // The last removed row and its "<name> poistettu · Kumoa" in the preview's own bar (the dialog covers the app's).
+    var removed by remember { mutableStateOf<RemovedRow?>(null) }
+    val bar = remember { SnackbarHostState() }
+    val latest by rememberUpdatedState(preview)
+    val removedText = removed?.let { stringResource(R.string.food_deleted, it.name) }.orEmpty()
+    val undoText = stringResource(R.string.undo)
+    LaunchedEffect(removed) {
+        val row = removed ?: return@LaunchedEffect
+        if (bar.showTimed(removedText, undoText) == SnackbarResult.ActionPerformed) {
+            AppLog.i("food.import.preview", "undo")
+            actions.onAiEdit(
+                when (row) {
+                    is RemovedRow.Item -> latest.withItemBack(row.index, row.item)
+                    is RemovedRow.Product -> latest.withProductBack(row.index, row.product)
+                },
+            )
+        }
+        removed = null
+    }
     Dialog(onDismissRequest = actions.onAiCancel, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize().testTag("aiPreview"), color = MaterialTheme.colorScheme.surface) {
+          Box(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.ai_title), style = MaterialTheme.typography.titleLarge)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -93,7 +143,8 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
                         preview.items.forEachIndexed { i, item ->
                             val details = listOf(item.amount?.let(::formatAmount), item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal))
                             PreviewRow(item.name, item.treat, details.filterNotNull().joinToString(" · "), stringResource(R.string.ai_remove, item.name), "aiItem-$i", { editItem = i }) {
-                                actions.onAiEdit(preview.copy(items = preview.items.filterIndexed { j, _ -> j != i }))
+                                actions.onAiEdit(preview.withoutItem(i))
+                                removed = RemovedRow.Item(i, item)
                             }
                         }
                     }
@@ -101,7 +152,8 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
                         SectionTitle(stringResource(R.string.ai_products))
                         preview.products.forEachIndexed { i, p ->
                             PreviewRow(p.name, p.treat, energyText(p.energy), stringResource(R.string.ai_remove, p.name), "aiProduct-$i", { editProduct = i }) {
-                                actions.onAiEdit(preview.copy(products = preview.products.filterIndexed { j, _ -> j != i }))
+                                actions.onAiEdit(preview.withoutProduct(i))
+                                removed = RemovedRow.Product(i, p)
                             }
                         }
                     }
@@ -130,6 +182,9 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
                     ) { Text(stringResource(R.string.ai_add)) }
                 }
             }
+            // Above Peruuta / Lisää, so the buttons stay reachable.
+            AppSnackbarHost(bar, Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp))
+          }
         }
     }
     if (pickDay) AiDayPicker(preview.day, { pickDay = false }) { actions.onAiEdit(preview.copy(day = it)); pickDay = false }
@@ -159,7 +214,7 @@ private fun SectionTitle(text: String) {
 /** A row: tap edits; the remove button has its own column at the edge. */
 @Composable
 private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabel: String, tag: String, onEdit: () -> Unit, onRemove: () -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).clickable(onClick = onEdit).padding(vertical = 6.dp).testTag(tag)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f, fill = false))
@@ -168,7 +223,7 @@ private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabe
             Text(details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         IconButton(onClick = onRemove, modifier = Modifier.testTag("$tag-remove")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = removeLabel)
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = removeLabel, tint = MaterialTheme.colorScheme.error)
         }
     }
 }
