@@ -3,16 +3,16 @@
 ## 1. Card data and Lisää kaikki
 
 - [x] 1.1 `ClipOffer` preview lines and total from the dry-run plan; unit tests: lines and total match the preview, "+N muuta" after five, products-only lines
-- [ ] 1.2 `FoodViewModel.addAllFromClip()` reads, checks the key, saves via the import path to the shown day, marks done, message with Kumoa; view-model tests: added and offer gone, changed clip saves nothing and refreshes, Kumoa removes items but offer stays gone
+- [x] 1.2 `FoodViewModel.addAllFromClip()` reads, checks the key, saves via the import path to the shown day, marks done, message with Kumoa; view-model tests: added and offer gone, changed clip saves nothing and refreshes, Kumoa removes items but offer stays gone
 
 ## 2. Sheet layout
 
-- [ ] 2.1 Header with day and ⋮ (Kopioi tuontiohje), card above the field, field hint and search icon, list headings, bottom "Tuo ruoka-annokset"; keyboard only without the card; same card on Ruoka; widget sheet saves in place; smoke tests: card shows and Lisää kaikki adds, keyboard focus without card
-- [ ] 2.2 Enter row "Lisää ”<text>” uutena" with its second line; test that tapping it equals Enter for a number and a name
+- [x] 2.1 Header with day and ⋮ (Kopioi tuontiohje), card above the field, field hint and search icon, list headings, bottom "Tuo ruoka-annokset"; keyboard only without the card; same card on Ruoka; widget sheet saves in place; smoke tests: card shows and Lisää kaikki adds, keyboard focus without card
+- [x] 2.2 Enter row "Lisää ”<text>” uutena" with its second line; test that tapping it equals Enter for a number and a name
 
 ## 3. Delete product
 
-- [ ] 3.1 Trash button on own-product rows, product removed with Kumoa line, none on base products; view-model test remove + undo; smoke test the button exists only on own rows
+- [x] 3.1 Trash button on own-product rows, product removed with Kumoa line, none on base products; view-model test remove + undo; smoke test the button exists only on own rows
 
 ## 4. Undo messages
 

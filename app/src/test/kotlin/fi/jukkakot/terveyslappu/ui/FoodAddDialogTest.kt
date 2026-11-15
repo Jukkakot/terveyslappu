@@ -1,8 +1,13 @@
 package fi.jukkakot.terveyslappu.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Looper
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performImeAction
@@ -22,6 +27,11 @@ import org.robolectric.annotation.Config
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import fi.jukkakot.terveyslappu.food.Amount
+import fi.jukkakot.terveyslappu.food.AmountUnit
+import fi.jukkakot.terveyslappu.food.Energy
+import fi.jukkakot.terveyslappu.food.Product
 
 /** Smoke test of the Lisää annos dialog (food-widget), against a fake Health Connect; made-up foods only. */
 @OptIn(ExperimentalTestApi::class)
@@ -87,5 +97,68 @@ class FoodAddDialogTest {
         scenario.close()
         shadowOf(Looper.getMainLooper()).idle()
         assertEquals(listOf("Tomaattikeitto"), records.items.map { it.name })
+    }
+
+    // food-sheet-layout; made-up foods only.
+    private fun copy(text: String) {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        app.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("test", text))
+    }
+
+    @Test
+    fun `without a card the field has the focus`() {
+        open().use {
+            compose.waitForIdle()
+            compose.onNodeWithTag("addField").assertIsFocused()
+            compose.onNodeWithTag("clipOffer").assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `the card shows without the keyboard and Lisaa kaikki adds in the sheet`() {
+        copy("""Arvio: {"items":[{"name":"Testikeitto","amount":300,"unit":"g","kcal":180},{"name":"Testileipa","kcal":90}]}""")
+        open().use {
+            compose.waitUntilAtLeastOneExists(hasTestTag("clipOffer"), 5_000)
+            compose.onNodeWithTag("addField").assertIsNotFocused()
+            compose.onNodeWithTag("clipAddAll").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("sheetImported"), 5_000)
+            assertEquals(listOf("Testikeitto", "Testileipa"), records.items.sortedBy { it.pos }.map { it.name })
+            compose.onNodeWithTag("clipOffer").assertDoesNotExist()
+            compose.onNodeWithTag("addField").assertExists()
+        }
+    }
+
+    @Test
+    fun `the enter row adds what enter adds`() {
+        open().use {
+            compose.onNodeWithTag("addField").performTextInput("350")
+            compose.onNodeWithTag("enterRow").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            compose.onNodeWithTag("addField").performTextInput("Testimuffinssi")
+            compose.onNodeWithTag("enterRow").performClick()
+            compose.waitForIdle()
+            // The writes run in the app scope on the main looper.
+            shadowOf(Looper.getMainLooper()).idle()
+            val items = records.items.sortedBy { it.pos }
+            assertEquals(listOf("Pikalisäys", "Testimuffinssi"), items.map { it.name })
+            assertEquals(350.0, items.first().kcal)
+            assertNull(items.last().kcal)
+        }
+    }
+
+    @Test
+    fun `only own products have the delete button`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
+        open().use {
+            compose.onNodeWithTag("addField").performTextInput("kaurapuu")
+            compose.waitForIdle()
+            compose.onNodeWithTag("deleteProduct-Kaurapuuro testi").assertExists()
+            compose.onNodeWithTag("edit-Kaurapuuro").assertExists()
+            compose.onNodeWithTag("deleteProduct-Kaurapuuro").assertDoesNotExist()
+            compose.onNodeWithTag("deleteProduct-Kaurapuuro testi").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("sheetProductRemoved"), 5_000)
+            assertNull(app.products.find("Kaurapuuro testi"))
+        }
     }
 }

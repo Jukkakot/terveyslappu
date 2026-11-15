@@ -261,4 +261,15 @@ class FoodRulesTest {
         assertTrue(product.treat)
         assertTrue(plan.others.new.isEmpty())
     }
+
+    @Test
+    fun `enter row tells what enter adds and hides for a listed name`() {
+        val rahka = Product("Testirahka", false, Energy(65.0, AmountUnit.G), Amount(200.0, AmountUnit.G))
+        val base = listOf(BaseProduct("Testipuuro", listOf("puuro"), Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G), false))
+        assertEquals(EnterRow.Quick("350", 350), EnterRow.of(" 350 ", emptyList(), listOf(rahka), base))
+        assertEquals(EnterRow.Named("työpaikan pizza", null), EnterRow.of("työpaikan  pizza", emptyList(), listOf(rahka), base))
+        assertEquals(EnterRow.Named("puuro", base.single().toProduct()), EnterRow.of("puuro", emptyList(), listOf(rahka), base))
+        assertNull(EnterRow.of("testirahka", listOf(Suggestion.Own(rahka)), listOf(rahka), base))
+        assertNull(EnterRow.of("  ", emptyList(), listOf(rahka), base))
+    }
 }
