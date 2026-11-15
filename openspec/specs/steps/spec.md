@@ -189,7 +189,8 @@ that no check SHALL start when the last one finished under a minute ago. A chang
 once: the front page steps card and Askeleet re-read their whole range from the new source. Without
 the steps permission the sub-screen SHALL show the same reason and buttons as Askeleet (asking or
 opening Health Connect's settings from there) and no list; the permission SHALL NOT be asked when
-the sub-screen merely opens. The default SHALL be "Automaattinen".
+the sub-screen merely opens. The default SHALL be "Automaattinen". The chosen source SHALL also be the source of Kulutus
+(energy-burn), and the sub-screen SHALL say so in one line under "Lähde".
 
 #### Scenario: First visit
 - **GIVEN** Garmin Connect and the phone wrote steps in the last 30 days and the user never chose
@@ -341,12 +342,13 @@ Tuo tiedot SHALL also accept a ZIP file (the picker offers ZIP files next to the
 and SHALL recognise Garmin's account data export by its entries
 `DI_CONNECT/DI-Connect-Aggregator/UDSFile_*.json` (any folder depth before `DI_CONNECT` allowed).
 Each such entry is a JSON array of daily summaries; the app SHALL read `calendarDate`
-("yyyy-MM-dd") and `totalSteps` and SHALL skip summaries whose `totalSteps` is null or below 1 or
+("yyyy-MM-dd"), `totalSteps`, `activeKilocalories` and `bmrKilocalories` (lepo) and SHALL keep a day's steps only when `totalSteps` is at least 1 and its kcal only when both kcal
+fields are numbers, skipping a summary that has neither or
 whose date does not parse, and SHALL ignore every other entry and field. The ZIP SHALL be read as a
 stream, without unpacking it to storage, and a ZIP of 100 MB SHALL be read without running out of
 memory. When a day appears twice, the larger step count SHALL be kept. Before saving, the app SHALL
-show a preview: "Garminin askelhistoria", the first and last day with years, the number of days
-with steps, and the buttons Peruuta and Tuo. Tuo SHALL replace any earlier imported history with
+show a preview: "Garminin historia", the first and last day with years, the number of days
+with steps and the number of days with kcal, and the buttons Peruuta and Tuo. Tuo SHALL replace any earlier imported history with
 this one in one write and show "Askelhistoria tuotu: N päivää". A ZIP that is not a Garmin export,
 or holds no day with steps, SHALL show "Tiedostosta ei löytynyt Garminin askelia" and save nothing.
 Garmin's other data (sleep, weight, heart rate …) SHALL NOT be read. Only days before the day of the import SHALL be
@@ -367,6 +369,10 @@ stored.
 - **GIVEN** an imported history to 8.11.2026
 - **WHEN** the user imports a newer export to 1.2.2027
 - **THEN** the stored history is the newer export's days only
+
+#### Scenario: Earlier import without kcal
+- **GIVEN** a history imported before kcal were read
+- **THEN** its steps keep working and Asetukset says to import the ZIP again to get Kulutus
 
 ### Requirement: Imported Garmin days in the totals
 An imported day SHALL be used only when the steps source in use is Garmin Connect (chosen, or the
@@ -398,8 +404,9 @@ as without an import. Own charts with steps SHALL use the same merged days.
 - **THEN** 1.3.2025 shows 9 000 steps
 
 ### Requirement: Imported history in Asetukset
-Asetukset → Askeleet SHALL show, under the source choice, a row "Garminin askelhistoria" with the
-imported range and day count ("18.7.2023 – 8.11.2026 · 1 206 päivää") and a red "Poista" button,
+Asetukset → Askeleet SHALL show, under the source choice, a row "Garminin historia" with the
+imported range and day count (and, when the stored history has no kcal, the line "Tuo ZIP
+uudelleen, niin kulutus tulee mukaan") ("18.7.2023 – 8.11.2026 · 1 206 päivää") and a red "Poista" button,
 or, with nothing imported, the line "Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedot". The
 row SHALL show also without the steps permission. Poista SHALL delete the imported history at once
 and show "Askelhistoria poistettu · Kumoa"; Kumoa SHALL bring it back unchanged. The steps card and

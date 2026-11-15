@@ -280,7 +280,7 @@ Connect is unavailable it SHALL read "Askeleet: ei saatavilla" and have no tap a
 - **THEN** the card reads "Askeleet: ei saatavilla" and tapping it does nothing
 
 ### Requirement: Card grid
-The front page SHALL place its cards (Paino, Ruoka, Askeleet) in a two-column grid, filled row by
+The front page SHALL place its cards (Paino, Ruoka, Askeleet, Kulutus) in a two-column grid, filled row by
 row in the user's order. Each card SHALL have its own size: small (half width, one row high), wide
 (full width, one row high) or big (full width, two rows high). There SHALL be no narrow-tall size.
 Two small cards that follow each other in the order SHALL share a row, the first one on the left; a
@@ -293,7 +293,8 @@ SHALL stay above the grid and SHALL NOT be part of the order. The order, the siz
 the hidden cards SHALL be remembered between app starts, SHALL be independent of the card periods,
 and SHALL NOT be part of the data file or the backup file. A remembered layout that cannot be read
 SHALL mean the default layout; a card the app does not know SHALL be ignored, and a card the stored
-layout lacks (added in a later version) SHALL be shown last at its default size.
+layout lacks (added in a later version) SHALL be shown last at its default size, except Kulutus,
+which SHALL be hidden by default (in the default layout too) and is added from "Lisää kortti".
 
 #### Scenario: Default layout
 - **GIVEN** the user never edited the front page
@@ -329,6 +330,10 @@ layout lacks (added in a later version) SHALL be shown last at its default size.
 #### Scenario: Larger layouts scroll
 - **GIVEN** all three cards big
 - **THEN** the front page scrolls to show them
+
+#### Scenario: Kulutus hidden by default
+- **GIVEN** a layout stored before the Kulutus card existed
+- **THEN** the front page looks as before and Lisää kortti offers Kulutus
 
 ### Requirement: Card sizes
 Every card SHALL have a defined look at each of the three sizes, with nothing cut off and every tap
