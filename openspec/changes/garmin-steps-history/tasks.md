@@ -8,7 +8,7 @@
 
 ## 2. Totals
 
-- [ ] 2.1 Merge rule (pure, in `steps/`): given the source in use (Garmin Connect package `com.garmin.android.apps.connectmobile`, or Kaikki) fill days without Health Connect steps from the import, never today; other sources ignore it. Kaikki start = first day with steps of either.
+- [ ] 2.1 Merge rule (pure, in `steps/`): given the source in use (Garmin Connect package `com.garmin.android.apps.connectmobile`, or no origin filter: Kaikki / Automaattinen without a pick) take per day the larger of Health Connect and the import (import alone where HC has none), never today; other sources ignore it. Kaikki start = first day with steps of either.
 - [ ] 2.2 Wire it into `StepsController` so `StepsSeries` (Askeleet) and `HomeSteps` (card) see merged days; imported days need no history permission; follow design.md 2-6.
 - [ ] 2.3 Tests: the scenarios of "Imported Garmin days in the totals" (before HC, other source, gap in HC, today never imported).
 
