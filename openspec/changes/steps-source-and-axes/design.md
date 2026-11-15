@@ -250,3 +250,27 @@ Rollback: older build ignores the `steps` prefs file.
 
 - Whether `AggregationResult.dataOrigins` lists deduped-away origins: check from the
   `steps.sources` log (`apps=` vs. what Health Connect's settings show); no change to the approach.
+
+## Implementation decisions (apply, 2026-11-15)
+
+Taken where the spec left room; each is the simplest reading consistent with it.
+
+- The logic lives in the Android-free `steps/StepsController`; `ui/StepsViewModel` only wires
+  Health Connect, `StepsPrefs`, `StepsAppNames` and the log, so the races and timing are unit-tested.
+- `StepsSource.check(today, candidates)` returns `StepsCheck(apps, records, pages)` (the log needs the
+  counts); the controller passes the phone, the stored choice and the stored pick, the source adds
+  the manifest's step apps and the discovered origins.
+- A check's totals are applied even when the user changed the choice while it ran (they do not
+  depend on the source); only reads are dropped by key and generation. The re-read after a check is
+  skipped when the choice changed meanwhile (that change already re-read).
+- Saved phone packages (`phonePackages`) are stored without `android`, which is always added.
+- `setChoice` with the current choice does nothing.
+- The sub-screen before the first check of the run, or after a failure, lists only Automaattinen,
+  the chosen app and Kaikki; while a check runs a small spinner with "Haetaan sovelluksia" sits under
+  Lähde.
+- Askeleet: chart (or empty message), then the source line, then "ei päivitetty", then the stats.
+- `steps.sources ... apps=` counts the apps with steps in 30 days.
+- The 365-day date-format rule counts the period's days with both ends (1 v = 365 days → `M/yyyy`).
+- The weight strip's "do not fit": three label heights + 4 dp above 80 dp; then the unit stays on
+  the top label only. At 360 dp and font scale 1.3 it fits (LargeTextTest).
+- Paino's and BMI's legends use a line swatch; BMI's bands get no legend entry.

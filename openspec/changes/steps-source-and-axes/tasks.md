@@ -128,10 +128,10 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
 
 ## 5. Help, context, version
 
-- [ ] 5.1 Ohje: replace the priority-list advice in `help_steps_body` with the source setting (one
+- [x] 5.1 Ohje: replace the priority-list advice in `help_steps_body` with the source setting (one
   app's own count; Automaattinen = most steps in 30 days; Kaikki (Health Connectin järjestys) =
   Health Connect's merge and shows the full history, one sentence).
-- [ ] 5.2 Context: `.claude/CLAUDE.md` map (`StepsSources`, `StepsCheckRule`, `StepsPrefs`,
+- [x] 5.2 Context: `.claude/CLAUDE.md` map (`StepsSources`, `StepsCheckRule`, `StepsPrefs`,
   `StepsAppNames`, `chart/AxisTicks`, `ChartLegend`, `SettingsPage.STEPS`) and log list (decision
   10); `openspec/context/knowledge.md` "Steps in Health Connect": add the gap-filling finding, the
   SPN rule (`android` + SPN, `getCurrentDeviceDataSource`, don't hard-code) and the

@@ -16,7 +16,7 @@ the source. No configuration, versions or other things that go stale.
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung, Health Connect from the background, widget updates |
-| Steps in Health Connect | aggregate dedupe by app priority, daily buckets, on-device steps, history limit, Garmin gaps |
+| Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
@@ -93,6 +93,21 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   counts the phone's own steps (batched about once a minute) as one more source in the priority
   dedupe. From the June 2026 update their origin is a device-specific synthetic package name instead
   of `android`; an aggregate without an origin filter includes them unchanged. (read data page)
+- **The merge fills gaps across apps.** The no-filter aggregate takes, for each stretch of time, the
+  highest-priority app that has data there, so the phone's steps fill the hours a watch left empty:
+  the day's total can exceed every single app's own count. One app's own daily total =
+  `aggregateGroupByPeriod` with `dataOriginFilter` = that app's packages. (aggregate data page;
+  seen in this app with Garmin Connect + the phone, 2026-11-15)
+- **`READ_STEPS` alone reads the origins.** Every `StepsRecord` carries `metadata.dataOrigin`, and
+  aggregates accept `dataOriginFilter`; no extra permission is needed. Whether
+  `AggregationResult.dataOrigins` lists origins the dedupe dropped is not documented, so the origin
+  list also needs a records read. (read data page)
+- **Phone steps = `android` + the synthetic package name (SPN).** Filter on both to get the phone's
+  own steps across the June 2026 change. The SPN is device- and app-scoped and must not be
+  hard-coded: framework `HealthConnectManager.getCurrentDeviceDataSource()` (API 34 + SDK extension
+  22; not in the Jetpack client) gives it; the documented shape `com.android.healthconnect.phone.…`
+  is only a fallback. (read data page,
+  [HealthConnectManager](https://developer.android.com/reference/android/health/connect/HealthConnectManager))
 - **Reads reach 30 days before the app's first permission grant**; older data needs
   `READ_HEALTH_DATA_HISTORY`, otherwise the read throws. Reads are foreground-only without the
   background-read permission.

@@ -222,6 +222,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     side by side at half width; Historia's Askeleet tab after Energia. Decided: no step goal or
     target line; steps are not in the data file or the backup (they are Garmin's and live in
     Health Connect and Garmin Connect); the permission is asked only from the steps card or tab.
+  - Decided (steps-source-and-axes, v1.30): a day's steps are one app's own count, never a merge
+    that lets another app fill its gaps; the source is Automaattinen (most steps in 30 days) by
+    default, one app, or Kaikki (Health Connectin järjestys), set in Asetukset → Askeleet and kept
+    only on the phone; the source holds for the whole history (no per-day fallback).
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.
