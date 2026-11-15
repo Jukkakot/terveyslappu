@@ -25,7 +25,7 @@
 
 - [x] 4.1 `product.md`: steps decision updated (Garmin history imported into app storage, HC still read-only); roadmap backlog entry done.
 - [x] 4.2 Bump MINOR of `appVersion` in `gradle.properties`.
-- [ ] 4.3 Run `./gradlew test lint assembleDebug`.
+- [x] 4.3 Run `./gradlew test lint assembleDebug`.
 
 ## Implementer's notes (decisions the spec left open)
 
