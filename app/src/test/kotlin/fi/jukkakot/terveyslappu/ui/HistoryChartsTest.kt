@@ -301,14 +301,13 @@ class HistoryChartsTest {
     }
 
     @Test
-    fun `delete asks and removes the tab`() {
+    fun `delete removes the tab at once without asking`() {
         add("Liike")
         add("Ilta")
         show()
         openTab("tab-chart-2")
         node("chartEdit").performClick()
         node("chartDelete").performClick()
-        node("chartDeleteConfirm").performClick()
         compose.waitForIdle()
         assertEquals(listOf(1), list.charts.map { it.id })
         assertEquals(false, exists("tab-chart-2"))

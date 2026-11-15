@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.chart.CustomCharts
@@ -12,6 +13,9 @@ import fi.jukkakot.terveyslappu.home.CardSize
 import fi.jukkakot.terveyslappu.home.HomeCard
 import fi.jukkakot.terveyslappu.home.HomeLayout
 import fi.jukkakot.terveyslappu.home.HomePrefs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,6 +54,29 @@ class ChartViewModelTest {
         assertEquals(emptyList(), model.state.value.charts)
         assertEquals(HomeLayout.DEFAULT, model.state.value.homeLayout)
         assertEquals(HomeLayout.DEFAULT, HomePrefs(app).load(setOf(CustomChart.cardId(id))))
+    }
+
+    @Test
+    fun `delete offers Kumoa that brings the chart and its card back`() {
+        val a = save("Liike")
+        val b = save("Ilta")
+        model.onChartPeriod(a, Period.QUARTER)
+        val layout = HomeLayout(listOf(HomeCard(HomeLayout.WEIGHT, CardSize.WIDE), HomeCard(CustomChart.cardId(a), CardSize.BIG)), HomeLayout.FIXED.drop(1))
+        model.onHomeLayout(layout)
+        val charts = model.state.value.charts
+        val got = mutableListOf<UiMessage>()
+        val job = CoroutineScope(Dispatchers.Unconfined).launch { model.messages.collect { got += it } }
+        model.onDeleteChart(a)
+        job.cancel()
+        val message = got.single()
+        assertEquals(R.string.chart_deleted, message.text)
+        assertEquals(R.string.undo, message.action?.label)
+        assertEquals(listOf(b), model.state.value.charts.map { it.id })
+        message.action!!.run()
+        assertEquals(charts, model.state.value.charts)
+        assertEquals(charts, app.charts.load().charts)
+        assertEquals(layout, model.state.value.homeLayout)
+        assertEquals(layout, HomePrefs(app).load(charts.map { it.cardId }.toSet()))
     }
 
     @Test

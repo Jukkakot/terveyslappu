@@ -9,14 +9,14 @@ Start only after `fixed-tabs-single-data` is merged to `main`.
 - [x] 1.5 AI preview: trash in error colour; removing a row shows "<name> poistettu · Kumoa" (in the preview's own snackbar/line); Kumoa puts it back at the same index
 - [x] 1.6 Clipboard card ✕: "Ohitettu · Kumoa"; Kumoa clears the skip mark so the offer shows again (bar outside the sheet, sheet line inside it)
 - [x] 1.7 Settings: `SettingsScreen` copy-log message and `ListenSection` messages through `showTimed`
-- [ ] 1.8 Unit tests for the undo logic (chart restore incl. home layout position, preview row restore, skip undo)
+- [x] 1.8 Unit tests for the undo logic (chart restore incl. home layout position, preview row restore, skip undo)
 
 ## 2. Buttons and rows
 
 - [x] 2.1 Ruoka bottom "Lisää annos": filled `Button`; Uusi kaavio tab's button: filled `Button`
-- [ ] 2.2 Rows: min height 56 dp and 16 dp start/end content edge on Historia weights, Energia, Askeleet, Ruoka, Ruokakirjaus, AI preview; sheet suggestion rows aligned to the same edge
-- [ ] 2.3 Strings for the new messages; Ohje: no long-press delete mention if any; `help_charts_body` unchanged
-- [ ] 2.4 Update UI tests that used long-press delete or the chart confirm dialog; one smoke test that chart delete shows Kumoa
+- [x] 2.2 Rows: min height 56 dp and 16 dp start/end content edge on Historia weights, Energia, Askeleet, Ruoka, Ruokakirjaus, AI preview; sheet suggestion rows aligned to the same edge
+- [x] 2.3 Strings for the new messages; Ohje: no long-press delete mention if any; `help_charts_body` unchanged
+- [x] 2.4 Update UI tests that used long-press delete or the chart confirm dialog; one smoke test that chart delete shows Kumoa
 
 ## 3. Finish
 

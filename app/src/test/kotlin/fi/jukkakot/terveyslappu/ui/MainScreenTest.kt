@@ -268,7 +268,7 @@ class MainScreenTest {
     }
 
     @Test
-    fun `long-press on a weight deletes at once`() {
+    fun `the trash deletes at once and a long-press does nothing`() {
         var deleted: String? = null
         show(MainUiState(access = Access.GRANTED, weights = listOf(weight("1", 0, 82.4)), screen = Screen.HISTORY), onDelete = { deleted = it.id })
         compose.onNodeWithTag("delete-1").performClick()
@@ -276,7 +276,7 @@ class MainScreenTest {
         deleted = null
         compose.onNode(hasText("82,4 kg") and hasAnyAncestor(hasTestTag("weights")) and !hasAnyAncestor(hasTestTag("stats")))
             .performTouchInput { longClick() }
-        assertEquals("1", deleted)
+        assertEquals(null, deleted)
     }
 
     @Test
