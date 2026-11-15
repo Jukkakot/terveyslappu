@@ -18,14 +18,14 @@
 ## 3. Historia
 
 - [ ] 3.1 Tabs and pages from `HistoryPages` (design 10): own chart tabs (name, one line, ellipsis, max 160 dp) and the last "Uusi kaavio" tab; the chart page with the "Muokkaa" button (new `ic_edit`), the readout slot and the chart; the "Uusi kaavio" page with its line and button; no list under either; Historia still opens on Paino; after a create the new chart's tab, after a delete the tab before. Verify: tests "two charts give seven tabs in order", "Historia reopens on Paino", "after delete the previous tab is shown"
-- [ ] 3.2 Reads on page entry and period change (design 14): energy and steps like the fixed tabs, no permission request by the chart; the history notice as on the other tabs; `chart.custom shown id= period=`. Verify: a test that opening a chart page with steps calls the steps read with the period's start and does not ask the nutrition permission
-- [ ] 3.3 Crosshair (design 9): tap sets, long-press drag scrubs and owns both axes until release, weekly snap, a tap on the readout clears, cleared on tab/period change, editor save and leaving Historia, kept on reload; TalkBack actions and the polite live region. Verify: tests "a tap shows the readout and a tap on it clears", "a fling still pages", "Edellinen päivä with no crosshair picks the newest day"
+- [ ] 3.2 Reads on page entry and period change (design 15): energy and steps like the fixed tabs, no permission request by the chart; the history notice as on the other tabs; `chart.custom shown id= period=`. Verify: a test that opening a chart page with steps calls the steps read with the period's start and does not ask the nutrition permission
+- [ ] 3.3 Crosshair (design 9): the readout slot with its hint when empty; tap sets, long-press drag scrubs and owns both axes until release, weekly snap, a tap on the readout clears, cleared on tab/period change, editor save and leaving Historia, kept on reload; TalkBack actions and the polite live region. Verify: tests "a tap shows the readout and a tap on it clears", "a fling still pages", "Edellinen päivä with no crosshair picks the newest day"
 - [ ] 3.4 Editor dialog (design 11): name, three rows (switch + Pylväät/Viiva), Asettelu with its lines, Peruuta/Tallenna, "Poista kaavio" with its confirmation; local draft survives rotation; back and outside tap discard without asking. Verify: tests "new chart defaults", "the last data stays on", "blank name disables Tallenna", "delete asks and removes the tab", "rename changes the tab text"
 
 ## 4. Front page
 
 - [ ] 4.1 `ChartCard` at three sizes (design 12, spec "Chart cards"): title row with `ic_chart` (new vector) and the name, the chart filling the free space, own period label, dates and overlaid legend at wide/big, scale labels at big, gated data left out with the short panel lines, "Ei tietoja tällä jaksolla"; a tap (except the period label) opens Historia on the chart's page (`MainUiState.historyChart`), back returns home. Verify: smoke tests for a small and a big chart card; a test that a tap opens Historia on that tab
-- [ ] 4.2 "Lisää kortti" lists hidden feature cards, charts not on the front page and "Uusi kaavio" (always enabled); a chart is added last WIDE; "Uusi kaavio" opens the editor over home and on save appends the new chart's card to the draft (design 13); Piilota on a chart card only takes it off the front page. Verify: tests "add Liike from Lisää kortti then Valmis shows it last and wide", "new chart from the front page has a Historia tab even after Peruuta"
+- [ ] 4.2 "Lisää kortti" lists hidden feature cards, charts not on the front page and "Uusi kaavio" (always enabled); a chart is added last WIDE; "Uusi kaavio" opens the editor over home and on save appends the new chart's card to the draft (design 13); Piilota on a chart card only takes it off the front page; Palauta oletus takes all chart cards off (design 14). Verify: tests "add Liike from Lisää kortti then Valmis shows it last and wide", "new chart from the front page has a Historia tab even after Peruuta"
 - [ ] 4.3 Steps read on home covers the widest shown chart card with steps (design 12). Verify: a test or a `MainActivity`-level check that `show(from)` gets the earlier of the steps card's and a 90-day chart card's start
 
 ## 5. Help, docs, version
@@ -36,4 +36,4 @@
 
 ## Workflow follow-up
 
-- At archive: reword home-screen "Hidden cards" so "Lisää kortti" is always enabled and lists the charts and "Uusi kaavio" (design 16), and merge "Custom charts in Ohje" into "Ohje screen" if that reads better.
+- At archive: reword home-screen "Hidden cards" so "Lisää kortti" is always enabled and lists the charts and "Uusi kaavio" (design 17), and merge "Custom charts in Ohje" into "Ohje screen" if that reads better.

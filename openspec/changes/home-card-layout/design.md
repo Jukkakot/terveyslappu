@@ -68,7 +68,10 @@ screens, changing Ruoka's order list.
    edit top bar: `TopAppBar` with `containerColor = secondaryContainer`, navigation icon `ic_close`
    (new vector asset, Material "close"; contentDescription "Peruuta"), title "Muokkaa etusivua", action `TextButton("Valmis")`.
    Edit-only content under the grid: `OutlinedButton("Lisää kortti")` (icon `ic_add`) and
-   `TextButton("Palauta oletus")`, side by side, full-span item.
+   `TextButton("Palauta oletus")`, side by side, full-span item. "Lisää kortti" opens a
+   `DropdownMenu` anchored to the button, one item per hidden card (icon + name). Card names in the
+   strip, the menu and TalkBack: "Paino", "Ruoka", "Askeleet" (`ic_scale`, `ic_restaurant`,
+   `ic_walk`). Valmis with no change leaves edit mode without writing or logging a layout.
 7. **Persistence:** `HomePrefs` over the existing `chart` prefs file, key `homeLayout`, one JSON
    string via kotlinx.serialization: `{"v":1,"shown":[{"id":"weight","size":"wide"},…],"hidden":[…]}`.
    Being in `chart.xml` it moves with Android's transfer like the periods (app-data-transfer);
@@ -122,5 +125,7 @@ screens, changing Ruoka's order list.
 - A new dependency (Reorderable) in a lazy grid with mixed spans; fallback if it misbehaves on the
   device: drag only from the handle (`draggableHandle`) and keep the menu path.
 - A lone small card leaves an empty half; the user can make it wide.
+- Landscape and wide screens keep two columns with 248 dp rows, so the page scrolls sooner; the
+  app is used in portrait.
 - Hiding the weight card removes Punnitse from the front page (weigh-in stays on the widget, tile
   and shortcut); the user's choice.

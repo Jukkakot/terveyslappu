@@ -108,7 +108,9 @@ stacked top to bottom in the order Paino, Energia, Askeleet on one shared time a
 row under the whole stack. No panel SHALL have a second value axis. On a Historia tab each panel
 SHALL be 112 dp high for three panels, 136 dp for two and 160 dp for one; each panel SHALL show the
 top of its scale with its unit. Over 90 days one "viikoittain" note SHALL sit above the panels, and
-Energia's legend (food, treats, average line as drawn) SHALL be one line under its panel.
+Energia's legend (food, treats) SHALL be one line under its panel when it is drawn as bars. A panel
+drawn as Energia or Askeleet Viiva SHALL say "7 pv keskiarvo" (over 90 days "viikoittain") next to
+its scale label.
 
 #### Scenario: Three panels
 - **GIVEN** weights, food and steps in the last 30 days and a chart with all three data, Allekkain
@@ -124,7 +126,8 @@ In the Päällekkäin layout all shown data SHALL be drawn in one plot on one ti
 own scale: bars behind lines; with two or three bar data the bars of one day (or week) SHALL stand
 side by side in its slot. Each data SHALL have its own tone (Paino secondary, Energia primary,
 Askeleet tertiary; Energia without the treats' split) and a legend under the plot SHALL name every
-data with its tone and its shape. The first shown data SHALL have its value axis on the left and the
+data with its tone and its shape; a line of Energia or Askeleet SHALL read "(7 pv ka.)" after its
+name. The first shown data SHALL have its value axis on the left and the
 second on the right, each axis labelled with numbers and unit in that data's tone; a third data SHALL
 have no axis and its legend entry SHALL name its scale ("Askeleet 0–12 000"). With one data the
 plot SHALL look like the Allekkain layout's single panel. On a Historia tab the plot SHALL be 200 dp
@@ -151,7 +154,8 @@ day and the average steps per day with steps, today left out, and "ei tietoa" fo
 days. Today SHALL show its running values without a mark. After a press-and-hold the drag SHALL own
 both directions until release. Tapping the chart SHALL never open anything. Tapping the readout
 SHALL remove the crosshair; leaving the tab, a period change, saving the chart in the editor and
-leaving Historia SHALL remove it; a data reload SHALL keep it. A plain sideways swipe or fling
+leaving Historia SHALL remove it; a data reload SHALL keep it while its day is still on the axis. While no day is
+chosen the readout's place SHALL keep its height and read "Napauta päivää nähdäksesi arvot". A plain sideways swipe or fling
 SHALL switch the tab as on the other tabs and SHALL NOT place a crosshair. For TalkBack the chart
 SHALL offer "Edellinen päivä" and "Seuraava päivä", starting from the newest day, and the readout
 SHALL be a polite live region updated only on a tap, a drop or one of those actions.

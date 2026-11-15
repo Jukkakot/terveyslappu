@@ -8,7 +8,8 @@ Choosing a chart SHALL put its card last in the edited layout at wide size; "Uus
 open the chart editor, and saving there SHALL create the chart (in Historia at once, also if the
 front page edits are later discarded) and put its card last in the edited layout at wide size.
 "Piilota" on a chart card SHALL take it off the front page only; the chart stays in Historia and
-in the "Lisää kortti" list. A deleted chart's card SHALL disappear from the front page.
+in the "Lisää kortti" list. A deleted chart's card SHALL disappear from the front page. "Palauta oletus" SHALL take every chart
+card off the edited layout; the charts stay in Historia.
 
 A chart card SHALL show the chart's name as its title with a chart icon and a chevron, the chart as
 defined (its data, styles and layout) over the card's own period, filling the card's free space,
