@@ -1,21 +1,50 @@
-# Proposal: home-card-order
+# Proposal: home-card-layout
 
 ## Why
 
-The front page now has three feature cards (weight, food, steps; food-widget adds a widget, not a card). The user wants the order to be theirs: roadmap "Reorder the front page cards" (user 2026-11-14): an edit mode where the feature cards are put into the user's order. The fixed order was always meant as "for now" (home-screen, feature card parity).
+The front page has three feature cards (weight, food, steps) in a fixed layout. The user wants the
+front page to be theirs (roadmap "Reorder the front page cards", user 2026-11-14; answers to Q8-Q10
+and Q14 on 2026-11-15): their own order, their own size per card, and cards they do not use hidden.
+The fixed layout was always meant as "for now" (home-screen, feature card parity). The next change,
+`custom-charts`, adds user-made chart cards, so the layout must take more card types than three.
 
 ## What Changes
 
-- **Edit mode** on the front page, entered with a sort button (ic_sort, "Järjestä kortit") in the top bar next to help and settings, left with a visible "Valmis" text button (like Ruoka's order list).
-- **In edit mode the three cards are a full-width list of compact rows** (card title, move up, move down, drag handle) in pure order, no pairing (Q14, default). Rows are reordered by the handle or the buttons. The real cards are not shown while editing, so their taps and quick actions are unreachable.
-- **Layout follows the order outside edit mode:** each card has a width (weight full, food and steps half); half cards pair greedily left to right, a leftover half card is full width and then uses its long forms.
-- **Remembered** in app preferences, not in the data file or backup. Default order weight, food, steps. An empty or corrupt stored order means the default; unknown ids are ignored; cards the stored order lacks (added later) are appended in default order.
-- A "Palauta oletusjärjestys" action in edit mode, disabled when the order already is the default.
-- Notices (backup, "?" check, clipboard offer) stay above the cards, visible and tappable in edit mode, and are not part of the order.
-- Not in this change: hiding cards (Q10), reordering inside a card, any other screen.
-- Parts touched: front page (HomeScreen), app preferences, Ohje (one sentence), Ruoka's order list (extracted for reuse); no new dependency.
+- **Card grid:** the front page cards sit in a two-column grid filled in the user's order. Each card
+  has a user-chosen size: **small** (1x1: half width, one row), **wide** (1x2: full width, one row,
+  like today's weight card) or **big** (2x2: full width, two rows high). All cards of one row have
+  the same height. Default: weight wide, food small, steps small (today's layout).
+- **Every card has a defined look at each size** (weight, food, steps); the chart grows with the
+  card, the big size adds the scale labels.
+- **Edit mode by long-press on a card** (Q8). It shows the real cards (Q14), unmistakably: an edit
+  top bar ("Muokkaa etusivua", Peruuta, Valmis), outlined and dimmed cards with a drag handle and a
+  menu (size, move earlier or later, hide). While editing, the cards' own taps, buttons and menus do
+  nothing. Cards are reordered by dragging the real cards, or with the menu's move items and
+  TalkBack actions.
+- **Hide and bring back** (Q10): a hidden card leaves the grid; "Lisää kortti" in edit mode lists
+  the hidden cards and puts the chosen one back last. The last shown card cannot be hidden.
+- **Changes count only on "Valmis"**; Peruuta or back discards them without asking. A "Palauta
+  oletus" action in edit mode restores the default layout (also only on Valmis).
+- **Remembered** in app preferences (order, size per card, hidden cards), next to the periods, so
+  Android's phone transfer carries it; not in the data file or the backup file. A stored layout that cannot be read means the default; unknown cards are dropped,
+  cards added in a later version are appended.
+- Notices (backup, "?" check, clipboard offer) stay above the grid outside edit mode and are hidden
+  while editing.
+- Not in this change: chart cards (`custom-charts`), per-card settings other than size, other
+  screens.
+- Parts touched: front page (HomeScreen and its cards), a new pure layout rule and its preference,
+  Ohje (one sentence), the event list; a new dependency (`sh.calvin.reorderable`, drag in a lazy
+  grid).
+
+## Capabilities
+
+- home-screen (modified: Simple home screen, Food row on the home screen, Steps card on the home
+  screen; removed: Steps card height; added: Card grid, Card sizes, Card edit mode, Hidden cards)
+- help-page (modified: Ohje screen names the front page editing)
+- app-data-transfer (modified: the layout moves with Android's transfer and cloud backup, as the
+  periods do)
 
 ## Impact
 
-home-screen spec (Card order, Card edit mode; the archive edit of "Simple home screen" also allows the edit button in the top bar and the reset action). Depends on `steps` (the half-width row) being merged first; no conflict with `food-widget`.
-Questions for the user: Q8-Q10 and Q14 in context/questions.md.
+`custom-charts` depends on this change (a chart is a card type in this grid): implement this one
+first. No conflict with other active changes.
