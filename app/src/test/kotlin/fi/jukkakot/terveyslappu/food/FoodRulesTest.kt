@@ -244,4 +244,21 @@ class FoodRulesTest {
     fun `instant arithmetic is not shifted by the test clock`() {
         assertEquals(Instant.parse("2026-11-14T05:00:00Z"), at(today, 7))
     }
+
+    @Test
+    fun `edit before adding applies the editor to a new item, a base product becomes own`() {
+        val day = listOf(item("Kahvi", pos = 1))
+        val pick = Suggestion.Base(base[1])
+        val input = EditInput("Jauhelihakastike", EditMode.G, 350.0, 140.0, true)
+        val plan = FoodEdits.addEdited(today, day, pick, input, emptyList(), base, at(today, 18), zone, "new")
+        assertEquals("new", plan.item.uuid)
+        assertEquals(2, plan.item.pos)
+        assertEquals(Amount(350.0, AmountUnit.G), plan.item.amount)
+        assertEquals(490.0, plan.item.kcal)
+        assertTrue(plan.item.treat)
+        val product = assertNotNull(plan.others.product)
+        assertEquals(Amount(350.0, AmountUnit.G), product.lastAmount)
+        assertTrue(product.treat)
+        assertTrue(plan.others.new.isEmpty())
+    }
 }

@@ -12,6 +12,8 @@ import fi.jukkakot.terveyslappu.food.AiImportPlan
 import fi.jukkakot.terveyslappu.food.AiPaste
 import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.ClipOffers
+import fi.jukkakot.terveyslappu.food.ClipRead
+import fi.jukkakot.terveyslappu.food.ClipStep
 import fi.jukkakot.terveyslappu.food.AiResult
 import fi.jukkakot.terveyslappu.food.EditInput
 import fi.jukkakot.terveyslappu.food.FoodDay
@@ -31,6 +33,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -68,6 +73,8 @@ data class FoodUiState(
     val editing: FoodItem? = null,
     /** The editor was opened from the add sheet on this day: leaving it reopens the sheet (food-widget design 4). */
     val editReturn: LocalDate? = null,
+    /** The editor is a draft of a new item of this suggestion (edit before adding): Lisää / Peruuta. */
+    val draft: Suggestion? = null,
     /** Järjestä: the working order of the day. */
     val ordering: List<FoodItem>? = null,
     /** The AI import preview, null = closed. */
@@ -111,9 +118,6 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The dialog opened its sheet once; a recreated dialog keeps its state (design 11). */
     private var dialogStarted = false
-
-    /** The dialog read the clipboard once (design 13); kept across rotation. */
-    var dialogClipChecked = false
 
     var permissionAsked = false
         private set
@@ -252,7 +256,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.i("food.import", "ok", "from" to from, "count" to p.items.size, "products" to p.products.size, "skipped" to p.skipped)
                 // Any open sheet or editor closes (food-widget design 5).
                 _state.update {
-                    it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now()), sheetDay = null, query = "", line = null, editing = null, editReturn = null)
+                    it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now(), ClipOffers.key(p)), sheetDay = null, query = "", line = null, editing = null, draft = null, editReturn = null)
                 }
             }
             is AiResult.Failed -> {
@@ -264,36 +268,88 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     private val clipPrefs = app.getSharedPreferences("foodclip", android.content.Context.MODE_PRIVATE)
 
-    /** Timestamp of the clip last offered; the activity asks before it reads any clip text. */
-    fun lastOfferedClip(): Long = clipPrefs.getLong("offered", 0L)
+    private fun doneKeys(): List<String> =
+        runCatching { clipJson.decodeFromString(doneSerializer, clipPrefs.getString("done", null) ?: "[]") }.getOrDefault(emptyList())
 
-    /** The activity read a new clip: it is marked offered whatever it holds; food JSON shows the line. */
-    fun offerClip(clipTime: Long, text: String) {
-        clipPrefs.edit().putLong("offered", clipTime).apply()
-        val offer = ClipOffers.from(text) ?: return
-        AppLog.i("food.import.offer", "shown", "count" to offer.count)
+    private fun markDone(key: String) {
+        clipPrefs.edit().putString("done", clipJson.encodeToString(doneSerializer, ClipOffers.markDone(doneKeys(), key))).apply()
+        _state.update { s -> if (s.clipOffer?.key == key) s.copy(clipOffer = null) else s }
+    }
+
+    private fun cachedRead(): ClipRead? {
+        if (!clipPrefs.contains("readTime")) return null
+        val key = clipPrefs.getString("readKey", null)
+        val offer = key?.let {
+            ClipOffer(it, clipPrefs.getInt("readCount", 0), clipPrefs.getInt("readKcal", -1).takeIf { k -> k >= 0 }, clipPrefs.getBoolean("readProducts", false))
+        }
+        return ClipRead(clipPrefs.getLong("readTime", 0L), offer)
+    }
+
+    private fun cacheRead(read: ClipRead) {
+        val o = read.offer
+        val edit = clipPrefs.edit().putLong("readTime", read.time)
+        if (o == null) {
+            edit.remove("readKey").remove("readCount").remove("readKcal").remove("readProducts")
+        } else {
+            edit.putString("readKey", o.key).putInt("readCount", o.count).putInt("readKcal", o.kcal ?: -1).putBoolean("readProducts", o.productsOnly)
+        }
+        edit.apply()
+    }
+
+    /**
+     * The clipboard check on open and resume (design 3): [hasText] and [clipTime] from the clip's
+     * description (no paste toast); [read] reads the text only when the clip changed since the last read.
+     */
+    fun checkClip(hasText: Boolean, clipTime: Long, read: () -> String) {
+        // Before this change the app kept the last offered clip's time: older clips count as answered.
+        val legacy = clipPrefs.getLong("offered", -1L)
+        if (legacy >= 0) {
+            clipPrefs.edit().remove("offered").apply()
+            if (clipTime in 1..legacy && cachedRead() == null) cacheRead(ClipRead(clipTime, null))
+        }
+        val done = doneKeys()
+        val offer: ClipOffer?
+        val didRead: Boolean
+        when (val step = ClipOffers.step(hasText, clipTime, cachedRead(), done)) {
+            is ClipStep.Known -> {
+                didRead = false
+                offer = step.offer
+            }
+            ClipStep.Read -> {
+                didRead = true
+                val found = ClipOffers.from(read(), store.all(), base)
+                cacheRead(ClipRead(clipTime, found))
+                offer = ClipOffers.shown(found, done)
+            }
+        }
+        val json = hasText && cachedRead()?.offer != null
+        AppLog.i("food.import.offer", "check", "read" to didRead, "json" to json, "done" to (json && offer == null))
+        val before = _state.value.clipOffer
         _state.update { it.copy(clipOffer = offer) }
+        if (offer != null && offer != before) AppLog.i("food.import.offer", "shown", "count" to offer.count)
     }
 
-    /** Näytä in the dialog: the offered text, handed to the app (food-widget design 5). */
-    fun takeClipOffer(): ClipOffer? {
-        val offer = _state.value.clipOffer ?: return null
-        AppLog.i("food.import.offer", "open", "count" to offer.count)
-        _state.update { it.copy(clipOffer = null) }
-        return offer
+    /** Tapping the offer: logged; the caller reads the clip text and opens the preview (design 4). */
+    fun clipOpened() {
+        _state.value.clipOffer?.let { AppLog.i("food.import.offer", "open", "count" to it.count) }
     }
 
-    /** Näytä: the offered text opens the preview. */
-    fun openClipOffer() {
-        val offer = takeClipOffer() ?: return
-        openAi(offer.text, "paste")
+    /** The offer tapped in the app: [text] is the clipboard read now; whatever food JSON it holds opens. */
+    fun openClipOffer(text: String) {
+        clipOpened()
+        openAi(text, "paste")
     }
 
-    /** Ohita: the line goes away. */
+    /** Ohita: that content is not offered again. */
     fun skipClipOffer() {
         val offer = _state.value.clipOffer ?: return
         AppLog.i("food.import.offer", "skip", "count" to offer.count)
-        _state.update { it.copy(clipOffer = null) }
+        markDone(offer.key)
+    }
+
+    /** Kopioi tuontiohje: the example JSON in the copied text is never offered. */
+    fun markTextDone(text: String) {
+        (AiPaste.parse(text) as? AiResult.Ok)?.let { markDone(ClipOffers.key(it.parsed)) }
     }
 
     fun setAi(preview: AiPreview) = _state.update { it.copy(ai = preview.copy(day = minOf(preview.day, LocalDate.now()))) }
@@ -304,6 +360,8 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     fun addAi() {
         val preview = _state.value.ai ?: return
         _state.update { it.copy(ai = null) }
+        // Saved content is not offered again, whatever opened the preview (review decision: before the write).
+        preview.sourceKey?.let { markDone(it) }
         viewModelScope.launch {
             if (_state.value.items == null) load()
             val current = _state.value
@@ -343,7 +401,50 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Muuta: from the sheet's line the editor replaces the sheet and leaving it reopens the sheet (design 4). */
-    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, editReturn = it.sheetDay, sheetDay = null) }
+    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, draft = null, editReturn = it.sheetDay, sheetDay = null) }
+
+    /** A row's edit button: the editor opens on the item a tap would add; nothing is written yet. */
+    fun editDraft(pick: Suggestion) {
+        val s = _state.value
+        val day = s.sheetDay ?: LocalDate.now()
+        val (item, _) = FoodEdits.add(day, s.dayItems(day), pick, null, Instant.now(), ZoneId.systemDefault(), "draft")
+        _state.update { it.copy(editing = item, draft = pick, editReturn = it.sheetDay, sheetDay = null) }
+    }
+
+    /** Lisää of the draft editor: the item as edited at the end of the day; back to the field with the Muuta · Kumoa line. */
+    fun addDraft(input: EditInput) {
+        val current = _state.value
+        val pick = current.draft ?: return
+        val day = current.editReturn ?: current.sheetDay ?: LocalDate.now()
+        _state.update { leaveEditor(it, it.line).copy(query = "") }
+        val now = Instant.now()
+        val uuid = UUID.randomUUID().toString()
+        val fields = arrayOf<Pair<String, Any?>>("from" to source, "kind" to "edited")
+        terveys.appScope.launch {
+            writes.withLock {
+                if (_state.value.items == null) load()
+                if (_state.value.items == null) {
+                    AppLog.w("food.add", "failed", *fields, "reason" to "read")
+                    failed()
+                    return@withLock
+                }
+                val plan = FoodEdits.addEdited(day, _state.value.items.orEmpty(), pick, input, store.all(), base, now, ZoneId.systemDefault(), uuid)
+                val item = plan.item
+                val others = plan.others
+                // As after Tallenna: the product keeps the edited values (also when the write fails).
+                others.product?.let { store.put(it) }
+                _state.update { s ->
+                    val byUuid = others.new.associateBy { it.uuid }
+                    s.copy(items = s.items.orEmpty().map { byUuid[it.uuid] ?: it } + item, line = SheetLine.Added(item), products = store.all())
+                }
+                val old = withRecordIds(others.old)
+                runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) {
+                    foods.insert(listOf(item))
+                    if (others.new.isNotEmpty()) foods.replace(old, others.new)
+                }
+            }
+        }
+    }
 
     /** Peruuta: back to the sheet (its line as it was) when the editor came from there. */
     fun closeEditor() = _state.update { leaveEditor(it, it.line) }
@@ -376,7 +477,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     /** The editor closes; it reopens the sheet with [line] when it came from there, else the list stays. */
     private fun leaveEditor(s: FoodUiState, line: SheetLine?): FoodUiState {
         val back = s.editReturn
-        return s.copy(editing = null, editReturn = null, sheetDay = back ?: s.sheetDay, line = if (back != null) line else s.line)
+        return s.copy(editing = null, draft = null, editReturn = null, sheetDay = back ?: s.sheetDay, line = if (back != null) line else s.line)
     }
 
     /** Undo of a delete: the old record id back, so its place and values return. */
@@ -477,3 +578,6 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000
 }
+
+private val clipJson = Json
+private val doneSerializer = ListSerializer(String.serializer())

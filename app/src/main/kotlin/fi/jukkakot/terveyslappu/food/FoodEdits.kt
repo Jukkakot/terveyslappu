@@ -7,6 +7,9 @@ import java.time.ZoneId
 /** A change to write: the old versions of the items, their new versions, and the product to keep. */
 data class FoodPlan(val old: List<FoodItem>, val new: List<FoodItem>, val product: Product? = null)
 
+/** An edited new item to insert, and the other changes its edit makes (product, other items). */
+data class DraftPlan(val item: FoodItem, val others: FoodPlan)
+
 /** The editor's unit choice (design "Editor"): pieces, grams, or a total for the item. */
 enum class EditMode { KPL, G, TOTAL }
 
@@ -38,6 +41,22 @@ object FoodEdits {
             timed = timed,
         )
         return item to product?.takeIf { it.name != QUICK_ADD }
+    }
+
+    /**
+     * Edit before adding (food-log "Adding an item"): the item a tap on [pick] would add, with the
+     * editor's [input] applied by the [edit] rules (product energy, usual amount, Herkku, rename; a
+     * base product becomes own). [DraftPlan.others] are the day's other items the edit rewrites.
+     */
+    fun addEdited(
+        day: LocalDate, all: Collection<FoodItem>, pick: Suggestion, input: EditInput,
+        own: List<Product>, base: List<BaseProduct>, now: Instant, zone: ZoneId, uuid: String,
+    ): DraftPlan {
+        val (item, _) = add(day, all.filter { it.day == day }, pick, null, now, zone, uuid)
+        val plan = edit(item, input, all + item, own, base)
+        val edited = plan.new.firstOrNull { it.uuid == uuid } ?: item
+        val others = FoodPlan(plan.old.filter { it.uuid != uuid }, plan.new.filter { it.uuid != uuid }, plan.product)
+        return DraftPlan(edited, others)
     }
 
     /** The editor's starting values for [item]. */

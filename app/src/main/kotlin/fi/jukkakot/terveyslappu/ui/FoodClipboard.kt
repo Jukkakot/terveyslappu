@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import fi.jukkakot.terveyslappu.R
-import fi.jukkakot.terveyslappu.food.ClipOffers
 import fi.jukkakot.terveyslappu.log.AppLog
 
 /** The food log's clipboard use, shared by the main screen and the Lisää annos dialog (food-ai-import). */
@@ -17,22 +16,22 @@ object FoodClipboard {
     }
 
     /**
-     * The clipboard offer: called only while Ruoka or Lisää annos is shown. The description is checked
-     * first (no paste toast); the text is read only for a text clip newer than the last offered one.
+     * The clipboard offer: called only while the front page, Ruoka or Lisää annos is shown. The
+     * description is checked first (no paste toast); the text is read only for a changed clip.
+     * No description (no focus yet) keeps the offer as it is.
      */
     fun checkOffer(context: Context, model: FoodViewModel) {
         val manager = context.getSystemService(ClipboardManager::class.java) ?: return
         val description = manager.primaryClipDescription ?: return
-        val time = description.timestamp
-        if (!ClipOffers.shouldRead(description.hasMimeType("text/*"), time, model.lastOfferedClip())) return
-        model.offerClip(time, text(context))
+        model.checkClip(description.hasMimeType("text/*"), description.timestamp) { text(context) }
     }
 
-    /** Kopioi tuontiohje: assets/ai-food-prompt.txt as is. */
-    fun copyPrompt(context: Context) {
+    /** Kopioi tuontiohje: assets/ai-food-prompt.txt as is; its example JSON is never offered. */
+    fun copyPrompt(context: Context, model: FoodViewModel) {
         runCatching { context.assets.open("ai-food-prompt.txt").bufferedReader().use { it.readText() } }
             .onSuccess {
                 context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText("terveyslappu ai prompt", it))
+                model.markTextDone(it)
                 AppLog.i("food.prompt.copy", "", "chars" to it.length)
                 Toast.makeText(context, R.string.ai_prompt_copied, Toast.LENGTH_SHORT).show()
             }

@@ -72,6 +72,8 @@ class FoodAddActivity : ComponentActivity() {
                         onCloseSheet = model::closeSheet,
                         onQuery = model::onQuery,
                         onPick = model::addSuggestion,
+                        onEditPick = model::editDraft,
+                        onAddDraft = model::addDraft,
                         onEnter = model::addTyped,
                         onUndoAdd = model::undoAdd,
                         onUndoDelete = model::undoDelete,
@@ -80,8 +82,11 @@ class FoodAddActivity : ComponentActivity() {
                         onSave = model::saveEdit,
                         onDelete = model::delete,
                         onPasteAi = { handOver(FoodClipboard.text(this), "paste") },
-                        onCopyAiPrompt = { FoodClipboard.copyPrompt(this) },
-                        onClipOpen = { model.takeClipOffer()?.let { handOver(it.text, "paste") } },
+                        onCopyAiPrompt = { FoodClipboard.copyPrompt(this, model) },
+                        onClipOpen = {
+                            model.clipOpened()
+                            handOver(FoodClipboard.text(this), "paste")
+                        },
                         onClipSkip = model::skipClipOffer,
                     ),
                     FoodDialogActions(
@@ -92,7 +97,7 @@ class FoodAddActivity : ComponentActivity() {
                         onOpenSettings = {
                             launchSafely { startActivity(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)) }
                         },
-                        onFocused = ::checkClipOnce,
+                        onFocused = ::checkClip,
                     ),
                 )
             }
@@ -114,15 +119,11 @@ class FoodAddActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) checkClipOnce()
+        if (hasFocus) checkClip()
     }
 
-    /** The clipboard is read once, when a dialog window first has focus (Android 10+, design 13). */
-    private fun checkClipOnce() {
-        if (model.dialogClipChecked) return
-        model.dialogClipChecked = true
-        FoodClipboard.checkOffer(this, model)
-    }
+    /** The clipboard is checked on every focus gain (Android 10+ allows the read only then); text is read only for a changed clip. */
+    private fun checkClip() = FoodClipboard.checkOffer(this, model)
 
     /** Tuo ruoka-annokset and Näytä: the app opens on the preview over the front page (design 5). */
     private fun handOver(text: String, from: String) {

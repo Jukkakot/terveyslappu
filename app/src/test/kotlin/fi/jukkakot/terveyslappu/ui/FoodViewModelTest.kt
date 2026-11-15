@@ -10,7 +10,10 @@ import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.EditInput
 import fi.jukkakot.terveyslappu.food.EditMode
+import fi.jukkakot.terveyslappu.food.Energy
 import fi.jukkakot.terveyslappu.food.FoodItem
+import fi.jukkakot.terveyslappu.food.Product
+import fi.jukkakot.terveyslappu.food.Suggestion
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Before
@@ -198,5 +201,123 @@ class FoodViewModelTest {
         model.openSheet(yesterday)
         type("kahvi")
         assertEquals(yesterday, records.items.single().day)
+    }
+
+    // Clipboard offer (food-sheet-clip-and-suggestions); made-up foods only.
+    private val clipJson = "Arvio:\n```json\n{\"items\":[{\"name\":\"Testipuuro\",\"amount\":300,\"unit\":\"g\",\"kcal\":210},{\"name\":\"Testikahvi\",\"kcal\":5}]}\n```"
+
+    private fun check(time: Long, text: String = clipJson): Int {
+        var reads = 0
+        model.checkClip(true, time) { reads++; text }
+        return reads
+    }
+
+    @Test
+    fun `the offer survives a second check without a second read`() {
+        assertEquals(1, check(100))
+        assertEquals(2, state.clipOffer?.count)
+        assertEquals(215, state.clipOffer?.kcal)
+        assertEquals(0, check(100))
+        assertNotNull(state.clipOffer)
+    }
+
+    @Test
+    fun `other text and a clip without text offer nothing`() {
+        check(100, "https://example.com/a")
+        assertNull(state.clipOffer)
+        check(200)
+        assertNotNull(state.clipOffer)
+        model.checkClip(false, 300) { error("no read") }
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `Ohita ends the offer, also when the same json is copied again`() {
+        check(100)
+        model.skipClipOffer()
+        assertNull(state.clipOffer)
+        check(100)
+        assertNull(state.clipOffer)
+        check(200, "Toinen viesti " + clipJson)
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `tapping the offer opens the preview from the clipboard text and saving ends the offer`() {
+        ready()
+        check(100)
+        model.openClipOffer(clipJson)
+        val preview = assertNotNull(state.ai)
+        assertEquals(2, preview.items.size)
+        assertNotNull(preview.sourceKey)
+        model.addAi()
+        idle()
+        assertNull(state.clipOffer)
+        check(100)
+        assertNull(state.clipOffer)
+        assertEquals(2, records.items.size)
+    }
+
+    @Test
+    fun `Peruuta on the preview keeps the offer`() {
+        check(100)
+        model.openClipOffer(clipJson)
+        model.cancelAi()
+        check(100)
+        assertNotNull(state.clipOffer)
+    }
+
+    @Test
+    fun `content saved from a share is not offered afterwards`() {
+        ready()
+        model.openAi(clipJson, "share")
+        model.addAi()
+        idle()
+        check(100)
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `the copied import instructions are never offered`() {
+        val prompt = app.assets.open("ai-food-prompt.txt").bufferedReader().use { it.readText() }
+        model.markTextDone(prompt)
+        check(100, prompt)
+        assertNull(state.clipOffer)
+    }
+
+    // Edit before adding.
+    private val kastike = Product("Testikastike", false, Energy(140.0, AmountUnit.G), Amount(250.0, AmountUnit.G))
+
+    @Test
+    fun `edit before adding adds the edited item and the product remembers the amount`() {
+        app.products.put(kastike)
+        ready()
+        model.editDraft(Suggestion.Own(kastike))
+        assertNotNull(state.editing)
+        assertNotNull(state.draft)
+        assertNull(state.sheetDay)
+        model.addDraft(EditInput("Testikastike", EditMode.G, 350.0, 140.0, false))
+        idle()
+        val item = records.items.single()
+        assertEquals(350.0, item.amount?.value)
+        assertEquals(490.0, item.kcal)
+        assertEquals(today, state.sheetDay)
+        assertNull(state.editing)
+        assertNull(state.draft)
+        assertEquals(item.uuid, assertIs<SheetLine.Added>(state.line).item.uuid)
+        assertEquals(350.0, app.products.find("Testikastike")?.usualAmount()?.value)
+    }
+
+    @Test
+    fun `Peruuta in the draft editor adds nothing and returns to the field`() {
+        app.products.put(kastike)
+        ready()
+        model.editDraft(Suggestion.Own(kastike))
+        model.closeEditor()
+        idle()
+        assertTrue(records.items.isEmpty())
+        assertEquals(today, state.sheetDay)
+        assertNull(state.draft)
+        assertNull(state.line)
     }
 }

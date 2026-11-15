@@ -86,6 +86,21 @@ logged items.
   empty and loading hints unchanged.
 - Done keys: FIFO, at most 50.
 
+Implementer's decisions (apply):
+
+- `food.import.offer check`: `json=` = the current clip holds food JSON (from the read or the
+  cache), `done=` = it does but its key is done. `shown` is logged when the offer appears or
+  changes, not on every check.
+- Offer kcal plans on today with no day items (positions do not affect kcal).
+- Cache prefs (`foodclip`): `readTime` plus `readKey/readCount/readKcal/readProducts` (absent =
+  no food JSON); done keys under `done` as a JSON string list.
+- The widget sheet checks on both the activity's and the sheet window's focus gain; a duplicate
+  check uses the cache (two `check` lines, no second read).
+- Row detail strings: new `ei kcal` string for the rows (the old "ilman kcal" stays elsewhere).
+- Draft Lisää writes the new item (insert) and, when the edit fills or re-tags other items of the
+  product, replaces those in the same locked write; one `food.add ... kind=edited` line.
+- The draft editor's start values use the picked product (also a base product not yet own).
+
 ## Risks / Trade-offs
 
 - [The same JSON copied again after import is never offered] → intended; Tuo ruoka-annokset and

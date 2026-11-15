@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -684,7 +685,12 @@ internal fun BackupNotice(failed: Boolean, onOpen: () -> Unit) {
 /** The clipboard offer line above the cards (food-ai-import). */
 @Composable
 internal fun ClipOfferNotice(offer: fi.jukkakot.terveyslappu.food.ClipOffer, actions: FoodActions) {
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(start = 16.dp, end = 4.dp)) {
-        ClipOfferLine(offer, actions)
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(onClick = actions.onClipOpen).heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp).testTag("clipOffer"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(clipOfferText(offer), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(vertical = 8.dp).testTag("clipOpen"))
+        TextButton(onClick = actions.onClipSkip, modifier = Modifier.heightIn(min = 48.dp).testTag("clipSkip")) { Text(stringResource(R.string.ai_clip_skip)) }
     }
 }

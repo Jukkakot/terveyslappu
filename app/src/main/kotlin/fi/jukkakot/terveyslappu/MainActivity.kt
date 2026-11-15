@@ -265,6 +265,8 @@ class MainActivity : ComponentActivity() {
                         onCloseSheet = foodModel::closeSheet,
                         onQuery = foodModel::onQuery,
                         onPick = foodModel::addSuggestion,
+                        onEditPick = foodModel::editDraft,
+                        onAddDraft = foodModel::addDraft,
                         onEnter = foodModel::addTyped,
                         onUndoAdd = foodModel::undoAdd,
                         onUndoDelete = foodModel::undoDelete,
@@ -281,7 +283,7 @@ class MainActivity : ComponentActivity() {
                         onRemoveProduct = foodModel::removeProduct,
                         onPasteAi = ::pasteAiFood,
                         onCopyAiPrompt = ::copyAiPrompt,
-                        onClipOpen = foodModel::openClipOffer,
+                        onClipOpen = { foodModel.openClipOffer(FoodClipboard.text(this)) },
                         onClipSkip = foodModel::skipClipOffer,
                         onAiEdit = foodModel::setAi,
                         onAiCancel = foodModel::cancelAi,
@@ -425,7 +427,7 @@ class MainActivity : ComponentActivity() {
     private fun checkClipOffer() = FoodClipboard.checkOffer(this, foodModel)
 
     /** Kopioi ohje tekoälylle: assets/ai-food-prompt.txt as is. */
-    private fun copyAiPrompt() = FoodClipboard.copyPrompt(this)
+    private fun copyAiPrompt() = FoodClipboard.copyPrompt(this, foodModel)
 
     private fun shareLog() {
         AppLog.i("log.share")

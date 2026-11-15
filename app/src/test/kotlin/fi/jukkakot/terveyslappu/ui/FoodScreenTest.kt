@@ -49,6 +49,7 @@ class FoodScreenTest {
     )
 
     private var picked: Suggestion? = null
+    private var editPicked: Suggestion? = null
 
     private fun show(start: MainUiState, foodStart: FoodUiState) {
         compose.setContent {
@@ -73,6 +74,7 @@ class FoodScreenTest {
                         },
                         onAdd = { food = food.copy(sheetDay = it) },
                         onPick = { picked = it },
+                        onEditPick = { editPicked = it },
                         onCloseSheet = { food = food.copy(sheetDay = null) },
                         onClipSkip = { food = food.copy(clipOffer = null) },
                     ),
@@ -91,6 +93,8 @@ class FoodScreenTest {
         compose.onNodeWithTag("addField").assertExists()
         compose.onNodeWithTag("pick-Rahka").performClick()
         assertEquals("Rahka", picked?.name)
+        compose.onNodeWithTag("edit-Pullo").performClick()
+        assertEquals("Pullo", editPicked?.name)
     }
 
     @Test
@@ -118,7 +122,7 @@ class FoodScreenTest {
 
     @Test
     fun `front page shows the clipboard offer above the cards and Ohita hides it`() {
-        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(clipOffer = ClipOffer("x", 4, false)))
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(clipOffer = ClipOffer("k", 4, 850, false)))
         compose.onNodeWithTag("clipOffer").assertExists()
         compose.onNodeWithTag("clipSkip").performClick()
         compose.onNodeWithTag("clipOffer").assertDoesNotExist()

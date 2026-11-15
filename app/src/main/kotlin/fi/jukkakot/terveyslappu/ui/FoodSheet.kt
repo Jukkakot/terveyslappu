@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,7 +21,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,7 +67,7 @@ internal fun energyText(energy: Energy?): String = when {
 }
 
 /**
- * The add field (food-log "Adding an item"): keyboard up, suggestion buttons at the empty field,
+ * The add field (food-log "Adding an item"): keyboard up, suggestion rows at the empty field,
  * up to five matches while typing, one tap adds, enter adds the typed text; the field stays open.
  */
 @Composable
@@ -105,7 +108,7 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
         modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
     )
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    food.clipOffer?.let { ClipOfferLine(it, actions) }
+    food.clipOffer?.let { ClipOfferButton(it, actions) }
     food.line?.let { SheetLineRow(it, actions) }
     val items = food.items
     if (FoodNames.normalize(food.query).isEmpty()) {
@@ -119,32 +122,58 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
                 modifier = Modifier.testTag(if (food.loadFailed) "addReadFailed" else "addLoading"),
             )
             picks.isEmpty() -> Text(stringResource(R.string.food_add_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("addHint"))
-            else -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.testTag("addSuggestions")) {
-                picks.forEach { p ->
-                    SuggestionChip(onClick = { actions.onPick(Suggestion.Own(p)) }, label = { Text(p.name) }, modifier = Modifier.heightIn(min = 48.dp).testTag("pick-${p.name}"))
-                }
+            else -> Column(Modifier.testTag("addSuggestions")) {
+                picks.forEach { p -> SuggestionRow(Suggestion.Own(p), "pick", actions) }
             }
         }
     } else {
         val matches = remember(food.query, items, food.products) { Suggestions.typing(food.query, food.products, base, items.orEmpty()) }
         Column(Modifier.testTag("addMatches")) {
-            matches.forEach { s ->
-                Row(
-                    Modifier.fillMaxWidth().clickable { actions.onPick(s) }.heightIn(min = 52.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("match-${s.name}"),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(s.name, style = MaterialTheme.typography.bodyLarge)
-                        Text(energyText(s.product.energy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (s.product.treat) TreatSign()
-                }
-            }
+            matches.forEach { s -> SuggestionRow(s, "match", actions) }
         }
     }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
         TextButton(onClick = actions.onCopyAiPrompt, modifier = Modifier.heightIn(min = 48.dp).testTag("aiCopyPrompt")) { Text(stringResource(R.string.ai_copy_prompt)) }
+    }
+}
+
+/** A suggestion's second line: "200 g · 130 kcal", "140 kcal / 100 g", "200 g · ei kcal" or "ei kcal". */
+@Composable
+internal fun suggestionDetail(product: Product): String {
+    val amount = product.usualAmount()
+    val energy = product.energy
+    return when {
+        amount != null && energy != null -> {
+            val kcal = energy.kcalOf(amount)
+            formatAmount(amount) + " · " + (kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_row_no_kcal))
+        }
+        amount != null -> formatAmount(amount) + " · " + stringResource(R.string.food_row_no_kcal)
+        energy != null -> energyText(energy)
+        else -> stringResource(R.string.food_row_no_kcal)
+    }
+}
+
+/**
+ * One suggestion (empty-field list and typed matches): name, usual amount · kcal, the treat sign; a
+ * tap adds at once, the pencil opens the editor on a new item first.
+ */
+@Composable
+private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f).clickable { actions.onPick(s) }.heightIn(min = 56.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("$tag-${s.name}"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(s.name, style = MaterialTheme.typography.bodyLarge)
+                Text(suggestionDetail(s.product), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (s.product.treat) TreatSign()
+        }
+        IconButton(onClick = { actions.onEditPick(s) }, modifier = Modifier.size(48.dp).testTag("edit-${s.name}")) {
+            Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.food_edit_before_add))
+        }
     }
 }
 
@@ -182,7 +211,7 @@ private fun numberText(value: Double?): String = value?.let { if (it % 1.0 == 0.
 /** The item editor (design "Editor"): name, amount with its unit choice, kcal, Herkku, Poista. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodActions) {
+internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodActions, draft: Boolean = false) {
     val start = remember(item) { FoodEdits.editStart(item, products.firstOrNull { it.key == item.key }) }
     var name by remember(item) { mutableStateOf(start.name) }
     var mode by remember(item) { mutableStateOf(start.mode) }
@@ -234,11 +263,15 @@ internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodAc
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { actions.onSave(item, input) }, modifier = Modifier.testTag("editSave")) { Text(stringResource(R.string.food_save)) } },
+        confirmButton = {
+            // Edit before adding: Lisää / Peruuta instead of Tallenna / Poista.
+            if (draft) TextButton(onClick = { actions.onAddDraft(input) }, modifier = Modifier.testTag("editAdd")) { Text(stringResource(R.string.ai_add)) }
+            else TextButton(onClick = { actions.onSave(item, input) }, modifier = Modifier.testTag("editSave")) { Text(stringResource(R.string.food_save)) }
+        },
         dismissButton = {
             Row {
-                TextButton(onClick = { actions.onDelete(item) }, modifier = Modifier.testTag("editDelete")) { Text(stringResource(R.string.food_delete)) }
-                TextButton(onClick = actions.onCloseEditor) { Text(stringResource(R.string.cancel)) }
+                if (!draft) TextButton(onClick = { actions.onDelete(item) }, modifier = Modifier.testTag("editDelete")) { Text(stringResource(R.string.food_delete)) }
+                TextButton(onClick = actions.onCloseEditor, modifier = Modifier.testTag("editCancel")) { Text(stringResource(R.string.cancel)) }
             }
         },
     )

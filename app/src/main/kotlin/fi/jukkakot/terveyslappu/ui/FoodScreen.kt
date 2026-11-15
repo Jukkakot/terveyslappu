@@ -75,6 +75,10 @@ class FoodActions(
     val onCloseSheet: () -> Unit = {},
     val onQuery: (String) -> Unit = {},
     val onPick: (Suggestion) -> Unit = {},
+    /** A suggestion row's edit button: the editor on a new item of that product (Lisää / Peruuta). */
+    val onEditPick: (Suggestion) -> Unit = {},
+    /** Lisää of that draft editor. */
+    val onAddDraft: (EditInput) -> Unit = {},
     val onEnter: () -> Unit = {},
     val onUndoAdd: () -> Unit = {},
     /** The sheet line's Kumoa of a delete made in the editor opened from the sheet. */
@@ -203,7 +207,7 @@ internal fun FoodScreen(
                 food.items == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).testTag("foodDay")) {
                     DayBar(food.day, today, enabled = ordering == null, actions.onDay)
-                    if (ordering == null) food.clipOffer?.let { ClipOfferLine(it, actions) }
+                    if (ordering == null) food.clipOffer?.let { ClipOfferButton(it, actions) }
                     if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) HistoryNotice(onGrantHistory)
                     val items = ordering ?: food.dayItems(food.day)
                     if (items.isEmpty()) {
