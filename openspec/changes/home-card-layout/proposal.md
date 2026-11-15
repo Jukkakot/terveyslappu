@@ -20,14 +20,17 @@ The fixed layout was always meant as "for now" (home-screen, feature card parity
   top bar ("Muokkaa etusivua", Peruuta, Valmis), outlined and dimmed cards with a drag handle and a
   menu (size, move earlier or later, hide). While editing, the cards' own taps, buttons and menus do
   nothing. Cards are reordered by dragging the real cards, or with the menu's move items and
-  TalkBack actions.
+  TalkBack actions. The long-press that enters edit mode continues into a drag when the finger then
+  moves (as on a launcher home screen).
 - **Hide and bring back** (Q10): a hidden card leaves the grid; "Lisää kortti" in edit mode lists
-  the hidden cards and puts the chosen one back last. The last shown card cannot be hidden.
+  the hidden cards (a scrolling menu) and puts the chosen one back last. The last shown card cannot be hidden.
 - **Changes count only on "Valmis"**; Peruuta or back discards them without asking. A "Palauta
   oletus" action in edit mode restores the default layout (also only on Valmis).
 - **Remembered** in app preferences (order, size per card, hidden cards), next to the periods, so
   Android's phone transfer carries it; not in the data file or the backup file. A stored layout that cannot be read means the default; unknown cards are dropped,
-  cards added in a later version are appended.
+  cards added in a later version are appended. Edit mode ends and its draft is dropped when any
+  outside intent (food sheet, weigh-in, notification action, another screen) arrives or Health
+  Connect access is lost.
 - Notices (backup, "?" check, clipboard offer) stay above the grid outside edit mode and are hidden
   while editing.
 - Not in this change: chart cards (`custom-charts`), per-card settings other than size, other
@@ -46,5 +49,6 @@ The fixed layout was always meant as "for now" (home-screen, feature card parity
 
 ## Impact
 
-`custom-charts` depends on this change (a chart is a card type in this grid): implement this one
-first. No conflict with other active changes.
+Implementation order: `steps-source-and-axes` (its pure axis helper `AxisTicks` gives the big
+cards' scale top), then this change, then `custom-charts` (a chart is a card type in this grid).
+Adds a Robolectric size matrix test (every card type at every size, 360 dp, font scale 1.3).

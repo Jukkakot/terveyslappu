@@ -6,45 +6,58 @@ Historia (`ui/HistoryScreen.kt`) is a `LazyColumn`: period chips, a `PrimaryScro
 `HorizontalPager` with pages 0..n-1 = `Quantity` (Paino, BMI: `QuantityPage`, Vico chart in
 `WeightChart.kt`), `ENERGY_PAGE` (`EnergyPage`, Canvas, `food/EnergySeries`) and `STEPS_PAGE`
 (`StepsTab`, Canvas, `steps/StepsSeries`). Energia and Askeleet draw the weights under their bars
-with `PeriodWeights` (`ui/EnergyPage.kt`). Over 90 days `EnergySeries`/`StepsSeries` are weekly and
-have no `average` line. Data: weights in `MainUiState`, food in `FoodUiState.items` (all own items
-are read), steps in `StepsUiState.days` (read from the widest `StepsViewModel.show(from)` asked).
-Tab entry triggers reads (`actions.onEnergyShown`, `stepsActions.onShown`). After
-`home-card-layout` the front page is a `LazyVerticalGrid` of `HomeCard(id, size)` from `HomeLayout`,
-stored by `HomeLayoutCodec` with the known ids as a parameter, and edit mode has "Lisää kortti".
-Chart knowledge: global bank `~/.claude/knowledge.md` "Charts" (whole period on x, one scale rule
-per quantity, units on every axis, direction not by colour alone).
+with `PeriodWeights` (`ui/EnergyPage.kt`). Over 90 days `EnergySeries`/`StepsSeries` are weekly
+averages (ISO weeks, Monday start) with no `average` line; those fixed tabs stay as they are.
+Data: weights in `MainUiState`, food in `FoodUiState.items` (all own items are read), steps in
+`StepsUiState.days` (read from the widest `StepsViewModel.show(from)` asked). Tab entry triggers
+reads (`actions.onEnergyShown`, `stepsActions.onShown`). `Period` (`chart/Period.kt`) is
+`Last(days) | All | Custom(from, to)`; the shared chips and the Oma calendar
+(`RangeCalendarDialog`) set it. After `home-card-layout` the front page is a `LazyVerticalGrid` of
+`HomeCard(id, size)` from `HomeLayout`, stored by `HomeLayoutCodec` (fixed ids plus an allowed
+extra id set), and edit mode has "Lisää kortti". After `steps-source-and-axes` there are the pure
+`chart/AxisTicks` (`bars`, `line`, `dates`: y labels bottom/middle/top, 4-5 x dates) and the shared
+`ChartLegend`. Chart knowledge: global bank `~/.claude/knowledge.md` "Charts" (whole period on x,
+one scale rule per quantity, units on every axis, direction not by colour alone).
 
 ## Goals / Non-Goals
 
-**Goals:** any number of user charts; per data bars or line; stacked or overlaid; one definition
-in a Historia tab and optionally a front page card; a small create/edit/delete flow; reuse the
-existing series and drawing; readable on a phone.
+**Goals:** any number of user charts; per data bars or line; stacked or overlaid; real daily
+values; each chart's own period; one definition in a Historia tab and optionally a front page card;
+a small create/edit/delete flow; reuse the existing series, the shared axis helper and the drawing;
+readable on a phone.
 **Non-Goals:** BMI as data, data order inside a chart, tab order, statistics or a list on chart
-tabs, export, zoom.
+tabs, export, zoom, weekly averages in custom charts.
 
 ## Decisions
 
-1. **Model.** `CustomChart(id: Int, name: String, series: List<ChartSeries>, layout: ChartLayout)`,
-   `ChartSeries(kind: SeriesKind {WEIGHT, ENERGY, STEPS}, style: SeriesStyle {BARS, LINE})`,
-   `ChartLayout {STACKED, OVERLAID}`. Two charts may share a name (no uniqueness rule; tabs and
-   cards are told apart by place); the name field stops input at 24 characters. `series` is kept sorted by `kind` order and non-empty, at most
-   one entry per kind. Ids are ints from a stored `next` counter, never reused, so a deleted chart's
-   card id cannot point at a new chart. Pure `CustomCharts` rules: `newDraft(existing)` (name "Kaavio
-   n", lowest n not used, defaults per spec), `validName` (trimmed, 1-24 chars), `toggle(kind)` (the
-   last one stays), `setStyle`, `add`, `update`, `delete`.
-2. **One definition, two places (Q18 recommendation).** The tab is always there; the card is a
-   `HomeCard("chart:<id>", size)` in `HomeLayout`. The codec's known ids are the fixed ids plus
-   `chart:<id>` of every existing chart, so a deleted chart's card is dropped on the next decode;
-   `MainViewModel` also removes it from the saved layout at delete time (no wait for a restart).
-   Charts not on the front page are not in `hidden` by default; "Lisää kortti" lists `hidden` plus
-   every chart whose id is in neither list, then "Uusi kaavio".
+1. **Model.** `CustomChart(id: Int, name: String, series: List<ChartSeries>, layout: ChartLayout,
+   period: Period)`, `ChartSeries(kind: SeriesKind {WEIGHT, ENERGY, STEPS}, style: SeriesStyle
+   {BARS, LINE})`, `ChartLayout {STACKED, OVERLAID}`. `series` is kept sorted by `kind` order and
+   non-empty, at most one entry per kind. Ids are ints from a stored `next` counter, never reused,
+   so a deleted chart's card id cannot point at a new chart. Names: trimmed, 1 to 24 grapheme
+   clusters (`BreakIterator`, so an emoji counts one), stored trimmed, duplicates allowed (tabs and
+   cards are told apart by place); only the default name "Kaavio n" is checked: lowest n for which
+   no existing name equals "Kaavio n" case-insensitively after trimming. Pure `CustomCharts`
+   rules: `newDraft(existing)` (defaults per spec, period `Last(30)`), `validName`, `toggle(kind)`
+   (the last one stays), `setStyle`, `setPeriod`, `add`, `update`, `delete`.
+2. **One definition, two places.** The tab is always there; the card is a `HomeCard("chart:<id>",
+   size)` in `HomeLayout`. The codec's `allowedExtra` ids are `chart:<id>` of every existing chart
+   (extra ids are kept when listed and allowed and NEVER appended, `home-card-layout` design 7), so
+   a deleted chart's card is dropped on the next decode and a chart not on the front page is in
+   neither list. `MainViewModel` also removes it from the saved layout at delete time. If the
+   removal leaves `shown` empty (the chart was the only shown card) the **default layout is saved
+   at once** (the three fixed cards shown, nothing hidden). "Lisää kortti" lists `hidden` plus every
+   chart whose id is in neither list, **in tab order**, then "Uusi kaavio". **Piilota on a chart
+   card removes its id from both lists** (not into `hidden`); the chart then reappears in
+   "Lisää kortti" and comes back wide. `HomeLayout.isDefault` = the fixed cards in default order and
+   sizes and **no chart id in either list**; `reset()` ("Palauta oletus") also clears chart ids.
 3. **Storage:** `ChartStore` over the `chart` prefs file, key `customCharts`, kotlinx.serialization
-   JSON `{"v":1,"next":3,"charts":[{"id":1,"name":"…","layout":"stacked","series":[{"kind":"weight","style":"line"},…]}]}`;
-   decode failures = no charts (logged once, `chart.custom.decode failed`). Chart card periods in
-   the same file, key `chartDays:<id>`, `HomeSummary.homeDays` rule, default 30. `chart.xml` already
-   moves with Android transfer (app-data-transfer), so nothing changes in `data_extraction_rules.xml`.
-   Singleton in `TerveysApp`, state in `MainUiState.charts`.
+   JSON `{"v":1,"next":3,"charts":[{"id":1,"name":"…","layout":"stacked","period":{"k":"last","days":30},"series":[{"kind":"weight","style":"line"},…]}]}`;
+   period `k` = `last` (with `days`), `all` or `custom` (with `from`, `to` as ISO dates); decode
+   failures = no charts (logged once, `chart.custom.decode failed`). The period is part of the
+   definition: the tab's chips and the card read and write the same field (no separate card
+   period). `chart.xml` already moves with Android transfer (app-data-transfer), so nothing changes
+   in `data_extraction_rules.xml`. Singleton in `TerveysApp`, state in `MainUiState.charts`.
 4. **Rendering: own Canvas, not Vico.** Vico (already used for Paino/BMI) can overlay column and line
    layers with start and end axes, but it cannot draw one crosshair through several stacked charts,
    its own scroll/zoom/marker gestures would fight the pager's swipe and the long-press scrub, and it
@@ -52,88 +65,110 @@ tabs, export, zoom.
    lines in Canvas; extracting them gives one renderer for tabs, the new charts and the cards. No
    other Compose chart library was checked beyond Vico (network to GitHub is blocked in the
    container); the extraction is small and keeps one look.
-5. **Shared drawing (`ui/chart/` or `ui/ChartPanels.kt`).** Pure `ChartAxis(from, to, weekly,
-   days)` with `x(day) = (daysBetween(from, day) + 0.5) × dayW` (day centres) used by every panel,
-   bar and crosshair. Panel drawers take `(axis, data, style, scale, area, crosshairDay)` and draw
-   into a `DrawScope` area: `drawBars`, `drawLine`, `drawWeights` (line + dots), each with the
-   existing rules (bar 70 % of its slot, gaps for missing days, 2 dp lines). `EnergyChart`,
-   `StepsChart` and `PeriodWeights` call them, unchanged in look (their tests stay green); the
-   x mapping on those two tabs moves to day centres too (bars already sit centred; the weight line
-   shifts half a day, accepted).
-6. **Data per style** (pure `ChartData.of(chart, period, today, weights, foodItems, stepDays)`):
-   weight line = non-"?" weights in range; weight bars = per day (week over 90 days) average of
-   non-"?" weights, drawn from the `WeightScale` bottom (Q16); energy bars = `EnergySeries.bars`;
-   energy line = `EnergySeries.average`, or over 90 days the weekly bars' values at the weeks'
-   centres (Q17); steps likewise from `StepsSeries`. Scales: weight `WeightScale.of(shown kg)`;
-   kcal `ceil(max × 1.1 / 500) × 500` (as Energia, min 500); steps rounded up to 1 000 × 1.1
-   (as Askeleet). One `ChartData` per chart feeds the tab, the card and the readout.
-7. **Stacked:** panels in kind order; tab heights 112/136/160 dp per 3/2/1 panels; each panel's
-   scale top label with unit at its top left (`labelSmall`); "viikoittain" note once above;
-   Energia's legend line under its panel when bars are shown (food, treats); a line-style Energia
-   or Askeleet panel adds "7 pv keskiarvo" (over 90 days "viikoittain") after its scale label, so
-   the line is not read as daily values; one date row under the stack. Card: the chart area split evenly between
-   panels, no labels below big, min 24 dp per panel.
-8. **Overlaid:** 200 dp on a tab. Bars first, lines on top. With k bar data the day slot is split
-   in k equal sub-slots (each bar 70 % of its sub-slot), in kind order. Tones: weight `secondary`,
-   energy `primary` (no treats split, so tones stay distinct), steps `tertiary`. Left axis = first
-   shown kind, right axis = second, both with 3 labels (bottom, middle, top) with unit in the data's
-   tone; a third data gets no axis and its legend entry reads its scale "Askeleet 0–12 000" (Q15).
-   Legend under the plot: swatch (block for bars, short line for lines) + name per data; a line
-   of Energia or Askeleet reads "Energia (7 pv ka.)" / "Askeleet (7 pv ka.)". One data =
-   the same plot as a stacked single panel (left axis only).
-9. **Crosshair and readout** (from the first draft, now per chart): pure `ChartReadout.of(day,
-   data)`: daily: date, last non-"?" weight ("ei painoa"), kcal ("ei kirjauksia"), steps ("ei
-   tietoa"); weekly: "vk 46 (10.–16.11.)", week average weight (non-"?"), average kcal per logged
-   day and steps per day with steps, today left out (the bars' numbers), "ei tietoa" for an empty
-   part; data without permission left out; today unmarked. Gestures on the chart's `pointerInput`:
-   `detectTapGestures` sets the day; `detectDragGesturesAfterLongPress` scrubs and owns both axes
-   until release (the pager and the list do not move). Over 90 days snap to the week, line at the
-   week's centre. State `rememberSaveable(chart.id, period) { day }`; cleared on tab change, period
-   change, editor save and leaving Historia; kept on data reload while its day is still on the axis
-   (cleared when a Kaikki start moves past it). The readout slot keeps its height when empty and
-   shows the hint "Napauta päivää nähdäksesi arvot", so the chart does not jump. Readout above the chart; a tap on
-   it clears. Line 1.5 dp `onSurface` through the whole stack or plot. TalkBack: custom actions
-   "Edellinen päivä"/"Seuraava päivä" on the chart (first use picks the newest day), readout a
-   polite live region updated on tap, drop or action only.
-10. **Historia tabs:** the pager's page count = 4 fixed + charts + 1. Page index → `HistoryPage`
-    sealed type (`Fixed(quantity)`, `Energy`, `Steps`, `Custom(id)`, `NewChart`) through a pure
-    `HistoryPages.of(charts)` so index math lives in one tested place. Tab text = name, `maxLines =
-    1`, ellipsis, max width 160 dp. After a create, `animateScrollToPage` to the new chart's page;
-    after a delete, to the page before it. A chart page: a top row with the "Muokkaa" `TextButton`
-    (icon `ic_edit`, new vector, Material "edit") at the end, the readout slot, the chart. The
-    "Uusi kaavio" page: one line (`chart_new_intro`) and a `FilledTonalButton` "Uusi kaavio" (not
-    filled: the front page's Punnitse rule is home-only, but a tonal button keeps Historia calm).
-11. **Editor:** a `Dialog` (`usePlatformDefaultWidth = false`, 24 dp side margin) with a title
-    ("Uusi kaavio" / "Muokkaa kaaviota"), `OutlinedTextField` name (single line, 24 chars max,
+5. **Axis, ticks and legend: reuse `steps-source-and-axes`.** Value labels (bottom, middle, top with
+   unit in a left column of fixed width), the 4-5 dates under the plot and the legend (a swatch per
+   line and bar) come from its pure `AxisTicks.bars/line/dates` and shared `ChartLegend`; custom-charts
+   writes no axis rule of its own. Scale tops are the same as the fixed tabs': weight
+   `WeightScale.of(shown kg)` (`AxisTicks.line`), kcal `ceil(max × 1.1 / 500) × 500` (min 500),
+   steps `ceil(max × 1.1 / 2000) × 2000` (min 2 000), i.e. `AxisTicks.bars`; here `max` is the
+   highest daily value drawn.
+6. **Shared drawing (`ui/chart/` or `ui/ChartPanels.kt`).** Pure `ChartAxis(from, to, weekly)` with
+   `x(day) = (daysBetween(from, day) + 0.5) × dayW` (day centres) used by every panel, bar and
+   crosshair; `weekly` is true only for the fixed Energia and Askeleet tabs (ISO weeks, Monday
+   start; the only place weeks remain), always false for custom charts. Drawers take
+   `(axis, data, style, scale, area, crosshairDay)` into a `DrawScope` area: `drawBars`, `drawLine`,
+   `drawWeights` (line + dots when they fit). Bars are 70 % of their slot but never narrower than
+   1 dp (the minimum-width clamp that makes daily bars at 90 days, 1 v or Kaikki thin lines, not
+   gaps); days without data are gaps; lines are 2 dp and join the days that have a value (as the
+   weight line does). `EnergyChart`, `StepsChart` and `PeriodWeights` call them, unchanged in look
+   (their tests stay green); their x mapping moves to day centres too (bars already sit centred;
+   the weight line shifts half a day, accepted).
+7. **Data (pure `ChartData.of(chart, today, weights, foodItems, stepDays)`), real values only.**
+   The period is the chart's own (`Period.resolve`, Kaikki = first day with data among the shown,
+   loaded data). Weight (line or bars) = each day's **last** weight not marked "?" in range, never
+   an average; weight bars rise from the bottom of the `WeightScale` (Q16). Energy and steps = each
+   day's own value from the daily series (`EnergySeries` and `StepsSeries` expose a daily entry
+   point that ignores the weekly switch over 90 days; the fixed tabs keep calling the weekly one):
+   bars one per logged day (Energia with the treats' share in its tone when stacked), lines join the
+   days' own values. No 7-day average and no weekly value exists in `ChartData`. One `ChartData`
+   per chart feeds the tab, the card and the readout.
+8. **Stacked:** panels in kind order; tab heights 112/136/160 dp per 3/2/1 panels; each panel with
+   its left label column (`AxisTicks`, unit); one date row under the stack (`AxisTicks.dates`,
+   offset by the label column) and one `ChartLegend` under it naming every drawn line and bar
+   (paino, ruoka, herkut when Energia bars, askeleet). No "viikoittain" or "7 pv keskiarvo" notes.
+   Card: the chart area split evenly between panels, no labels below big, min 24 dp per panel.
+9. **Overlaid:** 200 dp on a tab. Bars first, lines on top. With k bar data the day slot is split
+   in k equal sub-slots (each bar 70 % of its sub-slot, min 1 dp), in kind order. Tones: weight
+   `secondary`, energy `primary` (no treats split, so tones stay distinct), steps `tertiary`. The
+   **first two data actually drawn** (kinds with values and access, in kind order) get the left and
+   right value axis (`AxisTicks`, 3 labels, unit, in the data's tone); a **third drawn data gets no
+   scale at all**, recognised by its colour and its legend name only (the legend does not carry a
+   scale). Legend under the date row via `ChartLegend`, a swatch per drawn line or bar. **One data
+   drawn = exactly the stacked single panel** (left axis only, same height rules as 1 panel).
+10. **Crosshair and readout.** Pure `ChartReadout.of(day, data)`: date, that day's last non-"?"
+    weight ("ei painoa"), kcal ("ei kirjauksia"), steps ("ei tietoa"); data without permission left
+    out; today shows its running values unmarked; always daily (no week form, no averages).
+    Gestures on the plot areas' `pointerInput` only (buttons inside panels, such as the grant
+    button, stay buttons; taps outside drawn plot areas place nothing): a tap sets the day; a
+    **press-and-hold released without moving places the crosshair** (haptic tick) and a hold
+    followed by a drag scrubs and owns both axes until release (the pager and the list do not
+    move). The 1.5 dp `onSurface` line is drawn only over panels that draw data (an empty or gated
+    panel has none). State `rememberSaveable(chart.id) { day }`; cleared on tab change, period
+    change, editor save and leaving Historia; kept on data reload and cleared only when its day
+    leaves the axis `[start, end]` (a Kaikki start moving past it, a shorter period). The readout
+    slot keeps its height when empty and shows the hint "Napauta päivää nähdäksesi arvot"; a tap on
+    it clears. TalkBack: custom actions "Edellinen päivä"/"Seuraava päivä" on the chart (the first
+    use starts from today), readout a polite live region updated on tap, drop or action only.
+11. **Historia tabs and the chart's own period.** The pager's page count = 4 fixed + charts + 1.
+    Page index → `HistoryPage` sealed type (`Fixed(quantity)`, `Energy`, `Steps`, `Custom(id)`,
+    `NewChart`) through a pure `HistoryPages.of(charts)`. Tab text = name, `maxLines = 1`,
+    ellipsis, max width 160 dp. After a create, `animateScrollToPage` to the new chart's page; after
+    a delete, to the page before it. **The period chips above the tabs follow the current page:** on
+    a `Custom(id)` page the row shows the same chips (1 vk, 1 kk, 3 kk, 1 v, Kaikki, Oma with the
+    calendar) bound to that chart's `period`, via `MainActions.onChartPeriod(id, period)` (saved at
+    once into `ChartStore`, so the front page card follows); on every other page the shared chips
+    as today, and the shared chips never affect a chart page. A chart page: a top row with the
+    "Muokkaa" `TextButton` (icon `ic_edit`, new vector, Material "edit") at the end, the readout
+    slot, the chart. The `NewChart` page: one line (`chart_new_intro`) and a `FilledTonalButton`
+    "Uusi kaavio". New UI field `MainUiState.historyChart: Int?` (the chart to open, like
+    `historyOnSteps`), cleared by `MainUiState.back()` and not kept when passing through Ruoka.
+12. **Editor:** a `Dialog` (`usePlatformDefaultWidth = false`, 24 dp side margin) with a title
+    ("Uusi kaavio" / "Muokkaa kaaviota"), `OutlinedTextField` name (single line, 24 graphemes max,
     error text "Anna nimi" when blank), three rows: name + `Switch` + `SingleChoiceSegmentedButtonRow`
     (Pylväät, Viiva; disabled when off), "Asettelu": segmented Allekkain / Päällekkäin with the line
     "Jokainen tieto omassa kuvassaan" / "Kaikki samassa kuvassa, kaksi asteikkoa", and at the bottom
     "Poista kaavio" (error tone TextButton, only for an existing chart) at the start and Peruuta /
-    Tallenna at the end. The editor works on a local draft (`rememberSaveable`); Tallenna calls
+    Tallenna at the end. The period is not in the editor (it is the chips on the tab); saving keeps
+    it. The editor works on a local draft (`rememberSaveable`); Tallenna calls
     `MainActions.onSaveChart(chart)`; Poista asks in an `AlertDialog` and calls `onDeleteChart(id)`.
     No preview (the chart behind the dialog updates on save).
-12. **Front page card (`ChartCard`):** title row (icon `ic_chart`, new vector, Material
+13. **Front page card (`ChartCard`):** title row (icon `ic_chart`, new vector, Material
     "insert_chart_outlined"; name; chevron), the chart via the shared drawers filling the free space
-    (decision 7/8 card rules), period label (`HomePeriodLabel`, own `chartDays:<id>`), dates at
-    wide and big, overlaid legend at wide and big, scale labels at big. Tap (except the period label)
-    → `actions.onOpenChart(id)` = Historia on that page (a `MainUiState.historyChart` id like
-    `historyOnSteps`). Long-press → edit mode (from `home-card-layout`). Loading on home: when a
-    chart card with steps is shown, `MainActivity` asks `stepsModel.show(from)` for the widest of the
-    steps card's and those charts' periods; food is read in full already.
-13. **"Lisää kortti" from the front page → "Uusi kaavio":** opens the same editor over the home
-    screen; on Tallenna the chart is saved at once (Historia has it) and `HomeCard("chart:<id>",
-    WIDE)` is appended to the edit draft. Peruuta on the edit mode then leaves the chart in
-    Historia only (spec).
-14. **"Palauta oletus" in edit mode** restores the fixed cards' default layout and takes every
-    chart card off the edited layout (the charts stay in Historia and in "Lisää kortti").
-15. **Permissions and reads:** a chart page calls `onEnergyShown` when it shows Energia and food
-    access is GRANTED or to refresh the state (it never calls `foodActions.onGrant` by itself),
-    and `stepsActions.onShown(from)` when it shows Askeleet, both on page entry and on a period
-    change, like the fixed tabs. Kaikki start = min of the first days of the shown, loaded data.
-16. **Logging:** `chart.custom create|edit|delete id= series=weight:line,energy:bars layout=stacked`
-    and `chart.custom shown id= period=` on page entry; never names or values. Added to the event
-    list in `.claude/CLAUDE.md`.
-17. **Spec wording:** "One quantity at a time" is MODIFIED here (fixed tabs, then own charts, then
+    (decision 8/9 card rules), the chart's period as a **plain label** (e.g. "1 kk", "Kaikki",
+    "1.9.–15.10."; not tappable, no menu: the period is changed on the tab), dates at wide and big,
+    the legend at wide and big, scale labels at big. Tap anywhere → `actions.onOpenChart(id)` =
+    Historia on that page (`MainUiState.historyChart`). Long-press → edit mode (`home-card-layout`).
+    Loading on home: when a chart card with steps is shown, `MainActivity` asks
+    `stepsModel.show(from)` for the earliest of the steps card's and those charts' period starts
+    (Kaikki as the Askeleet tab asks it); food is read in full already.
+14. **"Lisää kortti" from the front page → "Uusi kaavio":** opens the same editor over the home
+    screen (a local dialog, not an outside intent: the edit draft survives); on Tallenna the chart
+    is saved at once (Historia has it) and `HomeCard("chart:<id>", WIDE)` is appended to the edit
+    draft. Peruuta on the edit mode then leaves the chart in Historia only (spec).
+15. **Permissions, loading and failure:** a chart page calls `onEnergyShown` when it shows Energia
+    and `stepsActions.onShown(from)` when it shows Askeleet, on page entry and on a period change,
+    like the fixed tabs; it NEVER calls `foodActions.onGrant` or the steps grant by itself (the
+    grant buttons in a panel are ordinary buttons). Energia's and Askeleet's own tab taps stay
+    exactly as now. While the weights are null or failed the chart page shows Historia's spinner or
+    failure notice instead of the chart.
+16. **Empty Kaikki:** Kaikki with no data in any shown data: the axis is just today (one date) and
+    the chart reads "Ei tietoja tällä jaksolla" (home-screen and weight-chart specs).
+17. **Logging:** `chart.custom create|edit|delete id= series=weight:line,energy:bars layout=stacked`,
+    `chart.custom period id= period=last30|all|custom` and `chart.custom shown id= period=` on page
+    entry; never names or values. Added to the event list in `.claude/CLAUDE.md`.
+18. **Accessibility inherited:** chart cards use `home-card-layout`'s edit-mode semantics (place
+    announced after a move and a resize).
+19. **Spec wording:** "One quantity at a time" is MODIFIED here (fixed tabs, then own charts, then
     Uusi kaavio). home-screen, help-page and app-data-transfer get ADDED requirements instead of
     edits to the requirements `home-card-layout` changes, so the two changes do not edit the same
     block; at archive, check that "Hidden cards" (Lisää kortti disabled when nothing is hidden) and
@@ -143,9 +178,12 @@ tabs, export, zoom.
 ## Risks / Trade-offs
 
 - Overlaid charts with two scales invite reading false correlation (the reason the first draft
-  refused them); the user asked for the choice, and a new chart defaults to Allekkain.
+  refused them); the user asked for the choice, and a new chart defaults to Allekkain. A third data
+  with no scale can only be read by shape and through the crosshair readout.
 - Weight bars drawn from the scale bottom break the "bars start at zero" rule; from zero they would
   all look the same height (Q16).
+- Daily bars over a year or Kaikki are about 1 dp wide lines; readable as a silhouette, the
+  crosshair gives the numbers.
 - Extracting the drawing touches the working Energia and Askeleet tabs; their smoke tests must stay
   green, and the half-day shift of their weight line is a visible change.
 - Many charts make a long tab row; it scrolls, and names are capped.

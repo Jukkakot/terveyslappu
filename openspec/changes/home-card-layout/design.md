@@ -31,7 +31,9 @@ screens, changing Ruoka's order list.
    (it would put cards out of the order the user sees in edit mode).
 2. **Row unit height is fixed**, `ROW_UNIT = 248.dp × max(1, min(fontScale, 1.3))`, so every card in
    a row has the same height without intrinsic measuring (a lazy grid cannot measure a row's tallest
-   item). 248 dp holds today's wide weight card and small food card at the default text size; each
+   item). 248 dp is the starting estimate; the final value comes from the size matrix test (task
+   2.4: every card type at every size at 360 dp and font scale 1.3, key nodes displayed): raise it
+   until the matrix passes. It must hold today's wide weight card and small food card; each
    card lays out its fixed parts and gives its chart `Modifier.weight(1f)` (min 32 dp), so the chart
    grows with the size. Above 130 % text the cards may clip, accepted (the spec promises 130 %).
 3. **Library: `sh.calvin.reorderable` (Calvin-LL/Reorderable) 3.1.0**, Apache-2.0, on Maven Central,
@@ -43,24 +45,37 @@ screens, changing Ruoka's order list.
    full-span "Lisää kortti"/"Palauta oletus" item under them. Writing 2-D drag in a grid by hand is
    exactly what the library is for. Ruoka's 1-D `OrderList` stays (it works; moving it is not this
    change's job). Gradle goes through Google's Maven Central mirror in cloud containers (install.sh).
-4. **Edit state = a draft.** `rememberSaveable` holds `editing: Boolean` and the draft layout
+4. **Edit state = a draft, at `HomeScreen` level** (above the grid and the top bar, so the edit bar
+   and the cards share it). `rememberSaveable` holds `editing: Boolean` and the draft layout
    (serialised with the same codec as the preference, decision 7), so rotation and background keep
    both. Valmis writes the draft through `HomePrefs` into `MainUiState.homeLayout` (only when it
    differs from the saved one), then leaves; Peruuta and back drop the draft. A HOME-only
    `BackHandler(enabled = editing)` does the back; it is a deliberate exception to the one back rule
-   (`MainUiState.back()`): the draft is local to the page and ends with it. When `state.screen`
-   leaves HOME (an intent from a notification or widget), the draft is dropped
-   (`LaunchedEffect(state.screen)`).
-5. **Entering by long-press over the card's own clickables.** A wrapper modifier on every card uses
-   `pointerInput` with `awaitEachGesture` on `PointerEventPass.Initial`: it watches the first down
-   without consuming; if the pointer stays down past `viewConfiguration.longPressTimeoutMillis`
-   without moving past touch slop, it fires `onEditStart` (haptic `LongPress`) and consumes every
-   later change of that gesture, so the inner `clickable`, `Button` or period `Surface` sees a
-   cancelled gesture and does not fire. A movement past slop before the timeout lets the scroll
-   have it. Semantics: `customActions = "Muokkaa etusivua"` on each card.
+   (`MainUiState.back()`): the draft is local to the page and ends with it. Any outside intent discards the
+   draft and leaves edit mode first: the food sheet (`FoodAddActivity` hand-off, `openFrom`), the
+   weigh-in, a notification action, another screen (`state.screen` leaves HOME,
+   `LaunchedEffect(state.screen)`), and losing Health Connect access (the home screen's gated
+   states replace the cards).
+5. **Entering by long-press over the card's own clickables, continuing into a drag.** A wrapper
+   modifier on every card uses `pointerInput` with `awaitEachGesture` on `PointerEventPass.Initial`:
+   it watches the first down without consuming; if the pointer stays down past
+   `viewConfiguration.longPressTimeoutMillis` without moving past touch slop, it fires
+   `onEditStart` (haptic `LongPress`) and consumes every later change of that gesture, so the inner
+   `clickable`, `Button` or period `Surface` sees a cancelled gesture and does not fire. A movement
+   past slop before the timeout lets the scroll have it. **The same gesture then continues into a
+   drag** (like a launcher home screen): once edit mode is on, if the held finger moves past slop,
+   the interceptor hands the pointer to the card's drag (Reorderable's state-level start/drag/stop
+   from the pressed card's key and the pointer position, the interceptor forwarding the move events
+   until release); a release without movement just leaves edit mode on. The implementer checks
+   that Reorderable 3.1.0 can start a drag from outside its own gesture detector; if not, the
+   interceptor keeps owning the gesture and drives the state's drag itself, and says so in the
+   commit. **In edit mode the entry interceptor is off** (no new long-press entry, no consuming).
+   Semantics: `customActions = "Muokkaa etusivua"` on each card.
 6. **Edit-mode rendering.** The real card composable is drawn at its draft size inside a `Box`:
    content at `alpha = 0.55f`, `clearAndSetSemantics` (the card's own nodes are hidden from
-   TalkBack), and a full-size transparent overlay that consumes taps (so no inner action fires). On
+   TalkBack), and a full-size transparent overlay that consumes **only taps** (`detectTapGestures`; no inner action
+   fires, but drags and long-presses pass through to the card body's `longPressDraggableHandle()`,
+   so a long-press drag on the card body reorders). On
    top, a 48 dp strip (`surfaceContainerHighest` at 92 % opacity) with `ic_drag_handle`
    (`draggableHandle()`), the card's name (ellipsis) and an `ic_more_vert` menu button (new vector
    asset, Material "more_vert"). The whole card also has `longPressDraggableHandle()`. Outline 2 dp
@@ -69,17 +84,21 @@ screens, changing Ruoka's order list.
    (new vector asset, Material "close"; contentDescription "Peruuta"), title "Muokkaa etusivua", action `TextButton("Valmis")`.
    Edit-only content under the grid: `OutlinedButton("Lisää kortti")` (icon `ic_add`) and
    `TextButton("Palauta oletus")`, side by side, full-span item. "Lisää kortti" opens a
-   `DropdownMenu` anchored to the button, one item per hidden card (icon + name). Card names in the
+   `DropdownMenu` anchored to the button (scrolling: a max height with `verticalScroll`, since
+   `custom-charts` adds many items), one item per hidden card (icon + name). Card names in the
    strip, the menu and TalkBack: "Paino", "Ruoka", "Askeleet" (`ic_scale`, `ic_restaurant`,
    `ic_walk`). Valmis with no change leaves edit mode without writing or logging a layout.
-7. **Persistence:** `HomePrefs` over the existing `chart` prefs file, key `homeLayout`, one JSON
+7. **Persistence (two id sets):** `HomePrefs` over the existing `chart` prefs file, key `homeLayout`, one JSON
    string via kotlinx.serialization: `{"v":1,"shown":[{"id":"weight","size":"wide"},…],"hidden":[…]}`.
    Being in `chart.xml` it moves with Android's transfer like the periods (app-data-transfer);
    `DataTransferRulesTest` needs no change. Pure `HomeLayoutCodec`: decode (null, blank, bad JSON or
    an unknown `v` = default; unknown ids dropped; a duplicate id keeps its first entry; an unknown
-   size = that card's default size; known ids missing from both lists appended to `shown` at their
-   default size, in default order; an empty `shown` = default), encode. The set of known ids is a
-   parameter so `custom-charts` can add the chart ids without touching the rule.
+   size = that card's default size; **fixed** ids (`weight`, `food`, `steps`) missing from both lists appended to `shown` at their
+   default size, in default order; an empty `shown` = default), encode. The codec takes two id sets:
+   the fixed ids with default sizes (appended when missing) and an `allowedExtra` set (`custom-charts`
+   passes `chart:<id>` of every existing chart): extra ids are kept when listed and allowed, dropped
+   when not, and NEVER appended. Test: a stored layout without `chart:2` while chart 2 exists
+   decodes without it.
 8. **Pure edits on `HomeLayout`:** `move(from, to)` within `shown`, `moveEarlier(id)`,
    `moveLater(id)`, `resize(id, size)`, `hide(id)` (refused when `shown.size == 1`), `show(id)`
    (from `hidden`, appended last with its kept size), `reset()` = default, `isDefault`. The drag's
@@ -91,9 +110,12 @@ screens, changing Ruoka's order list.
      `Sparkline` (top and bottom `kg` labels at the left, dots per `ChartDots.fit`).
    - food and steps: wide puts the average in its long form (new strings `home_food_average_long`
      "keskim. %1$s kcal/pv", `home_steps_average_long` "keskim. %1$s askelta/pv") and, for food,
-     "+ Annos" at the end of the period row; big adds the scale's top label (the same rounding as
-     Energia/Askeleet: `ceil(max × 1.1 / 500) × 500` kcal, steps to 1 000) and a dashed average line
+     "+ Annos" at the end of the period row; big adds the scale's top label (the same rule as
+     Energia/Askeleet) and a dashed average line
      (`PathEffect.dashPathEffect`, `onSurfaceVariant`, 1 dp) when `averageKcal`/`averageSteps` exists.
+     The scale top is `steps-source-and-axes`' `AxisTicks.bars` top: kcal
+     `ceil(max × 1.1 / 500) × 500` (min 500); steps `ceil(max × 1.1 / 2000) × 2000` (min 2 000), the
+     real Askeleet rule (11 400 steps give 14 000).
    - gated states (permission, unavailable, loading, failed): unchanged texts, centred in the
      remaining space (`Modifier.weight(1f)` box).
 10. **Data loading is unchanged.** A hidden card's data still loads as today (the food and steps
@@ -105,7 +127,7 @@ screens, changing Ruoka's order list.
     is always a card to long-press.
 13. **Accessibility:** in edit mode each card's semantics: contentDescription "<name>, <place>/<count>,
     <size>" (sizes "pieni", "leveä", "iso"), custom actions Siirrä aiemmaksi, Siirrä myöhemmäksi,
-    Pieni, Leveä, Iso, Piilota (only the applicable ones); after a move or resize
+    Pieni, Leveä, Iso, Piilota (only the applicable ones); after a move and after a resize
     `announceForAccessibility` of the new place ("Ruoka, 1/3"). The menu is the visible non-drag path.
 14. **Logging:** `home.edit open`, `home.edit cancel changed=true|false`, and on Valmis
     `home.layout set=weight:wide,food:small,steps:small hidden=` (ids and sizes only; with custom
@@ -123,7 +145,9 @@ screens, changing Ruoka's order list.
   Robolectric test covers "long-press on + Annos starts edit mode and does not open the sheet" and
   "a plain tap on + Annos still opens it".
 - A new dependency (Reorderable) in a lazy grid with mixed spans; fallback if it misbehaves on the
-  device: drag only from the handle (`draggableHandle`) and keep the menu path.
+  device: drag only from the handle (`draggableHandle`) and keep the menu path. The long-press that continues into a drag needs a drag started from outside
+  Reorderable's own detector (decision 5); if that cannot be made to work the entering long-press
+  ends at edit mode (a second press drags) and the commit says so.
 - A lone small card leaves an empty half; the user can make it wide.
 - Landscape and wide screens keep two columns with 248 dp rows, so the page scrolls sooner; the
   app is used in portrait.

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Carry custom charts
-The own charts (their names, data, styles, layouts) and the chart cards' periods SHALL move with
+The own charts (their names, data, styles, layouts and periods) SHALL move with
 Android's phone-to-phone transfer and cloud backup like the chart periods, and SHALL NOT be part of
 the data file or the backup file.
 

@@ -67,12 +67,12 @@ own taps, quick actions and period label SHALL work the same at every size.
 - **Food card.** Small: as described in Food row on the home screen. Wide: the title, today's kcal
   and the treats' share on top, the bars across the full width, then one row with the period label,
   the average in its long form ("keskim. 1 900 kcal/pv") and "+ Annos" at the row's end. Big: the
-  wide look with taller bars, the top of the kcal scale ("2 500 kcal") at the bars' top left, and
+  wide look with taller bars, the top of the kcal scale (the Energia tab's rule, e.g. "2 500 kcal") at the bars' top left, and
   a dashed line across the bars at the period's average when there is one.
 - **Steps card.** Small: as described in Steps card on the home screen. Wide: the title and today's
   steps on top, the bars across the full width, then one row with the period label and the average
   in its long form ("keskim. 7 800 askelta/pv"). Big: the wide look with taller bars, the top of
-  the steps scale ("12 000 askelta") at the bars' top left, and a dashed line at the period's
+  the steps scale (the Askeleet tab's rule, e.g. "14 000 askelta") at the bars' top left, and a dashed line at the period's
   average when there is one.
 - A card without its permission, unavailable, loading or failed SHALL show the same text or
   indicator as today at every size, centred in the card's free space, with its tap unchanged.
@@ -88,7 +88,7 @@ own taps, quick actions and period label SHALL work the same at every size.
 
 #### Scenario: Big steps card
 - **GIVEN** the steps card is big and the period's highest day has 11 400 steps
-- **THEN** the bars are taller than at wide size, the scale's top label reads "12 000 askelta" and a
+- **THEN** the bars are taller than at wide size, the scale's top label reads "14 000 askelta" and a
   dashed line marks the average
 
 #### Scenario: Same row, same height
@@ -113,22 +113,39 @@ menus SHALL do nothing, and the notices SHALL be hidden.
 The card's menu SHALL hold the sizes Pieni, Leveä and Iso (the current one marked), "Siirrä
 aiemmaksi", "Siirrä myöhemmäksi" and "Piilota" (see Hidden cards); a move item SHALL be disabled at
 the end it cannot pass. A card SHALL be dragged to a new place by a long-press anywhere on it or a
-press on its handle; the other cards SHALL make room as it moves, and the layout SHALL be drawn as it
+press on its handle; the long-press that starts edit mode SHALL continue into a drag when the
+finger, still held, then moves; the other cards SHALL make room as it moves, and the layout SHALL be drawn as it
 will be after the drop. Under the grid edit mode SHALL show "Lisää kortti" (see Hidden cards) and
 "Palauta oletus", which restores the default layout and is disabled when the edited layout already
 is the default. For TalkBack each card SHALL read its name, its place and its size ("Ruoka, 2/3,
-pieni") and SHALL offer the actions of its menu; after a move the new place SHALL be announced.
+pieni") and SHALL offer the actions of its menu; after a move or a resize the new place SHALL be announced.
 
 Edits SHALL change only the edited layout. "Valmis" SHALL save the edited layout, show it with the
 cards working again and leave edit mode. "Peruuta" and back SHALL leave edit mode and discard every
 edit, without asking. Edit mode and its edits SHALL survive rotation and the app going to the
-background; when another screen is opened (e.g. from a notification) edit mode SHALL end and its
-edits SHALL be discarded.
+background; when any other intent arrives (another screen, the food sheet, the weigh-in, a notification action)
+or Health Connect access is lost, edit mode SHALL end first and its edits SHALL be discarded.
 
 #### Scenario: Enter by long-press
 - **WHEN** the user presses and holds the food card's "+ Annos"
 - **THEN** edit mode starts, the add field does not open, and the edit bar reads "Muokkaa etusivua"
   with Peruuta and Valmis
+
+#### Scenario: Long-press continues into a drag
+- **GIVEN** the default layout
+- **WHEN** the user presses and holds the steps card, edit mode starts, and without lifting the
+  finger the user moves it above the weight card and releases
+- **THEN** edit mode is on and the order is steps, weight, food
+
+#### Scenario: Drag from the card body
+- **GIVEN** edit mode
+- **WHEN** the user long-presses the food card's body and drags it before the weight card
+- **THEN** the order is food, weight, steps, and a plain tap on a card still does nothing
+
+#### Scenario: Outside intent
+- **GIVEN** edit mode with unsaved edits
+- **WHEN** the user taps the "Lisää annos" widget
+- **THEN** edit mode has ended with its edits discarded and the add sheet opens
 
 #### Scenario: Cards inert while editing
 - **GIVEN** edit mode
@@ -176,7 +193,7 @@ edits SHALL be discarded.
 
 ### Requirement: Hidden cards
 "Piilota" in a card's menu SHALL take the card off the edited layout and SHALL be disabled when it is
-the only shown card. "Lisää kortti" under the grid in edit mode SHALL open a list of the hidden
+the only shown card. "Lisää kortti" under the grid in edit mode SHALL open a scrolling menu of the hidden
 cards (name and icon); choosing one SHALL put it last in the edited layout at the size it had and
 close the list. "Lisää kortti" SHALL be disabled when no card is hidden. A hidden card SHALL NOT be
 shown on the front page and its features SHALL stay reachable elsewhere as before (weigh-in from the
@@ -190,7 +207,7 @@ widget, tile and shortcut; Ruoka and Askeleet from Historia).
 #### Scenario: Bring it back
 - **GIVEN** the steps card is hidden and was small
 - **WHEN** the user taps Lisää kortti in edit mode and picks Askeleet
-- **THEN** the steps card appears last, small, and the list closes
+- **THEN** the steps card appears last, small, and the menu closes
 
 #### Scenario: Last card stays
 - **GIVEN** weight and food are hidden
