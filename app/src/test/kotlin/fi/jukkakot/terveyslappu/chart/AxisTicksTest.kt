@@ -101,7 +101,7 @@ class AxisTicksTest {
             val first = if (period == Period.All) data.origin else null
             val (from, to) = AxisTicks.periodDates(period, today, first)
             for (count in 3..5) {
-                val expected = AxisTicks.dates(from, to, count)
+                val expected = AxisTicks.labelDays(from, to, count)
                 assertEquals(expected, data.labelDays(count), "$period")
                 data.labelXs(count).zip(expected).forEach { (x, day) ->
                     assertTrue(abs(x - (AxisTicks.days(data.origin, day) + 0.5)) < 1e-9)
@@ -109,5 +109,32 @@ class AxisTicksTest {
                 }
             }
         }
+    }
+
+    private fun weekdays(from: LocalDate, to: LocalDate) = AxisTicks.labelDays(from, to, 5).map { AxisTicks.weekday(it) }
+
+    @Test
+    fun `a week is labelled with weekdays`() {
+        val sunday = LocalDate.of(2026, 11, 15)
+        assertEquals(listOf("Ma", "Ti", "Ke", "To", "Pe", "La", "Su"), weekdays(sunday.minusDays(6), sunday))
+        val wednesday = LocalDate.of(2026, 11, 18)
+        assertEquals(listOf("To", "Pe", "La", "Su", "Ma", "Ti", "Ke"), weekdays(wednesday.minusDays(6), wednesday))
+        assertEquals(listOf("Ma", "Ti", "Ke"), weekdays(LocalDate.of(2026, 11, 16), wednesday))
+    }
+
+    @Test
+    fun `eight days still gives dates`() {
+        val to = LocalDate.of(2026, 11, 15)
+        assertFalse(AxisTicks.isWeek(to.minusDays(7), to))
+        assertEquals(AxisTicks.dates(to.minusDays(7), to, 5), AxisTicks.labelDays(to.minusDays(7), to, 5))
+    }
+
+    @Test
+    fun `weekday labels are centred on their days`() {
+        val to = LocalDate.of(2026, 11, 15)
+        val from = to.minusDays(6)
+        val b = AxisTicks.labelBounds(from, to, AxisTicks.labelDays(from, to, 5), 700f, centred = true) { 20f }
+        assertEquals(50f - 10f, b.first().start, 1e-3f)
+        assertEquals(650f + 10f, b.last().endInclusive, 1e-3f)
     }
 }

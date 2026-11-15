@@ -119,7 +119,7 @@ fun WeightChart(
     val count = remember(data, labelStyle, density, widthDp, axisLabel) {
         val yWidth = yTicks.maxOf { measurer.measure(axisLabel(it), labelStyle).size.width }
         val plot = with(density) { widthDp.dp.toPx() } - yWidth
-        AxisTicks.fitCount(data.from, data.to, plot, with(density) { 8.dp.toPx() }) {
+        if (AxisTicks.isWeek(data.from, data.to)) 0 else AxisTicks.fitCount(data.from, data.to, plot, with(density) { 8.dp.toPx() }) {
             measurer.measure(dateLabel(it, data.overYear), labelStyle).size.width.toFloat()
         }
     }
@@ -146,7 +146,7 @@ fun WeightChart(
             lineProvider = remember(line) { LineCartesianLayer.LineProvider.series(line) },
             rangeProvider = remember(data) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = data.maxX, minY = data.minY, maxY = data.maxY) },
         )
-        val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> dateLabel(data.dayAt(x - 0.5), data.overYear) } }
+        val dayLabels = remember(data) { CartesianValueFormatter { _, x, _ -> axisDayLabel(data.dayAt(x - 0.5), AxisTicks.isWeek(data.from, data.to), data.overYear) } }
         val yLabels = remember(axisLabel) { CartesianValueFormatter { _, y, _ -> axisLabel(y) } }
         val markerLabel = rememberTextComponent(
             style = TextStyle(color = colors.onSurface, fontSize = 14.sp),

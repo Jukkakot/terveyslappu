@@ -48,6 +48,9 @@ internal fun formatAxisKg(kg: Double): String {
 /** The date label of [day]: "9.11." or, for a year or more, "9/2022". */
 internal fun dateLabel(day: LocalDate, monthYear: Boolean): String = if (monthYear) formatMonthYear(day) else formatShortDay(day)
 
+/** An axis label: the weekday on a week-or-shorter chart, else [dateLabel]. */
+internal fun axisDayLabel(day: LocalDate, week: Boolean, monthYear: Boolean): String = if (week) AxisTicks.weekday(day) else dateLabel(day, monthYear)
+
 /** The shared label column's width: the widest of [labels] plus padding, measured once per tab. */
 @Composable
 internal fun axisLabelWidth(labels: List<String>): Dp {
@@ -104,21 +107,22 @@ internal fun DateAxis(from: LocalDate, to: LocalDate, tag: String, modifier: Mod
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     val measurer = rememberTextMeasurer()
     val monthYear = AxisTicks.monthYear(from, to)
+    val week = AxisTicks.isWeek(from, to)
     BoxWithConstraints(modifier.fillMaxWidth().testTag(tag)) {
         val widthPx = constraints.maxWidth.toFloat()
         val gap = with(LocalDensity.current) { LABEL_GAP.toPx() }
         val dates = remember(from, to, widthPx, style) {
             val measure = { day: LocalDate -> measurer.measure(dateLabel(day, monthYear), style).size.width.toFloat() }
-            AxisTicks.dates(from, to, AxisTicks.fitCount(from, to, widthPx, gap, measure))
+            AxisTicks.labelDays(from, to, if (week) 0 else AxisTicks.fitCount(from, to, widthPx, gap, measure))
         }
         Layout(
-            content = { dates.forEach { Text(dateLabel(it, monthYear), style = style, color = color, maxLines = 1, softWrap = false, modifier = Modifier.testTag("$tag-label")) } },
+            content = { dates.forEach { Text(axisDayLabel(it, week, monthYear), style = style, color = color, maxLines = 1, softWrap = false, modifier = Modifier.testTag("$tag-label")) } },
             modifier = Modifier.fillMaxWidth(),
         ) { measurables, constraints ->
             val placeables = measurables.map { it.measure(Constraints()) }
             val w = constraints.maxWidth
             val h = placeables.maxOfOrNull { it.height } ?: 0
-            val bounds = AxisTicks.labelBounds(from, to, dates, w.toFloat()) { day -> placeables[dates.indexOf(day)].width.toFloat() }
+            val bounds = AxisTicks.labelBounds(from, to, dates, w.toFloat(), centred = week) { day -> placeables[dates.indexOf(day)].width.toFloat() }
             layout(w, h) {
                 placeables.forEachIndexed { i, p -> p.place(bounds[i].start.roundToInt(), 0) }
             }

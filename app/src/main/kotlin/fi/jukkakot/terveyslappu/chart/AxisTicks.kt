@@ -35,6 +35,16 @@ object AxisTicks {
         return (0 until n).map { i -> from.plusDays((i * span.toDouble() / (n - 1)).roundToLong()) }.distinct()
     }
 
+    /** A period of 7 days or fewer: every day is labelled with its weekday (weekday-axis). */
+    fun isWeek(from: LocalDate, to: LocalDate): Boolean = days(from, to) + 1 <= WEEK_DAYS
+
+    /** The label dates: every day for a week or less, else [dates] of [count]. */
+    fun labelDays(from: LocalDate, to: LocalDate, count: Int): List<LocalDate> =
+        if (isWeek(from, to)) (0..days(from, to)).map { from.plusDays(it) } else dates(from, to, count)
+
+    /** "Ma", "Ti" ... "Su". */
+    fun weekday(day: LocalDate): String = WEEKDAYS[day.dayOfWeek.value - 1]
+
     /** Month and year ("9/2022") when the period holds 365 days or more (1 v included), else day and month. */
     fun monthYear(from: LocalDate, to: LocalDate): Boolean = days(from, to) + 1 >= YEAR_DAYS
 
@@ -48,12 +58,12 @@ object AxisTicks {
      * The horizontal bounds of the date labels on a plot [plotWidth] wide: the first start-aligned,
      * the last end-aligned, the others centred on their day's slot.
      */
-    fun labelBounds(from: LocalDate, to: LocalDate, dates: List<LocalDate>, plotWidth: Float, measure: (LocalDate) -> Float): List<ClosedFloatingPointRange<Float>> =
+    fun labelBounds(from: LocalDate, to: LocalDate, dates: List<LocalDate>, plotWidth: Float, centred: Boolean = false, measure: (LocalDate) -> Float): List<ClosedFloatingPointRange<Float>> =
         dates.mapIndexed { i, day ->
             val w = measure(day)
             when {
-                i == 0 -> 0f..w
-                i == dates.lastIndex -> (plotWidth - w)..plotWidth
+                !centred && i == 0 -> 0f..w
+                !centred && i == dates.lastIndex -> (plotWidth - w)..plotWidth
                 else -> {
                     val x = position(from, to, day) * plotWidth
                     (x - w / 2)..(x + w / 2)
@@ -64,7 +74,7 @@ object AxisTicks {
     /** The most dates (5, 4 or 3) whose measured labels keep at least [gap] between neighbours; 3 if none fits. */
     fun fitCount(from: LocalDate, to: LocalDate, plotWidth: Float, gap: Float, measure: (LocalDate) -> Float): Int {
         for (n in MAX_DATES downTo MIN_DATES + 1) {
-            val bounds = labelBounds(from, to, dates(from, to, n), plotWidth, measure)
+            val bounds = labelBounds(from, to, dates(from, to, n), plotWidth, measure = measure)
             if (bounds.zipWithNext().all { (a, b) -> b.start - a.endInclusive >= gap }) return n
         }
         return MIN_DATES
@@ -77,6 +87,8 @@ object AxisTicks {
         is Period.Custom -> period.from to period.to
     }
 
+    const val WEEK_DAYS = 7
+    private val WEEKDAYS = listOf("Ma", "Ti", "Ke", "To", "Pe", "La", "Su")
     const val MIN_DATES = 3
     const val MAX_DATES = 5
     const val YEAR_DAYS = 365

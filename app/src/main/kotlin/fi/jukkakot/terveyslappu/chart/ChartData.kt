@@ -33,7 +33,7 @@ class ChartData(
     val overYear: Boolean get() = AxisTicks.monthYear(from, to)
 
     /** The x-axis label dates for [count] labels. */
-    fun labelDays(count: Int): List<LocalDate> = AxisTicks.dates(from, to, count)
+    fun labelDays(count: Int): List<LocalDate> = AxisTicks.labelDays(from, to, count)
 
     /** Their x values: the centre of each day, as the bars' x. */
     fun labelXs(count: Int): List<Double> = labelDays(count).map { AxisTicks.days(origin, it) + 0.5 }

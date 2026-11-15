@@ -59,6 +59,9 @@ class LargeTextTest {
             val boxes = listOf("stepsAxis-").flatMap { prefix -> (0..2).flatMap { all("$prefix$it") } } +
                 all("stepsDates-label") + all("stepsLegend-entry")
             kotlin.test.assertTrue(boxes.size >= 3 + 3 + 2, "$period: ${boxes.size} labels")
+            if (period == fi.jukkakot.terveyslappu.chart.Period.WEEK) {
+                kotlin.test.assertEquals(7, all("stepsDates-label").size, "one weekday label per day")
+            }
             for (i in boxes.indices) for (j in i + 1 until boxes.size) {
                 kotlin.test.assertFalse(boxes[i].overlaps(boxes[j]), "$period: label $i ${boxes[i]} overlaps label $j ${boxes[j]}")
             }
