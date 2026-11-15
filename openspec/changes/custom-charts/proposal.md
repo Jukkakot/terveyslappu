@@ -1,20 +1,52 @@
-# Proposal: combined-chart
+# Proposal: custom-charts
 
 ## Why
 
-Weight, food and steps are now all in Historia, one quantity per tab. Energia and Askeleet show the weight line under their bars, but there is no view that puts the three together. Roadmap "combined chart" (user 2026-11-14): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis. General chart knowledge (global bank `~/.claude/knowledge.md`, not present in this container; project knowledge.md has no chart section) was not available, so the choice rests on the design below.
+Weight, food and steps are in Historia one quantity per tab; Energia and Askeleet only show the
+weight line under their bars. The user wants to see them together, in charts of their own (roadmap
+"combined chart", user 2026-11-14; answers 2026-11-15 replace the single fixed "Yhdistelmä" tab of
+the first draft): as many charts as they like, each with its own data, bar or line per data, and
+either stacked panels or one overlaid plot, shown in Historia and on the front page.
 
 ## What Changes
 
-- A fifth Historia tab **Yhdistelmä** after Askeleet: the one tab whose quantities are chosen and stacked. It shows the chosen quantities as **stacked panels on one shared time axis** (no two-axis plot): Paino (weight line, weight scale), Energia (daily kcal bars with the treats' share, 7-day average line) and Askeleet (daily step bars, 7-day average line), always in that order, top to bottom.
-- **Choice chips** on the tab (Paino, Energia, Askeleet; any combination, at least one stays on), remembered, all three on by default.
-- Uses Historia's period chips; one shared x-axis and one date row under the whole stack, the same weekly bars over 90 days as the single tabs. Kaikki starts at the first day with data among the shown panels whose data is loaded.
-- **Crosshair:** tapping, or press-and-hold then dragging, puts one vertical line through all panels at that day (over 90 days at the week), and one readout above the panels shows the weight, kcal and steps. A plain horizontal swipe still switches tabs.
-- A panel with no data or no permission keeps its place and height with a centred message (and a grant button), so the layout does not jump.
-- TalkBack gets "Edellinen päivä" / "Seuraava päivä" actions on the stack.
-- Nothing new is read or stored beyond the chip choice; no list of days under the panels. Not in this change: BMI panel (Q13), user-orderable panels, a front page combined card, exports of the chart.
-- Parts touched: Historia (HistoryScreen, EnergyPage/StepsPage drawing extracted for reuse), app preferences (chip choice), Ohje.
+- **User-made charts, any number.** Each chart has a name, the shown data (any of Paino, Energia,
+  Askeleet; at least one; no BMI, Q13), a style per data (Pylväät or Viiva) and a layout:
+  **Allekkain** (one panel per data, stacked on one shared time axis) or **Päällekkäin** (one plot
+  with all data overlaid and two value axes).
+- **One chart definition, shown in two places:** always as its own Historia tab after Askeleet
+  (Historia still opens on Paino), and optionally as a front page card (a card type of
+  `home-card-layout`, added from "Lisää kortti", sized small, wide or big like the other cards).
+  Editing a chart changes both; deleting it removes both.
+- **Create, edit, rename, delete in one small editor** (a dialog): name, the three data rows with
+  a switch and Pylväät/Viiva, the layout, Tallenna/Peruuta, and "Poista kaavio" for an existing
+  chart. Created from Historia's last tab "Uusi kaavio" or from the front page's "Lisää kortti".
+  A new chart starts with all three data on (Q12 a): Paino as a line, Energia and Askeleet as bars,
+  Allekkain.
+- **Reading a chart:** Historia's period chips; weekly bars over 90 days as on the single tabs; a
+  tap or a press-and-hold drag puts one crosshair through the chart and a readout above it shows
+  the day's (or week's) values; a plain swipe still switches tabs.
+- Data without permission or without values keeps its panel (Allekkain) or is named under the plot
+  (Päällekkäin); the chart never asks for a permission by itself.
+- Remembered in app preferences (moves with Android's phone transfer like the periods), not in the
+  data file or the backup file. Names are never logged.
+- Not in this change: BMI as data (Q13), reordering the data inside a chart, reordering the chart
+  tabs, statistics or a day list on chart tabs, exporting a chart.
+- Parts touched: Historia (tabs, a chart page, the editor), the Energia/Askeleet drawing (extracted
+  into shared panel drawing), the front page grid (chart card, "Lisää kortti"), app preferences,
+  Ohje.
+
+## Capabilities
+
+- weight-chart (modified: One quantity at a time; added: Custom charts, Custom chart tabs, Chart
+  editor, Stacked layout, Overlaid layout, Chart crosshair, Chart time axis, Chart data without
+  values)
+- home-screen (added: Chart cards)
+- help-page (added: Custom charts in Ohje)
+- app-data-transfer (added: Carry custom charts)
 
 ## Impact
 
-weight-chart spec (Combined chart ...). Depends on `steps` (Askeleet, `StepsSeries`, `PeriodWeights`) being merged first. Questions for the user: Q11-Q13 in context/questions.md.
+**Depends on `home-card-layout`** (chart cards are cards of its grid, its `HomeLayout` ids and
+"Lisää kortti"): implement and archive `home-card-layout` first, then this change. Uses the
+existing series (`EnergySeries`, `StepsSeries`, `WeightScale`); no new Health Connect reads.

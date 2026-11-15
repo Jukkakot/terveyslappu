@@ -5,10 +5,8 @@ is folded into a change or a context file.
 
 | ID | Question | Recommendation |
 |---|---|---|
-| Q8 | home-card-order: how is edit mode entered? A top-bar button (pencil, then check) or a long-press on a card? | Button only: discoverable, no clash with the buttons and menus inside the cards. |
-| Q9 | home-card-order: weight is full width and food/steps are half width. If you put weight between food and steps, the lone half card goes full width. OK, or should weight only be allowed above or below the food+steps row? | Allow any order, a lone card spans full width. |
-| Q10 | home-card-order: should a card also be hideable (e.g. no steps card)? | No, not now: reorder only; hiding can follow if you miss it. |
-| Q11 | combined-chart: a new last Historia tab "Yhdistelmä" (stacked panels Paino, Energia, Askeleet, same time axis). Right name and place, or should it be the first tab or a mode of an existing tab? | New last tab named Yhdistelmä; Historia still opens on Paino. |
-| Q12 | combined-chart: which panels are on by default, and may you switch any off? | All three on by default, any combination, at least one stays on, choice remembered. |
-| Q13 | combined-chart: should BMI be a fourth panel option? | No: it is derived from weight and would only repeat the weight line. |
-| Q14 | home-card-order: in edit mode, are the cards shown as a compact list of rows (name, ↑, ↓, drag handle) instead of the real cards side by side? | Compact list: food and steps share a row outside edit mode, so dragging the real cards cannot work cleanly. |
+| Q15 | custom-charts: Päällekkäin with all three data: only two value axes fit, so the third (e.g. Askeleet) has no axis and its scale is written in the legend ("Askeleet 0–12 000"). OK? | Yes; a new chart starts Allekkain anyway. |
+| Q16 | custom-charts: Paino as bars: bars from zero would all look equally tall, so they rise from the bottom of the weight scale (breaks the usual bars-from-zero rule). OK? | Yes, from the weight scale's bottom. |
+| Q17 | custom-charts: Energia/Askeleet as a line: is the line the 7-day average (as on their tabs, calmer) rather than each day's value joined (zigzag)? | 7-day average; over 90 days the weekly values. |
+| Q18 | custom-charts: a chart is one definition: its Historia tab always exists and its front page card is optional; editing changes both, deleting removes both. OK? | Yes, one definition. |
+| Q19 | home-card-layout: a small card followed by a wide one leaves the right half of its row empty (no later card is pulled up to fill it). OK? | Yes: the grid keeps your order; make the card wide if the gap bothers. |
