@@ -2,10 +2,11 @@
 
 ### Requirement: Undo messages
 Every message with Kumoa in the app (deleted item, added item, import, removed product, weights)
-SHALL show for about 4 seconds, SHALL go away at once when swiped sideways or when the user taps
-elsewhere to act, and SHALL sit at the bottom as a narrow bar that does not cover the open sheet's
-buttons or the field (in the Lisää annos sheet it is the line inside the sheet, as today). A new
-message SHALL replace the one shown.
+shown as a bar at the bottom SHALL show for about 4 seconds, SHALL go away at once when swiped
+sideways, when another message comes or when the screen changes, and SHALL sit above the screen's
+bottom buttons without covering them. While a sheet is open, its messages SHALL appear as the line
+inside the sheet (which stays until the next action, as today) and no bar SHALL be drawn over the
+sheet. Other bar messages keep their length but can be swiped away too.
 
 #### Scenario: Gone in time
 - **WHEN** the user deletes an item on Ruoka and does nothing
