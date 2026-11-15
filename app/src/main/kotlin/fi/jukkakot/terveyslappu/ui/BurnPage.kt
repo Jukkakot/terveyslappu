@@ -239,9 +239,9 @@ private fun BurnStatsTiles(series: BurnSeries) {
 
 /** One day of the Kulutus list: date, total kcal and "aktiivinen N kcal"; a row opens nothing. */
 @Composable
-internal fun BurnDayRow(day: BurnDay, today: LocalDate) {
+internal fun BurnDayRow(day: BurnDay, today: LocalDate, depth: Int = 0) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("burnDay-${day.day}"),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = indent(depth), end = 16.dp, top = 8.dp, bottom = 8.dp).testTag("burnDay-${day.day}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

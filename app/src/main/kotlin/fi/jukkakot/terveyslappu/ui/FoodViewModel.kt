@@ -580,10 +580,14 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun delete(item: FoodItem) {
-        val toSheet = _state.value.editReturn != null
+        // From the editor opened in the sheet, or the trash of a sheet row (the sheet is open then).
+        val toSheet = _state.value.editReturn != null || _state.value.sheetDay != null
         // The record id before the item leaves the list (the Muuta line's item has none of its own).
         val known = withRecordIds(listOf(item)).single()
-        _state.update { leaveEditor(it, SheetLine.Deleted(item)).copy(items = it.items?.filter { i -> i.uuid != item.uuid }) }
+        _state.update {
+            val left = leaveEditor(it, SheetLine.Deleted(item))
+            (if (it.sheetDay != null) left.copy(line = SheetLine.Deleted(item)) else left).copy(items = it.items?.filter { i -> i.uuid != item.uuid })
+        }
         // In the sheet the Kumoa is its line (design 7); elsewhere a snackbar as before.
         if (!toSheet) _messages.tryEmit(UiMessage(R.string.food_deleted, listOf(item.name), UiAction(R.string.undo) { restore(item) }))
         write("food.delete") { (known.recordId ?: withRecordIds(listOf(item)).single().recordId)?.let { foods.delete(listOf(it)) } }

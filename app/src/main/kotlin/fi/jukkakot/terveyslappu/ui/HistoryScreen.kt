@@ -40,6 +40,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartData
+import fi.jukkakot.terveyslappu.chart.DayGroups
+import fi.jukkakot.terveyslappu.chart.DayNode
+import fi.jukkakot.terveyslappu.chart.GroupSummaries
 import fi.jukkakot.terveyslappu.chart.ListGroups
 import fi.jukkakot.terveyslappu.chart.RangePick
 import fi.jukkakot.terveyslappu.chart.ListNode
@@ -259,6 +262,23 @@ private fun PeriodList(
     // The nutrition permission is asked when Energia is first opened (review decision).
     LaunchedEffect(onEnergy) { if (onEnergy && food.access == FoodAccess.NEEDS) foodActions.onGrant() }
     val series = remember(food.items, state.period, today) { EnergySeries.of(food.items.orEmpty(), state.period, today) }
+    // Day lists group like the weight list: all closed on a period change and a tab switch, each list its own open set.
+    var openEnergy by remember(state.period) { mutableStateOf(emptySet<String>()) }
+    var openSteps by remember(state.period) { mutableStateOf(emptySet<String>()) }
+    var openBurn by remember(state.period) { mutableStateOf(emptySet<String>()) }
+    var lastPage by remember { mutableStateOf(pager.currentPage) }
+    LaunchedEffect(pager.currentPage) {
+        if (lastPage != pager.currentPage) {
+            lastPage = pager.currentPage
+            open = emptySet()
+            openEnergy = emptySet()
+            openSteps = emptySet()
+            openBurn = emptySet()
+        }
+    }
+    val energyRows = remember(series, openEnergy) { DayGroups.flatten(DayGroups.build(series.days) { it.day }, openEnergy) }
+    val stepsRows = remember(stepsSeries, openSteps) { DayGroups.flatten(DayGroups.build(stepsSeries.days) { it.day }, openSteps) }
+    val burnRows = remember(burnSeries, openBurn) { DayGroups.flatten(DayGroups.build(burnSeries.days) { it.day }, openBurn) }
     val scope = rememberCoroutineScope()
     LazyColumn(Modifier.fillMaxSize().testTag("weights"), state = listState) {
         item(key = "chips") {
@@ -361,21 +381,54 @@ private fun PeriodList(
             }
         }
         if (onBurn) {
-            val burnDays = if (burn.access == StepsAccess.GRANTED && burn.days != null) burnSeries.days else emptyList()
-            items(burnDays, key = { "burn-${it.day}" }) { day ->
+            val shownRows = if (burn.access == StepsAccess.GRANTED && burn.days != null) burnRows else emptyList()
+            items(shownRows, key = { "burn-${it.node.key}" }) { row ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                BurnDayRow(day, today)
+                when (val node = row.node) {
+                    is DayNode.Row -> BurnDayRow(node.item, today, row.depth)
+                    is DayNode.Group -> {
+                        val s = GroupSummaries.burn(node.members, today)
+                        DayGroupRowItem(
+                            node,
+                            stringResource(R.string.group_avg_kcal, formatKcal(s.main.toDouble())),
+                            s.extra?.let { stringResource(R.string.group_avg_active, formatKcal(it.toDouble())) },
+                            s.days, node.key in openBurn, today, row.depth,
+                        ) { openBurn = if (node.key in openBurn) openBurn - node.key else openBurn + node.key }
+                    }
+                }
             }
         } else if (onSteps) {
-            val stepDays = if (steps.access == StepsAccess.GRANTED && steps.days != null) stepsSeries.days else emptyList()
-            items(stepDays, key = { "steps-${it.day}" }) { day ->
+            val shownRows = if (steps.access == StepsAccess.GRANTED && steps.days != null) stepsRows else emptyList()
+            items(shownRows, key = { "steps-${it.node.key}" }) { row ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                StepsDayRow(day, today)
+                when (val node = row.node) {
+                    is DayNode.Row -> StepsDayRow(node.item, today, row.depth)
+                    is DayNode.Group -> {
+                        val s = GroupSummaries.steps(node.members, today)
+                        DayGroupRowItem(
+                            node,
+                            stringResource(R.string.group_avg_steps, formatSteps(s.main)),
+                            null,
+                            s.days, node.key in openSteps, today, row.depth,
+                        ) { openSteps = if (node.key in openSteps) openSteps - node.key else openSteps + node.key }
+                    }
+                }
             }
         } else if (onEnergy) {
-            items(if (food.access == FoodAccess.GRANTED) series.days else emptyList(), key = { "energy-${it.day}" }) { day ->
+            items(if (food.access == FoodAccess.GRANTED) energyRows else emptyList(), key = { "energy-${it.node.key}" }) { row ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                EnergyDayRow(day, today) { foodActions.onOpenDay(it) }
+                when (val node = row.node) {
+                    is DayNode.Row -> EnergyDayRow(node.item, today, row.depth) { foodActions.onOpenDay(it) }
+                    is DayNode.Group -> {
+                        val s = GroupSummaries.energy(node.members, today)
+                        DayGroupRowItem(
+                            node,
+                            stringResource(R.string.group_avg_kcal, formatKcal(s.main.toDouble())),
+                            s.extra?.let { stringResource(R.string.group_avg_treats, formatKcal(it.toDouble())) },
+                            s.days, node.key in openEnergy, today, row.depth,
+                        ) { openEnergy = if (node.key in openEnergy) openEnergy - node.key else openEnergy + node.key }
+                    }
+                }
             }
         } else if (page is HistoryPage.Fixed) items(rows, key = { it.node.key }) { row ->
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

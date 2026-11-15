@@ -162,16 +162,16 @@ object ListGroups {
         is ListNode.Gap -> error("gap has no weight")
     }
 
-    private fun weekMonday(day: LocalDate): LocalDate = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    internal fun weekMonday(day: LocalDate): LocalDate = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
-    private fun key(level: GroupLevel, day: LocalDate): String = when (level) {
+    internal fun key(level: GroupLevel, day: LocalDate): String = when (level) {
         GroupLevel.YEAR -> "y${day.year}"
         GroupLevel.MONTH -> "m${day.year}-%02d".format(day.monthValue)
         // Month + week, so a week split by a month border is two groups.
         GroupLevel.WEEK -> "w${day.year}-%02d-%02d".format(day.monthValue, weekMonday(day).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR))
     }
 
-    private fun span(level: GroupLevel, day: LocalDate): Pair<LocalDate, LocalDate> = when (level) {
+    internal fun span(level: GroupLevel, day: LocalDate): Pair<LocalDate, LocalDate> = when (level) {
         GroupLevel.YEAR -> day.withDayOfYear(1) to day.with(TemporalAdjusters.lastDayOfYear())
         GroupLevel.MONTH -> day.withDayOfMonth(1) to day.with(TemporalAdjusters.lastDayOfMonth())
         GroupLevel.WEEK -> {

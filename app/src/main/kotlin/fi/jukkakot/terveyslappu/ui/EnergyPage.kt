@@ -150,9 +150,9 @@ private fun EnergyStatsTiles(series: EnergySeries) {
 
 /** One logged day of the Energia list: date, total and treat share; opens Ruoka on it. */
 @Composable
-internal fun EnergyDayRow(day: EnergyDay, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
+internal fun EnergyDayRow(day: EnergyDay, today: LocalDate, depth: Int = 0, onOpenDay: (LocalDate) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { onOpenDay(day.day) }.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("energyDay-${day.day}"),
+        Modifier.fillMaxWidth().clickable { onOpenDay(day.day) }.heightIn(min = 56.dp).padding(start = indent(depth), end = 16.dp, top = 8.dp, bottom = 8.dp).testTag("energyDay-${day.day}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

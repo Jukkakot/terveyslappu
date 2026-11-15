@@ -185,4 +185,23 @@ class FoodAddDialogTest {
             assertNull(app.products.find("Kaurapuuro testi"))
         }
     }
+
+    @Test
+    fun `the trash in the sheet's day list deletes and Kumoa restores`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
+        open().use {
+            compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
+            compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            shadowOf(Looper.getMainLooper()).idle()
+            val uuid = records.items.single().uuid
+            compose.onNodeWithTag("sheet-$uuid-delete").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("sheetDeleted"), 5_000)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(0, records.items.size)
+            compose.onNodeWithTag("deletedUndo").performClick()
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.size == 1 }
+        }
+    }
 }

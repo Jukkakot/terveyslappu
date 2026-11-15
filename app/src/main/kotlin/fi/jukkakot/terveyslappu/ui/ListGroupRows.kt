@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.DayNode
 import fi.jukkakot.terveyslappu.chart.GroupLevel
 import fi.jukkakot.terveyslappu.chart.ListNode
 import java.time.LocalDate
@@ -42,12 +43,51 @@ internal fun formatDayRange(from: LocalDate, to: LocalDate, today: LocalDate): S
 }
 
 /** "2024", "Marraskuu 2025", "Vk 45 · 3.–9.11.". */
-internal fun groupName(group: ListNode.Group, today: LocalDate): String {
-    val year = if (group.from.year == today.year) "" else " ${group.from.year}"
-    return when (group.level) {
-        GroupLevel.YEAR -> "${group.from.year}"
-        GroupLevel.MONTH -> monthName.format(group.from).replaceFirstChar { it.titlecase(finnish) } + year
-        GroupLevel.WEEK -> "Vk ${group.week} · ${formatDayRange(group.from, group.to, today)}"
+internal fun groupName(group: ListNode.Group, today: LocalDate): String = groupName(group.level, group.from, group.to, group.week, today)
+
+internal fun groupName(level: GroupLevel, from: LocalDate, to: LocalDate, week: Int, today: LocalDate): String {
+    val year = if (from.year == today.year) "" else " ${from.year}"
+    return when (level) {
+        GroupLevel.YEAR -> "${from.year}"
+        GroupLevel.MONTH -> monthName.format(from).replaceFirstChar { it.titlecase(finnish) } + year
+        GroupLevel.WEEK -> "Vk $week · ${formatDayRange(from, to, today)}"
+    }
+}
+
+/**
+ * A group of a day list (Energia, Askeleet, Kulutus): name and "ka .../pv" on the first line, "N pv" and
+ * the secondary average on the second, the open sign.
+ */
+@Composable
+internal fun DayGroupRowItem(group: DayNode.Group<*>, main: String, extra: String?, days: Int, open: Boolean, today: LocalDate, depth: Int, onToggle: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val name = groupName(group.level, group.from, group.to, group.week, today)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClickLabel = stringResource(if (open) R.string.group_close else R.string.group_open, name), onClick = onToggle)
+            .heightIn(min = 56.dp)
+            .padding(start = indent(depth), end = 16.dp, top = 6.dp, bottom = 6.dp)
+            .testTag("group-${group.key}"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(main, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.group_days, days), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                if (extra != null) Text(extra, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            }
+        }
+        Icon(
+            painterResource(R.drawable.ic_chevron_right),
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(24.dp).rotate(if (open) 270f else 90f),
+        )
     }
 }
 

@@ -28,6 +28,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertTextEquals
 import fi.jukkakot.terveyslappu.steps.StepsDay
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -250,5 +254,25 @@ class StepsScreenTest {
             .assertTextContains(formatSteps(6420), substring = true)
         compose.onNodeWithTag("chartReadout").performClick()
         compose.onNodeWithTag("chartHint", useUnmergedTree = true).assertExists()
+    }
+
+    private val groupRow = androidx.compose.ui.test.SemanticsMatcher("a group row") {
+        it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith("group-") == true
+    }
+
+    @Test
+    fun `Askeleet and Energia lists over 14 days show closed group rows`() {
+        val many = (0L..20L).map { StepsDay(today.minusDays(it), 7000L + it) }
+        val items = (0L..20L).map { d ->
+            val t = today.minusDays(d).atTime(12, 0).atZone(zone).toInstant()
+            FoodItem("f$d", today.minusDays(d), 1, "Annos", 500.0 + d, Amount(1.0, AmountUnit.KPL), false, t, zone.rules.getOffset(t), true)
+        }
+        val start = MainUiState(access = Access.GRANTED, weights = weights, period = Period.Last(30), screen = Screen.HISTORY, historyOnSteps = true)
+        show(start, StepsUiState(access = StepsAccess.GRANTED, days = many), FoodUiState(access = FoodAccess.GRANTED, items = items))
+        compose.onAllNodes(groupRow).onFirst().assertExists()
+        compose.onNodeWithTag("stepsDay-$today").assertDoesNotExist()
+        compose.onNodeWithTag("tab-ENERGY").performClick()
+        compose.waitForIdle()
+        compose.onAllNodes(groupRow).onFirst().assertExists()
     }
 }

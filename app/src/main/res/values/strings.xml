@@ -109,6 +109,11 @@
     <string name="group_value_single">%1$s kg · 1 paino</string>
     <string name="group_values">%1$s → %2$s kg · %3$d painoa</string>
     <string name="group_count_only">%1$d painoa</string>
+    <string name="group_days">%1$d pv</string>
+    <string name="group_avg_kcal">ka %1$s kcal/pv</string>
+    <string name="group_avg_steps">ka %1$s askelta/pv</string>
+    <string name="group_avg_treats">herkkuja ka %1$s</string>
+    <string name="group_avg_active">aktiivinen ka %1$s</string>
     <string name="group_gap">Ei punnituksia %1$s–%2$s</string>
 
     <string name="quantity_weight">Paino</string>

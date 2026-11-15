@@ -171,7 +171,7 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
                 if (typing) {
                     TypedList(food, base, actions, beforeEditor)
                 } else {
-                    DayList(food, day, dayItems, highlight, imeUp, actions, beforeEditor, focusManager::clearFocus, keyboard)
+                    DayList(food, day, dayItems, highlight, imeUp, actions, beforeEditor, focusManager::clearFocus, keyboard) { highlight = null }
                 }
             }
             Column(
@@ -217,6 +217,7 @@ private fun DayList(
     beforeEditor: () -> Unit,
     clearFocus: () -> Unit,
     keyboard: androidx.compose.ui.platform.SoftwareKeyboardController?,
+    clearHighlight: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val zone = remember { ZoneId.systemDefault() }
@@ -251,7 +252,15 @@ private fun DayList(
             }
             else -> items(dayItems, key = { it.uuid }) { item ->
                 val tint = if (item.uuid == highlight) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-                FoodRow(item, zone, Modifier.background(tint).clickable { beforeEditor(); actions.onEdit(item) })
+                FoodRow(item, zone, Modifier.background(tint).clickable { beforeEditor(); actions.onEdit(item) }) {
+                    RowActions(
+                        stringResource(R.string.food_edit_item, item.name),
+                        stringResource(R.string.food_delete_item, item.name),
+                        { beforeEditor(); actions.onEdit(item) },
+                        { if (item.uuid == highlight) clearHighlight(); actions.onDelete(item) },
+                        "sheet-${item.uuid}",
+                    )
+                }
             }
         }
     }

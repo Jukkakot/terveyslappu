@@ -9,6 +9,10 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.burn.BurnUiState
@@ -98,5 +102,17 @@ class BurnScreenTest {
         val burn = compose.onNodeWithTag("homeSlot-burn", useUnmergedTree = true).getBoundsInRoot()
         assertTrue(burn.top >= steps.bottom, "Kulutus comes after steps (food and steps share the row)")
         assertEquals(HomeCard(HomeLayout.BURN, CardSize.SMALL), withCard.shown.last())
+    }
+
+    @Test
+    fun `a Kulutus list over 14 days shows closed group rows`() {
+        val days = (0L..20L).mapNotNull { fi.jukkakot.terveyslappu.burn.BurnDay.of(HomeFixtures.today.minusDays(it), 2_200L + it, 400L) }.sortedBy { it.day }
+        val start = MainUiState(access = Access.GRANTED, weights = HomeFixtures.weights, period = fi.jukkakot.terveyslappu.chart.Period.Last(30), screen = Screen.HISTORY, historyOnBurn = true)
+        show(BurnUiState(access = StepsAccess.GRANTED, days = days), start)
+        val groupRow = androidx.compose.ui.test.SemanticsMatcher("a group row") {
+            it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.startsWith("group-") == true
+        }
+        compose.onAllNodes(groupRow).onFirst().assertExists()
+        compose.onNodeWithTag("burnDay-${HomeFixtures.today}").assertDoesNotExist()
     }
 }

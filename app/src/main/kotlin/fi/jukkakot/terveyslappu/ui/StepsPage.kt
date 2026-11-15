@@ -251,9 +251,9 @@ private fun StepsStatsTiles(series: StepsSeries) {
 
 /** One day of the Askeleet list: date and steps; a row opens nothing. */
 @Composable
-internal fun StepsDayRow(day: StepsDay, today: LocalDate) {
+internal fun StepsDayRow(day: StepsDay, today: LocalDate, depth: Int = 0) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("stepsDay-${day.day}"),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = indent(depth), end = 16.dp, top = 8.dp, bottom = 8.dp).testTag("stepsDay-${day.day}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
