@@ -149,6 +149,7 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights))
         compose.onNodeWithTag("help").performClick()
         compose.onNodeWithTag("helpList").assertExists()
+        compose.onNodeWithTag("helpList").performScrollToNode(hasText("Omat kaaviot"))
         compose.onNodeWithText("Historia").assertExists()
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("latestCard").assertExists()

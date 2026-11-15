@@ -175,6 +175,36 @@ tabs, export, zoom, weekly averages in custom charts.
     "Chart cards" (always enabled) read together: the later "Chart cards" rule wins, and the archive
     task rewords "Hidden cards" accordingly.
 
+## Implementation notes (apply, 2026-11-15)
+
+Where the built dependencies or the code differ from the text above, or the spec left a choice:
+
+- **Names:** `chart/ChartData` already exists (the Paino/BMI chart), so the own charts' data class
+  is `CustomChartData` (in `chart/CustomChartData.kt`, with `ChartAxis`, `KindData`, `ChartReadout`).
+  The editor works on a `ChartDraft` (every kind keeps a style while switched off).
+- **Codec (home-card-layout):** `HomeLayoutCodec`'s `allowedExtra` and `extraSize = WIDE` were
+  built already; `HomePrefs.load(charts)` passes the chart card ids, and edit mode's saved draft
+  uses a codec with the same ids. `HomeLayout.hide` on a chart id calls `remove` (out of both
+  lists); `isDefault` stays `this == DEFAULT`, which already is false with any chart id.
+- **Lisää kortti** is always enabled now (home-card-layout's "disabled when nothing is hidden" test
+  updated); the archive follow-up rewords "Hidden cards".
+- **Food on a chart page:** food is read in full already and `onEnergyShown` only clears a flag,
+  so a chart page with Energia calls nothing for food (design 15's `onEnergyShown` is not needed).
+- **Tones:** overlaid as in decision 9; stacked steps keep their tab's `primary` (its own panel and
+  unit), energy bars keep the treats' `tertiary`.
+- **All data loaded and empty** (any period) shows the one line "Ei tietoja tällä jaksolla" in
+  both layouts, on the tab and the card; panels show their own line only while another data has
+  values, is loading or is gated.
+- **Päällekkäin with nothing drawn** (all loading or gated): the first shown data's panel at the
+  single-panel height with its state, the others as lines under it.
+- **Readout** sits left of the Muokkaa button in the chart page's top row (one row instead of two).
+- **Weight line on the Energia/Askeleet tabs** now puts each weight at its day's centre (several
+  weights on one day stack at the same x).
+- **Size matrix:** the chart card's matrix is its own test class (`ChartCardSizesTest`) next to the
+  other chart-card tests, same 360 dp and 130 % text, both layouts and all three sizes.
+- **Crosshair gestures** are tested in Robolectric only (tap, hold in place, fling pages, grant
+  button); the real-device feel of the hold timeout and the scrub is untested.
+
 ## Risks / Trade-offs
 
 - Overlaid charts with two scales invite reading false correlation (the reason the first draft

@@ -224,7 +224,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - As built (steps, v1.28): steps are read only, from Health Connect's merged daily aggregate
     (no origin filter: two writers are merged by the user's app priority, never summed); a day
     without data is a gap, never zero; the front page row is the food card and the steps card
-    side by side at half width (by default since home-card-layout); Historia's Askeleet tab after Energia. Decided: no step goal or
+    side by side at half width (by default since home-card-layout); Historia's Askeleet tab after Energia, then the own charts (custom-charts) and Uusi kaavio. Decided: no step goal or
     target line; steps are not in the data file or the backup (they are Garmin's and live in
     Health Connect and Garmin Connect); the permission is asked only from the steps card or tab.
   - Decided (steps-source-and-axes, v1.30): a day's steps are one app's own count, never a merge
