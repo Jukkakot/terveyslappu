@@ -65,7 +65,7 @@ day with data (today left out); weekly bars (average per day with data of the we
 for periods over 90 days; the shared axes, period range line and legend ("lepo", "aktiivinen",
 "keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show, through the crosshair, its day (or week) with total, active and lepo
 kcal. Under the chart: the average total kcal per day, the average active kcal per
-day, and "x / y päivää"; then the days newest first, each with its date ("Tänään", "Eilen",
+day, and "x / y päivää"; then the days newest first and grouped as in weight-chart "Grouped day lists", each with its date ("Tänään", "Eilen",
 weekday and date as on Askeleet), total kcal and "aktiivinen N kcal". The tab SHALL show energy
 burned only: no eaten energy, no difference, no target.
 
