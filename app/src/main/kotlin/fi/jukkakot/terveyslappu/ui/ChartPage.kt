@@ -1,14 +1,12 @@
 package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,9 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
@@ -36,6 +31,7 @@ import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.chart.CustomChartData
 import fi.jukkakot.terveyslappu.chart.Readout
 import fi.jukkakot.terveyslappu.chart.SeriesKind
+import fi.jukkakot.terveyslappu.chart.TabReadouts
 import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -133,7 +129,7 @@ internal fun ChartPage(
         ) {
             Column {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    ReadoutSlot(crosshair?.let { ChartReadout.of(it, data, access) }, onClear = { onDay(null) }, Modifier.weight(1f))
+                    ReadoutSlot(crosshair?.let { readoutText(ChartReadout.of(it, data, access)) }, onClear = { onDay(null) }, Modifier.weight(1f))
                     TextButton(onClick = onEdit, modifier = Modifier.testTag("chartEdit")) {
                         Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -146,29 +142,7 @@ internal fun ChartPage(
     }
 }
 
-/** The day's values over the chart, or the hint; keeps its height; a tap clears (design 10). */
-@Composable
-private fun ReadoutSlot(readout: Readout?, onClear: () -> Unit, modifier: Modifier) {
-    val colors = MaterialTheme.colorScheme
-    val text = readout?.let { readoutText(it) } ?: stringResource(R.string.chart_hint)
-    Box(
-        modifier
-            .heightIn(min = 48.dp)
-            .then(if (readout != null) Modifier.clickable(onClickLabel = stringResource(R.string.chart_clear), onClick = onClear) else Modifier)
-            .semantics { liveRegion = LiveRegionMode.Polite }
-            .testTag("chartReadout"),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Text(
-            text,
-            style = if (readout != null) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
-            color = if (readout != null) colors.onSurface else colors.onSurfaceVariant,
-            modifier = Modifier.testTag(if (readout != null) "chartReadoutText" else "chartHint"),
-        )
-    }
-}
-
-/** "12.11. · 82,4 kg · 1 900 kcal · 6 420 askelta"; missing parts "ei painoa", "ei kirjauksia", "ei tietoa". */
+/** "Ma 12.11. · 82,4 kg · 1 900 kcal · 6 420 askelta"; missing parts "ei painoa", "ei kirjauksia", "ei tietoa". */
 @Composable
 internal fun readoutText(readout: Readout): String {
     val parts = readout.values.map { (kind, value) ->
@@ -188,7 +162,7 @@ internal fun readoutText(readout: Readout): String {
             )
         }
     }
-    return (listOf(formatShortDay(readout.day)) + parts).joinToString(" · ")
+    return (listOf(TabReadouts.day(readout.day, LocalDate.now())) + parts).joinToString(" · ")
 }
 
 /** "2 300 kcal · aktiivinen 450"; a day without a split "2 300 kcal" (weight-chart "Kulutus in own charts"). */

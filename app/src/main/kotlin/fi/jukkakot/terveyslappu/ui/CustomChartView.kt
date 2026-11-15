@@ -2,8 +2,6 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,24 +22,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -99,23 +88,8 @@ internal fun CustomChartView(
     modifier: Modifier = Modifier,
 ) {
     val description = stringResource(R.string.custom_chart_description, data.chart.name)
-    val previous = stringResource(R.string.chart_previous_day)
-    val next = stringResource(R.string.chart_next_day)
-    val axis = data.axis
-    val current by rememberUpdatedState(crosshair)
-    val a11y = Modifier.semantics {
-        contentDescription = description
-        if (mode == ChartMode.Tab) {
-            // The first use starts from today (clamped into the axis).
-            fun step(days: Long): Boolean {
-                val start = current ?: LocalDate.now().coerceIn(axis.from, axis.to)
-                val day = if (current == null) start else start.plusDays(days).coerceIn(axis.from, axis.to)
-                onDay(day)
-                return true
-            }
-            customActions = listOf(CustomAccessibilityAction(previous) { step(-1) }, CustomAccessibilityAction(next) { step(1) })
-        }
-    }
+    val actions = if (mode == ChartMode.Tab) Modifier.crosshairActions(data.axis, crosshair, onDay) else Modifier
+    val a11y = Modifier.semantics { contentDescription = description }.then(actions)
     val fill = mode.card != null
     Column(modifier.fillMaxWidth().then(a11y).testTag("customChart-${data.chart.id}")) {
         if (data.empty) {
@@ -133,7 +107,6 @@ internal fun CustomChartView(
     }
 }
 
-private fun <T : Comparable<T>> T.coerceIn(from: T, to: T): T = if (this < from) from else if (this > to) to else this
 
 /**
  * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else Oletus = weight
@@ -184,18 +157,18 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
  * Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16);
  * Kulutus bars split into lepo and aktiivinen when [burnSplit] (Allekkain), else one tone.
  */
-private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false) {
+private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false, chosen: LocalDate? = null) {
     val values = kind.values.orEmpty()
     fun y(v: Double) = size.height * (1 - kind.fraction(v))
     if (kind.style == SeriesStyle.BARS) {
         if (!barsToo) return
         if (kind.kind == SeriesKind.BURN && burnSplit) {
-            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots)
+            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots, chosen = chosen)
         } else {
-            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
+            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots, chosen = chosen)
         }
     } else if (linesToo) {
-        drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT)
+        drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT, chosen = chosen)
     }
 }
 
@@ -227,11 +200,12 @@ private fun ColumnScope.Stacked(data: CustomChartData, mode: ChartMode, states: 
                 if (kind.drawn) {
                     val tone = data.toneOf(kind.kind, overlaid = false)
                     val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) data.treatTone(tone) else null
+                    val chosen = crosshair.takeIf { mode == ChartMode.Tab }
                     Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
                         drawGuidelines(colors.outlineVariant, kind.ticks.map { size.height * (1 - kind.fraction(it)) })
-                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true)
+                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true, chosen = chosen)
                         if (data.chart.showAverage) drawKindAverage(kind, colors.onSurfaceVariant)
-                        drawKind(kind, data.axis, tone, treat, barsToo = false)
+                        drawKind(kind, data.axis, tone, treat, barsToo = false, chosen = chosen)
                     }
                     if (card == CardSize.BIG) ScaleTopLabel(axisLabels(kind).last(), "scaleTop-${kind.kind.name}")
                 } else {
@@ -270,11 +244,12 @@ private fun ColumnScope.Overlaid(data: CustomChartData, mode: ChartMode, states:
         if (labels) YAxisLabels(leftLabels, listOf(0f, 0.5f, 1f), leftWidth, OVERLAID_PLOT - 4.dp, "axisLeft-${left.kind.name}", tones.getValue(left.kind))
         Box(Modifier.weight(1f).fillMaxHeight()) {
             val bars = drawn.filter { it.style == SeriesStyle.BARS }
+            val chosen = crosshair.takeIf { mode == ChartMode.Tab }
             Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-OVERLAID")) {
                 drawGuidelines(colors.outlineVariant, listOf(0f, 0.5f, 1f).map { size.height * (1 - it) })
-                bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size) }
+                bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size, chosen = chosen) }
                 if (data.chart.showAverage) drawn.forEach { drawKindAverage(it, tones.getValue(it.kind)) }
-                drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null) }
+                drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null, chosen = chosen) }
             }
             if (card == CardSize.BIG) {
                 ScaleTopLabel(leftLabels.last(), "scaleTop-${left.kind.name}", Modifier.align(Alignment.TopStart), tones.getValue(left.kind))
@@ -349,52 +324,6 @@ private fun Plot(axis: ChartAxis, mode: ChartMode, crosshair: LocalDate?, onDay:
     Canvas(modifier.clipToBounds().then(gestures)) {
         draw()
         if (crosshair != null && mode == ChartMode.Tab) drawCrosshair(axis, crosshair, line)
-    }
-}
-
-/**
- * The crosshair gestures (design 10): a tap sets the day; a press held past the long-press timeout
- * without moving places it with a haptic tick and then scrubs, owning both directions until release.
- * A move past touch slop before the timeout is left to the pager and the list (a swipe or fling
- * switches the tab and places nothing).
- */
-@Composable
-private fun Modifier.crosshairGestures(axis: ChartAxis, onDay: (LocalDate) -> Unit): Modifier {
-    val haptic = LocalHapticFeedback.current
-    val pick by rememberUpdatedState(onDay)
-    return pointerInput(axis) {
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false)
-            val slop = viewConfiguration.touchSlop
-            var moved = false
-            var released = false
-            withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-                while (true) {
-                    val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
-                    if (!change.pressed) {
-                        released = true
-                        break
-                    }
-                    if ((change.position - down.position).getDistance() > slop) {
-                        moved = true
-                        break
-                    }
-                }
-            }
-            if (moved) return@awaitEachGesture
-            if (released) {
-                pick(axis.dayAt(down.position.x, size.width.toFloat()))
-                return@awaitEachGesture
-            }
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            pick(axis.dayAt(down.position.x, size.width.toFloat()))
-            while (true) {
-                val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
-                if (change.positionChange() != androidx.compose.ui.geometry.Offset.Zero) pick(axis.dayAt(change.position.x, size.width.toFloat()))
-                change.consume()
-                if (!change.pressed) return@awaitEachGesture
-            }
-        }
     }
 }
 

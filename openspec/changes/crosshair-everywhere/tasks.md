@@ -2,9 +2,9 @@
 
 ## 1. Shared crosshair
 
-- [ ] 1.1 Extract the own charts' crosshair (gesture detector, line, readout slot with placeholder, removal rules, TalkBack actions, haptic) from `ui/CustomChartView` into a reusable piece, without changing own charts' behaviour.
-- [ ] 1.2 Marker drawing: a ring on the chosen line/dot value; chosen bar full tone, other bars at 60 % alpha.
-- [ ] 1.3 Pure readout texts (in `chart/`): date head (weekday + date, year when not current; week form "Vk N · d.–d.M." for weekly bars, both ends' months when they differ) and per-tab values as specified; unit tests incl. old year and weekly.
+- [x] 1.1 Extract the own charts' crosshair (gesture detector, line, readout slot with placeholder, removal rules, TalkBack actions, haptic) from `ui/CustomChartView` into a reusable piece, without changing own charts' behaviour.
+- [x] 1.2 Marker drawing: a ring on the chosen line/dot value; chosen bar full tone, other bars at 60 % alpha.
+- [x] 1.3 Pure readout texts (in `chart/`): date head (weekday + date, year when not current; week form "Vk N · d.–d.M." for weekly bars, both ends' months when they differ) and per-tab values as specified; unit tests incl. old year and weekly.
 
 ## 2. Tabs
 
