@@ -16,7 +16,7 @@
 
 ## 4. Undo messages
 
-- [ ] 4.1 App snackbar: 4 s timer, swipe to dismiss, above the nav bar, not over an open sheet; test that an action message is gone after the timeout
+- [x] 4.1 App snackbar: 4 s timer, swipe to dismiss, above the nav bar, not over an open sheet; test that an action message is gone after the timeout
 
 ## 5. Docs and release
 

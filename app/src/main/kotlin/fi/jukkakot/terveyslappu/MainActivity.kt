@@ -28,7 +28,6 @@ import fi.jukkakot.terveyslappu.weight.HistoryAccess
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +53,7 @@ import fi.jukkakot.terveyslappu.ui.FoodAccess
 import fi.jukkakot.terveyslappu.ui.FoodActions
 import fi.jukkakot.terveyslappu.ui.FoodClipboard
 import fi.jukkakot.terveyslappu.ui.FoodViewModel
+import fi.jukkakot.terveyslappu.ui.showTimed
 import fi.jukkakot.terveyslappu.ui.Access
 import fi.jukkakot.terveyslappu.ui.StepsActions
 import fi.jukkakot.terveyslappu.ui.StepsViewModel
@@ -216,15 +216,21 @@ class MainActivity : ComponentActivity() {
                     onPauseOrDispose {}
                 }
                 LaunchedEffect(Unit) {
+                    // A new message replaces the shown one at once (app-appearance "Undo messages").
                     merge(viewModel.messages, foodModel.messages).collect { message ->
-                        val result = snackbar.showSnackbar(
-                            message = getString(message.text, *message.args.toTypedArray()),
-                            actionLabel = message.action?.let { getString(it.label) },
-                            duration = if (message.action != null) SnackbarDuration.Long else SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) message.action?.run?.invoke()
+                        launch {
+                            val result = snackbar.showTimed(
+                                getString(message.text, *message.args.toTypedArray()),
+                                message.action?.let { getString(it.label) },
+                            )
+                            if (result == SnackbarResult.ActionPerformed) message.action?.run?.invoke()
+                        }
                     }
                 }
+                // No bar over an open sheet (its messages are the sheet's line), none left from another screen.
+                LaunchedEffect(state.screen, state.settingsPage) { snackbar.currentSnackbarData?.dismiss() }
+                val sheetOpen = food.sheetDay != null
+                LaunchedEffect(sheetOpen) { if (sheetOpen) snackbar.currentSnackbarData?.dismiss() }
 
                 MainScreen(
                     state = state,

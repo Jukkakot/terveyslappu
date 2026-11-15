@@ -26,7 +26,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -129,7 +128,7 @@ internal fun SettingsScreen(
 private fun SubPage(title: Int, actions: MainActions, snackbar: SnackbarHostState, tag: String, content: @Composable ColumnScope.() -> Unit) {
     Scaffold(
         topBar = { SubScreenBar(stringResource(title), onBack = actions.onBack) },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { AppSnackbarHost(snackbar) },
     ) { padding ->
         Column(
             Modifier
@@ -194,7 +193,7 @@ private fun SettingsList(
     val profileLine = SettingsSummary.profile(profile, { if (it == Gender.MALE) male else female }, none)
     Scaffold(
         topBar = { SubScreenBar(stringResource(R.string.settings_title), onBack = actions.onBack) },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { AppSnackbarHost(snackbar) },
     ) { padding ->
         Column(
             Modifier
