@@ -92,9 +92,7 @@ kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL 
 the preview's Lisää would, to the day the sheet or Ruoka shows, without opening the preview, and
 show "<N> annosta lisätty · Kumoa". "Muokkaa" SHALL open the preview. When the JSON holds only
 products the card SHALL list the products with their energy and its button SHALL read "Tallenna
-tuotteet". On the front page the offer SHALL be a notice above the cards reading "Tuo
-leikepöydältä: <N> annosta · <kcal> kcal" ("1 annos"; without the kcal part when no item has kcal;
-"<N> tuotetta" / "1 tuote" for products only) with Ohita; tapping it SHALL open the preview. The
+tuotteet". On the front page the same card SHALL be shown above the cards, adding to today. The
 offer SHALL be shown again on every open and resume while the same content is on the clipboard,
 until the user saves that content (Lisää kaikki or the preview's Lisää) or taps Ohita or ✕; after
 either, that content SHALL NOT be offered again, on any screen, also when it is copied again; Kumoa
@@ -122,8 +120,7 @@ Järjestä, nor in the front page's edit mode.
 #### Scenario: Offered on the front page
 - **GIVEN** the user copied food JSON with 4 items
 - **WHEN** they open the app on the front page
-- **THEN** the notice "Tuo leikepöydältä: 4 annosta · … kcal" is shown above the cards, and tapping
-  it opens the preview
+- **THEN** the card with the 4 items is shown above the cards, and Lisää kaikki adds them to today
 
 #### Scenario: Still offered after looking elsewhere
 - **GIVEN** the user copied food JSON and the front page already offered it

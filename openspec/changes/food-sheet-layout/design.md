@@ -71,6 +71,9 @@ done keys are in `FoodViewModel` (`clipOffer`, `food.import.offer`), the import 
   content description "Ohita", 48 dp. Long names ellipsize in one line.
 - The ⋮ menu has one entry for now; fine (more may join in the consistency pass).
 
+- **Front page** (user 2026-11-15): the same card replaces `ClipOfferNotice`; its messages use the snackbar.
+- **Sheet line** stays until the next action (user 2026-11-15).
+
 ## Risks / Trade-offs
 
 - [Lisää kaikki skips the preview's day choice] → the card adds to the day shown; another day goes
