@@ -2,15 +2,15 @@
 
 ## 1. Reader and store
 
-- [ ] 1.1 Pure reader: from a ZIP `InputStream` (streamed with `ZipInputStream`), parse every `.../DI_CONNECT/DI-Connect-Aggregator/UDSFile_*.json` entry (JSON array; read `calendarDate`, `totalSteps`); skip null/<1/bad dates and days from the import day on; duplicates keep the larger; result = sorted day → steps, plus entry count. Parse each entry with a streaming JSON reader so memory stays bounded.
-- [ ] 1.2 Store `garmin-steps.json` in app storage (one atomic write, replace whole), with delete and restore for Kumoa; singleton in `TerveysApp`; add to `data_extraction_rules.xml` (both sections) like `products.json`; update `DataTransferRulesTest`.
-- [ ] 1.3 Unit tests with a made-up ZIP built in the test: nested folder prefix, two UDS files with an overlapping day, null and zero steps, bad date, a non-Garmin ZIP, a future day.
+- [x] 1.1 Pure reader: from a ZIP `InputStream` (streamed with `ZipInputStream`), parse every `.../DI_CONNECT/DI-Connect-Aggregator/UDSFile_*.json` entry (JSON array; read `calendarDate`, `totalSteps`); skip null/<1/bad dates and days from the import day on; duplicates keep the larger; result = sorted day → steps, plus entry count. Parse each entry with a streaming JSON reader so memory stays bounded.
+- [x] 1.2 Store `garmin-steps.json` in app storage (one atomic write, replace whole), with delete and restore for Kumoa; singleton in `TerveysApp`; add to `data_extraction_rules.xml` (both sections) like `products.json`; update `DataTransferRulesTest`.
+- [x] 1.3 Unit tests with a made-up ZIP built in the test: nested folder prefix, two UDS files with an overlapping day, null and zero steps, bad date, a non-Garmin ZIP, a future day.
 
 ## 2. Totals
 
-- [ ] 2.1 Merge rule (pure, in `steps/`): given the source in use (Garmin Connect package `com.garmin.android.apps.connectmobile`, or no origin filter: Kaikki / Automaattinen without a pick) take per day the larger of Health Connect and the import (import alone where HC has none), never today; other sources ignore it. Kaikki start = first day with steps of either.
-- [ ] 2.2 Wire it into `StepsController` so `StepsSeries` (Askeleet) and `HomeSteps` (card) see merged days; imported days need no history permission; follow design.md 2-6.
-- [ ] 2.3 Tests: the scenarios of "Imported Garmin days in the totals" (before HC, other source, gap in HC, today never imported).
+- [x] 2.1 Merge rule (pure, in `steps/`): given the source in use (Garmin Connect package `com.garmin.android.apps.connectmobile`, or no origin filter: Kaikki / Automaattinen without a pick) take per day the larger of Health Connect and the import (import alone where HC has none), never today; other sources ignore it. Kaikki start = first day with steps of either.
+- [x] 2.2 Wire it into `StepsController` so `StepsSeries` (Askeleet) and `HomeSteps` (card) see merged days; imported days need no history permission; follow design.md 2-6.
+- [x] 2.3 Tests: the scenarios of "Imported Garmin days in the totals" (before HC, other source, gap in HC, today never imported).
 
 ## 3. Screens
 
