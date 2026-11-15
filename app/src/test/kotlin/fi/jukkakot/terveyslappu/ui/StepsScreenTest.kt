@@ -6,12 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -236,5 +238,17 @@ class StepsScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true), StepsUiState(access = StepsAccess.GRANTED, days = emptyList()))
         compose.onNodeWithTag("stepsEmpty").assertExists()
         compose.onNodeWithTag("stepsChart").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a tap on an Askeleet bar shows the crosshair readout`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true), granted)
+        compose.onNodeWithTag("chartHint", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("stepsBars").performTouchInput { click(centerRight.copy(x = width - 2f)) }
+        compose.onNodeWithTag("chartReadoutText", useUnmergedTree = true)
+            .assertTextContains(fi.jukkakot.terveyslappu.chart.TabReadouts.day(today, today), substring = true)
+            .assertTextContains(formatSteps(6420), substring = true)
+        compose.onNodeWithTag("chartReadout").performClick()
+        compose.onNodeWithTag("chartHint", useUnmergedTree = true).assertExists()
     }
 }

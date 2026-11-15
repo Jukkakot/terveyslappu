@@ -9,6 +9,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
@@ -191,5 +193,16 @@ class FoodScreenTest {
         }
         compose.onNodeWithTag("foodGrant").performClick()
         assertTrue(asked)
+    }
+
+    @Test
+    fun `a tap on a Syoty bar shows the readout and Avaa paiva opens Ruoka, back returns`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.HISTORY, historyOnEnergy = true), granted)
+        compose.onNodeWithTag("energyBars").performTouchInput { click(centerRight.copy(x = width - 2f)) }
+        compose.onNodeWithTag("chartReadoutText", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("chartReadoutAction").performClick()
+        compose.onNodeWithTag("food-a").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("energyChart").assertExists()
     }
 }
