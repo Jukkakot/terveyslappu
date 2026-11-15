@@ -39,6 +39,29 @@ NOT be in the data file.
 - **WHEN** the user exports their data
 - **THEN** the file holds no steps
 
+### Requirement: Old steps need the history permission
+Steps older than 30 days before the app's first permission grant SHALL be read only when the
+history-read permission the app already asks for weights is granted. The daily read SHALL start at
+the later of the period's start and the first readable steps day of the source in use (found by an
+ascending read limited to that source, which returns only readable records). The app SHALL NOT ask
+for the history permission from the steps card or the source setting.
+
+#### Scenario: Read start
+- **GIVEN** the first readable steps day of the chosen app is 20 days ago
+- **WHEN** the user picks 3 kk
+- **THEN** steps are read from that day on and earlier days are gaps
+
+#### Scenario: Kaikki starts at the source's first day
+- **GIVEN** the phone has steps from 2 years ago and Garmin Connect, the source in use, from 100
+  days ago, with the history permission granted
+- **WHEN** the user picks Kaikki on Askeleet
+- **THEN** with no imported Garmin history the chart starts 100 days ago, at Garmin Connect's
+  first day, and no earlier day shows the phone's steps; with an imported history it starts at the
+  first day with steps of either
+- Whoever wants the phone's older steps picks Puhelin, or "Kaikki (Health Connectin järjestys)",
+  which shows the full history; Ohje says so in one sentence. No notice appears when the source
+  is chosen or changed.
+
 ## ADDED Requirements
 
 ### Requirement: Import Garmin step history
@@ -54,8 +77,8 @@ show a preview: "Garminin askelhistoria", the first and last day with years, the
 with steps, and the buttons Peruuta and Tuo. Tuo SHALL replace any earlier imported history with
 this one in one write and show "Askelhistoria tuotu: N päivää". A ZIP that is not a Garmin export,
 or holds no day with steps, SHALL show "Tiedostosta ei löytynyt Garminin askelia" and save nothing.
-Garmin's other data (sleep, weight, heart rate …) SHALL NOT be read. Days after today SHALL be
-skipped.
+Garmin's other data (sleep, weight, heart rate …) SHALL NOT be read. Only days before the day of the import SHALL be
+stored.
 
 #### Scenario: Import
 - **GIVEN** a Garmin export ZIP with daily summaries from 18.7.2023 to 8.11.2026, 1 206 of them
@@ -75,13 +98,13 @@ skipped.
 
 ### Requirement: Imported Garmin days in the totals
 An imported day SHALL be used only when the steps source in use is Garmin Connect (chosen, or the
-app Automaattinen uses now) or "Kaikki (Health Connectin järjestys)", and only for a day for which
-that source has no steps in Health Connect; a day Health Connect has SHALL keep Health Connect's
-total. Today SHALL never come from the import. With any other source the import SHALL be ignored.
+app Automaattinen uses now) or "Kaikki (Health Connectin järjestys)", for a day Health Connect has no
+steps for, and on a day both have, the larger of the two counts SHALL be shown. Today SHALL never come from the import. With any other source the import SHALL be ignored.
 Imported days SHALL count like other days with steps everywhere steps are shown: the Askeleet
 bars, average line, statistics, day list and Kaikki start (the first day with steps of either),
-and the front page steps card. Imported days SHALL be shown without the history permission, and
-the history notice SHALL appear only for days the import does not cover.
+and the front page steps card. Imported days SHALL be shown without the history permission; the history notice is unchanged.
+Without the steps permission, or with Health Connect unavailable, the card and Askeleet SHALL stay
+as without an import. Own charts with steps SHALL use the same merged days.
 
 #### Scenario: Before Health Connect
 - **GIVEN** Garmin Connect is the source with Health Connect steps from 15.8.2026 and an import
@@ -97,6 +120,10 @@ the history notice SHALL appear only for days the import does not cover.
 - **GIVEN** Garmin Connect is the source and Health Connect has no steps for 3.10.2026 while the
   import has 7 400
 - **THEN** 3.10.2026 shows 7 400 steps
+
+#### Scenario: Partial day
+- **GIVEN** Kaikki as the source, Health Connect 2 000 steps for 1.3.2025 and the import 9 000
+- **THEN** 1.3.2025 shows 9 000 steps
 
 ### Requirement: Imported history in Asetukset
 Asetukset → Askeleet SHALL show, under the source choice, a row "Garminin askelhistoria" with the
