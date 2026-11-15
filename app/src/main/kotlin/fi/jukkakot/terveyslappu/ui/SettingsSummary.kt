@@ -5,6 +5,9 @@ import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
+import fi.jukkakot.terveyslappu.steps.StepsSourceState
 import java.time.Instant
 import java.time.LocalTime
 
@@ -45,6 +48,34 @@ object SettingsSummary {
         status.needsAttention(now) -> BackupLine.Stale(status.lastOkAt, status.lastCount)
         else -> BackupLine.Ok(status.lastOkAt, status.lastCount)
     }
+
+    /**
+     * Askeleet (steps-source-and-axes design 7): no permission, unavailable, blank while checking,
+     * else the source in use; before any check [source] is resolved from the stored pick.
+     */
+    fun steps(access: StepsAccess, source: StepsSourceState): StepsLine = when (access) {
+        StepsAccess.NEEDS, StepsAccess.DENIED -> StepsLine.NoAccess
+        StepsAccess.CHECKING -> StepsLine.Blank
+        StepsAccess.UNAVAILABLE -> StepsLine.Unavailable
+        StepsAccess.GRANTED -> when (val label = source.label) {
+            is StepsSourceLabel.Auto -> StepsLine.Auto(label.id)
+            is StepsSourceLabel.App -> StepsLine.App(label.id, label.noRecent == true)
+            StepsSourceLabel.All -> StepsLine.All
+        }
+    }
+}
+
+sealed interface StepsLine {
+    val warn: Boolean get() = false
+
+    data object NoAccess : StepsLine
+    data object Unavailable : StepsLine
+    data object Blank : StepsLine
+
+    /** [id] null: no app wrote steps in 30 days. */
+    data class Auto(val id: String?) : StepsLine
+    data class App(val id: String, val noRecent: Boolean) : StepsLine { override val warn get() = noRecent }
+    data object All : StepsLine
 }
 
 sealed interface ListenLine {

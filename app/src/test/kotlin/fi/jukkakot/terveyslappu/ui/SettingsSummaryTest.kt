@@ -6,6 +6,9 @@ import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsChoice
+import fi.jukkakot.terveyslappu.steps.StepsSourceRules
 import org.junit.Test
 import java.time.Instant
 import kotlin.test.assertEquals
@@ -54,5 +57,21 @@ class SettingsSummaryTest {
         assertTrue(SettingsSummary.backup(enabled.copy(lastOkAt = now.minusSeconds(4 * 86_400L), lastCount = 5), now).warn)
         assertTrue(SettingsSummary.backup(enabled.copy(lastFailedAt = t), now).warn)
         assertFalse(SettingsSummary.backup(BackupStatus(), now).warn)
+    }
+
+    @Test
+    fun `steps line per access and source`() {
+        val garmin = "com.garmin.android.apps.connectmobile"
+        val stored = StepsSourceRules.resolve(StepsChoice.Auto, garmin, null, checkedToday = false)
+        assertEquals(StepsLine.NoAccess, SettingsSummary.steps(StepsAccess.NEEDS, stored))
+        assertEquals(StepsLine.NoAccess, SettingsSummary.steps(StepsAccess.DENIED, stored))
+        assertEquals(StepsLine.Blank, SettingsSummary.steps(StepsAccess.CHECKING, stored))
+        assertEquals(StepsLine.Unavailable, SettingsSummary.steps(StepsAccess.UNAVAILABLE, stored))
+        assertEquals(StepsLine.Auto(garmin), SettingsSummary.steps(StepsAccess.GRANTED, stored))
+        assertEquals(StepsLine.All, SettingsSummary.steps(StepsAccess.GRANTED, StepsSourceRules.resolve(StepsChoice.All, null, null, false)))
+        val unchecked = SettingsSummary.steps(StepsAccess.GRANTED, StepsSourceRules.resolve(StepsChoice.App(garmin), null, null, false))
+        assertFalse(unchecked.warn)
+        val silent = SettingsSummary.steps(StepsAccess.GRANTED, StepsSourceRules.resolve(StepsChoice.App(garmin), null, emptyList(), true))
+        assertTrue(silent.warn)
     }
 }

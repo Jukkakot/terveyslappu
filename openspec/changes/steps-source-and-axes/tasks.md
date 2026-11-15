@@ -5,7 +5,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
 
 ## 1. Source rules (pure)
 
-- [ ] 1.1 New `steps/StepsSources.kt`: `StepsApp(id, packages)`, `StepsAppTotal(app, total, days,
+- [x] 1.1 New `steps/StepsSources.kt`: `StepsApp(id, packages)`, `StepsAppTotal(app, total, days,
   averageExToday)`, `StepsChoice` (`Auto`, `All`, `App(id)`) with `encode()`/`decode()` (corrupt or
   empty → `Auto`), `StepsSourceRules.group(origins, phoneSpn)` (decision 1: `android`, the SPN and
   the `com.android.healthconnect.phone.` prefix → one app `phone`), `pick(totals, current)`
@@ -20,10 +20,10 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   5 000 and 10 000), today left out of the average, resolve (Auto/All/App present/App absent/`phone`
   absent → `android` + saved packages; `noRecent` null before the check), choice encode/decode round
   trip and corrupt input.
-- [ ] 1.2 `SettingsSummary.steps(access, state)` → `StepsLine` (decision 7: "Ei lupaa" for NEEDS
+- [x] 1.2 `SettingsSummary.steps(access, state)` → `StepsLine` (decision 7: "Ei lupaa" for NEEDS
   and DENIED, blank for CHECKING, Unavailable, the row from the stored pick before any check, `warn`
   only for `noRecent == true`). Verify: cases added to `SettingsSummaryTest`.
-- [ ] 1.3 Pure check scheduling `StepsCheckRule.due(today, autoPickDay, lastFailureAt, now,
+- [x] 1.3 Pure check scheduling `StepsCheckRule.due(today, autoPickDay, lastFailureAt, now,
   foreground)` and `subScreenAllowed(lastFinishedAt, now)` (decision 4: due when `autoPickDay !=
   today` on a foreground read; after a failure not before 1 h; sub-screen check not within 1 min of
   the last finished check). Verify: `StepsCheckRuleTest`: same-day no repeat, next day due, failure
