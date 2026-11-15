@@ -86,7 +86,7 @@ bars of the card's own period (7, 30 or 90 days, its own menu, remembered, 7 by 
 period's first and last day and the average total ("keskim. 2 300 kcal/pv", short "2 300/pv" at
 small size), the big size's scale top and dashed average line. A tap anywhere but the period label
 SHALL open Historia on Kulutus. Without the permissions it SHALL read "Kulutus: anna lupa" and a
-tap SHALL ask for them. The card SHALL be hidden by default (see home-screen "Card grid").
+tap SHALL ask for them. The card SHALL be hidden by default (see home-screen "Card grid"); its default size is small.
 
 #### Scenario: Card added
 - **WHEN** the user adds Kulutus from Lisää kortti and taps Valmis
