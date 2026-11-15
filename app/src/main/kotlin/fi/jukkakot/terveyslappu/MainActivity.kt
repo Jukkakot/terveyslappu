@@ -136,6 +136,15 @@ class MainActivity : ComponentActivity() {
                     stepsModel.onPermissionRequested()
                     launchSafely("hc.permission.steps") { stepsLauncher.launch(stepsModel.steps.permissions) }
                 }
+                val burn by stepsModel.burn.collectAsStateWithLifecycle()
+                // energy-burn design 9: both calories read permissions together, from the Kulutus tab or card.
+                val burnLauncher = rememberLauncherForActivityResult(
+                    PermissionController.createRequestPermissionResultContract(),
+                ) { granted -> stepsModel.onBurnPermissionResult(granted) }
+                fun grantBurn() {
+                    stepsModel.onBurnPermissionRequested()
+                    launchSafely("hc.permission.burn") { burnLauncher.launch(stepsModel.burnSource.permissions) }
+                }
                 // The front page reads the steps card's range whenever it is shown (steps "Refresh and failed reads").
                 val homeShown = state.screen == Screen.HOME && state.access == Access.GRANTED
                 // Chart cards with steps widen it to their own period's start (custom-charts design 13).

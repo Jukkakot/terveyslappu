@@ -17,7 +17,7 @@ the source. No configuration, versions or other things that go stale.
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung, Health Connect from the background, widget updates |
 | Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference |
-| Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps |
+| Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps, total calories estimate fill, Garmin kcal split |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
@@ -142,3 +142,20 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   intermittently, days undercounted by 10-20 %. Garmin's own support page was not verified.
   ([Android Central](https://www.androidcentral.com/wearables/garmin/heres-everything-garmin-will-and-wont-share-with-google-health-connect),
   [Garmin forum](https://forums.garmin.com/apps-software/mobile-apps-web/f/garmin-connect-mobile-andriod/442637/android-health-connect---missing-steps-intermittently-during-sync-no-reconciliation))
+- **The total calories aggregate is partly an estimate.** `TotalCaloriesBurnedRecord.ENERGY_TOTAL`
+  is deduped by priority like steps, and every interval of the requested range with no total record
+  is filled with that interval's active calories plus basal calories: from `BasalMetabolicRate`
+  records, else from height and weight records, else defaults (73 kg, 1,7 m, age 30). The fill
+  reads those tables without the request's `dataOriginFilter`, so an origin filter does not stop
+  it, and a day with no record at all can still get a total. Only `ENERGY_TOTAL` is derived;
+  `ACTIVE_CALORIES_TOTAL` sums records only. To show only written data, read the raw records
+  first and keep only days on which the origin wrote one. The public docs say only that total
+  includes active and BMR.
+  ([TotalCaloriesBurnedRecord](https://developer.android.com/reference/kotlin/androidx/health/connect/client/records/TotalCaloriesBurnedRecord),
+  AOSP `packages/modules/HealthFitness` `TotalCaloriesBurnedRecordHelper.deriveAggregate`,
+  `DeriveTotalCaloriesBurnedHelper`, `DeriveBasalCaloriesBurnedHelper`, read 2026-11-15)
+- **Garmin's export splits each day's burn.** The account export's UDS daily summaries hold
+  `activeKilocalories`, `bmrKilocalories` and `totalKilocalories` (total = active + bmr on every
+  day); days before the watch hold BMR only. What Garmin Connect writes to Health Connect for
+  calories (whole-day totals, or active only for workouts) is not known yet; `burn.read` logs the
+  split / total-only / active-only day counts. (a real export, 2026-11-15)

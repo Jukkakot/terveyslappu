@@ -213,7 +213,7 @@
     <string name="import_skip_duplicate">sama hetki kahdesti</string>
 
     <string name="privacy_title">Tietosuoja</string>
-    <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin vaa\'alta, käsin tai tuodusta tiedostosta sekä pituutesi, jos tallennat sen Omiin tietoihin, ja lukee sieltä painot näytettäväksi ja omaan vientitiedostoosi. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
+    <string name="privacy_body">Terveyslappu kirjoittaa painon Health Connectiin vaa\'alta, käsin tai tuodusta tiedostosta sekä pituutesi, jos tallennat sen Omiin tietoihin, ja lukee sieltä painot näytettäväksi ja omaan vientitiedostoosi. Askeleet sekä kulutetun energian (kokonais ja aktiivinen) se vain lukee näytettäväksi eikä koskaan kirjoita niitä. Tietoja ei lähetetä minnekään. Sovelluksen loki pysyy puhelimessa, kunnes jaat sen itse.</string>
     <plurals name="weighin_closes_in">
         <item quantity="one">Sulkeutuu %1$d sekunnin kuluttua</item>
         <item quantity="other">Sulkeutuu %1$d sekunnin kuluttua</item>
