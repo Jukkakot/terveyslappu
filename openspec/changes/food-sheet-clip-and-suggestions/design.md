@@ -58,6 +58,34 @@ logged items.
 8. **Log**: `food.import.offer check read=true|false json=true|false done=true|false` on every
    check, `food.import.offer shown|open|skip count=` as now.
 
+## Review decisions
+
+- **Key** is computed in `openAi` from the freshly parsed `AiParsed` (before preview edits), so
+  offer, paste, share and the widget hand-over all get it with no intent extra. Canonical text:
+  each item `FoodNames.key(name)|amount|unit|kcal|treat`, products likewise with energy; numbers
+  via Double `toString()`; `skipped` not included.
+- **Done** is marked on the preview's Lisää tap (before the write; a failed write shows the usual
+  failure) and `clipOffer` is cleared at once. Kopioi tuontiohje marks the prompt example's key
+  done right after copying.
+- **Check results**: a real "no food JSON" or a done key clears `clipOffer`; a null description
+  (no focus yet) keeps the state. The widget sheet checks on every window focus gain (drop
+  `dialogClipChecked`); reads still only on a changed timestamp.
+- **Offer kcal** = the preview's total: run `AiImport.plan` (pure) on the parsed data against own
+  and base products without writing and sum item kcal. Android `plurals`, kcal via `formatKcal`.
+- **Old prefs**: key `offered` is read once as migration: a clip whose timestamp is <= it counts as
+  already answered (cached as "no offer"), then the key is removed.
+- **Placement**: Ruoka shows the button under the DayBar only when the day is shown (permission,
+  loaded, not in Järjestä). The front page notice is tappable as a whole plus Ohita; no Näytä.
+- **Draft add**: pure `FoodEdits.addEdited(...)` = build the item as `add` does, then apply the
+  `edit` rules (product energy, `lastAmount`, Herkku, rename; a base product becomes own); one
+  insert under `writes`; unit-tested. State: `editing` + `draft = true`, `editReturn` = the sheet;
+  Peruuta or dismiss keeps the previous line; Lisää clears the query and sets `SheetLine.Added`.
+  Same in `FoodAddDialog`.
+- **Rows**: two lines (name, then amount · kcal); right side the Herkku mark, then the pencil
+  `IconButton` outside the row's clickable; tags `pick-<name>`, `match-<name>`, `edit-<name>`;
+  empty and loading hints unchanged.
+- Done keys: FIFO, at most 50.
+
 ## Risks / Trade-offs
 
 - [The same JSON copied again after import is never offered] → intended; Tuo ruoka-annokset and

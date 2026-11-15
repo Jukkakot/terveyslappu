@@ -5,16 +5,16 @@
 up, adding to the day shown (today from the front page). With the field empty it SHALL show up to
 eight suggestions as a list, one row per product: the products most often logged within two hours
 of the current clock time in the last 30 days, then the most often logged products. Each row SHALL
-show the product's name, its usual amount and the kcal that amount gives ("200 g · 130 kcal";
-"ei kcal" when the energy is unknown, no amount when there is none) and the treat sign for a
-Herkku product. While typing it SHALL show up to five matching products in the same row form, own
+show the product's name and under it its usual amount and the kcal that amount gives
+("200 g · 130 kcal"; with no usual amount the energy, "140 kcal / 100 g"; "200 g · ei kcal" or
+"ei kcal" when the energy is unknown), and the treat sign for a Herkku product. While typing it SHALL show up to five matching products in the same row form, own
 products before base products. Tapping a row SHALL add that product at once at the end of the day
 with its usual amount and show a line "<name> <amount> · <kcal> · Muuta · Kumoa"; Muuta SHALL open
 the item's editor, Kumoa SHALL take it back. Every row SHALL also have an edit button that opens an
-editor for a new item of that product, filled with its usual amount, its kcal and its Herkku, with
-Lisää and Peruuta: Lisää SHALL add the item as edited (and the product remembers the amount, as
-after any add), show the same "Muuta · Kumoa" line and return to the open add field; Peruuta SHALL
-return to the field and add nothing. Leaving the item editor by Tallenna, Peruuta or Poista SHALL
+editor for a new item of that product: the same editor and rules as Muuta (name, amount and unit,
+energy, Herkku; changes reach the product as after Tallenna), filled as a tap would add it, with
+Lisää and Peruuta instead of Tallenna and Poista: Lisää SHALL add the item as edited, show the same "Muuta · Kumoa" line and return to the open add field; Peruuta SHALL
+return to the field and add nothing (as does closing the editor). Leaving the item editor by Tallenna, Peruuta or Poista SHALL
 return to the open add field, and the line SHALL then show the edited item (none after Poista).
 Pressing enter SHALL add exactly the typed text: a bare number as an item "Pikalisäys" with that
 many kcal, any other text as an item of that name (its product's kcal when the name is a known
@@ -72,19 +72,23 @@ When the front page, the Ruoka screen or the Lisää annos sheet (in the app or 
 widget or shortcut) opens or the app resumes on one of them, and the clipboard holds usable food
 JSON that has not been imported or skipped, the app SHALL offer it. In the sheet and on the Ruoka
 screen the offer SHALL be a full-width button under the add field (on Ruoka at the top of the
-day), reading "Tuo leikepöydältä: <N> annosta · <kcal> kcal" (the kcal of the items that have it;
-without the kcal part when none has; "<N> tuotetta" when the JSON holds only products), with a
+day), reading "Tuo leikepöydältä: <N> annosta · <kcal> kcal" ("1 annos"; the kcal total the preview
+would show; without the kcal part when no item has kcal; "<N> tuotetta" / "1 tuote" when the JSON
+holds only products), with a
 small Ohita next to it. On the front page it SHALL be a notice above the cards with the same text
 and Ohita. Tapping the offer SHALL open the import preview. The offer SHALL be shown again on every
 open and resume while the same content is on the clipboard, until the user saves that content on
 the preview (Lisää) or taps Ohita on its offer; after either, that content SHALL NOT be offered
-again, on any screen, also when it is copied again. Content counts as the same when its JSON is the
+again, on any screen, also when it is copied again; Kumoa of the import SHALL NOT bring it back.
+The example JSON that Kopioi tuontiohje puts on the clipboard SHALL NOT be offered. Content counts as the same when its JSON is the
 same, whatever text surrounds it. Content imported by sharing it to the app or by Tuo
 ruoka-annokset SHALL count as imported too. Peruuta on the preview SHALL leave the content offered.
 Clipboard text without food JSON SHALL show nothing. In the sheet opened from the widget or
 shortcut the clipboard SHALL be read when its window first gains focus. The app SHALL read the
-clipboard's text only when the clipboard has changed since the app last read it, and SHALL NOT read
-it anywhere else or in the background.
+clipboard's text only when the clipboard has changed since the app last read it (Android may then
+show its own "pasted" notice once per new copy) and when the offer is tapped, and SHALL NOT read it
+anywhere else or in the background. The offer SHALL NOT be shown on Ruoka without the food
+permission, before the day is read or in Järjestä, nor in the front page's edit mode.
 
 #### Scenario: Copied in the chat
 - **GIVEN** the user copied the chat's answer with food JSON of 6 items
@@ -115,6 +119,15 @@ it anywhere else or in the background.
 #### Scenario: Offered once
 - **GIVEN** the user tapped Ohita on the offer
 - **WHEN** they open the Lisää annos sheet without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Import undone
+- **GIVEN** the user saved the offered content and tapped Kumoa
+- **WHEN** they open the Ruoka screen without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Import instructions copied
+- **WHEN** the user taps Kopioi tuontiohje and opens the Ruoka screen
 - **THEN** no offer is shown
 
 #### Scenario: Other text
