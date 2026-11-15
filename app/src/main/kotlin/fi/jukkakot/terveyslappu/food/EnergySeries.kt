@@ -42,6 +42,9 @@ class EnergySeries(
             .mapNotNull { (day, list) -> DaySum.of(list).takeIf { it.logged }?.let { EnergyDay(day, it.total, it.treat) } }
             .sortedBy { it.day }
 
+        /** Own charts' entry point (custom-charts design 7): each logged day of [from]..[to] with its own kcal, never weekly. */
+        fun daily(items: Collection<FoodItem>, from: LocalDate, to: LocalDate): List<EnergyDay> = loggedDays(items).filter { it.day in from..to }
+
         /** The period's first and last day at [today]; Kaikki starts at the first log (or today). */
         fun dates(period: Period, today: LocalDate, firstLog: LocalDate?): Pair<LocalDate, LocalDate> =
             fi.jukkakot.terveyslappu.chart.AxisTicks.periodDates(period, today, firstLog)

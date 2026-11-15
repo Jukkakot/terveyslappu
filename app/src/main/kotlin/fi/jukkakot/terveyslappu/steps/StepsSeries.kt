@@ -39,6 +39,12 @@ class StepsSeries(
         private const val WINDOW = 7
         private const val MIN_IN_WINDOW = 3
 
+        /** Days with steps (more than 0), one per day, oldest first. */
+        fun stepDays(input: Collection<StepsDay>): List<StepsDay> = input.filter { it.steps > 0 }.distinctBy { it.day }.sortedBy { it.day }
+
+        /** Own charts' entry point (custom-charts design 7): each day of [from]..[to] with its own steps, never weekly. */
+        fun daily(input: Collection<StepsDay>, from: LocalDate, to: LocalDate): List<StepsDay> = stepDays(input).filter { it.day in from..to }
+
         /** The period's first and last day at [today]; Kaikki starts at the first day with steps (or today). */
         fun dates(period: Period, today: LocalDate, firstDay: LocalDate?): Pair<LocalDate, LocalDate> =
             fi.jukkakot.terveyslappu.chart.AxisTicks.periodDates(period, today, firstDay)
