@@ -138,8 +138,12 @@ class MainActivity : ComponentActivity() {
                 }
                 // The front page reads the steps card's range whenever it is shown (steps "Refresh and failed reads").
                 val homeShown = state.screen == Screen.HOME && state.access == Access.GRANTED
-                LaunchedEffect(homeShown, state.stepsDays) {
-                    if (homeShown) stepsModel.show(LocalDate.now().minusDays(state.stepsDays - 1))
+                // Chart cards with steps widen it to their own period's start (custom-charts design 13).
+                val homeStepsFrom = fi.jukkakot.terveyslappu.chart.CustomCharts.homeStepsFrom(
+                    state.stepsDays, state.homeLayout.shown.map { it.id }, state.charts, LocalDate.now(),
+                )
+                LaunchedEffect(homeShown, homeStepsFrom) {
+                    if (homeShown) stepsModel.show(homeStepsFrom)
                 }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),

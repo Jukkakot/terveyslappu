@@ -75,6 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.home.CardSize
 import fi.jukkakot.terveyslappu.home.HomeCard
@@ -107,7 +108,9 @@ internal fun HomeScreen(
     steps: StepsUiState = StepsUiState(),
     stepsActions: StepsActions = StepsActions(),
 ) {
-    val codec = remember { HomeLayoutCodec() }
+    // Chart cards are kept in the saved draft only while their chart exists (custom-charts design 2).
+    val chartIds = remember(state.charts) { state.charts.map { it.cardId }.toSet() }
+    val codec = remember(chartIds) { HomeLayoutCodec(allowedExtra = chartIds) }
     val draftState = rememberSaveable(saver = draftSaver(codec)) { mutableStateOf(null) }
     val current by rememberUpdatedState(state)
     val edit = remember(draftState) {
@@ -231,7 +234,7 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
     // The slot's gesture lives across the switch into edit mode, so it must call through these (design 5).
     val announce = remember(edit) {
         { id: String ->
-            edit.draft?.let { d -> placeText(context, d, id)?.let { view.announceForAccessibility(it) } }
+            edit.draft?.let { d -> placeText(context, d, id, data.state.charts)?.let { view.announceForAccessibility(it) } }
             Unit
         }
     }
@@ -261,7 +264,7 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
                 CardSlot(card, layout, data, unit, editing, dragging, edit, onLongPress, announce)
             }
         }
-        if (draft != null) item(key = "editTools", span = full) { EditTools(draft, edit) }
+        if (draft != null) item(key = "editTools", span = full) { EditTools(draft, edit, data.state.charts, data.actions) }
     }
 }
 
@@ -283,7 +286,7 @@ private fun ReorderableCollectionItemScope.CardSlot(
     announce: (String) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
-    val name = stringResource(cardName(card.id))
+    val name = cardLabel(card.id, data.state.charts)
     val index = layout.indexOf(card.id)
     val description = stringResource(R.string.home_edit_card, name, index + 1, layout.shown.size, stringResource(sizeName(card.size)))
     val editLabel = stringResource(R.string.home_edit_title)
@@ -417,8 +420,24 @@ private fun editActions(card: HomeCard, layout: HomeLayout, edit: HomeEditor, an
 
 /** Under the grid in edit mode: Lisää kortti (the hidden cards) and Palauta oletus (design 6). */
 @Composable
-private fun EditTools(draft: HomeLayout, edit: HomeEditor) {
+private fun EditTools(draft: HomeLayout, edit: HomeEditor, charts: List<CustomChart>, actions: MainActions) {
     var open by remember { mutableStateOf(false) }
+    // Uusi kaavio from Lisää kortti: the editor over the front page; the edit draft stays (design 14).
+    var newChart by rememberSaveable { mutableStateOf(false) }
+    if (newChart) {
+        ChartEditor(
+            existing = null,
+            charts = charts,
+            onSave = { chart ->
+                newChart = false
+                val id = actions.onSaveChart(chart)
+                edit.draft?.let { edit.update(it.addChart(CustomChart.cardId(id))) }
+            },
+            onDelete = {},
+            onDismiss = { newChart = false },
+        )
+    }
+    val addable = charts.filter { !draft.contains(it.cardId) }
     Row(
         Modifier.fillMaxWidth().padding(top = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -427,7 +446,6 @@ private fun EditTools(draft: HomeLayout, edit: HomeEditor) {
         Box {
             OutlinedButton(
                 onClick = { open = true },
-                enabled = draft.hidden.isNotEmpty(),
                 modifier = Modifier.heightIn(min = 48.dp).testTag("editAdd"),
                 contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
             ) {
@@ -439,7 +457,7 @@ private fun EditTools(draft: HomeLayout, edit: HomeEditor) {
             DropdownMenu(expanded = open, onDismissRequest = { open = false }, modifier = Modifier.heightIn(max = 320.dp)) {
                 draft.hidden.forEach { card ->
                     DropdownMenuItem(
-                        text = { Text(stringResource(cardName(card.id))) },
+                        text = { Text(cardLabel(card.id, charts)) },
                         leadingIcon = { Icon(painterResource(cardIcon(card.id)), contentDescription = null) },
                         onClick = {
                             open = false
@@ -448,6 +466,27 @@ private fun EditTools(draft: HomeLayout, edit: HomeEditor) {
                         modifier = Modifier.testTag("editAddItem-${card.id}"),
                     )
                 }
+                // Charts not on the front page, in tab order, then Uusi kaavio (home-screen "Chart cards").
+                addable.forEach { chart ->
+                    DropdownMenuItem(
+                        text = { Text(chart.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        leadingIcon = { Icon(painterResource(R.drawable.ic_chart), contentDescription = null) },
+                        onClick = {
+                            open = false
+                            edit.update(draft.addChart(chart.cardId))
+                        },
+                        modifier = Modifier.testTag("editAddItem-${chart.cardId}"),
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.chart_new)) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
+                    onClick = {
+                        open = false
+                        newChart = true
+                    },
+                    modifier = Modifier.testTag("editAddNewChart"),
+                )
             }
         }
         TextButton(onClick = { edit.update(draft.reset()) }, enabled = !draft.isDefault, modifier = Modifier.heightIn(min = 48.dp).testTag("editReset")) {
@@ -505,6 +544,11 @@ internal object LongPressEntry : DragGestureDetector {
     }
 }
 
+/** A card's name: a feature card's, or an own chart's own name. */
+@Composable
+private fun cardLabel(id: String, charts: List<CustomChart>): String =
+    charts.firstOrNull { it.cardId == id }?.name ?: stringResource(cardName(id))
+
 private fun cardName(id: String): Int = when (id) {
     HomeLayout.WEIGHT -> R.string.home_card_weight
     HomeLayout.FOOD -> R.string.home_card_food
@@ -514,7 +558,8 @@ private fun cardName(id: String): Int = when (id) {
 private fun cardIcon(id: String): Int = when (id) {
     HomeLayout.WEIGHT -> R.drawable.ic_scale
     HomeLayout.FOOD -> R.drawable.ic_restaurant
-    else -> R.drawable.ic_walk
+    HomeLayout.STEPS -> R.drawable.ic_walk
+    else -> R.drawable.ic_chart
 }
 
 /** The menu's size names: Pieni, Leveä, Iso. */
@@ -532,7 +577,8 @@ private fun sizeName(size: CardSize): Int = when (size) {
 }
 
 /** "Ruoka, 1/3": the card's new place, announced after a move or a resize (design 13). */
-private fun placeText(context: android.content.Context, layout: HomeLayout, id: String): String? {
+private fun placeText(context: android.content.Context, layout: HomeLayout, id: String, charts: List<CustomChart>): String? {
     val index = layout.indexOf(id).takeIf { it >= 0 } ?: return null
-    return context.getString(R.string.home_edit_place, context.getString(cardName(id)), index + 1, layout.shown.size)
+    val name = charts.firstOrNull { it.cardId == id }?.name ?: context.getString(cardName(id))
+    return context.getString(R.string.home_edit_place, name, index + 1, layout.shown.size)
 }

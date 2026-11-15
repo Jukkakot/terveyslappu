@@ -116,6 +116,7 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
         }
         HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.actions.onOpenEnergy, data.foodActions, modifier)
         HomeLayout.STEPS -> StepsCard(data.steps, state.stepsDays, today, card.size, data.stepsActions, modifier)
+        else -> state.charts.firstOrNull { it.cardId == card.id }?.let { ChartCard(it, data, card.size, modifier) }
     }
 }
 
@@ -247,12 +248,12 @@ private fun AddButton(today: LocalDate, actions: FoodActions, modifier: Modifier
 
 /** A card's icon, title and (when it opens something) chevron. */
 @Composable
-private fun CardTitle(icon: Int, title: String, chevron: Boolean) {
+internal fun CardTitle(icon: Int, title: String, chevron: Boolean) {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(icon), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         if (chevron) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
     }
 }

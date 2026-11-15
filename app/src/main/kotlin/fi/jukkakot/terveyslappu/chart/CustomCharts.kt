@@ -151,6 +151,19 @@ object CustomCharts {
     fun update(list: ChartList, chart: CustomChart): ChartList =
         list.copy(charts = list.charts.map { if (it.id == chart.id) chart.copy(name = chart.name.trim()) else it })
 
+    /**
+     * The first day the front page reads steps from (custom-charts design 13): the steps card's start
+     * or, earlier, the start of a shown chart card with steps; null (everything) for such a card on Kaikki.
+     */
+    fun homeStepsFrom(stepsDays: Long, shownCardIds: List<String>, charts: List<CustomChart>, today: java.time.LocalDate): java.time.LocalDate? {
+        val card = today.minusDays(stepsDays - 1)
+        val starts = charts.filter { it.cardId in shownCardIds && it.has(SeriesKind.STEPS) }.map { chart ->
+            if (chart.period == Period.All) return null
+            AxisTicks.periodDates(chart.period, today, null).first
+        }
+        return (starts + card).min()
+    }
+
     /** The period in the log (`last30`, `all`, `custom`): never dates (design 17). */
     fun logPeriod(period: Period): String = when (period) {
         is Period.Last -> "last${period.days}"

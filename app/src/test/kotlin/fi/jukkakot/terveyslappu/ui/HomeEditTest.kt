@@ -290,7 +290,7 @@ class HomeEditTest {
     fun `hide steps, Valmis, steps gone`() {
         show()
         enter()
-        node("editAdd").assertIsNotEnabled()
+        node("editAdd").assertIsEnabled() // always: it lists the charts and Uusi kaavio (home-screen "Chart cards")
         menu(STEPS, "editHide-steps")
         node("editDone").performClick()
         assertEquals(listOf(WEIGHT, FOOD), order())
