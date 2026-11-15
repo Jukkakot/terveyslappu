@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.weight.weightEntry
@@ -31,6 +32,35 @@ class LargeTextTest {
         compose.setContent {
             TerveysTheme {
                 MainScreen(MainUiState(access = Access.GRANTED, weights = weights, screen = screen), "0.1.1-test", MainActions())
+            }
+        }
+    }
+
+    /** steps-source-and-axes design 8: at 360 dp and font scale 1.3 no two chart labels overlap. */
+    @Test
+    @Config(fontScale = 1.3f)
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun `Askeleet's chart labels do not overlap at 360 dp and font scale 1_3`() {
+        val today = java.time.LocalDate.now()
+        val steps = fi.jukkakot.terveyslappu.steps.StepsUiState(
+            access = fi.jukkakot.terveyslappu.steps.StepsAccess.GRANTED,
+            days = (0L..29L).map { fi.jukkakot.terveyslappu.steps.StepsDay(today.minusDays(it), 6_000L + it * 137) },
+        )
+        var shown by androidx.compose.runtime.mutableStateOf(fi.jukkakot.terveyslappu.chart.Period.WEEK)
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = shown), "0.1.1-test", MainActions(), steps = steps)
+            }
+        }
+        fun all(tag: String) = compose.onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+        for (period in listOf(fi.jukkakot.terveyslappu.chart.Period.WEEK, fi.jukkakot.terveyslappu.chart.Period.MONTH, fi.jukkakot.terveyslappu.chart.Period.YEAR)) {
+            shown = period
+            compose.waitForIdle()
+            val boxes = listOf("stepsAxis-", "stepsWeightsAxis-").flatMap { prefix -> (0..2).flatMap { all("$prefix$it") } } +
+                all("stepsDates-label") + all("stepsLegend-entry")
+            kotlin.test.assertTrue(boxes.size >= 6 + 3 + 3, "$period: ${boxes.size} labels")
+            for (i in boxes.indices) for (j in i + 1 until boxes.size) {
+                kotlin.test.assertFalse(boxes[i].overlaps(boxes[j]), "$period: label $i ${boxes[i]} overlaps label $j ${boxes[j]}")
             }
         }
     }

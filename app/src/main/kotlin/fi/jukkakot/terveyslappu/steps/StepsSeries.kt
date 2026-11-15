@@ -40,11 +40,8 @@ class StepsSeries(
         private const val MIN_IN_WINDOW = 3
 
         /** The period's first and last day at [today]; Kaikki starts at the first day with steps (or today). */
-        fun dates(period: Period, today: LocalDate, firstDay: LocalDate?): Pair<LocalDate, LocalDate> = when (period) {
-            is Period.Last -> today.minusDays(period.days - 1) to today
-            Period.All -> (firstDay?.takeIf { it <= today } ?: today) to today
-            is Period.Custom -> period.from to period.to
-        }
+        fun dates(period: Period, today: LocalDate, firstDay: LocalDate?): Pair<LocalDate, LocalDate> =
+            fi.jukkakot.terveyslappu.chart.AxisTicks.periodDates(period, today, firstDay)
 
         /** [input] in any order; days with no steps (0 or less) count as gaps. */
         fun of(input: Collection<StepsDay>, period: Period, today: LocalDate): StepsSeries {

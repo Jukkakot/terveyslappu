@@ -388,8 +388,10 @@
     <string name="steps_per_day">%1$s askelta/pv</string>
     <string name="steps_value">%1$s askelta</string>
     <string name="steps_point">%1$s: %2$s askelta</string>
-    <string name="steps_weekly">Viikkopalkit: keskiarvo askelpäivää kohden</string>
-    <string name="steps_legend">Askeleet</string>
+    <string name="steps_legend">askeleet</string>
+    <string name="legend_weight">paino</string>
+    <string name="legend_bmi">BMI</string>
+    <string name="legend_weekly">viikoittain</string>
     <string name="steps_source_phone">Puhelin</string>
     <string name="settings_steps">Askeleet</string>
     <string name="settings_steps_auto">Automaattinen: %1$s</string>
@@ -421,7 +423,6 @@
     <string name="energy_stat_days">Kirjattu</string>
     <string name="energy_per_day">%1$s kcal/pv</string>
     <string name="energy_days">%1$d / %2$d päivää</string>
-    <string name="energy_weekly">Viikkopalkit: keskiarvo kirjattua päivää kohden</string>
     <string name="energy_legend_food">ruoka</string>
     <string name="energy_legend_treat">herkut</string>
     <string name="energy_legend_average">7 pv keskiarvo</string>

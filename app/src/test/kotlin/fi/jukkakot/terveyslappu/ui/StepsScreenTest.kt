@@ -23,6 +23,10 @@ import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceRules
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertTextEquals
 import fi.jukkakot.terveyslappu.steps.StepsDay
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import fi.jukkakot.terveyslappu.weight.weightEntry
@@ -164,6 +168,49 @@ class StepsScreenTest {
         compose.onNodeWithTag("stepsChangeSource").performClick()
         assertEquals(1, sourceOpened)
         compose.onNodeWithTag("stepsSource").assertExists()
+    }
+
+    @Test
+    fun `Askeleet's axes show units, three y labels and 3 to 5 dates`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.MONTH), granted)
+        compose.onNodeWithTag("stepsAxis-0", useUnmergedTree = true).assertTextEquals("0 askelta")
+        compose.onNodeWithTag("stepsAxis-2", useUnmergedTree = true).assertExists()
+        val dates = compose.onAllNodesWithTag("stepsDates-label", useUnmergedTree = true).fetchSemanticsNodes().size
+        assertTrue(dates in 3..5, "$dates dates")
+        compose.onNodeWithTag("stepsWeightsAxis-2", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("stepsLegend").assertExists()
+        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun `a year's dates read month and year`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.YEAR), granted)
+        val labels = compose.onAllNodesWithTag("stepsDates-label", useUnmergedTree = true).fetchSemanticsNodes()
+            .map { it.config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString() }
+        assertTrue(labels.isNotEmpty() && labels.all { "/" in it }, labels.toString())
+        compose.onNodeWithText("viikoittain", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `Energia's legend has paino only with weights in the period`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
+        compose.onNodeWithTag("energyLegend").assertExists()
+        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun `Energia without weights in the period has no paino entry`() {
+        val old = listOf(weightEntry("old", now.minusSeconds(60 * 86_400L), null, 82.0, "me", "me"))
+        show(MainUiState(access = Access.GRANTED, weights = old, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
+        compose.onNodeWithTag("energyLegend").assertExists()
+        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun `Paino shows its legend`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, period = Period.WEEK), granted)
+        compose.onNodeWithTag("chartLegend").assertExists()
+        compose.onNodeWithText("paino", useUnmergedTree = true).assertExists()
     }
 
     @Test

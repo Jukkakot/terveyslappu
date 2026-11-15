@@ -18,6 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,13 +35,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.WeightScale
 import fi.jukkakot.terveyslappu.food.EnergyDay
 import fi.jukkakot.terveyslappu.food.EnergySeries
@@ -44,7 +49,6 @@ import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
-import kotlin.math.ceil
 import kotlin.math.max
 
 /**
@@ -84,116 +88,141 @@ private fun EnergyChart(series: EnergySeries, weights: List<WeightEntry>, zone: 
     val grid = colors.outlineVariant
     val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
     val top = max(series.bars.maxOf { it.total }, series.average.maxOfOrNull { it.kcal } ?: 0)
-    val maxKcal = (ceil(top * 1.1 / 500.0) * 500).coerceAtLeast(500.0)
+    val ticks = AxisTicks.bars(top.toDouble(), KCAL_STEP)
+    val maxKcal = ticks.last()
     val description = stringResource(R.string.energy_chart_description, series.bars.size)
-    val small = MaterialTheme.typography.labelSmall
+    val labels = ticks.map { stringResource(R.string.food_kcal, formatKcal(it)) }
+    val weightData = remember(series.from, series.to, weights, zone) { periodWeights(series.from, series.to, weights, zone) }
+    val weightLabels = weightData?.labels(units = true).orEmpty()
+    val labelWidth = axisLabelWidth(labels + weightLabels)
     Column(Modifier.fillMaxWidth().testTag("energyChart").semantics { contentDescription = description }) {
-        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
-            Text(stringResource(R.string.food_kcal, formatKcal(maxKcal)), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (series.weekly) Text(stringResource(R.string.energy_weekly), style = small, color = colors.onSurfaceVariant)
-        }
-        Canvas(
-            Modifier.fillMaxWidth().height(160.dp).pointerInput(series) {
-                detectTapGestures { offset ->
-                    val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
-                    val day = series.from.plusDays(index.toLong())
-                    val logged: EnergyDay? = if (series.weekly) {
-                        // A week's bar opens its latest logged day.
-                        series.days.firstOrNull { it.day.with(java.time.DayOfWeek.MONDAY) == day.with(java.time.DayOfWeek.MONDAY) }
-                    } else {
-                        series.days.firstOrNull { it.day == day }
+        Row(Modifier.fillMaxWidth()) {
+            YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "energyAxis")
+            Canvas(
+                Modifier.weight(1f).height(BAR_PLOT).pointerInput(series) {
+                    detectTapGestures { offset ->
+                        val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
+                        val day = series.from.plusDays(index.toLong())
+                        val logged: EnergyDay? = if (series.weekly) {
+                            // A week's bar opens its latest logged day.
+                            series.days.firstOrNull { it.day.with(java.time.DayOfWeek.MONDAY) == day.with(java.time.DayOfWeek.MONDAY) }
+                        } else {
+                            series.days.firstOrNull { it.day == day }
+                        }
+                        logged?.let { onOpenDay(it.day) }
                     }
-                    logged?.let { onOpenDay(it.day) }
+                },
+            ) {
+                val dayW = size.width / days
+                fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
+                fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
+                drawGuidelines(grid, ticks.map { y(it) })
+                for (bar in series.bars) {
+                    val span = bar.days * dayW
+                    val left = x(bar.from).toFloat() + span * 0.15f
+                    val width = max(span * 0.7f, 1.dp.toPx())
+                    val baseTop = y((bar.total - bar.treat).toDouble())
+                    drawRect(food, Offset(left, baseTop), Size(width, size.height - baseTop))
+                    if (bar.treat > 0) {
+                        val treatTop = y(bar.total.toDouble())
+                        drawRect(treat, Offset(left, treatTop), Size(width, baseTop - treatTop))
+                    }
                 }
+                if (series.average.size > 1) {
+                    val path = Path()
+                    series.average.forEachIndexed { i, p ->
+                        val px = x(p.day).toFloat() + dayW / 2
+                        val py = y(p.kcal.toDouble())
+                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                    }
+                    drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+                }
+            }
+        }
+        weightData?.let { PeriodWeights(series.from, series.to, it, labelWidth, "energyWeights") }
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Spacer(Modifier.width(labelWidth))
+            DateAxis(series.from, series.to, "energyDates", Modifier.weight(1f))
+        }
+        ChartLegend(
+            buildList {
+                add(LegendEntry(stringResource(R.string.energy_legend_food), food))
+                add(LegendEntry(stringResource(R.string.energy_legend_treat), treat))
+                if (series.average.size > 1) add(LegendEntry(stringResource(R.string.energy_legend_average), line, line = true))
+                if (weightData != null) add(LegendEntry(stringResource(R.string.legend_weight), colors.secondary, line = true))
+                if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
             },
-        ) {
-            val dayW = size.width / days
-            fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
-            fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
-            drawLine(grid, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
-            drawLine(grid, Offset(0f, y(maxKcal / 2)), Offset(size.width, y(maxKcal / 2)), strokeWidth = 0.5.dp.toPx())
-            for (bar in series.bars) {
-                val span = bar.days * dayW
-                val left = x(bar.from).toFloat() + span * 0.15f
-                val width = max(span * 0.7f, 1.dp.toPx())
-                val baseTop = y((bar.total - bar.treat).toDouble())
-                drawRect(food, Offset(left, baseTop), Size(width, size.height - baseTop))
-                if (bar.treat > 0) {
-                    val treatTop = y(bar.total.toDouble())
-                    drawRect(treat, Offset(left, treatTop), Size(width, baseTop - treatTop))
-                }
-            }
-            if (series.average.size > 1) {
-                val path = Path()
-                series.average.forEachIndexed { i, p ->
-                    val px = x(p.day).toFloat() + dayW / 2
-                    val py = y(p.kcal.toDouble())
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                }
-                drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-            }
-        }
-        Legend(food, treat, line, series.average.size > 1)
-        PeriodWeights(series.from, series.to, weights, zone, "energyWeights")
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics {}) {
-            Text(formatShortDay(series.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text(formatShortDay(series.to), style = small, color = colors.onSurfaceVariant)
-        }
+            "energyLegend",
+        )
+    }
+}
+
+/** The weights of a bar chart's period (Energia, Askeleet) and their scale; null when there are none. */
+internal class PeriodWeightData(val shown: List<WeightEntry>, val scale: fi.jukkakot.terveyslappu.chart.KgRange, val zone: ZoneId) {
+    val ticks: List<Double> get() = AxisTicks.line(scale.min, scale.max)
+
+    /** Bottom, middle, top; [units] false keeps the unit on the top label only. */
+    fun labels(units: Boolean): List<String> = ticks.mapIndexed { i, v -> if (units || i == ticks.lastIndex) "${formatAxisKg(v)} kg" else formatAxisKg(v) }
+}
+
+internal fun periodWeights(from: LocalDate, to: LocalDate, weights: List<WeightEntry>, zone: ZoneId): PeriodWeightData? {
+    val shown = weights.filter { val d = it.time.atZone(zone).toLocalDate(); d >= from && d <= to }.sortedBy { it.time }
+    if (shown.isEmpty()) return null
+    return PeriodWeightData(shown, WeightScale.of(shown.map { it.kg }), zone)
+}
+
+/** Three faint guidelines at [ys] (bottom, middle, top). */
+internal fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGuidelines(color: Color, ys: List<Float>) {
+    ys.forEachIndexed { i, y ->
+        val yy = y.coerceIn(0f, size.height)
+        drawLine(color, Offset(0f, yy), Offset(size.width, yy), strokeWidth = (if (i == 0) 1.dp else 0.5.dp).toPx())
     }
 }
 
 /**
- * The weights of the period's days under a bar chart (Energia, Askeleet), on the same x positions
- * and with the shared weight scale; nothing when the period has no weights.
+ * The period's weights under a bar chart (Energia, Askeleet), on the same x positions, with the
+ * shared weight scale and all three labels in the shared label column (design 8); when three labels
+ * do not fit the strip's height, the unit stays on the top label only.
  */
 @Composable
-internal fun PeriodWeights(from: LocalDate, to: LocalDate, weights: List<WeightEntry>, zone: ZoneId, tag: String) {
+internal fun PeriodWeights(from: LocalDate, to: LocalDate, data: PeriodWeightData, labelWidth: Dp, tag: String) {
     val colors = MaterialTheme.colorScheme
     val weightColor = colors.secondary
-    val small = MaterialTheme.typography.labelSmall
+    val grid = colors.outlineVariant
     val days = (ChronoUnit.DAYS.between(from, to) + 1).toInt().coerceAtLeast(1)
-    val shown = weights.filter { val d = it.time.atZone(zone).toLocalDate(); d >= from && d <= to }.sortedBy { it.time }
-    if (shown.isEmpty()) return
-    val scale = WeightScale.of(shown.map { it.kg })
-    Row(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics {}) {
-        Text("${formatKg(scale.max)} kg", style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelSmall
+    val density = LocalDensity.current
+    val fits = remember(style, density) {
+        val h = with(density) { measurer.measure("0", style).size.height.toDp() }
+        h * 3 + 4.dp <= WEIGHT_STRIP
     }
-    Canvas(Modifier.fillMaxWidth().height(64.dp).clipToBounds().testTag(tag)) {
-        val start = from.atStartOfDay(zone).toInstant().epochSecond
-        val spanSeconds = days * 86_400f
-        fun at(e: WeightEntry) = Offset(
-            size.width * ((e.time.epochSecond - start) / spanSeconds).coerceIn(0f, 1f),
-            size.height * ((scale.max - e.kg) / scale.span).toFloat(),
-        )
-        if (shown.size > 1) {
-            val path = Path()
-            shown.forEachIndexed { i, e -> at(e).let { p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) } }
-            drawPath(path, weightColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-        }
-        drawCircle(weightColor, radius = 3.dp.toPx(), center = at(shown.last()))
-    }
-}
-
-@Composable
-private fun Legend(food: Color, treat: Color, line: Color, average: Boolean) {
-    val small = MaterialTheme.typography.labelSmall
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Swatch(food)
-        Text(stringResource(R.string.energy_legend_food), style = small, color = muted)
-        Swatch(treat)
-        Text(stringResource(R.string.energy_legend_treat), style = small, color = muted)
-        if (average) {
-            Box(Modifier.size(width = 12.dp, height = 2.dp).background(line))
-            Text(stringResource(R.string.energy_legend_average), style = small, color = muted)
+    val scale = data.scale
+    Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        YAxisLabels(data.labels(units = fits), listOf(0f, 0.5f, 1f), labelWidth, WEIGHT_STRIP, "${tag}Axis")
+        Canvas(Modifier.weight(1f).height(WEIGHT_STRIP).clipToBounds().testTag(tag)) {
+            val start = from.atStartOfDay(data.zone).toInstant().epochSecond
+            val spanSeconds = days * 86_400f
+            fun yOf(kg: Double) = size.height * ((scale.max - kg) / scale.span).toFloat()
+            fun at(e: WeightEntry) = Offset(
+                size.width * ((e.time.epochSecond - start) / spanSeconds).coerceIn(0f, 1f),
+                yOf(e.kg),
+            )
+            drawGuidelines(grid, data.ticks.map { yOf(it) })
+            val shown = data.shown
+            if (shown.size > 1) {
+                val path = Path()
+                shown.forEachIndexed { i, e -> at(e).let { p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) } }
+                drawPath(path, weightColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+            }
+            drawCircle(weightColor, radius = 3.dp.toPx(), center = at(shown.last()))
         }
     }
 }
 
-@Composable
-private fun Swatch(color: Color) {
-    Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(color))
-}
+/** Height of a bar plot. */
+internal val BAR_PLOT = 160.dp
+private const val KCAL_STEP = 250.0
 
 @Composable
 private fun EnergyStatsTiles(series: EnergySeries) {

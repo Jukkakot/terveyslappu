@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,13 +36,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
@@ -54,7 +56,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
-import kotlin.math.ceil
 import kotlin.math.max
 
 /** What the steps card and the Askeleet tab can ask for; the activity wires these (steps design 5, 8). */
@@ -201,74 +202,78 @@ private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: Zo
     val grid = colors.outlineVariant
     val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
     val top = max(series.bars.maxOf { it.steps }, series.average.maxOfOrNull { it.steps } ?: 0L)
-    val maxSteps = (ceil(top * 1.1 / 2000.0) * 2000).coerceAtLeast(2000.0)
+    val ticks = AxisTicks.bars(top.toDouble(), STEPS_STEP)
+    val maxSteps = ticks.last()
     val description = stringResource(R.string.steps_chart_description, series.bars.size)
-    val small = MaterialTheme.typography.labelSmall
+    val labels = ticks.map { stringResource(R.string.steps_value, formatSteps(it.toLong())) }
+    val weightData = remember(series.from, series.to, weights, zone) { periodWeights(series.from, series.to, weights, zone) }
+    val labelWidth = axisLabelWidth(labels + weightData?.labels(units = true).orEmpty())
     // A tapped bar shows its day (a week: its Monday) and steps (weight-chart "Day details").
     var picked by remember(series) { mutableStateOf<StepsDay?>(null) }
     Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }) {
-        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
-            Text(formatSteps(maxSteps.toLong()), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (series.weekly) Text(stringResource(R.string.steps_weekly), style = small, color = colors.onSurfaceVariant)
-        }
-        Canvas(
-            Modifier.fillMaxWidth().height(160.dp).testTag("stepsBars").pointerInput(series) {
-                detectTapGestures { offset ->
-                    val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
-                    val day = series.from.plusDays(index.toLong())
-                    picked = if (series.weekly) {
-                        val monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                        series.bars.firstOrNull { it.from == monday }?.let { StepsDay(it.from, it.steps) }
-                    } else {
-                        series.days.firstOrNull { it.day == day }
+        Row(Modifier.fillMaxWidth()) {
+            YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "stepsAxis")
+            Canvas(
+                Modifier.weight(1f).height(BAR_PLOT).testTag("stepsBars").pointerInput(series) {
+                    detectTapGestures { offset ->
+                        val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
+                        val day = series.from.plusDays(index.toLong())
+                        picked = if (series.weekly) {
+                            val monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                            series.bars.firstOrNull { it.from == monday }?.let { StepsDay(it.from, it.steps) }
+                        } else {
+                            series.days.firstOrNull { it.day == day }
+                        }
                     }
+                },
+            ) {
+                val dayW = size.width / days
+                fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
+                fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
+                drawGuidelines(grid, ticks.map { y(it) })
+                for (bar in series.bars) {
+                    val span = bar.days * dayW
+                    val left = x(bar.from).toFloat() + span * 0.15f
+                    val width = max(span * 0.7f, 1.dp.toPx())
+                    val barTop = y(bar.steps.toDouble())
+                    drawRect(barColor, Offset(left, barTop), Size(width, size.height - barTop))
                 }
-            },
-        ) {
-            val dayW = size.width / days
-            fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
-            fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
-            drawLine(grid, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
-            drawLine(grid, Offset(0f, y(maxSteps / 2)), Offset(size.width, y(maxSteps / 2)), strokeWidth = 0.5.dp.toPx())
-            for (bar in series.bars) {
-                val span = bar.days * dayW
-                val left = x(bar.from).toFloat() + span * 0.15f
-                val width = max(span * 0.7f, 1.dp.toPx())
-                val barTop = y(bar.steps.toDouble())
-                drawRect(barColor, Offset(left, barTop), Size(width, size.height - barTop))
-            }
-            if (series.average.size > 1) {
-                val path = Path()
-                series.average.forEachIndexed { i, p ->
-                    val px = x(p.day).toFloat() + dayW / 2
-                    val py = y(p.steps.toDouble())
-                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                if (series.average.size > 1) {
+                    val path = Path()
+                    series.average.forEachIndexed { i, p ->
+                        val px = x(p.day).toFloat() + dayW / 2
+                        val py = y(p.steps.toDouble())
+                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                    }
+                    drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
                 }
-                drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(barColor))
-            Text(stringResource(R.string.steps_legend), style = small, color = colors.onSurfaceVariant)
-            if (series.average.size > 1) {
-                Box(Modifier.size(width = 12.dp, height = 2.dp).background(line))
-                Text(stringResource(R.string.energy_legend_average), style = small, color = colors.onSurfaceVariant)
             }
         }
         picked?.let {
             Text(
                 stringResource(R.string.steps_point, formatShortDay(it.day), formatSteps(it.steps)),
                 style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(top = 4.dp).testTag("stepsPicked"),
+                modifier = Modifier.padding(top = 4.dp, start = labelWidth).testTag("stepsPicked"),
             )
         }
-        PeriodWeights(series.from, series.to, weights, zone, "stepsWeights")
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp).clearAndSetSemantics {}) {
-            Text(formatShortDay(series.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text(formatShortDay(series.to), style = small, color = colors.onSurfaceVariant)
+        weightData?.let { PeriodWeights(series.from, series.to, it, labelWidth, "stepsWeights") }
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Spacer(Modifier.width(labelWidth))
+            DateAxis(series.from, series.to, "stepsDates", Modifier.weight(1f))
         }
+        ChartLegend(
+            buildList {
+                add(LegendEntry(stringResource(R.string.steps_legend), barColor))
+                if (series.average.size > 1) add(LegendEntry(stringResource(R.string.energy_legend_average), line, line = true))
+                if (weightData != null) add(LegendEntry(stringResource(R.string.legend_weight), colors.secondary, line = true))
+                if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
+            },
+            "stepsLegend",
+        )
     }
 }
+
+private const val STEPS_STEP = 1000.0
 
 @Composable
 private fun StepsStatsTiles(series: StepsSeries) {

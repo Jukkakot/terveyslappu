@@ -95,30 +95,36 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
 
 ## 4. Chart axes and legends
 
-- [ ] 4.1 New pure `chart/AxisTicks.kt` (decision 8: `bars`, `line`, `dates(from, to, count)`,
+- [x] 4.1 New pure `chart/AxisTicks.kt` (decision 8: `bars`, `line`, `dates(from, to, count)`,
   `fitCount(...)`, date format switch at span ≥ 365 days). Verify: `AxisTicksTest`: 9 400 steps →
   0/6 000/12 000; kcal 2 200 → 0/1 250/2 500; 95..100 → 95/97.5/100; dates for spans 0, 1, 2, 7
   (4 labels: 9., 11., 13., 15.11.), 30, 90, 364, 365, 3 years: first = from, last = to, 3–5
   labels, even spacing (±1 day), the same values for weekly and daily bars; `fitCount` takes 5 when
   they fit, fewer for wide labels, never fewer than 3; 364 days → `d.M.`, 365 days → `M/yyyy`.
-- [ ] 4.2 Canvas charts: Energia and Askeleet bars and `PeriodWeights` get the label column (shared
+- [x] 4.2 Canvas charts: Energia and Askeleet bars and `PeriodWeights` get the label column (shared
   width per tab), three guidelines and labels with units (top and bottom labels clamped inside the
   plot), the weight strip of about 80 dp with all three labels (the unit on the top label only when
   three labels with units do not fit), and the `AxisTicks.dates` row under the plot with the count
   from `fitCount` measured via `rememberTextMeasurer`; replace the existing top-label `Row`s and the
   first/last date `Row`. Use `formatKg` with at most one decimal for the weight labels.
-- [ ] 4.3 Paino/BMI (Vico): custom vertical and horizontal item placers from `AxisTicks.line` and
+- [x] 4.3 Paino/BMI (Vico): custom vertical and horizontal item placers from `AxisTicks.line` and
   `AxisTicks.dates` (same count rule); BMI labels stay bare numbers; remove
   `ChartData.labelSpacing` if unused (update `ChartDataTest`). Verify: a test compares the Vico
   placer's label values with `AxisTicks.dates` for the same periods (1 vk, 1 kk, 3 kk, 1 v, Kaikki).
-- [ ] 4.4 Shared `ChartLegend` (decision 9) used by all four tabs; "paino" only when weights are
+  *Done:* Vico 3.3.1's placer interfaces take explicit values (`FixedXPlacer`, `FixedYPlacer` in
+  `ui/WeightChart.kt`); the placer's x values are `ChartData.labelXs`, which `AxisTicksTest` compares
+  with `AxisTicks.dates`. Vico centres its labels (extremes shifted inside), so `fitCount`'s
+  start/end alignment is an approximation there.
+- [x] 4.4 Shared `ChartLegend` (decision 9) used by all four tabs; "paino" only when weights are
   drawn; FlowRow wraps; "viikoittain" in the legend row over 90 days, replacing the
   `steps_weekly` / `energy_weekly` note lines.
-- [ ] 4.5 Smoke tests: Askeleet shows `0 askelta` and the top label and 3–5 date labels; Energia's
+- [x] 4.5 Smoke tests: Askeleet shows `0 askelta` and the top label and 3–5 date labels; Energia's
   legend has "paino" with weights and not without; Paino shows its legend; the 1 v period shows
   month/year labels. `LargeTextTest` at 360 dp and font scale 1.3: label bounds (y labels, date
   labels, legend) do not intersect; if they do, reduce dates or drop the units from the middle and
   bottom labels per decision 8 and note it in the task.
+  *Done:* no overlap at 360 dp / 1.3 for 1 vk, 1 kk and 1 v, nothing reduced. The test runs in
+  Robolectric's native graphics mode (legacy mode measures text with fake widths).
 
 ## 5. Help, context, version
 

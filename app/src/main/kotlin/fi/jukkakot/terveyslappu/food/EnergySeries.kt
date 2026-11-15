@@ -43,11 +43,8 @@ class EnergySeries(
             .sortedBy { it.day }
 
         /** The period's first and last day at [today]; Kaikki starts at the first log (or today). */
-        fun dates(period: Period, today: LocalDate, firstLog: LocalDate?): Pair<LocalDate, LocalDate> = when (period) {
-            is Period.Last -> today.minusDays(period.days - 1) to today
-            Period.All -> (firstLog?.takeIf { it <= today } ?: today) to today
-            is Period.Custom -> period.from to period.to
-        }
+        fun dates(period: Period, today: LocalDate, firstLog: LocalDate?): Pair<LocalDate, LocalDate> =
+            fi.jukkakot.terveyslappu.chart.AxisTicks.periodDates(period, today, firstLog)
 
         fun of(items: Collection<FoodItem>, period: Period, today: LocalDate): EnergySeries {
             val all = loggedDays(items)

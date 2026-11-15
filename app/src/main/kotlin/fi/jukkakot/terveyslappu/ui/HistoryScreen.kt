@@ -338,6 +338,7 @@ private fun QuantityPage(
                     axisLabel = quantity::axis,
                     pointLabel = quantity::point,
                     bands = bmiBands(),
+                    legend = stringResource(R.string.legend_bmi),
                 )
             }
         }

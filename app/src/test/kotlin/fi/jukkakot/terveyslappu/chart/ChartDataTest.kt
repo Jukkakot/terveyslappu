@@ -23,7 +23,8 @@ class ChartDataTest {
         assertEquals(8.0, data.maxX)
         assertEquals(80.0, data.minY)
         assertEquals(85.0, data.maxY)
-        assertEquals(2, data.labelSpacing)
+        assertEquals(LocalDate.of(2026, 11, 3), data.from)
+        assertEquals(LocalDate.of(2026, 11, 9), data.to)
         assertEquals(LocalDate.of(2026, 11, 9), data.dayAt(7.0))
     }
 
@@ -33,7 +34,7 @@ class ChartDataTest {
         assertEquals(0.0, data.xs.first(), 0.5)
         assertEquals(82.0, data.entryAt(399.0)!!.kg)
         assertEquals(90.0, data.entryAt(3.0)!!.kg)
-        assertEquals(81, data.labelSpacing)
+        assertEquals(data.origin, data.from)
     }
 
     @Test
@@ -53,6 +54,7 @@ class ChartDataTest {
         assertEquals(setOf(0, 1), all.lone)
         val year = ChartData.of(Period.All, listOf(at(300, 90.0), at(0, 82.0)), now, zone)!!
         assertEquals(false, year.overYear)
+        assertEquals(true, ChartData.of(Period.YEAR, listOf(at(1, 82.0)), now, zone)!!.overYear)
         assertEquals(false, ChartData.of(Period.WEEK, listOf(at(1, 82.0)), now, zone)!!.overYear)
     }
 

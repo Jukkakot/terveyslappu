@@ -23,13 +23,21 @@ class ChartData(
     val maxX: Double,
     val minY: Double,
     val maxY: Double,
-    /** Days between x-axis labels. */
-    val labelSpacing: Int,
+    /** The x-axis date range, the same days the bar charts show (steps-source-and-axes design 8). */
+    val from: LocalDate = origin,
+    val to: LocalDate = origin,
     /** Indices of weights more than [MAX_GAP_DAYS] from every neighbour: they keep their dot in a dense chart. */
     val lone: Set<Int> = emptySet(),
-    /** The chart spans more than a year, so x labels show month and year. */
-    val overYear: Boolean = false,
 ) {
+    /** Date labels read month and year ("9/2022"): the period holds 365 days or more. */
+    val overYear: Boolean get() = AxisTicks.monthYear(from, to)
+
+    /** The x-axis label dates for [count] labels. */
+    fun labelDays(count: Int): List<LocalDate> = AxisTicks.dates(from, to, count)
+
+    /** Their x values: the centre of each day, as the bars' x. */
+    fun labelXs(count: Int): List<Double> = labelDays(count).map { AxisTicks.days(origin, it) + 0.5 }
+
     /** The day an x value stands for. */
     fun dayAt(x: Double): LocalDate = origin.plusDays(x.roundToLong())
 
@@ -40,9 +48,6 @@ class ChartData(
     fun indexAt(x: Double): Int? = xs.indices.minByOrNull { kotlin.math.abs(xs[it] - x) }
 
     companion object {
-        /** About this many labels fit under the chart on a phone. */
-        private const val LABELS = 5
-
         /** A pause longer than this many days between weights is a gap (lone dots, list gap rows). */
         const val MAX_GAP_DAYS = 30.0
 
@@ -81,6 +86,8 @@ class ChartData(
             val lastX = minOf(x(end), x(now)).coerceAtLeast(xs.last())
             val maxX = max(1.0, ceil(lastX))
             val range = scale(ys)
+            val today = now.atZone(zone).toLocalDate()
+            val (from, to) = AxisTicks.periodDates(period, today, origin)
             return ChartData(
                 entries = sorted,
                 ys = ys,
@@ -89,9 +96,9 @@ class ChartData(
                 maxX = maxX,
                 minY = range.min,
                 maxY = range.max,
-                labelSpacing = max(1, ceil(maxX / LABELS).toInt()),
+                from = from,
+                to = to,
                 lone = lone(xs),
-                overYear = origin.plusDays(maxX.toLong()) > origin.plusYears(1),
             )
         }
     }

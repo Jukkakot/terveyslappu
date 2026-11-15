@@ -79,8 +79,8 @@ fun Quantity.changeText(delta: Double): String = when (this) {
 
 /** A y-axis label: "98 kg", "25". */
 fun Quantity.axis(value: Double): String = when (this) {
-    Quantity.WEIGHT -> "%.0f kg".format(value)
-    Quantity.BMI -> "%.0f".format(value)
+    Quantity.WEIGHT -> "${formatAxisKg(value)} kg"
+    Quantity.BMI -> formatAxisKg(value)
 }
 
 /** A dot's value: "82,6 kg", "BMI 25,3". */
