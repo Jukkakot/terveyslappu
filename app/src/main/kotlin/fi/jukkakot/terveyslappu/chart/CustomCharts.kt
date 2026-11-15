@@ -151,5 +151,12 @@ object CustomCharts {
     fun update(list: ChartList, chart: CustomChart): ChartList =
         list.copy(charts = list.charts.map { if (it.id == chart.id) chart.copy(name = chart.name.trim()) else it })
 
+    /** The period in the log (`last30`, `all`, `custom`): never dates (design 17). */
+    fun logPeriod(period: Period): String = when (period) {
+        is Period.Last -> "last${period.days}"
+        Period.All -> "all"
+        is Period.Custom -> "custom"
+    }
+
     fun delete(list: ChartList, id: Int): ChartList = list.copy(charts = list.charts.filterNot { it.id == id })
 }

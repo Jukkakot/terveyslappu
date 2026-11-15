@@ -27,7 +27,10 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
     /** The grid's rows in order (see [rows]). */
     fun rows(): List<List<HomeCard>> = rows(shown)
 
+    /** The fixed cards in default order and sizes, nothing hidden and no chart card in either list (custom-charts design 2). */
     val isDefault: Boolean get() = this == DEFAULT
+
+    fun contains(id: String): Boolean = shown.any { it.id == id } || hidden.any { it.id == id }
 
     fun indexOf(id: String): Int = shown.indexOfFirst { it.id == id }
 
@@ -51,8 +54,10 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
     /** Whether [id] can be hidden: it is shown and not the only shown card (design 12). */
     fun canHide(id: String): Boolean = shown.size > 1 && indexOf(id) >= 0
 
+    /** Piilota: a feature card goes to [hidden]; a chart card leaves both lists (custom-charts design 2). */
     fun hide(id: String): HomeLayout {
         if (!canHide(id)) return this
+        if (isChart(id)) return remove(id)
         val card = shown[indexOf(id)]
         return HomeLayout(shown - card, hidden + card)
     }
@@ -63,6 +68,16 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
         return HomeLayout(shown + card, hidden - card)
     }
 
+    /** [id] out of both lists (a chart card hidden or its chart deleted). */
+    fun remove(id: String): HomeLayout = HomeLayout(shown.filterNot { it.id == id }, hidden.filterNot { it.id == id })
+
+    /** A deleted chart's card is gone; when nothing would be shown, the default layout (design 2). */
+    fun withoutChart(id: String): HomeLayout = remove(id).let { if (it.shown.isEmpty()) DEFAULT else it }
+
+    /** A chart card picked in Lisää kortti (or just made there): last, wide. */
+    fun addChart(id: String): HomeLayout = if (contains(id)) this else copy(shown = shown + HomeCard(id, CardSize.WIDE))
+
+    /** Palauta oletus: the fixed cards only, so every chart card goes too. */
     fun reset(): HomeLayout = DEFAULT
 
     companion object {
@@ -78,6 +93,9 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
         )
 
         val DEFAULT = HomeLayout(FIXED)
+
+        /** A card of an own chart (`chart:<id>`, custom-charts). */
+        fun isChart(id: String): Boolean = id.startsWith("chart:")
 
         /**
          * The rows of [shown]: two small cards that follow each other share a row, a small card before a

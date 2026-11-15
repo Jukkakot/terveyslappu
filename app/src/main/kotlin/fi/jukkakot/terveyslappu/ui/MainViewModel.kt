@@ -28,6 +28,9 @@ import fi.jukkakot.terveyslappu.chart.PeriodPrefs
 import fi.jukkakot.terveyslappu.home.HomeLayout
 import fi.jukkakot.terveyslappu.home.HomePrefs
 import fi.jukkakot.terveyslappu.chart.encode
+import fi.jukkakot.terveyslappu.chart.ChartList
+import fi.jukkakot.terveyslappu.chart.CustomChart
+import fi.jukkakot.terveyslappu.chart.CustomCharts
 import fi.jukkakot.terveyslappu.weight.newestFirst
 import fi.jukkakot.terveyslappu.backup.writeExport
 import fi.jukkakot.terveyslappu.data.DataFormat
@@ -105,6 +108,10 @@ data class MainUiState(
     val historyOnSteps: Boolean = false,
     /** Where Historia was opened from: FOOD for Ruoka's Viikko (back returns there), otherwise HOME. */
     val historyOrigin: Screen = Screen.HOME,
+    /** The own charts in tab order (custom-charts). */
+    val charts: List<CustomChart> = emptyList(),
+    /** Historia opens on this own chart's tab (its front page card); like [historyOnSteps]. */
+    val historyChart: Int? = null,
 ) {
     /** The weights not marked "?": everything that charts, counts or compares uses these. */
     val accepted: List<WeightEntry>? get() = weights?.filter { it.id !in questioned }
@@ -115,9 +122,9 @@ data class MainUiState(
     /** The one back rule, for the top-bar arrow and system back (settings-list design 2). */
     fun back(): MainUiState = when {
         screen == Screen.HOME -> this
-        screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME)
-        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME)
-        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false)
+        screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME, historyChart = null)
+        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME, historyChart = null)
+        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = null)
         settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
@@ -128,9 +135,9 @@ data class MainUiState(
      * screens); from Historia otherwise back returns to Historia; else home.
      */
     fun openFood(): MainUiState = when {
-        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyOrigin = Screen.HOME)
-        screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY)
-        else -> copy(screen = Screen.FOOD, foodOrigin = Screen.HOME)
+        screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyOrigin = Screen.HOME, historyChart = null)
+        screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY, historyChart = null)
+        else -> copy(screen = Screen.FOOD, foodOrigin = Screen.HOME, historyChart = null)
     }
 
     /** A sub-screen (or the list) of Asetukset, opened from [from]. */
@@ -190,8 +197,75 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private val _state = MutableStateFlow(MainUiState(period = periodPrefs.load(), homeDays = periodPrefs.loadHomeDays(), foodDays = periodPrefs.loadFoodDays(), stepsDays = periodPrefs.loadStepsDays(), homeLayout = homePrefs.load()))
+    /** The own charts and their id counter; [MainUiState.charts] shows [ChartList.charts]. */
+    private var chartList: ChartList = terveys.charts.load()
+
+    private val _state = MutableStateFlow(
+        MainUiState(
+            period = periodPrefs.load(),
+            homeDays = periodPrefs.loadHomeDays(),
+            foodDays = periodPrefs.loadFoodDays(),
+            stepsDays = periodPrefs.loadStepsDays(),
+            homeLayout = homePrefs.load(chartList.charts.map { it.cardId }.toSet()),
+            charts = chartList.charts,
+        ),
+    )
     val state: StateFlow<MainUiState> = _state
+
+    /**
+     * Tallenna in the chart editor (custom-charts design 1, 17): a new chart (id 0) gets the next id
+     * and goes last; returns the saved chart's id. Names and values are never logged.
+     */
+    fun onSaveChart(chart: CustomChart): Int {
+        val isNew = chart.id == 0 || chartList.charts.none { it.id == chart.id }
+        val saved = if (isNew) {
+            val (list, stored) = CustomCharts.add(chartList, chart)
+            chartList = list
+            stored
+        } else {
+            chartList = CustomCharts.update(chartList, chart)
+            chartList.charts.first { it.id == chart.id }
+        }
+        terveys.charts.save(chartList)
+        AppLog.i("chart.custom", if (isNew) "create" else "edit", *chartFields(saved))
+        _state.update { it.copy(charts = chartList.charts) }
+        return saved.id
+    }
+
+    /** Poista kaavio: the chart, its tab and its front page card go (design 2). */
+    fun onDeleteChart(id: Int) {
+        val chart = chartList.charts.firstOrNull { it.id == id } ?: return
+        chartList = CustomCharts.delete(chartList, id)
+        terveys.charts.save(chartList)
+        AppLog.i("chart.custom", "delete", *chartFields(chart))
+        val layout = _state.value.homeLayout.withoutChart(chart.cardId)
+        if (layout != _state.value.homeLayout) homePrefs.save(layout)
+        _state.update { it.copy(charts = chartList.charts, homeLayout = layout, historyChart = it.historyChart.takeIf { c -> c != id }) }
+    }
+
+    /** The chart's own period chips on its Historia tab (design 11); the card follows. */
+    fun onChartPeriod(id: Int, period: Period) {
+        val chart = chartList.charts.firstOrNull { it.id == id } ?: return
+        if (chart.period == period) return
+        chartList = CustomCharts.update(chartList, CustomCharts.setPeriod(chart, period))
+        terveys.charts.save(chartList)
+        AppLog.i("chart.custom", "period", "id" to id, "period" to CustomCharts.logPeriod(period))
+        _state.update { it.copy(charts = chartList.charts) }
+    }
+
+    /** A chart card: Historia on that chart's tab; back returns home. */
+    fun openChart(id: Int) = _state.update {
+        it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = id, historyOrigin = Screen.HOME)
+    }
+
+    /** Historia has opened the chart's page. */
+    fun chartShown() = _state.update { it.copy(historyChart = null) }
+
+    private fun chartFields(chart: CustomChart): Array<Pair<String, Any?>> = arrayOf(
+        "id" to chart.id,
+        "series" to chart.series.joinToString(",") { "${it.kind.name.lowercase()}:${it.style.name.lowercase()}" },
+        "layout" to chart.layout.name.lowercase(),
+    )
 
     fun onPeriod(period: Period) {
         AppLog.i("chart.period", period.encode())
@@ -276,7 +350,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOrigin = Screen.HOME)
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = null, historyOrigin = Screen.HOME)
     }
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */

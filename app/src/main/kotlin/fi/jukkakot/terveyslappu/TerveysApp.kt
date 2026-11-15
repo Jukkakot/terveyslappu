@@ -130,6 +130,9 @@ class TerveysApp : Application() {
     /** The steps source choice and pick (steps-source-and-axes design 3), only on this phone. */
     val stepsPrefs: fi.jukkakot.terveyslappu.steps.StepsPrefs by lazy { fi.jukkakot.terveyslappu.steps.StepsPrefs(this) }
 
+    /** The own charts (custom-charts design 3), in the `chart` prefs file. */
+    val charts: fi.jukkakot.terveyslappu.chart.ChartStore by lazy { fi.jukkakot.terveyslappu.chart.ChartStore(this) }
+
     /** The theme choice (app-appearance), read by every activity's theme. */
     val appearance: AppearancePrefs by lazy { AppearancePrefs(this) }
 
