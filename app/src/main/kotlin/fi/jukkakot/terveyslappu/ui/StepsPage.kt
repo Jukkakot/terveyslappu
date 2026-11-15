@@ -114,7 +114,7 @@ private fun StepsSourceLine(steps: StepsUiState, actions: StepsActions) {
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .clickable(onClick = actions.onOpenSource)
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 16.dp)
             .testTag("stepsSource"),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -281,7 +281,7 @@ private fun StepsStatsTiles(series: StepsSeries) {
 @Composable
 internal fun StepsDayRow(day: StepsDay, today: LocalDate) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("stepsDay-${day.day}"),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("stepsDay-${day.day}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

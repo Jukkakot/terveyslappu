@@ -172,4 +172,11 @@ object CustomCharts {
     }
 
     fun delete(list: ChartList, id: Int): ChartList = list.copy(charts = list.charts.filterNot { it.id == id })
+
+    /** Kumoa of a delete: [chart] back at tab [index] (clamped); the id counter stays, so ids are never reused. */
+    fun restore(list: ChartList, chart: CustomChart, index: Int): ChartList {
+        if (list.charts.any { it.id == chart.id }) return list
+        val at = index.coerceIn(0, list.charts.size)
+        return list.copy(charts = list.charts.toMutableList().also { it.add(at, chart) })
+    }
 }

@@ -195,7 +195,7 @@ private fun ListHeading(text: String) {
         text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
+        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
     )
 }
 
@@ -203,7 +203,7 @@ private fun ListHeading(text: String) {
 @Composable
 private fun EnterRowView(row: EnterRow, actions: FoodActions) {
     Row(
-        Modifier.fillMaxWidth().clickable { actions.onEnter() }.heightIn(min = 56.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("enterRow"),
+        Modifier.fillMaxWidth().clickable { actions.onEnter() }.heightIn(min = 56.dp).padding(vertical = 6.dp).testTag("enterRow"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(painterResource(R.drawable.ic_add), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 12.dp).size(24.dp))
@@ -243,7 +243,7 @@ internal fun suggestionDetail(product: Product): String {
 private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(
-            Modifier.weight(1f).clickable { actions.onPick(s) }.heightIn(min = 56.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("$tag-${s.name}"),
+            Modifier.weight(1f).clickable { actions.onPick(s) }.heightIn(min = 56.dp).padding(vertical = 6.dp).testTag("$tag-${s.name}"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -370,7 +370,7 @@ internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodAc
         },
         dismissButton = {
             Row {
-                if (!draft) TextButton(onClick = { actions.onDelete(item) }, modifier = Modifier.testTag("editDelete")) { Text(stringResource(R.string.food_delete)) }
+                if (!draft) TextButton(onClick = { actions.onDelete(item) }, modifier = Modifier.testTag("editDelete")) { Text(stringResource(R.string.food_delete), color = MaterialTheme.colorScheme.error) }
                 TextButton(onClick = actions.onCloseEditor, modifier = Modifier.testTag("editCancel")) { Text(stringResource(R.string.cancel)) }
             }
         },

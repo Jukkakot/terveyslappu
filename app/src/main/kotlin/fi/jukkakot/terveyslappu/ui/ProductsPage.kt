@@ -141,7 +141,7 @@ private fun ProductEditor(product: Product, onSave: (Product) -> Unit, onRemove:
         },
         dismissButton = {
             Row {
-                TextButton(onClick = onRemove, modifier = Modifier.testTag("productRemove")) { Text(stringResource(R.string.food_product_remove)) }
+                TextButton(onClick = onRemove, modifier = Modifier.testTag("productRemove")) { Text(stringResource(R.string.food_product_remove), color = MaterialTheme.colorScheme.error) }
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
             }
         },

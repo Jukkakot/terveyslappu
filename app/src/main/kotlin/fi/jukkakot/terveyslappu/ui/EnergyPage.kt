@@ -171,7 +171,7 @@ private fun EnergyStatsTiles(series: EnergySeries) {
 @Composable
 internal fun EnergyDayRow(day: EnergyDay, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable { onOpenDay(day.day) }.heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("energyDay-${day.day}"),
+        Modifier.fillMaxWidth().clickable { onOpenDay(day.day) }.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("energyDay-${day.day}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

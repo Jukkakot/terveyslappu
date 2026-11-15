@@ -353,6 +353,7 @@
     <string name="ai_no_json">Tekstistä ei löytynyt ruoka-annoksia. Tuonti tarvitsee JSON-tekstin tuontiohjeen mukaan.</string>
     <string name="ai_empty">Tekstissä oli JSON, mutta ei yhtään käyttökelpoista ruokaa.</string>
     <string name="ai_clip_skip">Ohita</string>
+    <string name="ai_clip_skipped">Ohitettu</string>
     <string name="ai_clip_title">Leikepöydällä</string>
     <string name="ai_clip_add_all">Lisää kaikki</string>
     <string name="ai_clip_add_all_day">Lisää kaikki · %1$s</string>
@@ -487,8 +488,7 @@
     <string name="chart_layout_overlaid_line">Kaikki samassa kuvassa, kaksi asteikkoa</string>
     <string name="chart_save">Tallenna</string>
     <string name="chart_delete">Poista kaavio</string>
-    <string name="chart_delete_ask">Poistetaanko kaavio %1$s? Se poistuu myös etusivulta.</string>
-    <string name="chart_delete_confirm">Poista</string>
+    <string name="chart_deleted">Kaavio poistettu</string>
     <string name="chart_empty">Ei tietoja tällä jaksolla</string>
     <string name="chart_empty_weight">Ei painoja tällä jaksolla</string>
     <string name="chart_empty_energy">Ei ruokakirjauksia tällä jaksolla</string>

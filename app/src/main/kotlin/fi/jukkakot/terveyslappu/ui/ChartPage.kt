@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -180,7 +180,7 @@ internal fun NewChartPage(onNew: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(stringResource(R.string.chart_new_intro), style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-        FilledTonalButton(onClick = onNew, modifier = Modifier.testTag("chartNew")) {
+        Button(onClick = onNew, modifier = Modifier.testTag("chartNew")) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.chart_new))

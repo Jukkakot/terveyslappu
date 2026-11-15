@@ -22,9 +22,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -191,7 +191,7 @@ internal fun FoodScreen(
         bottomBar = {
             if (food.access == FoodAccess.GRANTED && ordering == null) {
                 Box(Modifier.navigationBarsPadding().padding(16.dp)) {
-                    OutlinedButton(
+                    Button(
                         onClick = { actions.onAdd(food.day) },
                         shape = RoundedCornerShape(20.dp),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("foodAdd"),
@@ -211,29 +211,29 @@ internal fun FoodScreen(
                 food.access != FoodAccess.GRANTED -> FoodPermissionNotice(stringResource(R.string.food_permission_reason), actions.onGrant, Modifier.align(Alignment.Center))
                 food.items == null && food.loadFailed -> Notice(stringResource(R.string.food_read_failed))
                 food.items == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).testTag("foodDay")) {
-                    DayBar(food.day, today, enabled = ordering == null, actions.onDay)
-                    if (ordering == null) food.clipOffer?.let { ClipOfferCard(it, food.day, actions, Modifier.padding(bottom = 8.dp)) }
-                    if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) HistoryNotice(onGrantHistory)
+                else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("foodDay")) {
+                    DayBar(food.day, today, enabled = ordering == null, actions.onDay, Modifier.padding(horizontal = 16.dp))
+                    if (ordering == null) food.clipOffer?.let { ClipOfferCard(it, food.day, actions, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) }
+                    if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) Box(Modifier.padding(horizontal = 16.dp)) { HistoryNotice(onGrantHistory) }
                     val items = ordering ?: food.dayItems(food.day)
                     if (items.isEmpty()) {
                         Text(
                             stringResource(R.string.food_day_empty),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 24.dp).testTag("foodEmpty"),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp).testTag("foodEmpty"),
                         )
                     } else {
                         Text(
                             daySumText(DaySum.of(items)),
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 12.dp).testTag("foodSum"),
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 12.dp).testTag("foodSum"),
                         )
                         if (ordering != null) {
-                            Text(stringResource(R.string.food_order_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+                            Text(stringResource(R.string.food_order_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
                             OrderList(ordering, actions.onMove)
                         } else {
-                            Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer)) {
+                            Column(Modifier.fillMaxWidth()) {
                                 items.forEachIndexed { i, item ->
                                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     FoodRow(item, ZoneId.systemDefault(), Modifier.clickable { actions.onEdit(item) })
@@ -249,8 +249,8 @@ internal fun FoodScreen(
 }
 
 @Composable
-private fun DayBar(day: LocalDate, today: LocalDate, enabled: Boolean, onDay: (LocalDate) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun DayBar(day: LocalDate, today: LocalDate, enabled: Boolean, onDay: (LocalDate) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { onDay(day.minusDays(1)) }, enabled = enabled, modifier = Modifier.testTag("prevDay")) {
             Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = stringResource(R.string.food_prev_day))
         }
@@ -310,7 +310,7 @@ private fun OrderList(items: List<FoodItem>, onMove: (Int, Int) -> Unit) {
     var offset by remember { mutableFloatStateOf(0f) }
     var rowHeight by remember { mutableIntStateOf(1) }
     val zone = ZoneId.systemDefault()
-    Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer).testTag("orderList")) {
+    Column(Modifier.fillMaxWidth().testTag("orderList")) {
         items.forEachIndexed { i, item -> key(item.uuid) {
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             val lifted = i == dragged
@@ -320,7 +320,7 @@ private fun OrderList(items: List<FoodItem>, onMove: (Int, Int) -> Unit) {
                 Modifier
                     .onSizeChanged { rowHeight = it.height.coerceAtLeast(1) }
                     .offset { IntOffset(0, if (lifted) offset.roundToInt() else 0) }
-                    .background(if (lifted) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surfaceContainer),
+                    .background(if (lifted) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surface),
             ) {
                 IconButton(onClick = { onMove(i, i - 1) }, enabled = i > 0, modifier = Modifier.size(40.dp)) {
                     Icon(painterResource(R.drawable.ic_arrow_up), contentDescription = stringResource(R.string.food_move_up, item.name))

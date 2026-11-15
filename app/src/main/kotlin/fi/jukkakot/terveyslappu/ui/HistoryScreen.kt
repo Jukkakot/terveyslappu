@@ -1,6 +1,5 @@
 package fi.jukkakot.terveyslappu.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,7 +8,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -501,7 +499,7 @@ private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, 
             .background(check.container)
             .border(1.dp, check.outline, shape)
             .clickable(onClickLabel = stringResource(R.string.check_title), onClick = onCheck)
-            .heightIn(min = 48.dp)
+            .heightIn(min = 56.dp)
             .padding(start = 8.dp)
             .testTag("questioned-${entry.id}"),
         verticalAlignment = Alignment.CenterVertically,
@@ -519,7 +517,7 @@ private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, 
         )
         val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
         IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = check.content)
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.error)
         }
     }
 }
@@ -534,21 +532,19 @@ private fun CheckDialog(entry: WeightEntry, today: LocalDate, onAccept: () -> Un
         confirmButton = { TextButton(onClick = onAccept, modifier = Modifier.testTag("checkAccept")) { Text(stringResource(R.string.check_accept)) } },
         dismissButton = {
             Row {
-                TextButton(onClick = onDelete, modifier = Modifier.testTag("checkDelete")) { Text(stringResource(R.string.check_delete)) }
+                TextButton(onClick = onDelete, modifier = Modifier.testTag("checkDelete")) { Text(stringResource(R.string.check_delete), color = MaterialTheme.colorScheme.error) }
                 TextButton(onClick = onDismiss, modifier = Modifier.testTag("checkCancel")) { Text(stringResource(R.string.cancel)) }
             }
         },
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate, depth: Int, onDelete: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = {}, onLongClick = onDelete)
-            .heightIn(min = 48.dp)
+            .heightIn(min = 56.dp)
             .padding(start = indent(depth), end = 4.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -564,10 +560,9 @@ private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate,
             )
         }
         Text(stringResource(R.string.kg_value, formatKg(entry.kg)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-        // Visible alternative to the long-press (ui rule: no gesture without one).
         val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
         IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.error)
         }
     }
 }

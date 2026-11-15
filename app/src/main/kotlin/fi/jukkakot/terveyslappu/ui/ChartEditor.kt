@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -78,7 +77,7 @@ private fun kindName(kind: SeriesKind): String = stringResource(
 
 /**
  * The chart editor (weight-chart "Chart editor", custom-charts design 12): name, the three data rows,
- * Asettelu, Peruuta / Tallenna and, for an existing chart, Poista kaavio with its confirmation.
+ * Asettelu, Peruuta / Tallenna and, for an existing chart, Poista kaavio (deletes at once; the caller offers Kumoa).
  * Back and an outside tap discard without asking. The period is not here; saving keeps it.
  */
 @Composable
@@ -90,7 +89,6 @@ internal fun ChartEditor(
     onDismiss: () -> Unit,
 ) {
     var draft by rememberSaveable(existing?.id, saver = DraftSaver) { mutableStateOf(existing?.let { ChartDraft.of(it) } ?: CustomCharts.newDraft(charts)) }
-    var asking by rememberSaveable { mutableStateOf(false) }
     val valid = CustomCharts.validName(draft.name)
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
@@ -147,7 +145,7 @@ internal fun ChartEditor(
                 )
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (existing != null) {
-                        TextButton(onClick = { asking = true }, modifier = Modifier.testTag("chartDelete")) {
+                        TextButton(onClick = { onDelete(existing.id) }, modifier = Modifier.testTag("chartDelete")) {
                             Text(stringResource(R.string.chart_delete), color = MaterialTheme.colorScheme.error)
                         }
                     }
@@ -158,17 +156,5 @@ internal fun ChartEditor(
                 }
             }
         }
-    }
-    if (asking && existing != null) {
-        AlertDialog(
-            onDismissRequest = { asking = false },
-            text = { Text(stringResource(R.string.chart_delete_ask, existing.name)) },
-            confirmButton = {
-                TextButton(onClick = { asking = false; onDelete(existing.id) }, modifier = Modifier.testTag("chartDeleteConfirm")) {
-                    Text(stringResource(R.string.chart_delete_confirm), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { asking = false }, modifier = Modifier.testTag("chartDeleteCancel")) { Text(stringResource(R.string.cancel)) } },
-        )
     }
 }

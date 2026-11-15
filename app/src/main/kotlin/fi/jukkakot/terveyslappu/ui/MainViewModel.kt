@@ -232,15 +232,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return saved.id
     }
 
-    /** Poista kaavio: the chart, its tab and its front page card go (design 2). */
+    /** Poista kaavio: the chart, its tab and its front page card go at once (design 2); Kumoa brings them back. */
     fun onDeleteChart(id: Int) {
         val chart = chartList.charts.firstOrNull { it.id == id } ?: return
+        val index = chartList.charts.indexOf(chart)
+        val before = _state.value.homeLayout
         chartList = CustomCharts.delete(chartList, id)
         terveys.charts.save(chartList)
         AppLog.i("chart.custom", "delete", *chartFields(chart))
-        val layout = _state.value.homeLayout.withoutChart(chart.cardId)
-        if (layout != _state.value.homeLayout) homePrefs.save(layout)
+        val layout = before.withoutChart(chart.cardId)
+        if (layout != before) homePrefs.save(layout)
         _state.update { it.copy(charts = chartList.charts, homeLayout = layout, historyChart = it.historyChart.takeIf { c -> c != id }) }
+        _messages.tryEmit(UiMessage(R.string.chart_deleted, action = UiAction(R.string.undo) { restoreChart(chart, index, before) }))
+    }
+
+    /** Kumoa of Poista kaavio: same id, name, data, layout and period, at its old tab and card place. */
+    private fun restoreChart(chart: CustomChart, index: Int, layoutBefore: HomeLayout) {
+        chartList = CustomCharts.restore(chartList, chart, index)
+        terveys.charts.save(chartList)
+        AppLog.i("chart.custom", "undo", "id" to chart.id)
+        val layout = _state.value.homeLayout.withChartBack(chart.cardId, layoutBefore)
+        if (layout != _state.value.homeLayout) homePrefs.save(layout)
+        _state.update { it.copy(charts = chartList.charts, homeLayout = layout) }
     }
 
     /** The chart's own period chips on its Historia tab (design 11); the card follows. */

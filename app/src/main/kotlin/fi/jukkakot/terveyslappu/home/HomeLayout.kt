@@ -74,6 +74,19 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
     /** A deleted chart's card is gone; when nothing would be shown, the default layout (design 2). */
     fun withoutChart(id: String): HomeLayout = remove(id).let { if (it.shown.isEmpty()) DEFAULT else it }
 
+    /**
+     * Kumoa of a chart delete: card [id] back where [before] (the layout at the delete) had it, same
+     * size. A layout that fell back to the default because the card was the only one shown returns
+     * to [before] whole. Nothing when the card is already there or [before] had none.
+     */
+    fun withChartBack(id: String, before: HomeLayout): HomeLayout {
+        if (contains(id)) return this
+        val card = before.shown.firstOrNull { it.id == id } ?: return this
+        if (before.shown.size == 1 && this == DEFAULT) return before
+        val index = before.indexOf(id).coerceAtMost(shown.size)
+        return copy(shown = shown.toMutableList().also { it.add(index, card) })
+    }
+
     /** A chart card picked in Lisää kortti (or just made there): last, wide. */
     fun addChart(id: String): HomeLayout = if (contains(id)) this else copy(shown = shown + HomeCard(id, CardSize.WIDE))
 

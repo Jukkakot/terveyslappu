@@ -32,7 +32,7 @@ private val finnish = Locale.forLanguageTag("fi")
 private val monthName = DateTimeFormatter.ofPattern("LLLL", finnish)
 
 /** Rows step in by level so the hierarchy reads without lines. */
-internal fun indent(depth: Int): Dp = 20.dp + 12.dp * depth
+internal fun indent(depth: Int): Dp = 16.dp + 12.dp * depth
 
 /** "3.–9.11." or across months "27.10.–2.11.", with the year when not [today]'s. */
 internal fun formatDayRange(from: LocalDate, to: LocalDate, today: LocalDate): String {
