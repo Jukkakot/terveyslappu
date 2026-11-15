@@ -53,6 +53,10 @@ year.
 - **WHEN** the user taps the dot of 82.6 kg on Sunday 8.11. this year at 7.05
 - **THEN** the readout shows "Su 8.11. · 7.05 · 82,6 kg"
 
+#### Scenario: Tap an old dot
+- **WHEN** the user taps the dot of 97.6 kg on Sunday 15.9.2024 at 8.33
+- **THEN** the readout shows "Su 15.9.2024 · 8.33 · 97,6 kg"
+
 #### Scenario: Tap a BMI dot
 - **GIVEN** the BMI chart is shown and the height is 180 cm
 - **WHEN** the user taps the dot of 82.0 kg on Sunday 8.11. this year at 7.05
