@@ -25,7 +25,7 @@
 
 - [x] 4.1 Ohje: a front page section (long-press a card to edit: order by dragging, size and hiding from the card's menu, Lisää kortti; Valmis saves, Peruuta discards). Verify: the help test still passes and the section text is in `strings.xml`
 - [x] 4.2 Update `.claude/CLAUDE.md`: the map (`HomeLayout`, `HomeLayoutCodec`, `HomePrefs`, the grid in `HomeScreen`, Reorderable) and the event list (`home.edit open|cancel changed=`, `home.layout set= hidden=`); roadmap item "Reorder the front page cards" marked done; product.md if it names the fixed card order. Verify: `git diff` shows those files
-- [ ] 4.3 Bump MINOR in `gradle.properties` `appVersion` (the last task); run `./gradlew test lint assembleDebug`. Verify: all green
+- [x] 4.3 Bump MINOR in `gradle.properties` `appVersion` (the last task); run `./gradlew test lint assembleDebug`. Verify: all green
 
 ## Workflow follow-up
 
