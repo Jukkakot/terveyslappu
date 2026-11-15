@@ -51,7 +51,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   Ulkoasu with the `StepsLine` text (warning look as the other rows), the sub-screen
   (`stepsSourcePage`) per decision 7: radio rows with Automaattinen + "Nyt: …", one row per app with
   "keskim. N askelta/pv", "Kaikki (Health Connectin järjestys)", loading and failure states,
-  `StepsReason` without access; opening it calls `discoverNow()`. Back rule unchanged
+  `StepsReason` without access (wire the same grant / open-settings actions as Askeleet; no request on open); opening it with access calls `discoverNow()`. Apps ordered by 30-day total, most first; a chosen app missing from discovery last. While the source changes, the home card and Askeleet show their existing loading state. Back rule unchanged
   (`MainUiState.back()`).
 - [ ] 3.2 Askeleet: the source line under the chart (`stepsSource`), tap → `withSettings(STEPS,
   HISTORY)` returning to Askeleet; the empty-period message per source ("Garmin Connect: ei askelia

@@ -71,10 +71,12 @@ unavailable). Its sub-screen SHALL hold "Lähde", a single choice of: "Automaatt
 naming the app it uses now), every app that wrote steps in the last 30 days, and "Kaikki (Health
 Connectin järjestys)". Each app SHALL show a readable name (the phone's own steps as "Puhelin";
 otherwise the installed app's name, or its package name when the name cannot be found) and its
-average steps per day with steps over those 30 days. The list SHALL be read again each time the
+average steps per day with steps over those 30 days. Apps SHALL be listed by their 30-day steps,
+most first; a chosen app without steps in those 30 days SHALL be listed after them. The list SHALL be read again each time the
 sub-screen opens. A change SHALL apply at once: the front page steps card and Askeleet re-read
 their whole range from the new source. Without the steps permission the sub-screen SHALL show the
-same reason and buttons as Askeleet and no list. The default SHALL be "Automaattinen".
+same reason and buttons as Askeleet (asking or opening Health Connect's settings from there) and no
+list; the permission SHALL NOT be asked when the sub-screen merely opens. The default SHALL be "Automaattinen".
 
 #### Scenario: First visit
 - **GIVEN** Garmin Connect and the phone wrote steps in the last 30 days and the user never chose

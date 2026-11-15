@@ -94,7 +94,8 @@ no "paino" entry). The legend SHALL wrap to a second line on a narrow phone rath
 
 ### Requirement: Askeleet source line
 The Askeleet tab SHALL show one quiet line under the chart naming the steps source in use ("Lähde:
-Garmin Connect (automaattinen)", "Lähde: Puhelin", "Lähde: kaikki sovellukset"); a chosen app
+Garmin Connect (automaattinen)", "Lähde: Puhelin", "Lähde: kaikki sovellukset", and "Lähde: kaikki
+sovellukset (automaattinen)" when the automatic pick found no app); a chosen app
 without steps in 30 days SHALL show in the warning tint. Tapping the line SHALL open Asetukset →
 Askeleet; back SHALL return to Historia on Askeleet. The front page steps card SHALL NOT show the
 source.
