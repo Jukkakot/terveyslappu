@@ -41,6 +41,8 @@ data class StepsSourcesUi(
     val failed: Boolean = false,
     /** A check finished successfully in this run (the list is known). */
     val checked: Boolean = false,
+    /** The imported Garmin history's range and count (null: none); shown also without the steps permission. */
+    val garmin: GarminSummary? = null,
 )
 
 /**
@@ -58,6 +60,8 @@ class StepsController(
     private val now: () -> Instant = Instant::now,
     private val today: () -> LocalDate = LocalDate::now,
     private val nanos: () -> Long = System::nanoTime,
+    /** The imported Garmin history (garmin-steps-history), oldest first. */
+    private val garmin: () -> List<StepsDay> = { emptyList() },
 ) {
     private val reader = StepsReader(source, log = { ok, error, fields -> log.line(ok, "steps.read", if (ok) "ok" else "failed", error, fields) }, nanos)
 
@@ -87,8 +91,20 @@ class StepsController(
     private var subScreenVisible = false
     private var lastLogged: String? = null
 
+    /** The last successful Health Connect read and its source, for re-merging the import (garmin-steps-history design 6). */
+    private var lastHc: Pair<List<StepsDay>, StepsSourceState>? = null
+
     init {
         publish("start")
+        _sources.update { it.copy(garmin = GarminSummary.of(garmin())) }
+    }
+
+    /** The import was replaced, deleted or restored: re-merge onto the last read, no new Health Connect read. */
+    fun garminChanged() {
+        _sources.update { it.copy(garmin = GarminSummary.of(garmin())) }
+        val (hc, src) = lastHc ?: return
+        if (current().key != src.key) return
+        _state.update { it.copy(days = GarminMerge.merge(hc, garmin(), src, today())) }
     }
 
     /** The source in use now. */
@@ -142,6 +158,7 @@ class StepsController(
         store.choice = choice
         generation++
         readJobs.cancelChildren()
+        lastHc = null
         _state.update { it.copy(days = null, loadFailed = false, stale = false) }
         publish("user")
         if (_state.value.access == StepsAccess.GRANTED && (all || widest != null)) scope.launch { read() }
@@ -176,7 +193,16 @@ class StepsController(
                 val src = current()
                 val gen = generation
                 val load = reader.read(if (all) null else widest, today(), src.packages, src.logName)
-                if (gen == generation && current().key == src.key) _state.update { it.after(load).copy(source = src, sourceName = src.appId?.let(names)) }
+                if (gen == generation && current().key == src.key) {
+                    val merged = when (load) {
+                        is StepsLoad.Ok -> {
+                            lastHc = load.days to src
+                            StepsLoad.Ok(GarminMerge.merge(load.days, garmin(), src, today()), load.from)
+                        }
+                        is StepsLoad.Failed -> load
+                    }
+                    _state.update { it.after(merged).copy(source = src, sourceName = src.appId?.let(names)) }
+                }
             }
         }.join()
     }

@@ -20,6 +20,7 @@ class DataTransferRulesTest {
         "sharedpref:chart.xml",
         "file:raw-archive.jsonl",
         "file:products.json",
+        "file:garmin-steps.json",
     )
 
     private fun includes(section: String): Set<String> {

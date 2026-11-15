@@ -13,6 +13,8 @@ import fi.jukkakot.terveyslappu.steps.StepsLogger
 import fi.jukkakot.terveyslappu.steps.StepsSourcesUi
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /** Writes the steps lines to the app log. */
@@ -28,13 +30,21 @@ val AppStepsLogger = StepsLogger { ok, event, message, error, fields ->
 class StepsViewModel(app: Application) : AndroidViewModel(app) {
     val steps = HealthConnectSteps(app)
 
+    private val garmin = (app as TerveysApp).garminSteps
+
     private val controller = StepsController(
         source = steps,
         store = (app as TerveysApp).stepsPrefs,
         scope = viewModelScope,
         log = AppStepsLogger,
         names = StepsAppNames(app)::name,
+        garmin = { garmin.days.value },
     )
+
+    init {
+        // An import, Poista or Kumoa (MainViewModel) re-merges at once (garmin-steps-history design 6).
+        viewModelScope.launch { garmin.days.drop(1).collect { controller.garminChanged() } }
+    }
 
     val state: StateFlow<StepsUiState> = controller.state
     val sources: StateFlow<StepsSourcesUi> = controller.sources

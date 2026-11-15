@@ -128,6 +128,9 @@ class TerveysApp : Application() {
     }
 
     /** The steps source choice and pick (steps-source-and-axes design 3), only on this phone. */
+    /** The imported Garmin step history (garmin-steps-history), in app storage and Android backup. */
+    val garminSteps: fi.jukkakot.terveyslappu.steps.GarminStepsStore by lazy { fi.jukkakot.terveyslappu.steps.GarminStepsStore(File(filesDir, "garmin-steps.json")) }
+
     val stepsPrefs: fi.jukkakot.terveyslappu.steps.StepsPrefs by lazy { fi.jukkakot.terveyslappu.steps.StepsPrefs(this) }
 
     /** The own charts (custom-charts design 3), in the `chart` prefs file. */
