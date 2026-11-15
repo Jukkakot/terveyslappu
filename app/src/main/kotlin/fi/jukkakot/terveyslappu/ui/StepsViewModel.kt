@@ -3,73 +3,53 @@ package fi.jukkakot.terveyslappu.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.steps.HealthConnectSteps
-import fi.jukkakot.terveyslappu.steps.StepsAccess
-import fi.jukkakot.terveyslappu.steps.StepsReader
-import fi.jukkakot.terveyslappu.steps.StepsRules
+import fi.jukkakot.terveyslappu.steps.StepsAppNames
+import fi.jukkakot.terveyslappu.steps.StepsChoice
+import fi.jukkakot.terveyslappu.steps.StepsController
+import fi.jukkakot.terveyslappu.steps.StepsLogger
+import fi.jukkakot.terveyslappu.steps.StepsSourcesUi
 import fi.jukkakot.terveyslappu.steps.StepsUiState
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 
+/** Writes the steps lines to the app log. */
+val AppStepsLogger = StepsLogger { ok, event, message, error, fields ->
+    if (ok) AppLog.i(event, message, *fields.toTypedArray()) else AppLog.e(event, error, message, *fields.toTypedArray())
+}
+
 /**
- * Steps read from Health Connect (steps design 5): the access state and the days of the widest
- * range shown so far, re-read in full on every resume and whenever the home screen or Askeleet is
- * shown (late watch data; no live updates). Nothing is stored.
+ * Steps read from Health Connect (steps design 5, steps-source-and-axes design 4, 5): the logic is
+ * [StepsController]; this wires Health Connect, the `steps` prefs, readable names and the log.
+ * Re-read in full on every resume and whenever the home screen or Askeleet is shown.
  */
 class StepsViewModel(app: Application) : AndroidViewModel(app) {
     val steps = HealthConnectSteps(app)
 
-    private val reader = StepsReader(steps, log = { ok, error, fields ->
-        if (ok) AppLog.i("steps.read", "ok", *fields.toTypedArray()) else AppLog.e("steps.read", error, "failed", *fields.toTypedArray())
-    })
+    private val controller = StepsController(
+        source = steps,
+        store = (app as TerveysApp).stepsPrefs,
+        scope = viewModelScope,
+        log = AppStepsLogger,
+        names = StepsAppNames(app)::name,
+    )
 
-    private val _state = MutableStateFlow(StepsUiState())
-    val state: StateFlow<StepsUiState> = _state
+    val state: StateFlow<StepsUiState> = controller.state
+    val sources: StateFlow<StepsSourcesUi> = controller.sources
 
-    /** Remembered only while the app runs (steps "Denied steps permission"). */
-    var permissionAsked = false
-        private set
+    fun show(from: LocalDate?) = controller.show(from)
 
-    /** The widest start asked so far; [all] = Kaikki. Nothing asked yet: no read. */
-    private var widest: LocalDate? = null
-    private var all = false
+    fun refresh() = controller.refresh()
 
-    private val reads = Mutex()
+    fun onPermissionRequested() = controller.onPermissionRequested()
 
-    /** A screen shows steps from [from] (null: Kaikki); widens the read range and reads. */
-    fun show(from: LocalDate?) {
-        if (from == null) all = true else widest = widest?.let { minOf(it, from) } ?: from
-        refresh()
-    }
+    fun onPermissionResult(granted: Set<String>) = controller.onPermissionResult(granted.containsAll(steps.permissions))
 
-    /** On every resume: the permission may have changed; reads the range shown so far. */
-    fun refresh() {
-        viewModelScope.launch {
-            val granted = runCatching { steps.granted() }.onFailure { AppLog.e("hc.permission.steps", it, "check") }.getOrNull()
-            val access = StepsRules.access(granted, permissionAsked)
-            _state.update { it.copy(access = access) }
-            if (access == StepsAccess.GRANTED && (all || widest != null)) load()
-        }
-    }
+    fun setChoice(choice: StepsChoice) = controller.setChoice(choice)
 
-    fun onPermissionRequested() {
-        AppLog.i("hc.permission.steps", "request")
-    }
+    fun subScreenShown() = controller.subScreenShown()
 
-    fun onPermissionResult(granted: Set<String>) {
-        permissionAsked = true
-        AppLog.i("hc.permission.steps", if (granted.containsAll(steps.permissions)) "granted" else "denied")
-        refresh()
-    }
-
-    private suspend fun load() = reads.withLock {
-        val load = reader.read(if (all) null else widest, LocalDate.now())
-        _state.update { it.after(load) }
-    }
+    fun subScreenHidden() = controller.subScreenHidden()
 }

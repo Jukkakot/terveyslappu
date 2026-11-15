@@ -32,7 +32,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
 
 ## 2. Health Connect reads and state
 
-- [ ] 2.1 `StepsSource` interface: `firstDay(packages: Set<String>?)`, `daily(from, to, packages)`,
+- [x] 2.1 `StepsSource` interface: `firstDay(packages: Set<String>?)`, `daily(from, to, packages)`,
   `check(today): List<StepsAppTotal>` and `phonePackages(): Set<String>`; `HealthConnectSteps`
   implements them (decision 2: one day-bucket `aggregateGroupByPeriod` with `dataOriginFilter` per
   candidate — phone, the manifest step apps Samsung Health / Garmin Connect / Fitbit / Google Fit,
@@ -41,16 +41,16 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   `getCurrentDeviceDataSource()` only when SDK extension ≥ 22, wrapped in `runCatching` (null =
   fall back to the prefix, then the saved packages, then `android`). Keep `LocalDateTime` bounds
   for the day buckets. Update the fake in `StepsReadTest`.
-- [ ] 2.2 `StepsReader.read(wanted, today, packages)` passes the filter to `firstDay` and `daily`
+- [x] 2.2 `StepsReader.read(wanted, today, packages)` passes the filter to `firstDay` and `daily`
   and adds `source=` (`all`, `phone` or the package) to `steps.read`; the range starts at the later
   of the period and the source's first day, no per-day fallback. Verify: `StepsReadTest` checks the
   fake receives the filter and the log field, a source with only recent history leaves earlier days
   as gaps even though the fake's other app has them, and the existing fallback cases still pass.
-- [ ] 2.3 `StepsPrefs` (prefs file `steps`: `choice`, `autoPick`, `autoPickDay`, `phonePackages`,
+- [x] 2.3 `StepsPrefs` (prefs file `steps`: `choice`, `autoPick`, `autoPickDay`, `phonePackages`,
   `seen.<id>`), singleton next to the others in `TerveysApp`; `steps.xml` stays out of
   `data_extraction_rules.xml` (extend its comment and `DataTransferRulesTest`'s expectation of what
   is left out, if it lists them).
-- [ ] 2.4 `StepsViewModel` (decisions 4, 5, 7): resolve the source before a read; run the check per
+- [x] 2.4 `StepsViewModel` (decisions 4, 5, 7): resolve the source before a read; run the check per
   `StepsCheckRule` under every choice (first read with no stored pick under `Auto`: check, then
   read; otherwise read at once, check after, re-read only when the source changed); entering the
   sub-screen (not a resume) calls `checkNow()`, and so does access becoming GRANTED while it is
@@ -65,7 +65,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   and All and leaves the source alone; a switch re-reads; a late result of an older source is
   dropped; `setChoice` during a running read cancels it; a failed read after `setChoice` is the
   failure state; a log capture holds no step numbers.
-- [ ] 2.5 `StepsAppNames` (decision 6) and the two `<intent>` entries in the manifest's `<queries>`.
+- [x] 2.5 `StepsAppNames` (decision 6) and the two `<intent>` entries in the manifest's `<queries>`.
   Verify: Robolectric test: unknown package → its package name, `phone` → "Puhelin".
 
 ## 3. Asetukset → Askeleet and the Askeleet source line

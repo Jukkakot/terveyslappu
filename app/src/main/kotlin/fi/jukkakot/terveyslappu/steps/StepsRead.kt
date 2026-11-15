@@ -10,12 +10,21 @@ interface StepsSource {
     /** Whether the read permission is granted; throws when Health Connect cannot be used. */
     suspend fun granted(): Boolean
 
-    /** The first day with a readable steps record (an ascending read returns only readable ones). */
-    suspend fun firstDay(): LocalDate?
+    /** The first day with a readable steps record of [packages] (null: any app). */
+    suspend fun firstDay(packages: Set<String>?): LocalDate?
 
-    /** Merged daily totals from [from] to [to], both included; a day without data is absent. */
-    suspend fun daily(from: LocalDate, to: LocalDate): List<StepsDay>
+    /** Daily totals of [packages] (null: Health Connect's merge) from [from] to [to]; a day without data is absent. */
+    suspend fun daily(from: LocalDate, to: LocalDate, packages: Set<String>?): List<StepsDay>
+
+    /** The 30-day source check (steps-source-and-axes design 2); throws when any read fails. */
+    suspend fun check(today: LocalDate, candidates: List<StepsApp>): StepsCheck
+
+    /** `android` plus the phone's synthetic package name when the system tells it. */
+    suspend fun phonePackages(): Set<String>
 }
+
+/** A source check's result: every app's 30-day figures, and the record count and pages read (for the log). */
+data class StepsCheck(val apps: List<StepsAppTotal>, val records: Int = 0, val pages: Int = 0)
 
 object StepsRules {
     /** The access state from the permission check ([granted] null: the check failed). */
@@ -62,6 +71,9 @@ data class StepsUiState(
     val loadFailed: Boolean = false,
     /** The last read failed but earlier numbers are shown ("ei päivitetty"). */
     val stale: Boolean = false,
+    /** The source in use (steps-source-and-axes design 5) and its readable name (null: all apps). */
+    val source: StepsSourceState = StepsSourceRules.resolve(StepsChoice.Auto, null, null, false),
+    val sourceName: String? = null,
 ) {
     fun after(load: StepsLoad): StepsUiState = when (load) {
         is StepsLoad.Ok -> copy(days = load.days, loadFailed = false, stale = false)
@@ -75,44 +87,45 @@ data class StepsUiState(
  * Health Connect throws or clamps for a start past the readable history is not known (task 2.1b):
  * a failed chunk read is retried once from the day after the first readable day (its midnight can
  * lie a few hours before the first readable record), and the log says which happened
- * (`fallback=none|later-start`). Logs counts and timings only, never step counts.
+ * (`fallback=none|later-start`) and which source was read (`source=all|phone|<package>`; one source
+ * for the whole range, no per-day fallback to another app). Logs counts and timings only, never step counts.
  */
 class StepsReader(
     private val source: StepsSource,
     private val log: (ok: Boolean, error: Throwable?, fields: List<Pair<String, Any?>>) -> Unit,
     private val nanos: () -> Long = System::nanoTime,
 ) {
-    suspend fun read(wanted: LocalDate?, today: LocalDate): StepsLoad {
+    suspend fun read(wanted: LocalDate?, today: LocalDate, packages: Set<String>? = null, sourceName: String = "all"): StepsLoad {
         val started = nanos()
         fun ms() = (nanos() - started) / 1_000_000
         return try {
-            val first = source.firstDay()
+            val first = source.firstDay(packages)
             val start = StepsRules.readStart(wanted, first, today)
             if (start == null) {
-                log(true, null, listOf("days" to 0, "first" to "none", "ms" to ms()))
+                log(true, null, listOf("days" to 0, "first" to "none", "source" to sourceName, "ms" to ms()))
                 return StepsLoad.Ok(emptyList(), null)
             }
             var fallback = "none"
             var from: LocalDate = start
             val days = try {
-                readAll(start, today)
+                readAll(start, today, packages)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException || first == null || start != first || start >= today) throw e
                 fallback = "later-start"
                 from = start.plusDays(1)
                 log(false, e, listOf("cause" to e.javaClass.simpleName, "retry" to true, "ms" to ms()))
-                readAll(from, today)
+                readAll(from, today, packages)
             }
-            log(true, null, listOf("days" to days.size, "back" to java.time.temporal.ChronoUnit.DAYS.between(from, today), "fallback" to fallback, "ms" to ms()))
+            log(true, null, listOf("days" to days.size, "back" to java.time.temporal.ChronoUnit.DAYS.between(from, today), "fallback" to fallback, "source" to sourceName, "ms" to ms()))
             StepsLoad.Ok(days, from)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            log(false, e, listOf("cause" to e.javaClass.simpleName, "ms" to ms()))
+            log(false, e, listOf("cause" to e.javaClass.simpleName, "source" to sourceName, "ms" to ms()))
             StepsLoad.Failed(e)
         }
     }
 
-    private suspend fun readAll(from: LocalDate, to: LocalDate): List<StepsDay> =
-        StepsRules.chunks(from, to).flatMap { (a, b) -> source.daily(a, b) }.filter { it.steps > 0 }.sortedBy { it.day }
+    private suspend fun readAll(from: LocalDate, to: LocalDate, packages: Set<String>?): List<StepsDay> =
+        StepsRules.chunks(from, to).flatMap { (a, b) -> source.daily(a, b, packages) }.filter { it.steps > 0 }.sortedBy { it.day }
 }

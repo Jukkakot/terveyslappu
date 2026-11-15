@@ -20,15 +20,25 @@ class StepsReadTest {
         /** daily() throws for a range starting before this day. */
         val failBefore: LocalDate? = null,
         val failAll: Boolean = false,
+        /** Another app's steps, returned only without a filter (null packages). */
+        val other: List<StepsDay> = emptyList(),
+        val otherFirst: LocalDate? = null,
     ) : StepsSource {
         val asked = mutableListOf<Pair<LocalDate, LocalDate>>()
+        val filters = mutableListOf<Set<String>?>()
         override suspend fun granted() = true
-        override suspend fun firstDay() = first
-        override suspend fun daily(from: LocalDate, to: LocalDate): List<StepsDay> {
+        override suspend fun firstDay(packages: Set<String>?): LocalDate? {
+            filters += packages
+            return if (packages == null && otherFirst != null) listOfNotNull(first, otherFirst).min() else first
+        }
+        override suspend fun check(today: LocalDate, candidates: List<StepsApp>) = StepsCheck(emptyList())
+        override suspend fun phonePackages() = setOf("android")
+        override suspend fun daily(from: LocalDate, to: LocalDate, packages: Set<String>?): List<StepsDay> {
             asked += from to to
+            filters += packages
             if (failAll) throw IllegalStateException("refused")
             if (failBefore != null && from < failBefore) throw SecurityException("too old")
-            return data.filter { it.day in from..to }
+            return (if (packages == null) data + other else data).filter { it.day in from..to }
         }
     }
 
@@ -77,6 +87,25 @@ class StepsReadTest {
         assertTrue(ok)
         assertTrue(fields.contains("days" to 2))
         assertFalse(fields.any { it.second.toString() == "4321" || it.second.toString() == "8765" })
+    }
+
+    @Test
+    fun `a read passes the source filter and logs the source`() = runBlocking {
+        val log = Log()
+        val garmin = setOf("com.garmin.android.apps.connectmobile")
+        val source = FakeSource(
+            first = today.minusDays(20),
+            data = listOf(StepsDay(today.minusDays(3), 5000)),
+            other = listOf(StepsDay(today.minusDays(60), 7000)),
+            otherFirst = today.minusDays(400),
+        )
+        val load = StepsReader(source, log::add).read(null, today, garmin, "com.garmin.android.apps.connectmobile")
+        assertIs<StepsLoad.Ok>(load)
+        // Kaikki starts at the source's own first day; the other app's older days stay gaps.
+        assertEquals(today.minusDays(20), load.from)
+        assertEquals(listOf(StepsDay(today.minusDays(3), 5000)), load.days)
+        assertTrue(source.filters.all { it == garmin })
+        assertTrue(log.lines.single().third.contains("source" to "com.garmin.android.apps.connectmobile"))
     }
 
     @Test

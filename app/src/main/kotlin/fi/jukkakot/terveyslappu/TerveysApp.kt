@@ -127,6 +127,9 @@ class TerveysApp : Application() {
             .getOrDefault(emptyList())
     }
 
+    /** The steps source choice and pick (steps-source-and-axes design 3), only on this phone. */
+    val stepsPrefs: fi.jukkakot.terveyslappu.steps.StepsPrefs by lazy { fi.jukkakot.terveyslappu.steps.StepsPrefs(this) }
+
     /** The theme choice (app-appearance), read by every activity's theme. */
     val appearance: AppearancePrefs by lazy { AppearancePrefs(this) }
 

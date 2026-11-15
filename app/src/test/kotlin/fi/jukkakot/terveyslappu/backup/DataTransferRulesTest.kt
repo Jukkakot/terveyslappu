@@ -13,6 +13,7 @@ class DataTransferRulesTest {
         .parse(File("src/main/res/xml/data_extraction_rules.xml"))
         .documentElement
 
+    // Left out on purpose: backup.xml, weighin.xml, listen.xml, steps.xml (steps-source-and-axes design 3), logs/.
     private val expected = setOf(
         "sharedpref:profile.xml",
         "sharedpref:appearance.xml",

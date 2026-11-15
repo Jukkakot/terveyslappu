@@ -390,6 +390,7 @@
     <string name="steps_point">%1$s: %2$s askelta</string>
     <string name="steps_weekly">Viikkopalkit: keskiarvo askelpäivää kohden</string>
     <string name="steps_legend">Askeleet</string>
+    <string name="steps_source_phone">Puhelin</string>
     <string name="quantity_energy">Energia</string>
     <string name="energy_reason">Energia vaatii luvan ravintotietoihin</string>
     <string name="energy_empty">Tällä jaksolla ei ole kirjattuja päiviä.</string>
