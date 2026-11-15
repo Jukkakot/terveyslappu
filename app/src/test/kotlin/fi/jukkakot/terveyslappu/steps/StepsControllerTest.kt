@@ -239,7 +239,7 @@ class StepsControllerTest {
     @Test
     fun `the Garmin import merges into the read and re-merges without a new read`() = runTest {
         val source = Fake()
-        var imported = listOf(StepsDay(day.minusDays(400), 6_111))
+        var imported = listOf(GarminDay(day.minusDays(400), 6_111))
         val store = MemoryStepsStore().apply { autoPick = garmin; autoPickDay = day }
         val c = StepsController(source, store, backgroundScope, logger, now = { now }, today = { day }, garmin = { imported })
         assertEquals(1, c.sources.value.garmin!!.count)
@@ -253,7 +253,7 @@ class StepsControllerTest {
         assertEquals(listOf(day), c.state.value.days!!.map { it.day })
         assertNull(c.sources.value.garmin)
         assertTrue(source.calls.isEmpty())
-        imported = listOf(StepsDay(day.minusDays(400), 6_111))
+        imported = listOf(GarminDay(day.minusDays(400), 6_111))
         c.setChoice(StepsChoice.App("phone"))
         runCurrent()
         c.garminChanged()

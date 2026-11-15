@@ -511,13 +511,16 @@
     <string name="help_charts_title">Omat kaaviot</string>
     <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Paino, energia ja askeleet voivat olla pylväinä tai viivana, allekkain tai päällekkäin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
     <!-- garmin-steps-history -->
-    <string name="garmin_title">Garminin askelhistoria</string>
-    <string name="garmin_preview">%1$s – %2$s, %3$s päivää</string>
+    <string name="garmin_title">Garminin historia</string>
+    <string name="garmin_preview">%1$s – %2$s</string>
+    <string name="garmin_preview_steps">%1$s päivää askelia</string>
+    <string name="garmin_preview_kcal">%1$s päivää kulutusta</string>
     <string name="garmin_none">Tiedostosta ei löytynyt Garminin askelia</string>
-    <string name="garmin_imported">Askelhistoria tuotu: %1$d päivää</string>
-    <string name="garmin_imported_hidden">Askelhistoria tuotu: %1$d päivää · näkyy, kun lähde on Garmin Connect tai Kaikki</string>
-    <string name="garmin_import_failed">Askelhistoriaa ei voitu tallentaa. Syy on lokissa.</string>
-    <string name="garmin_deleted">Askelhistoria poistettu</string>
+    <string name="garmin_imported">Garmin-historia tuotu: %1$d päivää</string>
+    <string name="garmin_imported_hidden">Garmin-historia tuotu: %1$d päivää · näkyy, kun lähde on Garmin Connect tai Kaikki</string>
+    <string name="garmin_import_failed">Garmin-historiaa ei voitu tallentaa. Syy on lokissa.</string>
+    <string name="garmin_deleted">Garmin-historia poistettu</string>
+    <string name="garmin_row_no_kcal">Tuo ZIP uudelleen, niin kulutus tulee mukaan</string>
     <string name="garmin_row">%1$s – %2$s · %3$s päivää</string>
     <string name="garmin_row_empty">Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedot</string>
     <string name="garmin_delete">Poista</string>

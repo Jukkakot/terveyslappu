@@ -144,8 +144,16 @@ class SettingsScreenTest {
             stepsActions = StepsActions(onGarminDelete = { deleted++ }),
         )
         compose.onNodeWithTag("garminHistoryLine").assertTextContains("18.7.2023 – 8.11.2026", substring = true)
+        compose.onNodeWithTag("garminNoKcal").assertDoesNotExist()
         compose.onNodeWithTag("garminDelete").performClick()
         assertEquals(1, deleted)
+    }
+
+    @Test
+    fun `a history without kcal says to import the ZIP again`() {
+        val summary = fi.jukkakot.terveyslappu.steps.GarminSummary(java.time.LocalDate.of(2023, 7, 18), java.time.LocalDate.of(2026, 11, 8), 1206, kcal = false)
+        show(page = SettingsPage.STEPS, steps = StepsUiState(access = StepsAccess.GRANTED), sources = StepsSourcesUi(garmin = summary))
+        compose.onNodeWithTag("garminNoKcal").assertExists()
     }
 
     @Test

@@ -2,9 +2,9 @@
 
 ## 1. Garmin history with kcal
 
-- [ ] 1.1 Reader keeps `activeKilocalories` and `bmrKilocalories` per day next to steps (rules in steps delta); store `garmin-history.json` with migration from `garmin-steps.json`; backup rules + `DataTransferRulesTest`.
-- [ ] 1.2 Preview "Garminin historia" with both day counts; Asetukset row wording incl. the "Tuo ZIP uudelleen" line.
-- [ ] 1.3 Tests with made-up ZIPs: kcal kept, steps-only day, kcal-only day, migration of the old file.
+- [x] 1.1 Reader keeps `activeKilocalories` and `bmrKilocalories` per day next to steps (rules in steps delta); store `garmin-history.json` with migration from `garmin-steps.json`; backup rules + `DataTransferRulesTest`.
+- [x] 1.2 Preview "Garminin historia" with both day counts; Asetukset row wording incl. the "Tuo ZIP uudelleen" line.
+- [x] 1.3 Tests with made-up ZIPs: kcal kept, steps-only day, kcal-only day, migration of the old file.
 
 ## 2. Burned energy data
 

@@ -617,7 +617,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }.onSuccess { read ->
                 AppLog.i(
                     "steps.garmin.read", "ok",
-                    "days" to read.days.size,
+                    "days" to read.stepDays,
+                    "kcalDays" to read.kcalDays,
                     "first" to (read.days.firstOrNull()?.day ?: "none"),
                     "last" to (read.days.lastOrNull()?.day ?: "none"),
                     "entries" to read.entries,
@@ -633,7 +634,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(import = null) }
         viewModelScope.launch {
             val saved = withContext(Dispatchers.IO) {
-                runCatching { terveys.garminSteps.replace(read.days) }
+                runCatching { terveys.garminHistory.replace(read.days) }
                     .onFailure { AppLog.e("steps.garmin.import", it, "failed", "cause" to it.javaClass.simpleName) }
                     .isSuccess
             }
@@ -641,7 +642,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _messages.tryEmit(UiMessage(R.string.garmin_import_failed))
                 return@launch
             }
-            AppLog.i("steps.garmin.import", "ok", "days" to read.days.size)
+            AppLog.i("steps.garmin.import", "ok", "days" to read.days.size, "kcalDays" to read.kcalDays)
             val prefs = terveys.stepsPrefs
             val source = StepsSourceRules.resolve(prefs.choice, prefs.autoPick, null, false, prefs.phonePackages)
             val text = if (GarminMerge.uses(source)) R.string.garmin_imported else R.string.garmin_imported_hidden
@@ -652,12 +653,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Asetukset → Askeleet's Poista: at once, with Kumoa restoring from memory (design 11). */
     fun deleteGarmin() {
         viewModelScope.launch {
-            val old = withContext(Dispatchers.IO) { runCatching { terveys.garminSteps.delete() }.getOrNull() } ?: return@launch
+            val old = withContext(Dispatchers.IO) { runCatching { terveys.garminHistory.delete() }.getOrNull() } ?: return@launch
             AppLog.i("steps.garmin.delete", "")
             _messages.tryEmit(
                 UiMessage(R.string.garmin_deleted, action = UiAction(R.string.undo) {
                     viewModelScope.launch {
-                        withContext(Dispatchers.IO) { runCatching { terveys.garminSteps.restore(old) } }
+                        withContext(Dispatchers.IO) { runCatching { terveys.garminHistory.restore(old) } }
                         AppLog.i("steps.garmin.undo", "")
                     }
                 }),

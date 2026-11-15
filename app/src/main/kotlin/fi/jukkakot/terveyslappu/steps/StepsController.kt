@@ -61,7 +61,7 @@ class StepsController(
     private val today: () -> LocalDate = LocalDate::now,
     private val nanos: () -> Long = System::nanoTime,
     /** The imported Garmin history (garmin-steps-history), oldest first. */
-    private val garmin: () -> List<StepsDay> = { emptyList() },
+    private val garmin: () -> List<GarminDay> = { emptyList() },
 ) {
     private val reader = StepsReader(source, log = { ok, error, fields -> log.line(ok, "steps.read", if (ok) "ok" else "failed", error, fields) }, nanos)
 
@@ -104,7 +104,7 @@ class StepsController(
         _sources.update { it.copy(garmin = GarminSummary.of(garmin())) }
         val (hc, src) = lastHc ?: return
         if (current().key != src.key) return
-        _state.update { it.copy(days = GarminMerge.merge(hc, garmin(), src, today())) }
+        _state.update { it.copy(days = GarminMerge.merge(hc, garmin().steps(), src, today())) }
     }
 
     /** The source in use now. */
@@ -197,7 +197,7 @@ class StepsController(
                     val merged = when (load) {
                         is StepsLoad.Ok -> {
                             lastHc = load.days to src
-                            StepsLoad.Ok(GarminMerge.merge(load.days, garmin(), src, today()), load.from)
+                            StepsLoad.Ok(GarminMerge.merge(load.days, garmin().steps(), src, today()), load.from)
                         }
                         is StepsLoad.Failed -> load
                     }

@@ -13,7 +13,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Made-up ZIPs and step counts only (NFR-1). */
+/** Made-up ZIPs, step counts and kcal only (NFR-1). */
 class GarminStepsTest {
     private val today = LocalDate.of(2026, 11, 15)
     private val dir = "export-123/DI_CONNECT/DI-Connect-Aggregator/"
@@ -51,7 +51,7 @@ class GarminStepsTest {
         )
         val result = read(bytes)
         assertEquals(2, result.entries)
-        assertEquals(listOf(StepsDay(LocalDate.of(2025, 1, 2), 5000), StepsDay(LocalDate.of(2025, 1, 5), 6500)), result.days)
+        assertEquals(listOf(StepsDay(LocalDate.of(2025, 1, 2), 5000), StepsDay(LocalDate.of(2025, 1, 5), 6500)), result.days.steps())
     }
 
     @Test
@@ -79,25 +79,83 @@ class GarminStepsTest {
         assertFalse(GarminStepsReader.isZip(byteArrayOf(0x50)))
     }
 
+    private fun kcal(date: String, steps: String, active: String, bmr: String) =
+        """{"calendarDate":"$date","totalSteps":$steps,"activeKilocalories":$active,"bmrKilocalories":$bmr,"totalKilocalories":0.0}"""
+
+    @Test
+    fun `kcal are kept next to steps, steps-only and kcal-only days, BMR-only days dropped`() {
+        val result = read(
+            zip(
+                "${dir}UDSFile_a.json" to "[" + listOf(
+                    kcal("2025-02-01", "8000", "450.4", "1850.6"),
+                    kcal("2025-02-02", "7000", "null", "1850.0"),
+                    kcal("2025-02-03", "null", "320.0", "1800.0"),
+                    kcal("2025-02-04", "null", "0.0", "1790.0"),
+                    kcal("2025-02-05", "0", "\"x\"", "1790.0"),
+                ).joinToString(",") + "]",
+            ),
+        )
+        assertEquals(
+            listOf(
+                GarminDay(LocalDate.of(2025, 2, 1), 8000, 450, 1851),
+                GarminDay(LocalDate.of(2025, 2, 2), 7000),
+                GarminDay(LocalDate.of(2025, 2, 3), null, 320, 1800),
+            ),
+            result.days,
+        )
+        assertEquals(2, result.stepDays)
+        assertEquals(2, result.kcalDays)
+        assertEquals(2301L, result.days.first().total)
+    }
+
+    @Test
+    fun `a day twice keeps the larger steps and the larger kcal total independently`() {
+        val result = read(
+            zip(
+                "${dir}UDSFile_a.json" to "[${kcal("2025-02-01", "9000", "100.0", "1800.0")}]",
+                "${dir}UDSFile_b.json" to "[${kcal("2025-02-01", "5000", "400.0", "1800.0")}]",
+            ),
+        )
+        assertEquals(listOf(GarminDay(LocalDate.of(2025, 2, 1), 9000, 400, 1800)), result.days)
+    }
+
     @Test
     fun `store replaces whole, deletes and restores`() {
         val file = File.createTempFile("garmin", ".json").apply { delete() }
         try {
-            val store = GarminStepsStore(file)
+            val store = GarminHistoryStore(file)
             assertTrue(store.days.value.isEmpty())
-            val days = listOf(StepsDay(LocalDate.of(2025, 1, 5), 6500), StepsDay(LocalDate.of(2025, 1, 2), 5000))
+            val days = listOf(GarminDay(LocalDate.of(2025, 1, 5), 6500, 300, 1800), GarminDay(LocalDate.of(2025, 1, 2), 5000))
             store.replace(days)
-            assertEquals(days.sortedBy { it.day }, GarminStepsStore(file).days.value)
-            store.replace(listOf(StepsDay(LocalDate.of(2026, 1, 1), 100)))
-            assertEquals(1, GarminStepsStore(file).days.value.size)
+            assertEquals(days.sortedBy { it.day }, GarminHistoryStore(file).days.value)
+            store.replace(listOf(GarminDay(LocalDate.of(2026, 1, 1), 100)))
+            assertEquals(1, GarminHistoryStore(file).days.value.size)
             val old = store.delete()
-            assertTrue(GarminStepsStore(file).days.value.isEmpty())
+            assertTrue(GarminHistoryStore(file).days.value.isEmpty())
             store.restore(old)
-            assertEquals(old, GarminStepsStore(file).days.value)
-            assertEquals(GarminSummary(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 1), 1), GarminSummary.of(old))
+            assertEquals(old, GarminHistoryStore(file).days.value)
+            assertEquals(GarminSummary(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 1), 1, kcal = false), GarminSummary.of(old))
+            assertTrue(GarminSummary.of(days)!!.kcal)
             assertNull(GarminSummary.of(emptyList()))
         } finally {
             file.delete()
+        }
+    }
+
+    @Test
+    fun `an old steps-only file is read until the next import replaces it`() {
+        val dirFile = java.nio.file.Files.createTempDirectory("garmin").toFile()
+        try {
+            val oldFile = File(dirFile, "garmin-steps.json").apply { writeText("""[{"day":"2025-01-02","steps":5000},{"day":"2025-01-03","steps":4000}]""") }
+            val newFile = File(dirFile, "garmin-history.json")
+            val store = GarminHistoryStore(newFile, oldFile)
+            assertEquals(listOf(GarminDay(LocalDate.of(2025, 1, 2), 5000), GarminDay(LocalDate.of(2025, 1, 3), 4000)), store.days.value)
+            assertFalse(GarminSummary.of(store.days.value)!!.kcal)
+            store.replace(listOf(GarminDay(LocalDate.of(2025, 2, 1), 8000, 450, 1850)))
+            assertFalse(oldFile.exists())
+            assertEquals(listOf(GarminDay(LocalDate.of(2025, 2, 1), 8000, 450, 1850)), GarminHistoryStore(newFile, oldFile).days.value)
+        } finally {
+            dirFile.deleteRecursively()
         }
     }
 

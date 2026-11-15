@@ -30,7 +30,7 @@ val AppStepsLogger = StepsLogger { ok, event, message, error, fields ->
 class StepsViewModel(app: Application) : AndroidViewModel(app) {
     val steps = HealthConnectSteps(app)
 
-    private val garmin = (app as TerveysApp).garminSteps
+    private val garmin = (app as TerveysApp).garminHistory
 
     private val controller = StepsController(
         source = steps,

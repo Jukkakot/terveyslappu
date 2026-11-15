@@ -136,7 +136,7 @@ internal fun stepsSourceLineText(steps: StepsUiState): String {
 }
 
 /**
- * Asetukset → Askeleet's "Garminin askelhistoria" (steps "Imported history in Asetukset"): the
+ * Asetukset → Askeleet's "Garminin historia" (steps "Imported history in Asetukset"): the
  * imported range and day count with a red Poista, or the hint line; shown also without the steps permission.
  */
 @Composable
@@ -155,6 +155,9 @@ internal fun GarminHistoryRow(garmin: GarminSummary?, actions: StepsActions) {
                 stringResource(R.string.garmin_row, formatFullDay(garmin.first), formatFullDay(garmin.last), formatSteps(garmin.count.toLong()))
             }
             Text(detail, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.testTag("garminHistoryLine"))
+            if (garmin != null && !garmin.kcal) {
+                Text(stringResource(R.string.garmin_row_no_kcal), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.testTag("garminNoKcal"))
+            }
         }
         if (garmin != null) {
             TextButton(onClick = actions.onGarminDelete, colors = ButtonDefaults.textButtonColors(contentColor = colors.error), modifier = Modifier.testTag("garminDelete")) {

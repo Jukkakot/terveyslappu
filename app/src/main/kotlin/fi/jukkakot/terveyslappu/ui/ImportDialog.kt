@@ -60,15 +60,11 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
                         Text(stringResource(R.string.import_reading))
                         LinearProgressIndicator(Modifier.fillMaxWidth())
                     }
-                    is ImportState.Garmin -> Text(
-                        stringResource(
-                            R.string.garmin_preview,
-                            importDate.format(state.read.days.first().day),
-                            importDate.format(state.read.days.last().day),
-                            formatSteps(state.read.days.size.toLong()),
-                        ),
-                        modifier = Modifier.testTag("garminPreview"),
-                    )
+                    is ImportState.Garmin -> Column(Modifier.testTag("garminPreview")) {
+                        Text(stringResource(R.string.garmin_preview, importDate.format(state.read.days.first().day), importDate.format(state.read.days.last().day)))
+                        Text(stringResource(R.string.garmin_preview_steps, formatSteps(state.read.stepDays.toLong())))
+                        Text(stringResource(R.string.garmin_preview_kcal, formatSteps(state.read.kcalDays.toLong())))
+                    }
                     ImportState.GarminNone -> Text(stringResource(R.string.garmin_none))
                 }
             }
