@@ -96,13 +96,17 @@ red and green, and a zero change SHALL use the neutral text colour.
 - **THEN** the list area says that there are no weights in the period
 
 ### Requirement: Delete own entry
-The app SHALL let the user delete a listed weight with a long-press or the row's delete button,
-without a confirmation, and SHALL offer to undo the deletion.
+The app SHALL let the user delete a listed weight with the row's delete button (red), without a
+confirmation, and SHALL offer to undo the deletion. A long-press on a row SHALL NOT delete it.
 
 #### Scenario: Delete a test weight
-- **WHEN** the user long-presses a weight or taps its delete button
+- **WHEN** the user taps a weight's delete button
 - **THEN** the weight is removed from Health Connect and from the list
 - **AND** a message "Paino poistettu" with Kumoa is shown
+
+#### Scenario: Long-press does nothing
+- **WHEN** the user long-presses a weight row
+- **THEN** the weight stays
 
 #### Scenario: Undo
 - **WHEN** the user taps Kumoa

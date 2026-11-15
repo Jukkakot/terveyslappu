@@ -611,8 +611,9 @@ be disabled while the name is blank; the name SHALL accept at most 24 characters
 as one) and SHALL be saved trimmed. A new chart SHALL start with the name "Kaavio <n>" (the lowest
 n for which no other chart's name equals "Kaavio <n>", ignoring case and surrounding spaces), all
 three data on, Paino as Viiva, Energia and Askeleet as Pylväät, Allekkain, and the period 1 kk. For
-an existing chart the editor SHALL also show "Poista kaavio", which asks "Poistetaanko kaavio <nimi>?
-Se poistuu myös etusivulta." with Peruuta and Poista. Peruuta, back and tapping outside SHALL close
+an existing chart the editor SHALL also show a red "Poista kaavio" on the left, which deletes the
+chart at once, without a question, and shows "Kaavio poistettu · Kumoa"; Kumoa SHALL bring the
+chart back with its name, data, layout, period and its front page card in its place. Peruuta, back and tapping outside SHALL close
 the editor without saving and without asking. A data switched off SHALL keep its chosen style for
 when it is switched on again while the editor is open.
 
@@ -642,8 +643,13 @@ when it is switched on again while the editor is open.
 
 #### Scenario: Delete
 - **GIVEN** the chart "Liike" is on the front page
-- **WHEN** the user taps Poista kaavio and confirms with Poista
-- **THEN** its tab and its card are gone and Historia shows the tab before it
+- **WHEN** the user taps Poista kaavio
+- **THEN** its tab and its card are gone at once and Historia shows the tab before it
+
+#### Scenario: Undo a chart delete
+- **GIVEN** the user deleted "Liike", which was on the front page
+- **WHEN** they tap Kumoa
+- **THEN** its tab and its front page card are back as before
 
 #### Scenario: Cancel
 - **GIVEN** the user changed the layout in the editor
