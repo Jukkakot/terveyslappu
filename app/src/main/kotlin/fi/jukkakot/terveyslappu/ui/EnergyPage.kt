@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.AxisTicks
+import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.WeightScale
 import fi.jukkakot.terveyslappu.food.EnergyDay
 import fi.jukkakot.terveyslappu.food.EnergySeries
@@ -113,30 +114,11 @@ private fun EnergyChart(series: EnergySeries, weights: List<WeightEntry>, zone: 
                     }
                 },
             ) {
-                val dayW = size.width / days
-                fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
+                val axis = ChartAxis(series.from, series.to, series.weekly)
                 fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
-                for (bar in series.bars) {
-                    val span = bar.days * dayW
-                    val left = x(bar.from).toFloat() + span * 0.15f
-                    val width = max(span * 0.7f, 1.dp.toPx())
-                    val baseTop = y((bar.total - bar.treat).toDouble())
-                    drawRect(food, Offset(left, baseTop), Size(width, size.height - baseTop))
-                    if (bar.treat > 0) {
-                        val treatTop = y(bar.total.toDouble())
-                        drawRect(treat, Offset(left, treatTop), Size(width, baseTop - treatTop))
-                    }
-                }
-                if (series.average.size > 1) {
-                    val path = Path()
-                    series.average.forEachIndexed { i, p ->
-                        val px = x(p.day).toFloat() + dayW / 2
-                        val py = y(p.kcal.toDouble())
-                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                    }
-                    drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-                }
+                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.total.toDouble(), it.treat.toDouble()) }, ::y, food, treat)
+                if (series.average.size > 1) drawValueLine(axis, series.average.map { it.day to it.kcal.toDouble() }, ::y, line)
             }
         }
         weightData?.let { PeriodWeights(series.from, series.to, it, labelWidth, "energyWeights") }
@@ -201,21 +183,13 @@ internal fun PeriodWeights(from: LocalDate, to: LocalDate, data: PeriodWeightDat
     Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         YAxisLabels(data.labels(units = fits), listOf(0f, 0.5f, 1f), labelWidth, WEIGHT_STRIP, "${tag}Axis")
         Canvas(Modifier.weight(1f).height(WEIGHT_STRIP).clipToBounds().testTag(tag)) {
-            val start = from.atStartOfDay(data.zone).toInstant().epochSecond
-            val spanSeconds = days * 86_400f
+            // Day centres, as the bars above (custom-charts design 6).
+            val axis = ChartAxis(from, to)
             fun yOf(kg: Double) = size.height * ((scale.max - kg) / scale.span).toFloat()
-            fun at(e: WeightEntry) = Offset(
-                size.width * ((e.time.epochSecond - start) / spanSeconds).coerceIn(0f, 1f),
-                yOf(e.kg),
-            )
             drawGuidelines(grid, data.ticks.map { yOf(it) })
-            val shown = data.shown
-            if (shown.size > 1) {
-                val path = Path()
-                shown.forEachIndexed { i, e -> at(e).let { p -> if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y) } }
-                drawPath(path, weightColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-            }
-            drawCircle(weightColor, radius = 3.dp.toPx(), center = at(shown.last()))
+            val points = data.shown.map { it.time.atZone(data.zone).toLocalDate() to it.kg }
+            drawValueLine(axis, points, ::yOf, weightColor)
+            points.last().let { (day, kg) -> drawCircle(weightColor, radius = 3.dp.toPx(), center = Offset(axis.x(day, size.width), yOf(kg))) }
         }
     }
 }

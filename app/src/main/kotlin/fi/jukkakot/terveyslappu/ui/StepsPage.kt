@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.AxisTicks
+import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
@@ -227,26 +228,11 @@ private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: Zo
                     }
                 },
             ) {
-                val dayW = size.width / days
-                fun x(day: LocalDate) = ChronoUnit.DAYS.between(series.from, day) * dayW
+                val axis = ChartAxis(series.from, series.to, series.weekly)
                 fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
-                for (bar in series.bars) {
-                    val span = bar.days * dayW
-                    val left = x(bar.from).toFloat() + span * 0.15f
-                    val width = max(span * 0.7f, 1.dp.toPx())
-                    val barTop = y(bar.steps.toDouble())
-                    drawRect(barColor, Offset(left, barTop), Size(width, size.height - barTop))
-                }
-                if (series.average.size > 1) {
-                    val path = Path()
-                    series.average.forEachIndexed { i, p ->
-                        val px = x(p.day).toFloat() + dayW / 2
-                        val py = y(p.steps.toDouble())
-                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
-                    }
-                    drawPath(path, line, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-                }
+                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.steps.toDouble()) }, ::y, barColor)
+                if (series.average.size > 1) drawValueLine(axis, series.average.map { it.day to it.steps.toDouble() }, ::y, line)
             }
         }
         picked?.let {
