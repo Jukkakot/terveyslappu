@@ -33,7 +33,7 @@
 
 - [x] 5.1 Ohje: the own charts section (where they are made, bars or line, stacked or overlaid, each chart's own period, tap or press-and-hold for a day's values). Verify: the help test still passes
 - [x] 5.2 Update `.claude/CLAUDE.md`: the map (`CustomCharts`, `ChartStore`, `ChartAxis`, `ChartData`, `ChartReadout`, `HistoryPages`, shared drawers, `ChartCard`, the editor) and the event list (`chart.custom …`); roadmap "combined chart" marked done; product.md if it names Historia's tabs; add to the global knowledge bank's Charts section only if research taught something new. Verify: `git diff` shows those files
-- [ ] 5.3 Bump MINOR in `gradle.properties` `appVersion` (the last task); run `./gradlew test lint assembleDebug`. Verify: all green
+- [x] 5.3 Bump MINOR in `gradle.properties` `appVersion` (the last task); run `./gradlew test lint assembleDebug`. Verify: all green
 
 ## Workflow follow-up
 
