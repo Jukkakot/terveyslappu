@@ -8,7 +8,7 @@
 
 ## 2. Burned energy data
 
-- [ ] 2.1 `burn/` pure model, merge (larger total wins with its split; today never imported; source rule as steps), `BurnSeries` (daily/weekly, average, stats, list), `HomeBurn`; tests incl. total-only and active-only days, today.
+- [x] 2.1 `burn/` pure model, merge (larger total wins with its split; today never imported; source rule as steps), `BurnSeries` (daily/weekly, average, stats, list), `HomeBurn`; tests incl. total-only and active-only days, today.
 - [ ] 2.2 `HealthConnectBurn` reader (two daily aggregates by the steps source), permissions in manifest/privacy/request; `BurnController` with access states as steps; `burn.read` and `hc.permission.burn` logs; tests on the controller with a fake reader.
 
 ## 3. Screens
