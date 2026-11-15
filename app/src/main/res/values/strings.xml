@@ -307,9 +307,8 @@
     <string name="food_order_hint">Raahaa riviä kahvasta tai siirrä nuolilla.</string>
     <string name="food_move_up">Siirrä %1$s ylös</string>
     <string name="food_move_down">Siirrä %1$s alas</string>
-    <string name="food_add_field">Ruoka tai kcal</string>
+    <string name="food_add_field">Hae ruokaa tai kirjoita kcal</string>
     <string name="food_add_empty_hint">Kirjoita mitä söit, tai pelkkä kcal-luku. Usein syömäsi tulevat jatkossa tähän napin taakse.</string>
-    <string name="food_add_for_day">Lisätään päivälle %1$s</string>
     <string name="food_no_kcal">ilman kcal</string>
     <string name="food_change">Muuta</string>
     <string name="food_treat">Herkku</string>
@@ -353,17 +352,22 @@
     <string name="ai_prompt_failed">Ohjetta ei voitu kopioida.</string>
     <string name="ai_no_json">Tekstistä ei löytynyt ruoka-annoksia. Tuonti tarvitsee JSON-tekstin tuontiohjeen mukaan.</string>
     <string name="ai_empty">Tekstissä oli JSON, mutta ei yhtään käyttökelpoista ruokaa.</string>
-    <string name="ai_clip_offer">Tuo leikepöydältä: %1$s</string>
-    <string name="ai_clip_offer_kcal">Tuo leikepöydältä: %1$s · %2$s kcal</string>
-    <plurals name="ai_clip_items_count">
-        <item quantity="one">%1$d annos</item>
-        <item quantity="other">%1$d annosta</item>
-    </plurals>
-    <plurals name="ai_clip_products_count">
-        <item quantity="one">%1$d tuote</item>
-        <item quantity="other">%1$d tuotetta</item>
-    </plurals>
     <string name="ai_clip_skip">Ohita</string>
+    <string name="ai_clip_title">Leikepöydällä</string>
+    <string name="ai_clip_add_all">Lisää kaikki</string>
+    <string name="ai_clip_add_all_day">Lisää kaikki · %1$s</string>
+    <string name="ai_clip_save_products">Tallenna tuotteet</string>
+    <string name="ai_clip_edit">Muokkaa</string>
+    <string name="ai_clip_more">+%1$d muuta</string>
+    <string name="ai_clip_more_products">+ %1$d tuotetta</string>
+    <string name="food_sheet_title">Lisää annos · %1$s</string>
+    <string name="food_sheet_more">Lisää toimintoja</string>
+    <string name="food_list_usual">Usein tähän aikaan</string>
+    <string name="food_list_products">Tuotteet</string>
+    <string name="food_enter_row">Lisää ”%1$s” uutena</string>
+    <string name="food_enter_quick">Pikalisäys %1$s kcal</string>
+    <string name="food_product_delete">Poista tuote %1$s</string>
+    <string name="ai_clip_changed">Leikepöytä muuttui</string>
     <string name="ai_title">Tuo ruoka-annokset</string>
     <string name="ai_day">Päivälle</string>
     <string name="ai_items">Annokset</string>

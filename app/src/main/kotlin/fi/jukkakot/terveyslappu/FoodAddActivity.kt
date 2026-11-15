@@ -84,10 +84,18 @@ class FoodAddActivity : ComponentActivity() {
                         onPasteAi = { handOver(FoodClipboard.text(this), "paste") },
                         onCopyAiPrompt = { FoodClipboard.copyPrompt(this, model) },
                         onClipOpen = {
-                            model.clipOpened()
-                            handOver(FoodClipboard.text(this), "paste")
+                            val text = FoodClipboard.text(this)
+                            if (model.clipMatches(text)) {
+                                model.clipOpened()
+                                handOver(text, "paste")
+                            }
                         },
                         onClipSkip = model::skipClipOffer,
+                        // Lisää kaikki saves in the sheet itself; the sheet stays open (food-log "Import from the home-screen sheet").
+                        onClipAddAll = { day -> model.addAllFromClip(FoodClipboard.text(this), day) },
+                        onUndoImport = model::undoImport,
+                        onDeleteProduct = model::deleteProduct,
+                        onUndoDeleteProduct = model::undoDeleteProduct,
                     ),
                     FoodDialogActions(
                         onGrant = {

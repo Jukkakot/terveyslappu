@@ -1,6 +1,8 @@
 package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -16,6 +18,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.EditInput
+import fi.jukkakot.terveyslappu.food.EnterRow
 import fi.jukkakot.terveyslappu.food.EditMode
 import fi.jukkakot.terveyslappu.food.Energy
 import fi.jukkakot.terveyslappu.food.AmountUnit
@@ -89,26 +97,40 @@ internal fun FoodSheetFrame(onClose: () -> Unit, content: @Composable () -> Unit
     }
 }
 
-/** The sheet's add field, its line, the suggestions and the import buttons. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * The sheet's content (food-log "Adding an item"): header with the day and ⋮, the clipboard card,
+ * the field, its line, the headed list and the quiet import button. The keyboard rises on open and
+ * when the card goes away, never while the card is shown.
+ */
 @Composable
 internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BaseProduct>, actions: FoodActions) {
     val focus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val today = LocalDate.now()
-    if (day != today) {
-        Text(stringResource(R.string.food_add_for_day, dayTitle(day, today)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
+    SheetHeader(day, today, actions)
+    val offer = food.clipOffer
+    offer?.let { ClipOfferCard(it, day, actions) }
     OutlinedTextField(
         value = food.query,
         onValueChange = actions.onQuery,
-        label = { Text(stringResource(R.string.food_add_field)) },
+        placeholder = { Text(stringResource(R.string.food_add_field)) },
+        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { actions.onEnter() }),
         modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
     )
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    food.clipOffer?.let { ClipOfferButton(it, actions) }
+    val cardShown = offer != null
+    LaunchedEffect(cardShown) {
+        if (!cardShown) {
+            runCatching { focus.requestFocus() }
+        } else if (food.query.isEmpty()) {
+            // The card came after the keyboard (the dialog reads the clip on focus): put it down.
+            focusManager.clearFocus()
+            keyboard?.hide()
+        }
+    }
     food.line?.let { SheetLineRow(it, actions) }
     val items = food.items
     if (FoodNames.normalize(food.query).isEmpty()) {
@@ -123,18 +145,76 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
             )
             picks.isEmpty() -> Text(stringResource(R.string.food_add_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("addHint"))
             else -> Column(Modifier.testTag("addSuggestions")) {
+                ListHeading(stringResource(R.string.food_list_usual))
                 picks.forEach { p -> SuggestionRow(Suggestion.Own(p), "pick", actions) }
             }
         }
     } else {
         val matches = remember(food.query, items, food.products) { Suggestions.typing(food.query, food.products, base, items.orEmpty()) }
+        val enter = remember(food.query, matches, food.products) { EnterRow.of(food.query, matches, food.products, base) }
         Column(Modifier.testTag("addMatches")) {
+            if (matches.isNotEmpty()) ListHeading(stringResource(R.string.food_list_products))
             matches.forEach { s -> SuggestionRow(s, "match", actions) }
+            enter?.let { EnterRowView(it, actions) }
         }
     }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
-        TextButton(onClick = actions.onCopyAiPrompt, modifier = Modifier.heightIn(min = 48.dp).testTag("aiCopyPrompt")) { Text(stringResource(R.string.ai_copy_prompt)) }
+    TextButton(onClick = actions.onPasteAi, modifier = Modifier.heightIn(min = 48.dp).testTag("aiPaste")) { Text(stringResource(R.string.ai_paste)) }
+}
+
+/** "Lisää annos · tänään" and the ⋮ menu (Kopioi tuontiohje). */
+@Composable
+private fun SheetHeader(day: LocalDate, today: LocalDate, actions: FoodActions) {
+    var menu by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.food_sheet_title, dayTitle(day, today).lowercaseFirst()),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.weight(1f).testTag("sheetTitle"),
+        )
+        Box {
+            IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp).testTag("sheetMenu")) {
+                Icon(painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.food_sheet_more))
+            }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.ai_copy_prompt)) },
+                    onClick = {
+                        menu = false
+                        actions.onCopyAiPrompt()
+                    },
+                    modifier = Modifier.testTag("aiCopyPrompt"),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ListHeading(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
+    )
+}
+
+/** The typed list's last row: "Lisää ”kana” uutena" over what enter adds; a tap is enter. */
+@Composable
+private fun EnterRowView(row: EnterRow, actions: FoodActions) {
+    Row(
+        Modifier.fillMaxWidth().clickable { actions.onEnter() }.heightIn(min = 56.dp).padding(horizontal = 4.dp, vertical = 6.dp).testTag("enterRow"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(painterResource(R.drawable.ic_add), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 12.dp).size(24.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.food_enter_row, row.text), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val detail = when (row) {
+                is EnterRow.Quick -> stringResource(R.string.food_enter_quick, formatKcal(row.kcal))
+                is EnterRow.Named -> row.product?.let { suggestionDetail(it) } ?: stringResource(R.string.food_no_kcal)
+            }
+            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
@@ -155,8 +235,9 @@ internal fun suggestionDetail(product: Product): String {
 }
 
 /**
- * One suggestion (empty-field list and typed matches): name, usual amount · kcal, the treat sign; a
- * tap adds at once, the pencil opens the editor on a new item first.
+ * One suggestion (empty-field list and typed matches): name and usual amount · kcal; a tap adds at
+ * once. A fixed trailing column: the treat sign, the pencil (editor on a new item first) and, on an
+ * own product, the red trash (removes the product).
  */
 @Composable
 private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions) {
@@ -166,7 +247,7 @@ private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(s.name, style = MaterialTheme.typography.bodyLarge)
+                Text(s.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(suggestionDetail(s.product), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (s.product.treat) TreatSign()
@@ -174,10 +255,17 @@ private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions) {
         IconButton(onClick = { actions.onEditPick(s) }, modifier = Modifier.size(48.dp).testTag("edit-${s.name}")) {
             Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.food_edit_before_add))
         }
+        if (s is Suggestion.Own) {
+            IconButton(onClick = { actions.onDeleteProduct(s.product) }, modifier = Modifier.size(48.dp).testTag("deleteProduct-${s.name}")) {
+                Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.food_product_delete, s.name), tint = MaterialTheme.colorScheme.error)
+            }
+        } else {
+            Spacer(Modifier.size(48.dp))
+        }
     }
 }
 
-/** The line under the field: "Rahka 200 g · 130 kcal · Muuta · Kumoa", a delete's Kumoa, or a failed write. */
+/** The line under the field: an add with Muuta · Kumoa, a delete's or import's Kumoa, a failed write or a changed clip. */
 @Composable
 private fun SheetLineRow(line: SheetLine, actions: FoodActions) {
     when (line) {
@@ -191,17 +279,29 @@ private fun SheetLineRow(line: SheetLine, actions: FoodActions) {
             TextButton(onClick = { actions.onEdit(item) }, modifier = Modifier.testTag("lastChange")) { Text(stringResource(R.string.food_change)) }
             TextButton(onClick = actions.onUndoAdd, modifier = Modifier.testTag("lastUndo")) { Text(stringResource(R.string.undo)) }
         }
-        is SheetLine.Deleted -> Row(Modifier.fillMaxWidth().testTag("sheetDeleted"), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.food_deleted, line.item.name), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            TextButton(onClick = actions.onUndoDelete, modifier = Modifier.testTag("deletedUndo")) { Text(stringResource(R.string.undo)) }
+        is SheetLine.Deleted -> UndoLine(stringResource(R.string.food_deleted, line.item.name), actions.onUndoDelete, "sheetDeleted", "deletedUndo")
+        is SheetLine.ProductRemoved -> UndoLine(stringResource(R.string.food_deleted, line.product.name), actions.onUndoDeleteProduct, "sheetProductRemoved", "productUndo")
+        is SheetLine.Imported -> {
+            val plan = line.plan
+            val text = if (plan.items.isEmpty()) stringResource(R.string.ai_products_saved, plan.products.size) else stringResource(R.string.ai_added, plan.items.size)
+            UndoLine(text, actions.onUndoImport, "sheetImported", "importUndo")
         }
-        SheetLine.Failed -> Text(
-            stringResource(R.string.food_sheet_failed),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("sheetFailed"),
-        )
+        SheetLine.Failed -> NoticeLine(stringResource(R.string.food_sheet_failed), MaterialTheme.colorScheme.error, "sheetFailed")
+        SheetLine.ClipChanged -> NoticeLine(stringResource(R.string.ai_clip_changed), MaterialTheme.colorScheme.onSurfaceVariant, "sheetClipChanged")
     }
+}
+
+@Composable
+private fun UndoLine(text: String, onUndo: () -> Unit, tag: String, undoTag: String) {
+    Row(Modifier.fillMaxWidth().testTag(tag), verticalAlignment = Alignment.CenterVertically) {
+        Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        TextButton(onClick = onUndo, modifier = Modifier.testTag(undoTag)) { Text(stringResource(R.string.undo)) }
+    }
+}
+
+@Composable
+private fun NoticeLine(text: String, color: androidx.compose.ui.graphics.Color, tag: String) {
+    Text(text, style = MaterialTheme.typography.bodyMedium, color = color, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag(tag))
 }
 
 private fun number(text: String): Double? = text.trim().replace(',', '.').replace(" ", "").toDoubleOrNull()?.takeIf { it >= 0 }

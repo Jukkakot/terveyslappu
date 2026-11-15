@@ -320,4 +320,71 @@ class FoodViewModelTest {
         assertNull(state.draft)
         assertNull(state.line)
     }
+
+    // Lisää kaikki and the product delete (food-sheet-layout).
+    @Test
+    fun `Lisaa kaikki adds the card's items to the sheet's day and ends the offer`() {
+        ready()
+        check(100)
+        model.addAllFromClip(clipJson, today)
+        idle()
+        assertEquals(listOf("Testipuuro", "Testikahvi"), records.items.sortedBy { it.pos }.map { it.name })
+        assertTrue(records.items.all { it.day == today })
+        assertNull(state.clipOffer)
+        assertIs<SheetLine.Imported>(state.line)
+        check(100)
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `a changed clipboard saves nothing and refreshes the card`() {
+        ready()
+        check(100)
+        model.addAllFromClip("""{"items":[{"name":"Testileipä","kcal":90}]}""", today)
+        idle()
+        assertTrue(records.items.isEmpty())
+        assertEquals(1, state.clipOffer?.count)
+        assertEquals(SheetLine.ClipChanged, state.line)
+        model.addAllFromClip("https://example.com/a", today)
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `Kumoa of Lisaa kaikki removes the items and the offer stays gone`() {
+        ready()
+        check(100)
+        model.addAllFromClip(clipJson, today)
+        idle()
+        model.undoImport()
+        idle()
+        assertTrue(records.items.isEmpty())
+        assertNull(app.products.find("Testipuuro"))
+        check(100)
+        assertNull(state.clipOffer)
+    }
+
+    @Test
+    fun `a failed Lisaa kaikki keeps the offer and the products`() {
+        ready()
+        check(100)
+        records.failInsert = true
+        model.addAllFromClip(clipJson, today)
+        idle()
+        assertNotNull(state.clipOffer)
+        assertEquals(SheetLine.Failed, state.line)
+        assertNull(app.products.find("Testipuuro"))
+    }
+
+    @Test
+    fun `the delete button removes a product and Kumoa brings it back`() {
+        val pallo = Product("Testipallo", true, Energy(150.0, AmountUnit.KPL), Amount(1.0, AmountUnit.KPL))
+        app.products.put(pallo)
+        ready()
+        model.deleteProduct(pallo)
+        assertNull(app.products.find("Testipallo"))
+        assertEquals(SheetLine.ProductRemoved(pallo), state.line)
+        model.undoDeleteProduct()
+        assertEquals(pallo, app.products.find("Testipallo"))
+        assertNull(state.line)
+    }
 }

@@ -7,6 +7,9 @@ import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.food.AddInput
 import fi.jukkakot.terveyslappu.food.AiFailure
+import fi.jukkakot.terveyslappu.food.AiItem
+import fi.jukkakot.terveyslappu.food.AiParsed
+import fi.jukkakot.terveyslappu.food.AiProduct
 import fi.jukkakot.terveyslappu.food.AiImport
 import fi.jukkakot.terveyslappu.food.AiImportPlan
 import fi.jukkakot.terveyslappu.food.AiPaste
@@ -54,6 +57,15 @@ sealed interface SheetLine {
 
     /** "Tallennus epäonnistui". */
     data object Failed : SheetLine
+
+    /** "<N> annosta lisätty · Kumoa" (or "<N> tuotetta tallennettu · Kumoa") after an import in an open sheet. */
+    data class Imported(val plan: AiImportPlan) : SheetLine
+
+    /** "<name> poistettu · Kumoa" after a row's delete button. */
+    data class ProductRemoved(val product: Product) : SheetLine
+
+    /** "Leikepöytä muuttui": the card's content left the clipboard before the tap; nothing saved. */
+    data object ClipChanged : SheetLine
 }
 
 data class FoodUiState(
@@ -276,23 +288,23 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { s -> if (s.clipOffer?.key == key) s.copy(clipOffer = null) else s }
     }
 
+    /**
+     * The last read clip: its time and the parsed content (JSON in `foodclip`), the card's lines
+     * planned against the current products on every check. A cache of an older version without the
+     * parsed content counts as no cache (read again).
+     */
     private fun cachedRead(): ClipRead? {
         if (!clipPrefs.contains("readTime")) return null
-        val key = clipPrefs.getString("readKey", null)
-        val offer = key?.let {
-            ClipOffer(it, clipPrefs.getInt("readCount", 0), clipPrefs.getInt("readKcal", -1).takeIf { k -> k >= 0 }, clipPrefs.getBoolean("readProducts", false))
-        }
+        val parsed = clipPrefs.getString("readParsed", null)
+        if (parsed == null && clipPrefs.contains("readKey")) return null
+        val offer = parsed?.let { runCatching { clipJson.decodeFromString(AiParsed.serializer(), it) }.getOrNull() ?: return null }
+            ?.let { ClipOffers.offer(it, store.all(), base) }
         return ClipRead(clipPrefs.getLong("readTime", 0L), offer)
     }
 
-    private fun cacheRead(read: ClipRead) {
-        val o = read.offer
-        val edit = clipPrefs.edit().putLong("readTime", read.time)
-        if (o == null) {
-            edit.remove("readKey").remove("readCount").remove("readKcal").remove("readProducts")
-        } else {
-            edit.putString("readKey", o.key).putInt("readCount", o.count).putInt("readKcal", o.kcal ?: -1).putBoolean("readProducts", o.productsOnly)
-        }
+    private fun cacheRead(time: Long, parsed: AiParsed?) {
+        val edit = clipPrefs.edit().putLong("readTime", time).remove("readKey").remove("readCount").remove("readKcal").remove("readProducts")
+        if (parsed == null) edit.remove("readParsed") else edit.putString("readParsed", clipJson.encodeToString(AiParsed.serializer(), parsed))
         edit.apply()
     }
 
@@ -305,24 +317,26 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val legacy = clipPrefs.getLong("offered", -1L)
         if (legacy >= 0) {
             clipPrefs.edit().remove("offered").apply()
-            if (clipTime in 1..legacy && cachedRead() == null) cacheRead(ClipRead(clipTime, null))
+            if (clipTime in 1..legacy && cachedRead() == null) cacheRead(clipTime, null)
         }
         val done = doneKeys()
         val offer: ClipOffer?
         val didRead: Boolean
-        when (val step = ClipOffers.step(hasText, clipTime, cachedRead(), done)) {
+        val cached = cachedRead()
+        var json = hasText && cached?.offer != null
+        when (val step = ClipOffers.step(hasText, clipTime, cached, done)) {
             is ClipStep.Known -> {
                 didRead = false
                 offer = step.offer
             }
             ClipStep.Read -> {
                 didRead = true
-                val found = ClipOffers.from(read(), store.all(), base)
-                cacheRead(ClipRead(clipTime, found))
-                offer = ClipOffers.shown(found, done)
+                val parsed = ClipOffers.parsed(read())
+                cacheRead(clipTime, parsed)
+                json = parsed != null
+                offer = ClipOffers.shown(parsed?.let { ClipOffers.offer(it, store.all(), base) }, done)
             }
         }
-        val json = hasText && cachedRead()?.offer != null
         AppLog.i("food.import.offer", "check", "read" to didRead, "json" to json, "done" to (json && offer == null))
         val before = _state.value.clipOffer
         _state.update { it.copy(clipOffer = offer) }
@@ -334,10 +348,38 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.value.clipOffer?.let { AppLog.i("food.import.offer", "open", "count" to it.count) }
     }
 
-    /** The offer tapped in the app: [text] is the clipboard read now; whatever food JSON it holds opens. */
+    /** Muokkaa in the app: [text] is the clipboard read now; the preview opens when it still holds the card's content. */
     fun openClipOffer(text: String) {
+        if (!clipMatches(text)) return
         clipOpened()
         openAi(text, "paste")
+    }
+
+    /**
+     * Whether [text] (the clipboard read at the tap) still holds the card's content (design 1). If
+     * not, the card is refreshed (or goes away), "Leikepöytä muuttui" says so and nothing is saved.
+     */
+    fun clipMatches(text: String): Boolean {
+        val offer = _state.value.clipOffer ?: return false
+        val parsed = ClipOffers.parsed(text)
+        if (parsed != null && ClipOffers.key(parsed) == offer.key) return true
+        val found = ClipOffers.shown(parsed?.let { ClipOffers.offer(it, store.all(), base) }, doneKeys())
+        AppLog.i("food.import.offer", "changed", "json" to (parsed != null))
+        _state.update { it.copy(clipOffer = found, line = if (it.sheetDay != null) SheetLine.ClipChanged else it.line) }
+        if (_state.value.sheetDay == null) _messages.tryEmit(UiMessage(R.string.ai_clip_changed))
+        return false
+    }
+
+    /**
+     * Lisää kaikki: the clipboard [text] read at the tap is saved as the preview's Lisää would, to
+     * [day] (the sheet's, Ruoka's or today), without the preview; only when it is still the card's content.
+     */
+    fun addAllFromClip(text: String, day: LocalDate) {
+        val offer = _state.value.clipOffer ?: return
+        if (!clipMatches(text)) return
+        val parsed = ClipOffers.parsed(text) ?: return
+        AppLog.i("food.import.offer", "addall", "count" to offer.count, "products" to parsed.products.size)
+        saveImport(parsed.items, parsed.products, minOf(day, LocalDate.now()), offer.key)
     }
 
     /** Ohita: that content is not offered again. */
@@ -360,29 +402,81 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     fun addAi() {
         val preview = _state.value.ai ?: return
         _state.update { it.copy(ai = null) }
-        // Saved content is not offered again, whatever opened the preview (review decision: before the write).
-        preview.sourceKey?.let { markDone(it) }
-        viewModelScope.launch {
-            if (_state.value.items == null) load()
-            val current = _state.value
-            val plan = AiImport.plan(
-                preview.items, preview.products, preview.day, current.dayItems(preview.day), store.all(), base,
-                Instant.now(), ZoneId.systemDefault(),
-            ) { UUID.randomUUID().toString() }
-            plan.products.forEach { store.put(it) }
-            _state.update { it.copy(items = it.items.orEmpty() + plan.items, products = store.all()) }
-            val undo = UiAction(R.string.undo) { undoAi(plan) }
-            _messages.tryEmit(
-                if (plan.items.isEmpty()) UiMessage(R.string.ai_products_saved, listOf(plan.products.size), undo)
-                else UiMessage(R.string.ai_added, listOf(plan.items.size), undo),
-            )
-            if (plan.items.isEmpty()) {
-                AppLog.i("food.import.save", "ok", "count" to 0, "products" to plan.products.size)
+        saveImport(preview.items, preview.products, preview.day, preview.sourceKey)
+    }
+
+    /**
+     * An import's save (the preview's Lisää and the card's Lisää kaikki): items at the end of [day];
+     * products are kept and [key] marked done only after Health Connect took the items (review
+     * decision), so a failed write leaves the offer and the products as they were.
+     */
+    private fun saveImport(items: List<AiItem>, products: List<AiProduct>, day: LocalDate, key: String?) {
+        terveys.appScope.launch {
+            writes.withLock {
+                if (items.isNotEmpty() && _state.value.items == null) load()
+                if (items.isNotEmpty() && _state.value.items == null) {
+                    AppLog.w("food.import.save", "failed", "reason" to "read")
+                    failed()
+                    return@withLock
+                }
+                val plan = AiImport.plan(
+                    items, products, day, _state.value.dayItems(day), store.all(), base, Instant.now(), ZoneId.systemDefault(),
+                ) { UUID.randomUUID().toString() }
+                val started = System.nanoTime()
+                val fields = arrayOf<Pair<String, Any?>>("count" to plan.items.size, "products" to plan.products.size)
+                val written = plan.items.isEmpty() || runCatching { foods.insert(plan.items) }
+                    .onFailure { AppLog.e("food.import.save", it, "failed", *fields, "ms" to msSince(started)) }
+                    .isSuccess
+                if (!written) {
+                    failed()
+                    load()
+                    return@withLock
+                }
+                AppLog.i("food.import.save", "ok", *fields, "ms" to msSince(started))
+                plan.products.forEach { store.put(it) }
+                key?.let { markDone(it) }
                 terveys.backup.request("food")
-            } else {
-                write("food.import.save", "count" to plan.items.size, "products" to plan.products.size) { foods.insert(plan.items) }
+                changed()
+                _state.update { it.copy(items = it.items.orEmpty() + plan.items, products = store.all()) }
+                imported(plan)
+                if (plan.items.isNotEmpty()) load()
             }
         }
+    }
+
+    /** The import's Kumoa: the sheet's line while a sheet is open, else the snackbar. */
+    private fun imported(plan: AiImportPlan) {
+        if (_state.value.sheetDay != null) {
+            _state.update { it.copy(line = SheetLine.Imported(plan)) }
+            return
+        }
+        val undo = UiAction(R.string.undo) { undoAi(plan) }
+        _messages.tryEmit(
+            if (plan.items.isEmpty()) UiMessage(R.string.ai_products_saved, listOf(plan.products.size), undo)
+            else UiMessage(R.string.ai_added, listOf(plan.items.size), undo),
+        )
+    }
+
+    /** The sheet line's Kumoa of an import. */
+    fun undoImport() {
+        val plan = (_state.value.line as? SheetLine.Imported)?.plan ?: return
+        _state.update { it.copy(line = null) }
+        undoAi(plan)
+    }
+
+    /** A row's delete button (food-log "Removing a product from the sheet"): logged items keep their values. */
+    fun deleteProduct(product: Product) {
+        store.remove(product.key)
+        AppLog.i("food.product.delete", "ok", "from" to source)
+        _state.update { it.copy(products = store.all(), line = if (it.sheetDay != null) SheetLine.ProductRemoved(product) else it.line) }
+    }
+
+    /** The sheet line's Kumoa of a product delete: the product back as it was. */
+    fun undoDeleteProduct() {
+        val product = (_state.value.line as? SheetLine.ProductRemoved)?.product ?: return
+        store.restore(mapOf(product.key to product))
+        AppLog.i("food.product.delete", "undo", "from" to source)
+        _state.update { it.copy(products = store.all(), line = null) }
     }
 
     private fun undoAi(plan: AiImportPlan) {

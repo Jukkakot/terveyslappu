@@ -133,6 +133,39 @@ fun resolveName(name: String, own: List<Product>, base: List<BaseProduct>): Sugg
     return Suggestion.Own(Product(FoodNames.clean(name)))
 }
 
+/** The typed list's last row "Lisää ”<text>” uutena": what enter adds (food-log "Adding an item"). */
+sealed interface EnterRow {
+    /** The quoted text, cleaned. */
+    val text: String
+
+    /** A bare number: "Pikalisäys <kcal> kcal". */
+    data class Quick(override val text: String, val kcal: Int) : EnterRow
+
+    /** A name: [product] when it is a known own or base product (its kcal shown), else null ("ilman kcal"). */
+    data class Named(override val text: String, val product: Product?) : EnterRow
+
+    companion object {
+        /**
+         * The row for [query], or null when the field is empty or the cleaned text is the name of a
+         * [listed] product (that row already adds it).
+         */
+        fun of(query: String, listed: List<Suggestion>, own: List<Product>, base: List<BaseProduct>): EnterRow? {
+            val input = AddInput.parse(query) ?: return null
+            val text = FoodNames.clean(query)
+            if (listed.any { it.product.key == FoodNames.key(text) }) return null
+            return when (input) {
+                is AddInput.Quick -> Quick(text, input.kcal)
+                is AddInput.Name -> {
+                    val key = FoodNames.key(input.name)
+                    val known = own.any { it.key == key } ||
+                        base.any { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }
+                    Named(text, if (known) resolveName(input.name, own, base).product else null)
+                }
+            }
+        }
+    }
+}
+
 /** The add field's suggestions (food-log "Adding an item", design 4). */
 object Suggestions {
     const val EMPTY_LIMIT = 8

@@ -286,25 +286,3 @@ private fun AiProductEditor(product: AiProduct, onDismiss: () -> Unit, onSave: (
     )
 }
 
-/** "Tuo leikepöydältä: 4 annosta · 850 kcal" (food-log "Clipboard offer"). */
-@Composable
-internal fun clipOfferText(offer: ClipOffer): String {
-    val res = LocalContext.current.resources
-    val count = if (offer.productsOnly) res.getQuantityString(R.plurals.ai_clip_products_count, offer.count, offer.count)
-    else res.getQuantityString(R.plurals.ai_clip_items_count, offer.count, offer.count)
-    return offer.kcal?.let { stringResource(R.string.ai_clip_offer_kcal, count, formatKcal(it)) } ?: stringResource(R.string.ai_clip_offer, count)
-}
-
-/** The offer under the add field and at the top of the Ruoka day: a full-width tonal button and a small Ohita. */
-@Composable
-internal fun ClipOfferButton(offer: ClipOffer, actions: FoodActions) {
-    Row(Modifier.fillMaxWidth().testTag("clipOffer"), verticalAlignment = Alignment.CenterVertically) {
-        // Filled primary: the import is usually the next tap (user, 2026-11-15).
-        Button(onClick = actions.onClipOpen, modifier = Modifier.weight(1f).heightIn(min = 64.dp).testTag("clipOpen")) {
-            Icon(painterResource(R.drawable.ic_import), contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(12.dp))
-            Text(clipOfferText(offer), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        }
-        TextButton(onClick = actions.onClipSkip, modifier = Modifier.heightIn(min = 48.dp).testTag("clipSkip")) { Text(stringResource(R.string.ai_clip_skip)) }
-    }
-}

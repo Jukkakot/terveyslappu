@@ -89,6 +89,7 @@ import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
 import java.time.Instant
+import java.time.LocalDate
 
 /**
  * The home screen (home-screen, home-card-layout): the feature cards in the user's grid, and the
@@ -257,7 +258,7 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
         if (!editing) {
             if (backup.needsAttention(Instant.now())) item(key = "backupNotice", span = full) { BackupNotice(backup.failed, data.actions.onOpenBackupSettings) }
             if (state.newestQuestioned != null) item(key = "checkNotice", span = full) { CheckNotice(data.actions.onOpenQuestioned) }
-            data.food.clipOffer?.let { offer -> item(key = "clipOffer", span = full) { ClipOfferNotice(offer, data.foodActions) } }
+            data.food.clipOffer?.let { offer -> item(key = "clipOffer", span = full) { ClipOfferCard(offer, LocalDate.now(), data.foodActions) } }
         }
         items(layout.shown, key = { it.id }, span = { GridItemSpan(it.size.span) }) { card ->
             ReorderableItem(reorder, key = card.id) { dragging ->

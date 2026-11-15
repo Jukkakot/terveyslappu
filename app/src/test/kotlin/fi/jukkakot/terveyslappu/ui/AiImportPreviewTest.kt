@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.food.AiItem
 import fi.jukkakot.terveyslappu.food.AiProduct
+import fi.jukkakot.terveyslappu.food.ClipLine
 import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
@@ -62,16 +63,23 @@ class AiImportPreviewTest {
     }
 
     @Test
-    fun `clip offer button shows the count and opens or skips`() {
+    fun `clip card shows the lines and adds all, opens or skips`() {
         var opened = 0
         var skipped = 0
+        val added = mutableListOf<LocalDate>()
+        val lines = listOf(ClipLine("Testipuuro", null, 210.0, false), ClipLine("Testikahvi", null, 5.0, false))
+        val day = LocalDate.now().minusDays(1)
         compose.setContent {
-            TerveysTheme { ClipOfferButton(ClipOffer("k", 6, 850, false), FoodActions(onClipOpen = { opened++ }, onClipSkip = { skipped++ })) }
+            TerveysTheme {
+                ClipOfferCard(ClipOffer("k", 2, 215, false, lines), day, FoodActions(onClipOpen = { opened++ }, onClipSkip = { skipped++ }, onClipAddAll = { added += it }))
+            }
         }
         compose.onNodeWithTag("clipOffer").assertExists()
-        compose.onNodeWithText("6", substring = true).assertExists()
+        compose.onNodeWithText("Testipuuro", substring = true).assertExists()
+        compose.onNodeWithTag("clipAddAll").performClick()
         compose.onNodeWithTag("clipOpen").performClick()
         compose.onNodeWithTag("clipSkip").performClick()
+        assertEquals(listOf(day), added)
         assertEquals(1, opened)
         assertEquals(1, skipped)
     }
