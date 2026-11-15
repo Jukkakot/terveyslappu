@@ -5,10 +5,12 @@
 ### Requirement: Energia chart
 The Energia tab SHALL show, for the chosen period, one bar per logged day with its kcal, the
 treats' share stacked as its own tone, and one flat dashed line across the whole chart at the period's average kcal per logged
-day, the value of the Energia statistics (today left out); no line when there is no average.
+day, the value of the Energia statistics (today left out when it is in the period), also
+when the bars are weekly (the per-day average, not the mean of the week bars); no line when
+there is no average. The scale's top SHALL cover both the highest bar and the line.
 There SHALL be no moving average line. Days with
 nothing logged SHALL be gaps, never zero bars. For 1 v, Kaikki and an Oma range over 90 days the
-bars SHALL be one per week (average per logged day of the week). The chart SHALL show energy only:
+bars SHALL be one per week (average per logged day of the week, today left out). The chart SHALL show energy only:
 no weights, no target line, budget or second y-axis. Combining energy with other data is done in
 own charts.
 
@@ -39,7 +41,9 @@ own charts.
 ### Requirement: Askeleet chart
 The Askeleet tab SHALL show, for the chosen period, one bar per day with steps in one tone, and one
 flat dashed line across the whole chart at the period's average steps per day with steps, the
-value of the Askeleet statistics (today left out); no line when there is no average. There SHALL
+value of the Askeleet statistics (today left out when it is in the period), also when the bars
+are weekly; no line when there is no average. The scale's top SHALL cover both the highest bar
+and the line. There SHALL
 be no moving average line. Days without steps data SHALL
 be gaps, never zero bars. Kaikki SHALL start at the first day with steps or today. The chart SHALL
 show steps only: no weights, goal line, target or second y-axis. Tapping a bar SHALL show its day
@@ -69,7 +73,7 @@ and steps.
 Every bar and line in a Historia chart SHALL have a legend entry under its chart saying what it is,
 with a swatch in its colour: Paino "paino", BMI "BMI", Energia "ruoka", "herkut" and
 "keskiarvo", Askeleet "askeleet" and "keskiarvo"; an own chart's average lines share one
-"keskiarvo" entry with a dashed swatch. An entry SHALL be shown only while its bar or
+"keskiarvo" entry; every "keskiarvo" swatch SHALL be a dashed line in the neutral line tone. An entry SHALL be shown only while its bar or
 line is drawn (no average line: no average entry). When the bars are weekly (periods over 90
 days), the legend row SHALL also say "viikoittain". The legend SHALL wrap to a second line on a
 narrow phone rather than cut text.
@@ -96,11 +100,15 @@ SHALL be remembered between app starts and SHALL NOT be part of the data file or
 
 A custom chart SHALL draw real values only: for each day its own value, at every period. It SHALL
 NOT draw moving average lines and SHALL NOT draw weekly bars. When the chart's Keskiarvo is on,
-each drawn data SHALL also get one flat dashed line (1 dp, in the data's tone, behind nothing but
-over its bars) across the period at its average on its own scale: Energia the average kcal per
-logged day and Askeleet the average steps per day with steps, both with today left out; Paino the
-average of each day's last weight not marked "?", today included (a weight is final). A data with
-no value to average SHALL have no line. What each style draws:
+each drawn data SHALL also get one flat dashed line (1 dp, the front page cards' dash) drawn over the bars and
+under the value lines and the crosshair, in the neutral line tone (onSurfaceVariant) in Allekkain
+and in the data's tone in Päällekkäin, across the period at its average on its own scale: Energia the average kcal per
+logged day and Askeleet the average steps per day with steps, both with today left out when it is in the period; Paino the
+average of each day's last weight not marked "?", today included (a weight is final). A line SHALL be drawn only for a data that is drawn
+(not loading, not without permission) and has a value to average; a third Päällekkäin data
+without a scale SHALL still get its line. The line SHALL be drawn on the Historia tab and on the
+front page card at every size. The Paino average can differ from the Paino tab's statistic, which
+counts every weight. What each style draws:
 - Paino, Viiva: each day's last weight not marked "?" as a line with the weight scale of the weight
   chart, dots when they fit. Paino, Pylväät: one bar per day with such a weight, drawn up from the
   bottom of the same weight scale.
@@ -167,7 +175,7 @@ when it is switched on again while the editor is open.
 - **GIVEN** a chart named "Kaavio 1" exists
 - **WHEN** the user taps Uusi kaavio
 - **THEN** the editor shows "Kaavio 2", all three data on, Paino Viiva, Energia and Askeleet
-  Pylväät, and Allekkain, and the saved chart's period is 1 kk
+  Pylväät, Allekkain and Keskiarvo off, and the saved chart's period is 1 kk
 
 #### Scenario: Rename
 - **WHEN** the user changes the name to "Ilta" and taps Tallenna
@@ -247,3 +255,12 @@ Allekkain layout's single panel. On a Historia tab the plot SHALL be 200 dp high
 #### Scenario: One data drawn
 - **GIVEN** a chart with all three data, Päällekkäin, and only steps have values
 - **THEN** the plot looks like a stacked single panel with the steps axis on the left
+
+#### Scenario: Only today logged
+- **GIVEN** 1 vk with food logged only today
+- **WHEN** the Energia tab is shown
+- **THEN** today's bar is drawn and there is no average line and no "keskiarvo" entry
+
+#### Scenario: One weight
+- **GIVEN** an own chart with Paino (Viiva), Keskiarvo on, and one weight of 82,0 kg in the period
+- **THEN** the dashed line runs at 82,0 kg through the dot
