@@ -47,13 +47,6 @@ layout lacks (added in a later version) SHALL be shown last at its default size.
 - **GIVEN** the stored layout names an unknown card and lacks a card added in a later version
 - **THEN** the unknown card is ignored and the added card is shown last at its default size
 
-#### Scenario: Fits without scrolling
-- **GIVEN** the default layout, weights, food and steps today and the "?" notice shown, on a phone of
-  about 6 inches in portrait
-- **WHEN** the home screen is shown
-- **THEN** the notice and all three cards are fully visible without scrolling
-- Covered by design: one Robolectric layout smoke test at about 360 dp width.
-
 #### Scenario: Larger layouts scroll
 - **GIVEN** all three cards big
 - **THEN** the front page scrolls to show them
@@ -262,6 +255,13 @@ steps have nothing to add).
 - **WHEN** the user taps Punnitse in the weight card
 - **THEN** the weigh-in dialog opens, and Historia does not open
 
+#### Scenario: Fits without scrolling
+- **GIVEN** the default layout, weights, food and steps today and the "?" notice shown, on a phone of
+  about 6 inches in portrait
+- **WHEN** the home screen is shown
+- **THEN** the weight card, the food and steps cards side by side and the notice are fully visible without scrolling
+- Covered by design: one Robolectric layout smoke test at about 360 dp width.
+
 #### Scenario: Automatic weigh-in off
 - **GIVEN** automatic weigh-in is switched on or off
 - **WHEN** the home screen is shown
@@ -341,7 +341,7 @@ permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
 - **WHEN** the user taps the food card's bars
 - **THEN** Historia opens on Energia; back returns to the home screen
 
-#### Scenario: Small size
+#### Scenario: Half width
 - **GIVEN** the food card is small, on a phone of about 6 inches in portrait
 - **WHEN** the front page is shown
 - **THEN** the food card fills its half with its number, bars, period label and + Annos all visible and none cut off
