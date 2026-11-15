@@ -235,7 +235,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - As built (steps, v1.28): steps are read only, from Health Connect's merged daily aggregate
     (no origin filter: two writers are merged by the user's app priority, never summed); a day
     without data is a gap, never zero; the front page row is the food card and the steps card
-    side by side at half width (by default since home-card-layout); Historia's Askeleet tab after Energia, then the own charts (custom-charts) and Uusi kaavio. Decided: no step goal or
+    side by side at half width (by default since home-card-layout); Historia's Askeleet tab after Syöty (then Kulutus), then the own charts (custom-charts) and Uusi kaavio. Decided: no step goal or
     target line; steps are not in the data file or the backup (they are Garmin's and live in
     Health Connect and Garmin Connect); the permission is asked only from the steps card or tab.
   - Decided (steps-source-and-axes, v1.30): a day's steps are one app's own count, never a merge
@@ -247,6 +247,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     (`garmin-steps.json`, in Android backup and transfer, not in the data file); Health Connect
     stays read only. The import fills days with Garmin Connect or Kaikki as the source, the larger
     count wins on a shared day, today never comes from it; Asetukset -> Askeleet shows and deletes it.
+  - Decided (energy-burn, user 2026-11-15, v1.42): burned energy is its own measured data,
+    **Kulutus** (parts **aktiivinen** and **lepo**), and the eaten energy tab and data are
+    **Syöty** (the standard intake / expenditure split, as Apple Health's dietary, active and
+    resting energy). The app shows Garmin's numbers only and computes nothing (no BMR formula,
+    no balance, no plus or minus signs); the user may put Syöty and Kulutus in one own chart.
+    Read only from Health Connect (total and active calories, the steps source) plus the Garmin
+    export, whose history file is now `garmin-history.json` (steps and kcal per day). Kulutus is
+    a Historia tab after Askeleet and a front page card hidden by default; own charts give every
+    data a colour from a fixed palette (Oletus keeps the old tones).
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.

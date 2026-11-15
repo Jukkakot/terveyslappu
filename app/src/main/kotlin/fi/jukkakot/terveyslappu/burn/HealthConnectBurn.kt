@@ -108,7 +108,8 @@ class HealthConnectBurn(private val context: Context) : BurnSource {
         val buckets = client.aggregateGroupByPeriod(
             AggregateGroupByPeriodRequest(
                 metrics = setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL, ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL),
-                timeRangeFilter = TimeRangeFilter.between(from.atStartOfDay(), to.plusDays(1).atStartOfDay()),
+                // Ends at now at the latest, so today's estimate fill cannot cover the hours still to come.
+                timeRangeFilter = TimeRangeFilter.between(from.atStartOfDay(), minOf(to.plusDays(1).atStartOfDay(), java.time.LocalDateTime.now())),
                 timeRangeSlicer = Period.ofDays(1),
                 dataOriginFilter = filter,
             ),

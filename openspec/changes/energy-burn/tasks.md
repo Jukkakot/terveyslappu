@@ -21,7 +21,20 @@
 
 ## 4. Context
 
-- [ ] 4.1 `.claude/CLAUDE.md` map (`burn/`, store rename) and log list; `product.md` decision (Kulutus, names, no formula); `knowledge.md` steps/HC section: what Garmin writes for calories once known; Ohje text.
+- [x] 4.1 `.claude/CLAUDE.md` map (`burn/`, store rename) and log list; `product.md` decision (Kulutus, names, no formula); `knowledge.md` steps/HC section: what Garmin writes for calories once known; Ohje text.
 - [ ] 4.2 After archive, sweep `openspec/specs/weight-chart/spec.md` for user-visible "Energia" wording and "three data" so the main spec reads true.
-- [ ] 4.3 Bump MINOR of `appVersion`.
-- [ ] 4.4 Run `./gradlew test lint assembleDebug`.
+- [x] 4.3 Bump MINOR of `appVersion`.
+- [x] 4.4 Run `./gradlew test lint assembleDebug`.
+
+## Implementation notes (decisions the spec left open)
+
+- Burn is hosted by `ui/StepsViewModel` (no separate `BurnViewModel`): it needs the steps controller's resolved source.
+- Garmin kcal are stored rounded to whole kcal; a day twice keeps the larger steps and, separately, the larger kcal total.
+- "Tiedostosta ei löytynyt Garminin askelia" kept as is for a ZIP with neither steps nor kcal.
+- A history whose days have no kcal at all (old file or an export without kcal) shows the "Tuo ZIP uudelleen" line.
+- Small Kulutus card: "aktiivinen N kcal" is dropped when the chart area is under its least height plus one line.
+- Kulutus legend name in own charts (Päällekkäin or Viiva): "kulutus"; Allekkain bars: lepo, aktiivinen (+ kokonais when such a day is drawn).
+- Kulutus tab readout of a tapped bar uses "Ma 12.11." (short weekday); a weekly bar shows its Monday.
+- Kulutus icon: Material local_fire_department.
+- The Health Connect daily aggregate ends at now at the latest (today's estimate fill cannot cover future hours).
+- 4.2 is left for the archive step (it sweeps the main spec after the delta is merged).
