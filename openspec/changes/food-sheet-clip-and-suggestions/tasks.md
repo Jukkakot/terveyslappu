@@ -21,4 +21,4 @@
 
 ## 5. Docs and release
 
-- [ ] 5.1 Ohje text on the clipboard offer and the edit button; CLAUDE.md log events (`food.import.offer check`, `kind=edited`); roadmap entry done; bump MINOR in `gradle.properties`; `./gradlew test lint assembleDebug` green
+- [x] 5.1 Ohje text on the clipboard offer and the edit button; CLAUDE.md log events (`food.import.offer check`, `kind=edited`); roadmap entry done; bump MINOR in `gradle.properties`; `./gradlew test lint assembleDebug` green
