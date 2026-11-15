@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +44,7 @@ internal fun FoodAddDialog(food: FoodUiState, base: List<BaseProduct>, actions: 
             LaunchedEffect(focused) { if (focused) dialog.onFocused() }
             when (food.access) {
                 // Checking: the frame only, no keyboard yet.
-                FoodAccess.CHECKING -> Box(Modifier.fillMaxWidth().heightIn(min = 160.dp).testTag("sheetChecking"))
+                FoodAccess.CHECKING -> Box(Modifier.fillMaxWidth().heightIn(min = 160.dp).padding(16.dp).testTag("sheetChecking"))
                 FoodAccess.GRANTED -> AddFoodContent(food, day, base, actions)
                 FoodAccess.NEEDS -> SheetNotice(stringResource(R.string.food_permission_reason), stringResource(R.string.food_sheet_allow), dialog.onGrant, "sheetGrant")
                 FoodAccess.DENIED -> SheetNotice(stringResource(R.string.food_permission_reason), stringResource(R.string.food_permission_settings), dialog.onOpenSettings, "sheetSettings")
@@ -56,7 +57,7 @@ internal fun FoodAddDialog(food: FoodUiState, base: List<BaseProduct>, actions: 
 
 @Composable
 private fun SheetNotice(text: String, button: String, onClick: () -> Unit, tag: String) {
-    Column(Modifier.fillMaxWidth().testTag("sheetNotice"), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth().padding(16.dp).testTag("sheetNotice"), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
         TextButton(onClick = onClick, modifier = Modifier.heightIn(min = 48.dp).testTag(tag)) { Text(button) }
     }

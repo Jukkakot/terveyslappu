@@ -308,7 +308,6 @@
     <string name="food_move_up">Siirrä %1$s ylös</string>
     <string name="food_move_down">Siirrä %1$s alas</string>
     <string name="food_add_field">Hae ruokaa tai kirjoita kcal</string>
-    <string name="food_add_empty_hint">Kirjoita mitä söit, tai pelkkä kcal-luku. Usein syömäsi tulevat jatkossa tähän napin taakse.</string>
     <string name="food_no_kcal">ilman kcal</string>
     <string name="food_change">Muuta</string>
     <string name="food_treat">Herkku</string>
@@ -363,9 +362,12 @@
     <string name="ai_clip_edit">Muokkaa</string>
     <string name="ai_clip_more">+%1$d muuta</string>
     <string name="ai_clip_more_products">+ %1$d tuotetta</string>
-    <string name="food_sheet_title">Lisää annos · %1$s</string>
+    <string name="food_sheet_header">%1$s · %2$s</string>
+    <string name="food_sheet_day_empty">Ei vielä annoksia</string>
+    <string name="food_chip_plain">+ %1$s</string>
+    <string name="food_chip_edit_action">Muokkaa ennen lisäämistä</string>
     <string name="food_sheet_more">Lisää toimintoja</string>
-    <string name="food_list_usual">Usein tähän aikaan</string>
+    <string name="food_list_usual">Lisää – usein tähän aikaan</string>
     <string name="food_list_products">Tuotteet</string>
     <string name="food_enter_row">Lisää ”%1$s” uutena</string>
     <string name="food_enter_quick">Pikalisäys %1$s kcal</string>

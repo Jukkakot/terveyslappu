@@ -109,6 +109,8 @@ class FoodActions(
     /** A sheet row's delete button on an own product, and its Kumoa. */
     val onDeleteProduct: (Product) -> Unit = {},
     val onUndoDeleteProduct: () -> Unit = {},
+    /** The sheet gives way to an editor: whether the keyboard was up (it returns with the sheet), and its reset. */
+    val onSheetKeyboard: (Boolean) -> Unit = {},
 )
 
 private val finnish = Locale.forLanguageTag("fi")
@@ -137,9 +139,18 @@ internal fun dayTitle(day: LocalDate, today: LocalDate = LocalDate.now()): Strin
 @Composable
 internal fun daySumText(sum: DaySum): String = buildList {
     add(stringResource(R.string.food_kcal, formatKcal(sum.total)))
+    addAll(daySummaryParts(sum))
+}.joinToString(" · ")
+
+/** The sum line without the total ("herkkuja 230 · 1 ilman kcal"); empty when both parts are zero. */
+@Composable
+internal fun daySummaryText(sum: DaySum): String = daySummaryParts(sum).joinToString(" · ")
+
+@Composable
+private fun daySummaryParts(sum: DaySum): List<String> = buildList {
     if (sum.treat > 0) add(stringResource(R.string.food_day_treats, formatKcal(sum.treat)))
     if (sum.withoutKcal > 0) add(stringResource(R.string.food_day_without, sum.withoutKcal))
-}.joinToString(" · ")
+}
 
 /** The reason and grant button shown in place of the food log without the nutrition permission. */
 @Composable

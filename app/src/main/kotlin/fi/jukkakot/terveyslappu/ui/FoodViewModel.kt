@@ -96,6 +96,8 @@ data class FoodUiState(
     val ai: AiPreview? = null,
     /** The clipboard line (food-ai-import), null = none. */
     val clipOffer: ClipOffer? = null,
+    /** The keyboard was up when an editor replaced the sheet: it comes back with the sheet (food-log "Adding an item", Keyboard). */
+    val sheetKeyboard: Boolean = false,
 ) {
     /** The latest add (the Muuta · Kumoa line). */
     val lastAdded: FoodItem? get() = (line as? SheetLine.Added)?.item
@@ -197,7 +199,10 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setDay(day: LocalDate) = _state.update { it.copy(day = minOf(day, LocalDate.now()), ordering = null) }
 
-    fun openSheet(day: LocalDate) = _state.update { it.copy(sheetDay = day, query = "", line = null, editReturn = null) }
+    fun openSheet(day: LocalDate) = _state.update { it.copy(sheetDay = day, query = "", line = null, editReturn = null, sheetKeyboard = false) }
+
+    /** Remembers whether the keyboard was up as an editor replaces the sheet; cleared once the sheet has used it. */
+    fun setSheetKeyboard(up: Boolean) = _state.update { it.copy(sheetKeyboard = up) }
 
     /** Closing drops the line, a pending delete Kumoa included (design 7). */
     fun closeSheet() = _state.update { it.copy(sheetDay = null, query = "", line = null, editReturn = null) }
@@ -569,7 +574,8 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val current = _state.value
         val plan = FoodEdits.edit(item, input, current.items.orEmpty(), store.all(), base)
         val edited = plan.new.firstOrNull { it.uuid == item.uuid } ?: item
-        _state.update { leaveEditor(it, SheetLine.Added(edited)) }
+        // Only the line's own item moves the line; editing another item leaves it as it was.
+        _state.update { s -> leaveEditor(s, if (s.lastAdded?.uuid == item.uuid) SheetLine.Added(edited) else s.line) }
         apply(plan, "food.edit", oldKey = null)
     }
 

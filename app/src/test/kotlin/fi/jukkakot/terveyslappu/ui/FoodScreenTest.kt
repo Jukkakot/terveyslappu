@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -97,10 +99,21 @@ class FoodScreenTest {
         compose.onNodeWithTag("foodToday").assertExists()
         compose.onNodeWithTag("homeFoodAdd").performScrollTo().performClick()
         compose.onNodeWithTag("addField").assertExists()
-        compose.onNodeWithTag("pick-Rahka").performClick()
+        // The sheet shows the day's items, the header total and the chips apart from them.
+        compose.onNodeWithTag("food-a").assertExists()
+        compose.onNodeWithTag("sheetTitle").assertTextContains("Tänään · 360 kcal")
+        compose.onNodeWithTag("chip-Rahka").performClick()
         assertEquals("Rahka", picked?.name)
-        compose.onNodeWithTag("edit-Pullo").performClick()
+        compose.onNodeWithTag("chip-Pullo").performTouchInput { longClick() }
         assertEquals("Pullo", editPicked?.name)
+    }
+
+    @Test
+    fun `typing in the sheet shows Tuotteet instead of the day list and the chips`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today, query = "rah"))
+        compose.onNodeWithTag("addMatches").assertExists()
+        compose.onNodeWithTag("addSuggestions").assertDoesNotExist()
+        compose.onNodeWithTag("sheetDayList").assertDoesNotExist()
     }
 
     @Test

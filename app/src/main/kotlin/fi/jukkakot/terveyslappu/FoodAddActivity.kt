@@ -97,6 +97,7 @@ class FoodAddActivity : ComponentActivity() {
                         onUndoImport = model::undoImport,
                         onDeleteProduct = model::deleteProduct,
                         onUndoDeleteProduct = model::undoDeleteProduct,
+                        onSheetKeyboard = model::setSheetKeyboard,
                     ),
                     FoodDialogActions(
                         onGrant = {

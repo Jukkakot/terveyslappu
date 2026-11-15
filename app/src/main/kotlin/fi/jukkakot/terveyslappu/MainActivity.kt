@@ -329,6 +329,7 @@ class MainActivity : ComponentActivity() {
                         onUndoImport = foodModel::undoImport,
                         onDeleteProduct = foodModel::deleteProduct,
                         onUndoDeleteProduct = foodModel::undoDeleteProduct,
+                        onSheetKeyboard = foodModel::setSheetKeyboard,
                         onAiEdit = foodModel::setAi,
                         onAiCancel = foodModel::cancelAi,
                         onAiAdd = {

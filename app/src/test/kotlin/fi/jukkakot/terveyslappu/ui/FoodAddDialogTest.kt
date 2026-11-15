@@ -4,8 +4,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Looper
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -106,10 +106,10 @@ class FoodAddDialogTest {
     }
 
     @Test
-    fun `without a card the field has the focus`() {
+    fun `the keyboard stays down on open, the field has no focus`() {
         open().use {
             compose.waitForIdle()
-            compose.onNodeWithTag("addField").assertIsFocused()
+            compose.onNodeWithTag("addField").assertIsNotFocused()
             compose.onNodeWithTag("clipOffer").assertDoesNotExist()
         }
     }
@@ -125,6 +125,30 @@ class FoodAddDialogTest {
             assertEquals(listOf("Testikeitto", "Testileipa"), records.items.sortedBy { it.pos }.map { it.name })
             compose.onNodeWithTag("clipOffer").assertDoesNotExist()
             compose.onNodeWithTag("addField").assertExists()
+        }
+    }
+
+    @Test
+    fun `a chip tap adds the product and it appears in the day list`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
+        open().use {
+            compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
+            compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(listOf("Kaurapuuro testi"), records.items.map { it.name })
+            compose.onNodeWithTag("sheetTitle").assertTextContains("Tänään · 210 kcal")
+            compose.onNodeWithTag("sheetDayList").assertExists()
+        }
+    }
+
+    @Test
+    fun `Tuo ruoka-annokset is in the menu`() {
+        open().use {
+            compose.onNodeWithTag("sheetMenu").performClick()
+            compose.onNodeWithTag("aiPaste").assertExists()
+            compose.onNodeWithTag("aiCopyPrompt").assertExists()
         }
     }
 
