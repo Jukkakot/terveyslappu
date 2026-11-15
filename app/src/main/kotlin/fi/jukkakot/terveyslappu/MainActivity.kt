@@ -390,6 +390,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // Any new intent (widget, shortcut, notification, share) ends the front page's edit mode first (home-card-layout design 4).
+        fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("main")
         openFrom(intent)
     }
 

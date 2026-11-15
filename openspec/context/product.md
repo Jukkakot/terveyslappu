@@ -216,10 +216,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - As built (home-overview, v1.26): the front page is one card per feature (Paino, Ruoka with
     its own period, Automaattinen punnitus while it is on); every feature gets the same parts on
     the front page and in its details unless a part means nothing for it.
+  - As built (home-card-layout, v1.31): the cards sit in a two-column grid in the user's order,
+    each small, wide or big, hidden cards out of the grid; default weight wide on top, food and
+    steps small under it. A long-press on a card edits the layout (drag, card menu, Lisää kortti,
+    Palauta oletus); Valmis saves, Peruuta and back discard. The layout travels with Android's
+    transfer, not in the data file.
   - As built (steps, v1.28): steps are read only, from Health Connect's merged daily aggregate
     (no origin filter: two writers are merged by the user's app priority, never summed); a day
     without data is a gap, never zero; the front page row is the food card and the steps card
-    side by side at half width; Historia's Askeleet tab after Energia. Decided: no step goal or
+    side by side at half width (by default since home-card-layout); Historia's Askeleet tab after Energia. Decided: no step goal or
     target line; steps are not in the data file or the backup (they are Garmin's and live in
     Health Connect and Garmin Connect); the permission is asked only from the steps card or tab.
   - Decided (steps-source-and-axes, v1.30): a day's steps are one app's own count, never a merge

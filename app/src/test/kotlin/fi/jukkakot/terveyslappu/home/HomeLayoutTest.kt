@@ -56,6 +56,14 @@ class HomeLayoutTest {
     }
 
     @Test
+    fun `the drag's keys map to indices`() {
+        val layout = HomeLayout.DEFAULT
+        assertEquals(listOf(STEPS, WEIGHT, FOOD), layout.moveById(STEPS, WEIGHT).shown.map { it.id })
+        assertEquals(listOf(FOOD, WEIGHT, STEPS), layout.moveById(WEIGHT, FOOD).shown.map { it.id })
+        assertSame(layout, layout.moveById(STEPS, "notice"))
+    }
+
+    @Test
     fun `resize, hide and show`() {
         val layout = HomeLayout.DEFAULT
         assertEquals(SMALL, layout.resize(WEIGHT, SMALL).shown.first().size)

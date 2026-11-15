@@ -39,6 +39,9 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
         return copy(shown = list)
     }
 
+    /** The drag's onMove from Reorderable: item keys (card ids) to indices of [shown] (design 8). */
+    fun moveById(fromId: String, toId: String): HomeLayout = move(indexOf(fromId), indexOf(toId))
+
     fun moveEarlier(id: String): HomeLayout = indexOf(id).let { if (it > 0) move(it, it - 1) else this }
 
     fun moveLater(id: String): HomeLayout = indexOf(id).let { if (it >= 0 && it < shown.lastIndex) move(it, it + 1) else this }

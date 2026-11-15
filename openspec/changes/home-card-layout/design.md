@@ -153,3 +153,32 @@ screens, changing Ruoka's order list.
   app is used in portrait.
 - Hiding the weight card removes Punnitse from the front page (weigh-in stays on the widget, tile
   and shortcut); the user's choice.
+
+## Implementation notes (apply, 2026-11-15)
+
+Choices the spec left open, taken in the simplest reading:
+
+- Long-press into drag (decision 5): Reorderable 3.1.0 keeps its drag start internal, but
+  `draggableHandle(dragGestureDetector = …)` takes a custom detector. `LongPressEntry` is that
+  detector (Initial pass, long-press timeout without slop, then consumes the gesture and feeds the
+  drag); its `onDragStarted` enters edit mode. So the first link of the chain works: the press that
+  starts edit mode continues into the drag, and in edit mode the same detector is the card body's
+  long-press drag. Verified only under Robolectric.
+- Reorderable moves a card once the dragged card covers the other card's centre; a small card
+  dragged onto a wide one has to reach its middle.
+- `ROW_UNIT` stays 248 dp: the size matrix passes there (200 dp fails).
+- Pure code lives in a new `home/` package (`HomeLayout`, `HomeLayoutCodec`, `HomePrefs`,
+  `HomeEditSignal`); the grid and edit mode in `ui/HomeEdit.kt`, the cards in `ui/HomeScreen.kt`.
+- A listed allowed-extra card with an unknown size decodes as wide.
+- Outside intents: `HomeEditSignal` from `MainActivity.onNewIntent`, `FoodAddActivity`,
+  `WeighInActivity` and `AutoActionReceiver`; besides those the draft is dropped when the add
+  sheet, the food editor, the AI preview, manual entry or the import dialog opens, access is lost
+  or the screen leaves HOME (the last one without a `home.edit cancel` line: the page leaves
+  composition).
+- The Lisää kortti menu is a `DropdownMenu` with a max height; it scrolls by itself.
+- The menu marks the current size with a check icon; TalkBack's actions leave out the current size.
+- Small weight card: the period row holds the period label and the period's change.
+- Big weight card: the scale's top and bottom labels sit in a narrow column left of the line.
+- Big food and steps cards: the scale top label reuses `food_kcal` / `steps_value`.
+- The steps card's gated states (permission, unavailable, loading, failed) moved from the number
+  slot into the centred free space, like the food card's.

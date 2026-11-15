@@ -55,6 +55,8 @@ class WeighInActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // home-card-layout design 4: the front page's edit mode ends and drops its draft.
+        if (savedInstanceState == null) fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("weighIn")
         AppLog.i("weighin.open", "", "from" to (intent.getStringExtra(EXTRA_FROM) ?: "unknown"))
         setContent {
             TerveysTheme {

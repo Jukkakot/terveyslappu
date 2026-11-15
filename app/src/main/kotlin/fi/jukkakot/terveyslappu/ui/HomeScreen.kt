@@ -7,40 +7,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,22 +44,29 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
-import fi.jukkakot.terveyslappu.backup.BackupStatus
+import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartDots
 import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.home.CardSize
+import fi.jukkakot.terveyslappu.home.HomeCard
+import fi.jukkakot.terveyslappu.home.HomeLayout
 import fi.jukkakot.terveyslappu.steps.HomeSteps
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -78,94 +76,59 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-/** The home screen: one card per feature (weight on top, then the row of smaller cards: food and steps), each with its own quick action. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun HomeScreen(
-    state: MainUiState,
-    actions: MainActions,
-    snackbar: SnackbarHostState,
-    backup: BackupStatus,
-    food: FoodUiState = FoodUiState(),
-    foodActions: FoodActions = FoodActions(),
-    steps: StepsUiState = StepsUiState(),
-    stepsActions: StepsActions = StepsActions(),
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    IconButton(onClick = { actions.onScreen(Screen.HELP) }, modifier = Modifier.testTag("help")) {
-                        Icon(painterResource(R.drawable.ic_help), contentDescription = stringResource(R.string.menu_help))
-                    }
-                    IconButton(onClick = { actions.onScreen(Screen.SETTINGS) }, modifier = Modifier.testTag("settings")) {
-                        Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings_title))
-                    }
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbar) },
-    ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            when (state.access) {
-                Access.CHECKING -> Notice(stringResource(R.string.hc_checking))
-                Access.UNAVAILABLE -> Notice(stringResource(R.string.hc_unavailable), stringResource(R.string.hc_open_store), actions.onOpenStore)
-                Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
-                Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
-                Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeContent(state, actions, backup, food, foodActions, steps, stepsActions)
-            }
-        }
-    }
-}
+/**
+ * One row unit of the front page grid (home-card-layout design 2): small and wide cards are one unit
+ * high, big cards two units and the gap. Grows with the text up to 130 %. 248 dp was the starting
+ * estimate; the size matrix test (`HomeCardSizesTest`) sets the final value.
+ */
+internal val ROW_UNIT = 248.dp
+
+/** The grid's gap between cards and rows. */
+internal val GRID_GAP = 8.dp
 
 @Composable
-private fun HomeContent(
-    state: MainUiState,
-    actions: MainActions,
-    backup: BackupStatus,
-    food: FoodUiState,
-    foodActions: FoodActions,
-    steps: StepsUiState,
-    stepsActions: StepsActions,
-) {
-    val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
-    val summary = remember(state.weights, state.homeDays, state.questioned) {
-        state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
-    }
+internal fun rowUnit(): Dp = ROW_UNIT * LocalDensity.current.fontScale.coerceIn(1f, 1.3f)
+
+internal fun cardHeight(size: CardSize, unit: Dp): Dp = if (size == CardSize.BIG) unit * 2 + GRID_GAP else unit
+
+/** What every front page card reads; one bundle so the grid and the size test draw the same cards. */
+internal class HomeCardsData(
+    val state: MainUiState,
+    val actions: MainActions,
+    val food: FoodUiState,
+    val foodActions: FoodActions,
+    val steps: StepsUiState,
+    val stepsActions: StepsActions,
+)
+
+/** One front page card at its size, filling [modifier]'s size (home-screen "Card sizes"). */
+@Composable
+internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifier = Modifier) {
+    val state = data.state
     val today = LocalDate.now()
-    Column(
-        // Fits a ~6" phone with a notice; scrolls only with more notices or large text (home-screen).
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (backup.needsAttention(Instant.now())) BackupNotice(backup.failed, actions.onOpenBackupSettings)
-        if (state.newestQuestioned != null) CheckNotice(actions.onOpenQuestioned)
-        food.clipOffer?.let { offer ->
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(start = 16.dp, end = 4.dp)) {
-                ClipOfferLine(offer, foodActions)
+    when (card.id) {
+        HomeLayout.WEIGHT -> {
+            val now = remember(state.loadedAt) { state.loadedAt ?: Instant.now() }
+            val summary = remember(state.weights, state.homeDays, state.questioned) {
+                state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
             }
+            LatestCard(state, summary, today, card.size, data.actions.onHomePeriod, data.actions.onWeighIn, { data.actions.onScreen(Screen.HISTORY) }, modifier)
         }
-        LatestCard(state, summary, today, actions.onHomePeriod, actions.onWeighIn) { actions.onScreen(Screen.HISTORY) }
-        // The row of smaller feature cards: food in the left half, steps in the right; the taller sets the height (home-screen).
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FoodCard(food, state.foodDays, today, actions.onFoodPeriod, actions.onOpenEnergy, foodActions, Modifier.weight(1f).fillMaxHeight())
-            StepsCard(steps, state.stepsDays, today, stepsActions, Modifier.weight(1f).fillMaxHeight())
-        }
+        HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.actions.onOpenEnergy, data.foodActions, modifier)
+        HomeLayout.STEPS -> StepsCard(data.steps, state.stepsDays, today, card.size, data.stepsActions, modifier)
     }
 }
 
 /**
- * The food card (home-screen "Food row on the home screen"), built like the weight card: today's
- * kcal, daily bars of its own period, the period's dates and average, outlined + Annos inside. The
- * title and today's number open Ruoka on today; the bars and what is under them open Historia on
- * Energia; the period label keeps its menu. Nothing on it is filled. Today is read at every
- * composition, so a resume after midnight shows the new day.
+ * The food card (home-screen "Food row on the home screen", "Card sizes"), built like the weight
+ * card: today's kcal, daily bars of its own period, the period's dates and average, outlined
+ * + Annos inside. The title and today's number open Ruoka on today; the bars and what is under them
+ * open Historia on Energia; the period label keeps its menu. Nothing on it is filled. Today is read
+ * at every composition, so a resume after midnight shows the new day.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions, modifier: Modifier = Modifier) {
+private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: CardSize, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val needsPermission = food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED
     val summary = remember(food.items, days, today) { HomeFood.of(food.items.orEmpty(), days, today) }
@@ -187,17 +150,12 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: 
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .testTag("foodToday"),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(R.drawable.ic_restaurant), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.home_food_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-            }
+            CardTitle(R.drawable.ic_restaurant, stringResource(R.string.home_food_title), chevron = true)
             when {
-                needsPermission -> Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
+                needsPermission -> Unit
                 summary.todayLogged -> FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline())
+                        Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline().testTag("foodTodayValue"))
                         Spacer(Modifier.width(6.dp))
                         Text("kcal", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
                     }
@@ -213,29 +171,47 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: 
                 else -> Text(stringResource(R.string.home_food_none), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
             }
         }
-        if (needsPermission) return@Column
+        if (needsPermission) {
+            // Gated: the same text as before, centred in the free space, with the same tap (design 9).
+            GatedBox(Modifier.clip(innerShape).clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)) {
+                Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge)
+            }
+            return@Column
+        }
         val small = MaterialTheme.typography.labelSmall
+        val big = size == CardSize.BIG
         Column(
             Modifier
                 .fillMaxWidth()
+                .weight(1f)
                 .clip(innerShape)
                 .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .testTag("foodBars"),
         ) {
-            if (summary.bars.isNotEmpty()) {
-                val description = stringResource(R.string.home_food_bars, summary.bars.size)
-                FoodBars(summary, colors.primary, colors.tertiary, Modifier.fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
+            Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
+                if (summary.bars.isNotEmpty()) {
+                    val description = stringResource(R.string.home_food_bars, summary.bars.size)
+                    val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.total }.toDouble(), KCAL_STEP).last() else null
+                    FoodBars(
+                        summary, colors.primary, colors.tertiary, top, summary.averageKcal?.toDouble()?.takeIf { big }, colors.onSurfaceVariant,
+                        Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description },
+                    )
+                    if (top != null) ScaleTop(stringResource(R.string.food_kcal, formatKcal(top)), "foodScaleTop")
+                }
             }
             Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
                 Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
+        val average = summary.averageKcal?.let {
+            stringResource(if (size == CardSize.SMALL) R.string.home_food_average else R.string.home_food_average_long, formatKcal(it))
+        } ?: stringResource(R.string.home_food_no_average)
         Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, onPeriod, "foodPeriod")
             Text(
-                summary.averageKcal?.let { stringResource(R.string.home_food_average, formatKcal(it)) } ?: stringResource(R.string.home_food_no_average),
+                average,
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier
@@ -248,27 +224,66 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, onPeriod: 
                     .padding(horizontal = 4.dp)
                     .testTag("foodAverage"),
             )
+            // Wide and big: + Annos at the end of the period row (spec Card sizes).
+            if (size != CardSize.SMALL) AddButton(today, actions, Modifier)
         }
-        Spacer(Modifier.weight(1f))
-        OutlinedButton(
-            onClick = { actions.onAdd(today) },
-            shape = RoundedCornerShape(20.dp),
-            contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).testTag("homeFoodAdd"),
-        ) {
-            Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(4.dp))
-            Text(stringResource(R.string.home_food_add))
-        }
+        if (size == CardSize.SMALL) AddButton(today, actions, Modifier.fillMaxWidth())
     }
 }
 
-/** Daily kcal bars of the period without axes, in Energia's tones (food, treats stacked). */
 @Composable
-private fun FoodBars(summary: HomeFood, food: Color, treat: Color, modifier: Modifier) {
+private fun AddButton(today: LocalDate, actions: FoodActions, modifier: Modifier) {
+    OutlinedButton(
+        onClick = { actions.onAdd(today) },
+        shape = RoundedCornerShape(20.dp),
+        contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
+        modifier = modifier.heightIn(min = 44.dp).testTag("homeFoodAdd"),
+    ) {
+        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(4.dp))
+        Text(stringResource(R.string.home_food_add))
+    }
+}
+
+/** A card's icon, title and (when it opens something) chevron. */
+@Composable
+private fun CardTitle(icon: Int, title: String, chevron: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(icon), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+        if (chevron) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** A gated state (permission, unavailable, loading, failed) centred in the card's free space. */
+@Composable
+private fun ColumnScope.GatedBox(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxWidth().weight(1f).then(modifier).padding(8.dp), contentAlignment = Alignment.Center) { content() }
+}
+
+/** The top of a big card's bar scale at the bars' top left (the Energia / Askeleet rule). */
+@Composable
+private fun ScaleTop(text: String, tag: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f))
+            .padding(horizontal = 2.dp)
+            .testTag(tag),
+    )
+}
+
+/** Daily kcal bars of the period without axes, in Energia's tones (food, treats stacked); big: on the scale [top] with a dashed [average]. */
+@Composable
+private fun FoodBars(summary: HomeFood, food: Color, treat: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
     Canvas(modifier) {
         val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
-        val max = summary.bars.maxOf { it.total }.coerceAtLeast(1).toFloat()
+        val max = (top ?: summary.bars.maxOf { it.total }.toDouble()).coerceAtLeast(1.0).toFloat()
         val dayW = size.width / days
         for (bar in summary.bars) {
             val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
@@ -281,17 +296,25 @@ private fun FoodBars(summary: HomeFood, food: Color, treat: Color, modifier: Mod
             }
         }
         drawLine(food.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+        if (average != null) averageLine(average.toFloat() / max, line)
     }
 }
 
+/** The dashed average line of a big card (design 9): 1 dp, onSurfaceVariant. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.averageLine(fraction: Float, color: Color) {
+    val y = size.height * (1 - fraction.coerceIn(0f, 1f))
+    val dash = 4.dp.toPx()
+    drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash)))
+}
+
 /**
- * The steps card (home-screen "Steps card on the home screen"), the food card's twin without a
- * quick action: today's steps, daily bars of its own period, the period's dates and average. A tap
- * anywhere but the period label opens Askeleet (without the permission: asks for it; after a denial
- * Askeleet explains); unavailable: no tap action. Free space goes under the bars.
+ * The steps card (home-screen "Steps card on the home screen", "Card sizes"), the food card's twin
+ * without a quick action: today's steps, daily bars of its own period, the period's dates and
+ * average. A tap anywhere but the period label opens Askeleet (without the permission: asks for it;
+ * after a denial Askeleet explains); unavailable: no tap action. Free space goes to the bars.
  */
 @Composable
-private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, actions: StepsActions, modifier: Modifier = Modifier) {
+private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: CardSize, actions: StepsActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val summary = remember(steps.days, days, today) { HomeSteps.of(steps.days.orEmpty(), days, today) }
     val onTap: (() -> Unit)? = when (steps.access) {
@@ -310,41 +333,52 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, actions
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsToday")) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(R.drawable.ic_walk), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.home_steps_title), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                if (onTap != null) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-            }
-            val big = MaterialTheme.typography.displaySmall
-            when {
-                steps.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.steps_unavailable), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
-                steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED ->
-                    Text(stringResource(R.string.steps_today_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp))
-                steps.access == StepsAccess.CHECKING || (steps.days == null && !steps.loadFailed) ->
-                    Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp)) }
-                steps.days == null -> Text(stringResource(R.string.steps_read_failed), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp).testTag("stepsFailed"))
-                summary.today != null -> Text(formatSteps(summary.today), style = big, modifier = Modifier.testTag("stepsTodayValue"))
-                else -> Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
+            CardTitle(R.drawable.ic_walk, stringResource(R.string.home_steps_title), chevron = onTap != null)
+            if (shows) {
+                if (summary.today != null) {
+                    Text(formatSteps(summary.today), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("stepsTodayValue"))
+                } else {
+                    Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
+                }
             }
         }
-        if (!shows) return@Column
+        if (!shows) {
+            GatedBox {
+                val gated = MaterialTheme.typography.titleLarge
+                when {
+                    steps.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.steps_unavailable), style = gated)
+                    steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED -> Text(stringResource(R.string.steps_today_permission), style = gated)
+                    steps.access == StepsAccess.CHECKING || !steps.loadFailed -> CircularProgressIndicator(Modifier.size(24.dp))
+                    else -> Text(stringResource(R.string.steps_read_failed), style = gated, modifier = Modifier.testTag("stepsFailed"))
+                }
+            }
+            return@Column
+        }
         val small = MaterialTheme.typography.labelSmall
-        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsBars")) {
-            if (summary.bars.isNotEmpty()) {
-                val description = stringResource(R.string.home_steps_bars, summary.bars.size)
-                StepsBars(summary, colors.primary, Modifier.fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
+        val big = size == CardSize.BIG
+        Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsBars")) {
+            Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
+                if (summary.bars.isNotEmpty()) {
+                    val description = stringResource(R.string.home_steps_bars, summary.bars.size)
+                    val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.steps }.toDouble(), STEPS_STEP).last() else null
+                    StepsBars(
+                        summary, colors.primary, top, summary.averageSteps?.toDouble()?.takeIf { big }, colors.onSurfaceVariant,
+                        Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description },
+                    )
+                    if (top != null) ScaleTop(stringResource(R.string.steps_value, formatSteps(top.toLong())), "stepsScaleTop")
+                }
             }
             Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
                 Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
-        Spacer(Modifier.weight(1f))
         Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, actions.onPeriod, "stepsPeriod")
             Text(
-                summary.averageSteps?.let { stringResource(R.string.home_steps_average, formatSteps(it)) } ?: stringResource(R.string.home_food_no_average),
+                summary.averageSteps?.let {
+                    stringResource(if (size == CardSize.SMALL) R.string.home_steps_average else R.string.home_steps_average_long, formatSteps(it))
+                } ?: stringResource(R.string.home_food_no_average),
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("stepsAverage"),
@@ -361,28 +395,33 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, actions
     }
 }
 
-/** Daily step bars of the period without axes, in one tone. */
+/** Daily step bars of the period without axes, in one tone; big: on the scale [top] with a dashed [average]. */
 @Composable
-private fun StepsBars(summary: HomeSteps, color: Color, modifier: Modifier) {
+private fun StepsBars(summary: HomeSteps, color: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
     Canvas(modifier) {
         val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
-        val max = summary.bars.maxOf { it.steps }.coerceAtLeast(1).toFloat()
+        val max = (top ?: summary.bars.maxOf { it.steps }.toDouble()).coerceAtLeast(1.0).toFloat()
         val dayW = size.width / days
         for (bar in summary.bars) {
             val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
             val width = maxOf(dayW * 0.7f, 1.dp.toPx())
-            val top = size.height * (1 - bar.steps / max)
-            drawRect(color, Offset(left, top), Size(width, size.height - top))
+            val barTop = size.height * (1 - bar.steps / max)
+            drawRect(color, Offset(left, barTop), Size(width, size.height - barTop))
         }
         drawLine(color.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+        if (average != null) averageLine(average.toFloat() / max, line)
     }
 }
 
 private val cardShape = RoundedCornerShape(24.dp)
+internal val homeCardShape get() = cardShape
 /** A tap area inside a card (its ripple keeps inside the card's corners). */
 private val innerShape = RoundedCornerShape(16.dp)
-/** Height of the cards' small charts: low, so the front page fits a phone without scrolling. */
-private val SMALL_CHART = 48.dp
+/** The least height of a card's chart; the chart takes the height its size leaves free (design 2). */
+private val MIN_CHART = 32.dp
+/** The bar scale steps of Energia and Askeleet (steps-source-and-axes `AxisTicks.bars`). */
+private const val KCAL_STEP = 250.0
+private const val STEPS_STEP = 1000.0
 internal val groupShape = RoundedCornerShape(20.dp)
 
 /** The weight card: latest weight, change, small chart, and Punnitse, the home screen's only filled action. */
@@ -391,34 +430,38 @@ private fun LatestCard(
     state: MainUiState,
     summary: HomeSummary?,
     today: LocalDate,
+    size: CardSize,
     onHomePeriod: (Long) -> Unit,
     onWeighIn: () -> Unit,
     onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
+    val small = size == CardSize.SMALL
     Column(
-        Modifier
-            .fillMaxWidth()
+        modifier
             .clip(cardShape)
             .background(colors.surfaceContainer)
             .clickable(onClickLabel = stringResource(R.string.home_open_history), onClick = onOpen)
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
+            .padding(start = if (small) 12.dp else 16.dp, end = if (small) 12.dp else 16.dp, top = 12.dp, bottom = 12.dp)
             .testTag("latestCard"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val title = summary?.let { stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
                 ?: stringResource(R.string.history_title)
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         when {
-            summary != null -> LatestValues(summary, state.homeDays, onHomePeriod)
-            state.loadFailed -> Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge)
-            state.weights == null -> Box(Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            else -> Column(Modifier.padding(vertical = 8.dp).testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.home_empty), style = MaterialTheme.typography.titleLarge)
-                Text(stringResource(R.string.home_empty_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            summary != null -> LatestValues(summary, state.homeDays, size, onHomePeriod)
+            state.loadFailed -> GatedBox { Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge) }
+            state.weights == null -> GatedBox { CircularProgressIndicator() }
+            else -> GatedBox {
+                Column(Modifier.testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.home_empty), style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.home_empty_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                }
             }
         }
         Button(
@@ -435,15 +478,18 @@ private fun LatestCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) -> Unit) {
+private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: CardSize, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val small = size == CardSize.SMALL
     FlowRow(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        // Small: the chip goes under the number when it does not fit beside it.
+        horizontalArrangement = if (small) Arrangement.spacedBy(8.dp) else Arrangement.SpaceBetween,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(end = 8.dp)) {
-            Text(formatKg(summary.latest.kg), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline())
+            val number = if (small) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall
+            Text(formatKg(summary.latest.kg), style = number, modifier = Modifier.alignByBaseline().testTag("latestKg"))
             Spacer(Modifier.width(6.dp))
             Text("kg", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
         }
@@ -452,29 +498,48 @@ private fun LatestValues(summary: HomeSummary, days: Long, onHomePeriod: (Long) 
     val first = summary.spark.firstOrNull()
     if (first != null) {
         val description = stringResource(R.string.home_spark, formatKg(first.kg), formatKg(summary.latest.kg))
-        Sparkline(summary, colors.primary, Modifier.padding(top = 4.dp).fillMaxWidth().height(SMALL_CHART).semantics { contentDescription = description })
-        val zone = ZoneId.systemDefault()
-        val small = MaterialTheme.typography.labelSmall
-        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
-            Text(formatShortDay(summary.sparkFrom.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text(formatShortDay(summary.sparkTo.atZone(zone).toLocalDate()), style = small, color = colors.onSurfaceVariant)
+        val chart = Modifier.padding(top = 4.dp).fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)
+        val scale = summary.sparkScale
+        if (size == CardSize.BIG && scale != null) {
+            // Big: the scale's top and bottom with kg at the left edge (spec Card sizes).
+            Row(chart) {
+                Column(Modifier.fillMaxHeight().padding(end = 4.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(R.string.kg_value, formatKg(scale.max)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleTop"))
+                    Text(stringResource(R.string.kg_value, formatKg(scale.min)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleBottom"))
+                }
+                Sparkline(summary, colors.primary, Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description })
+            }
+        } else {
+            Sparkline(summary, colors.primary, chart.semantics { contentDescription = description })
         }
+        val zone = ZoneId.systemDefault()
+        val label = MaterialTheme.typography.labelSmall
+        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+            Text(formatShortDay(summary.sparkFrom.atZone(zone).toLocalDate()), style = label, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text(formatShortDay(summary.sparkTo.atZone(zone).toLocalDate()), style = label, color = colors.onSurfaceVariant)
+        }
+    } else {
+        Spacer(Modifier.weight(1f))
     }
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         HomePeriodLabel(days, onHomePeriod)
-        val range = when {
-            first == null -> stringResource(R.string.period_empty)
-            summary.sparkChange == null -> stringResource(R.string.kg_value, formatKg(first.kg))
-            else -> stringResource(R.string.home_spark_range, formatKg(first.kg), formatKg(summary.latest.kg))
+        if (small) {
+            Spacer(Modifier.weight(1f).width(4.dp))
+        } else {
+            val range = when {
+                first == null -> stringResource(R.string.period_empty)
+                summary.sparkChange == null -> stringResource(R.string.kg_value, formatKg(first.kg))
+                else -> stringResource(R.string.home_spark_range, formatKg(first.kg), formatKg(summary.latest.kg))
+            }
+            Text(
+                range,
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f).padding(start = 8.dp).testTag("sparkRange"),
+            )
         }
-        Text(
-            range,
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.onSurfaceVariant,
-            modifier = Modifier.weight(1f).padding(start = 8.dp).testTag("sparkRange"),
-        )
         summary.sparkChange?.let { change ->
-            ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+            ChangeLabel(stringResource(R.string.kg_value, formatChange(change)), shownDirection(change, 1), Modifier.testTag("sparkChange"), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
         }
     }
 }
@@ -528,7 +593,7 @@ private fun ChangeChip(change: Double, modifier: Modifier = Modifier) {
     }
 }
 
-/** The last 30 days as a line by time, no axes; the latest weight is a dot at the right end. */
+/** The period's weights as a line by time, no axes; the latest weight is a dot at the right end. */
 @Composable
 private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
     val points = summary.spark
@@ -539,7 +604,7 @@ private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
         val width = size.width - 2 * dot
         val top = dot
         val height = size.height - 2 * dot
-        // The whole 30 days and the shared weight scale (home-screen, weight-chart "Weight scale").
+        // The whole period and the shared weight scale (home-screen, weight-chart "Weight scale").
         val t0 = summary.sparkFrom.epochSecond
         val span = (summary.sparkTo.epochSecond - t0).coerceAtLeast(1)
         fun at(entry: WeightEntry): Offset {
@@ -566,7 +631,7 @@ private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
 
 /** "Punnitus odottaa tarkistusta" in the "?" row's amber tint; opens Historia at the newest "?" weight. */
 @Composable
-private fun CheckNotice(onOpen: () -> Unit) {
+internal fun CheckNotice(onOpen: () -> Unit) {
     val check = checkColors()
     val shape = RoundedCornerShape(16.dp)
     Row(
@@ -590,7 +655,7 @@ private fun CheckNotice(onOpen: () -> Unit) {
 
 /** One notice when the backup failed or is stale; opens Asetukset (weight-backup "Visible status"). */
 @Composable
-private fun BackupNotice(failed: Boolean, onOpen: () -> Unit) {
+internal fun BackupNotice(failed: Boolean, onOpen: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
         Modifier
@@ -612,5 +677,13 @@ private fun BackupNotice(failed: Boolean, onOpen: () -> Unit) {
             modifier = Modifier.weight(1f),
         )
         Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onErrorContainer, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** The clipboard offer line above the cards (food-ai-import). */
+@Composable
+internal fun ClipOfferNotice(offer: fi.jukkakot.terveyslappu.food.ClipOffer, actions: FoodActions) {
+    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(start = 16.dp, end = 4.dp)) {
+        ClipOfferLine(offer, actions)
     }
 }

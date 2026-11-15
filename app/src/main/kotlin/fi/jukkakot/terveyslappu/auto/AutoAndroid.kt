@@ -148,6 +148,8 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
 class AutoActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as TerveysApp
+        // A notification action ends the front page's edit mode (home-card-layout design 4).
+        fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("notification")
         val result = goAsync()
         app.appScope.launch(Dispatchers.IO) {
             try {

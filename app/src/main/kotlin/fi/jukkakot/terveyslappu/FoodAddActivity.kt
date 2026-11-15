@@ -44,6 +44,8 @@ class FoodAddActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         logOpen(intent)
+        // home-card-layout design 4: the front page's edit mode ends and drops its draft.
+        if (savedInstanceState == null) fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("foodAdd")
         // A recreated dialog (rotation) keeps its state and logs no new timings.
         timingLogged = savedInstanceState != null
         model.startDialog(from(intent))
@@ -99,6 +101,7 @@ class FoodAddActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("foodAdd")
         // A second tap while open keeps the sheet as it is (design 11).
         logOpen(intent)
     }

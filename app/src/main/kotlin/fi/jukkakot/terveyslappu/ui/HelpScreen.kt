@@ -21,6 +21,7 @@ import fi.jukkakot.terveyslappu.R
 
 /** Title and body string of each help section (help-page spec); automatic weigh-in is left out on purpose. */
 private val helpSections = listOf(
+    R.string.help_home_title to R.string.help_home_body,
     R.string.help_weigh_title to R.string.help_weigh_body,
     R.string.help_manual_title to R.string.help_manual_body,
     R.string.help_history_title to R.string.help_history_body,
