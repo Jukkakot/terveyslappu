@@ -16,6 +16,7 @@ the source. No configuration, versions or other things that go stale.
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung, Health Connect from the background, widget updates |
+| Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference |
 | Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
@@ -78,6 +79,31 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   Android 17): a filtered PendingIntent scan delivered packets only when the screen came on while
   the app was "Optimoitu"; after "Rajoittamaton" packets arrived with the screen off and locked.
   Android's "Restricted" is not the only blocker: warn unless the app ignores battery optimisation.
+
+## Motivation and feedback
+
+- **Logging itself is the active part.** In a review of 39 trials, more self-monitoring went with
+  more weight loss in over 70 % of reported links; goal setting and tailored feedback strengthen
+  it. Adherence falls over time (about 70 % in week one to 20 % after 70 weeks), so the effort of
+  logging matters more than chart polish.
+  ([PMC7269678](https://pmc.ncbi.nlm.nih.gov/articles/PMC7269678), [Spark protocol](https://cdn.clinicaltrials.gov/large-docs/65/NCT05249465/Prot_000.pdf))
+- **Bad news weighs more than good.** Days with a weight gain bring more guilt, shame and lower
+  confidence; daily weighing with a trend line raised mood swings in one trial (another found no
+  harm). Setbacks hit 2-3 times harder than equal wins. Difficulty using negative feedback is a
+  proposed reason people stop tracking. Hence neutral framing: no red for a gain, no judgement.
+  ([PMC4846305](https://pmc.ncbi.nlm.nih.gov/articles/PMC4846305), [Springer 2024](https://link.springer.com/content/pdf/10.1007/s10865-024-00476-4.pdf))
+- **Visible progress motivates** (progress principle: small steps in meaningful work drive daily
+  motivation; goal-gradient: effort rises as a goal nears). Sources are summaries, not primary.
+  ([Ness Labs](https://nesslabs.com/?p=12440), [Learnnovators](https://learnnovators.com/blog/the-goal-gradient-effect-why-visible-progress-sustains-motivation/))
+- **Smoothed weight takes the sting out of plateaus** (Happy Scale, Libra: a moving average over
+  the daily weights; users report less discouragement; it lags after big changes). Anecdotal.
+  ([Happy Scale support](https://happyscale.com/support))
+- **Streaks and gamification:** evidence mixed, effects on steps small; no solid proof either way.
+  ([Sahha](https://sahha.ai/blog/gamification-behavioral-nudges-health-apps/), [Frontiers 2023](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2023.1286463/pdf))
+- **Flat average as a reference:** step apps draw the period's daily average as one line, so a
+  bar above it reads as an above-average day; Apple's Trends compare a recent 90-day average to
+  the 365-day one instead of drawing a moving line.
+  ([Vantagefit](https://www.vantagefit.io/en/help/health-tracking/what-are-trends/), [leancrew](https://leancrew.com/all-this/2024/11/apple-health-trends/))
 
 ## Steps in Health Connect
 
