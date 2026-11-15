@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.burn.BurnDay
+import fi.jukkakot.terveyslappu.burn.BurnSeries
 import fi.jukkakot.terveyslappu.food.EnergySeries
 import fi.jukkakot.terveyslappu.food.FoodItem
 import fi.jukkakot.terveyslappu.steps.StepsDay
@@ -39,8 +41,11 @@ data class ChartAxis(val from: LocalDate, val to: LocalDate, val weekly: Boolean
     operator fun contains(day: LocalDate): Boolean = day in from..to
 }
 
-/** One day's own value; [treat] is the treats' share of an energy day. */
-data class DayValue(val day: LocalDate, val value: Double, val treat: Double = 0.0)
+/**
+ * One day's own value; [treat] is the treats' share of an energy day; [active] the active kcal of a
+ * Kulutus day ([value] its total; null = a kokonais day without a split).
+ */
+data class DayValue(val day: LocalDate, val value: Double, val treat: Double = 0.0, val active: Double? = null)
 
 /**
  * One shown data of an own chart over the axis. [values] is null while the data is not loaded or
@@ -103,12 +108,14 @@ class CustomChartData(val chart: CustomChart, val axis: ChartAxis, val kinds: Li
             foodItems: Collection<FoodItem>?,
             stepDays: Collection<StepsDay>?,
             questioned: Set<String> = emptySet(),
+            burnDays: Collection<BurnDay>? = null,
         ): CustomChartData {
             val all: Map<SeriesKind, List<DayValue>?> = chart.series.associate { s ->
                 s.kind to when (s.kind) {
                     SeriesKind.WEIGHT -> weights?.let { lastWeights(it, zone, questioned) }
                     SeriesKind.ENERGY -> foodItems?.let { items -> EnergySeries.loggedDays(items).map { DayValue(it.day, it.total.toDouble(), it.treat.toDouble()) } }
                     SeriesKind.STEPS -> stepDays?.let { days -> StepsSeries.stepDays(days).map { DayValue(it.day, it.steps.toDouble()) } }
+                    SeriesKind.BURN -> burnDays?.let { days -> BurnSeries.burnDays(days).map { DayValue(it.day, it.total.toDouble(), active = it.active?.toDouble()) } }
                 }
             }
             val first = all.values.mapNotNull { it?.firstOrNull()?.day }.minOrNull()
@@ -122,8 +129,8 @@ class CustomChartData(val chart: CustomChart, val axis: ChartAxis, val kinds: Li
         }
 
         /**
-         * The period average of [values] (spec "Custom charts"): Energia per logged day and Askeleet
-         * per day with steps, today left out; Paino every day's last weight, today included. Null
+         * The period average of [values] (spec "Custom charts"): Syöty per logged day, Kulutus per day
+         * with data (its total) and Askeleet per day with steps, today left out; Paino every day's last weight, today included. Null
          * when there is nothing to average.
          */
         fun average(kind: SeriesKind, values: List<DayValue>?, today: LocalDate): Double? {
@@ -136,7 +143,7 @@ class CustomChartData(val chart: CustomChart, val axis: ChartAxis, val kinds: Li
             val top = values.maxOf { it.value }
             return when (kind) {
                 SeriesKind.WEIGHT -> WeightScale.of(values.map { it.value }).let { AxisTicks.line(it.min, it.max) }
-                SeriesKind.ENERGY -> AxisTicks.bars(top, KCAL_STEP)
+                SeriesKind.ENERGY, SeriesKind.BURN -> AxisTicks.bars(top, KCAL_STEP)
                 SeriesKind.STEPS -> AxisTicks.bars(top, STEPS_STEP)
             }
         }

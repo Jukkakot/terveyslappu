@@ -89,6 +89,8 @@ data class MainUiState(
     val foodDays: Long = HomeSummary.DEFAULT_DAYS,
     /** The front page steps card's own chart period in days. */
     val stepsDays: Long = HomeSummary.DEFAULT_DAYS,
+    /** The front page Kulutus card's own chart period in days (energy-burn "Kulutus card"). */
+    val burnDays: Long = HomeSummary.DEFAULT_DAYS,
     /** The saved front page layout (home-screen "Card grid"); edit mode works on a draft of it. */
     val homeLayout: HomeLayout = HomeLayout.DEFAULT,
     /** Whether weights older than 30 days can be read; null until checked. */
@@ -112,6 +114,8 @@ data class MainUiState(
     val historyOnEnergy: Boolean = false,
     /** Historia opens on Askeleet (the front page steps card). */
     val historyOnSteps: Boolean = false,
+    /** Historia opens on Kulutus (its card, or back from the source setting opened there). */
+    val historyOnBurn: Boolean = false,
     /** Where Historia was opened from: FOOD for Ruoka's Viikko (back returns there), otherwise HOME. */
     val historyOrigin: Screen = Screen.HOME,
     /** The own charts in tab order (custom-charts). */
@@ -130,7 +134,7 @@ data class MainUiState(
         screen == Screen.HOME -> this
         screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME, historyChart = null)
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME, historyChart = null)
-        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = null)
+        screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null)
         settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
@@ -153,6 +157,10 @@ data class MainUiState(
     /** Asetukset → Askeleet from the Askeleet source line; back returns to Historia on Askeleet. */
     fun withStepsSource(): MainUiState =
         withSettings(SettingsPage.STEPS, screen).copy(historyOnSteps = screen == Screen.HISTORY)
+
+    /** Asetukset → Askeleet from Kulutus's source line; back returns to Historia on Kulutus (energy-burn design 3). */
+    fun withBurnSource(): MainUiState =
+        withSettings(SettingsPage.STEPS, screen).copy(historyOnBurn = screen == Screen.HISTORY)
 
     /** The state after a successful read at [at]. */
     fun loaded(entries: List<WeightEntry>, history: HistoryAccess, at: Instant) =
@@ -212,6 +220,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             homeDays = periodPrefs.loadHomeDays(),
             foodDays = periodPrefs.loadFoodDays(),
             stepsDays = periodPrefs.loadStepsDays(),
+            burnDays = periodPrefs.loadBurnDays(),
             homeLayout = homePrefs.load(chartList.charts.map { it.cardId }.toSet()),
             charts = chartList.charts,
         ),
@@ -274,7 +283,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** A chart card: Historia on that chart's tab; back returns home. */
     fun openChart(id: Int) = _state.update {
-        it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = id, historyOrigin = Screen.HOME)
+        it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = id, historyOrigin = Screen.HOME)
     }
 
     /** Historia has opened the chart's page. */
@@ -311,6 +320,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         AppLog.i("home.period", "", "card" to "steps", "days" to chosen)
         periodPrefs.saveStepsDays(chosen)
         _state.update { it.copy(stepsDays = chosen) }
+    }
+
+    fun onBurnPeriod(days: Long) {
+        val chosen = HomeSummary.homeDays(days)
+        AppLog.i("home.period", "", "card" to "burn", "days" to chosen)
+        periodPrefs.saveBurnDays(chosen)
+        _state.update { it.copy(burnDays = chosen) }
     }
 
     /** Valmis in the front page's edit mode (home-card-layout design 4, 14): only ids and sizes are logged. */
@@ -369,7 +385,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyChart = null, historyOrigin = Screen.HOME)
+        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null, historyOrigin = Screen.HOME)
     }
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
@@ -389,6 +405,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Historia has opened its Askeleet page. */
     fun stepsShown() = _state.update { it.copy(historyOnSteps = false) }
+
+    /** The front page Kulutus card: Historia on Kulutus; back returns home. */
+    fun openBurn() = _state.update { it.copy(screen = Screen.HISTORY, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = true, historyOrigin = Screen.HOME) }
+
+    /** Historia has opened its Kulutus page. */
+    fun burnShown() = _state.update { it.copy(historyOnBurn = false) }
+
+    /** Kulutus's source line: Asetukset → Askeleet. */
+    fun openBurnSource() = _state.update { it.withBurnSource() }
 
     /** Historia has opened its Energia page. */
     fun energyShown() = _state.update { it.copy(historyOnEnergy = false) }

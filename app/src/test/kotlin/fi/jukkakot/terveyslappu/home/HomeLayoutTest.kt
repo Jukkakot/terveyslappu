@@ -69,11 +69,11 @@ class HomeLayoutTest {
         assertEquals(SMALL, layout.resize(WEIGHT, SMALL).shown.first().size)
         val hidden = layout.resize(STEPS, BIG).hide(STEPS)
         assertEquals(listOf(WEIGHT, FOOD), hidden.shown.map { it.id })
-        assertEquals(listOf(HomeCard(STEPS, BIG)), hidden.hidden)
+        assertEquals(HomeLayout.HIDDEN_DEFAULT + HomeCard(STEPS, BIG), hidden.hidden)
         val back = hidden.hide(WEIGHT).show(STEPS)
         assertEquals(listOf(FOOD, STEPS), back.shown.map { it.id })
         assertEquals(BIG, back.shown.last().size, "show keeps the size")
-        assertEquals(listOf(weight), back.hidden)
+        assertEquals(HomeLayout.HIDDEN_DEFAULT + weight, back.hidden)
         assertSame(back, back.show("nothing"))
     }
 

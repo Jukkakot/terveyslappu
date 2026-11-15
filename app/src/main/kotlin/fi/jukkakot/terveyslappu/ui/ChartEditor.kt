@@ -1,6 +1,18 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +51,7 @@ import fi.jukkakot.terveyslappu.chart.ChartLayout
 import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.chart.CustomCharts
 import fi.jukkakot.terveyslappu.chart.Period
+import fi.jukkakot.terveyslappu.chart.SeriesColour
 import fi.jukkakot.terveyslappu.chart.SeriesKind
 import fi.jukkakot.terveyslappu.chart.SeriesStyle
 import fi.jukkakot.terveyslappu.chart.encode
@@ -50,7 +63,10 @@ internal val EditorTargetSaver = Saver<MutableState<Int?>, Int>(save = { it.valu
 private val DraftSaver = Saver<MutableState<ChartDraft>, List<String>>(
     save = { s ->
         val d = s.value
-        listOf(d.id.toString(), d.name, d.on.joinToString(",") { it.name }, SeriesKind.entries.joinToString(",") { d.styleOf(it).name }, d.layout.name, d.period.encode(), d.showAverage.toString())
+        listOf(
+            d.id.toString(), d.name, d.on.joinToString(",") { it.name }, SeriesKind.entries.joinToString(",") { d.styleOf(it).name }, d.layout.name, d.period.encode(), d.showAverage.toString(),
+            SeriesKind.entries.joinToString(",") { d.colourOf(it)?.name ?: "" },
+        )
     },
     restore = { l ->
         mutableStateOf(
@@ -62,6 +78,7 @@ private val DraftSaver = Saver<MutableState<ChartDraft>, List<String>>(
                 layout = ChartLayout.valueOf(l[4]),
                 period = Period.decode(l[5]),
                 showAverage = l.getOrNull(6) == "true",
+                colours = l.getOrNull(7)?.let { c -> SeriesKind.entries.zip(c.split(',').map { n -> SeriesColour.entries.firstOrNull { it.name == n } }).toMap() } ?: emptyMap(),
             ),
         )
     },
@@ -72,12 +89,100 @@ private fun kindName(kind: SeriesKind): String = stringResource(
     when (kind) {
         SeriesKind.WEIGHT -> R.string.quantity_weight
         SeriesKind.ENERGY -> R.string.quantity_energy
+        SeriesKind.BURN -> R.string.quantity_burn
         SeriesKind.STEPS -> R.string.quantity_steps
     },
 )
 
+@Composable
+private fun colourName(colour: SeriesColour?): String = stringResource(
+    when (colour) {
+        null -> R.string.chart_colour_default
+        SeriesColour.SININEN -> R.string.chart_colour_sininen
+        SeriesColour.VIHREA -> R.string.chart_colour_vihrea
+        SeriesColour.ORANSSI -> R.string.chart_colour_oranssi
+        SeriesColour.PUNAINEN -> R.string.chart_colour_punainen
+        SeriesColour.VIOLETTI -> R.string.chart_colour_violetti
+        SeriesColour.TURKOOSI -> R.string.chart_colour_turkoosi
+        SeriesColour.KELTAINEN -> R.string.chart_colour_keltainen
+        SeriesColour.HARMAA -> R.string.chart_colour_harmaa
+    },
+)
+
+/** The swatch of [colour] for [kind]: a chosen colour's shade, or the kind's Oletus tone. */
+@Composable
+private fun swatch(kind: SeriesKind, colour: SeriesColour?): Color {
+    if (colour != null) return paletteColour(colour)
+    val c = MaterialTheme.colorScheme
+    return when (kind) {
+        SeriesKind.WEIGHT -> c.secondary
+        SeriesKind.ENERGY -> c.primary
+        SeriesKind.BURN -> burnColour()
+        SeriesKind.STEPS -> c.primary
+    }
+}
+
 /**
- * The chart editor (weight-chart "Chart editor", custom-charts design 12): name, the three data rows,
+ * A data row's colour dot (weight-chart "Chart editor colours"): 44 dp, named for TalkBack, disabled
+ * while the data is off; opens a 3 × 3 picker of Oletus and the eight colours, the chosen one checked.
+ */
+@Composable
+private fun ColourDot(kind: SeriesKind, colour: SeriesColour?, enabled: Boolean, onPick: (SeriesColour?) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val name = colourName(colour)
+    val label = stringResource(R.string.chart_colour, name)
+    Box(
+        Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClickLabel = stringResource(R.string.chart_colour_pick, kindName(kind))) { open = true }
+            .semantics { contentDescription = label }
+            .testTag("chartColour-${kind.name}"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(24.dp).clip(CircleShape).background(swatch(kind, colour).copy(alpha = if (enabled) 1f else 0.38f)))
+    }
+    if (open) {
+        Dialog(onDismissRequest = { open = false }) {
+            Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.testTag("colourPicker")) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.chart_colour_pick, kindName(kind)), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+                    val choices: List<SeriesColour?> = listOf<SeriesColour?>(null) + SeriesColour.entries
+                    val chosenText = stringResource(R.string.chart_colour_chosen)
+                    choices.chunked(3).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            row.forEach { choice ->
+                                val chosen = choice == colour
+                                val choiceName = colourName(choice)
+                                Column(
+                                    Modifier
+                                        .width(72.dp)
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .clickable {
+                                            open = false
+                                            onPick(choice)
+                                        }
+                                        .semantics { contentDescription = if (chosen) "$choiceName, $chosenText" else choiceName }
+                                        .padding(vertical = 4.dp)
+                                        .testTag("colourChoice-${choice?.name ?: "DEFAULT"}"),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Box(Modifier.size(44.dp).clip(CircleShape).background(swatch(kind, choice)), contentAlignment = Alignment.Center) {
+                                        if (chosen) Icon(painterResource(R.drawable.ic_check), contentDescription = null, tint = MaterialTheme.colorScheme.surface)
+                                    }
+                                    Text(choiceName, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The chart editor (weight-chart "Chart editor", custom-charts design 12): name, the four data rows (switch, style, colour),
  * Asettelu, Peruuta / Tallenna and, for an existing chart, Poista kaavio (deletes at once; the caller offers Kumoa).
  * Back and an outside tap discard without asking. The period is not here; saving keeps it.
  */
@@ -115,7 +220,8 @@ internal fun ChartEditor(
                             Text(kindName(kind), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                             Switch(checked = on, onCheckedChange = { draft = CustomCharts.toggle(draft, kind) }, modifier = Modifier.testTag("chartOn-${kind.name}"))
                         }
-                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
                             SeriesStyle.entries.forEachIndexed { i, style ->
                                 SegmentedButton(
                                     selected = draft.styleOf(kind) == style,
@@ -125,6 +231,9 @@ internal fun ChartEditor(
                                     modifier = Modifier.testTag("chartStyle-${kind.name}-${style.name}"),
                                 ) { Text(stringResource(if (style == SeriesStyle.BARS) R.string.chart_style_bars else R.string.chart_style_line)) }
                             }
+                        }
+                        Spacer(Modifier.width(4.dp))
+                        ColourDot(kind, draft.colourOf(kind), enabled = on) { draft = CustomCharts.setColour(draft, kind, it) }
                         }
                     }
                 }

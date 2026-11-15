@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.chart.SeriesKind.BURN
 import fi.jukkakot.terveyslappu.chart.SeriesKind.ENERGY
 import fi.jukkakot.terveyslappu.chart.SeriesKind.STEPS
 import fi.jukkakot.terveyslappu.chart.SeriesKind.WEIGHT
@@ -23,7 +24,7 @@ class CustomChartDataTest {
     private val zone: ZoneId = ZoneOffset.UTC
     private val today = LocalDate.of(2026, 11, 15)
 
-    private fun chart(period: Period = Period.MONTH, vararg kinds: SeriesKind = SeriesKind.entries.toTypedArray()) =
+    private fun chart(period: Period = Period.MONTH, vararg kinds: SeriesKind = (SeriesKind.entries - SeriesKind.BURN).toTypedArray()) =
         CustomChart(1, "K", kinds.map { ChartSeries(it, CustomCharts.defaultStyle(it)) }, ChartLayout.STACKED, period)
 
     private fun weight(id: String, day: LocalDate, hour: Int, kg: Double) = weightEntry(id, day.atTime(hour, 0).toInstant(ZoneOffset.UTC), null, kg, "me", "me")
@@ -95,17 +96,36 @@ class CustomChartDataTest {
     }
 
     @Test
-    fun `history pages put own charts after Askeleet and Uusi kaavio last`() {
+    fun `history pages put own charts after Kulutus and Uusi kaavio last`() {
         val charts = listOf(chart().copy(id = 3), chart().copy(id = 5))
         val pages = HistoryPages.of(charts)
-        assertEquals(7, pages.size)
+        assertEquals(8, pages.size)
         assertEquals(HistoryPage.Fixed(Quantity.WEIGHT), pages[0])
+        assertEquals(HistoryPage.Energy, pages[HistoryPages.ENERGY])
         assertEquals(HistoryPage.Steps, pages[HistoryPages.STEPS])
-        assertEquals(4, pages.indexOfChart(3))
-        assertEquals(5, pages.indexOfChart(5))
-        assertEquals(HistoryPage.NewChart, pages[6])
-        assertEquals(4, HistoryPages.afterDelete(charts, 5))
-        assertEquals(HistoryPages.STEPS, HistoryPages.afterDelete(charts, 3))
+        assertEquals(HistoryPage.Burn, pages[HistoryPages.BURN])
+        assertEquals(HistoryPages.STEPS + 1, HistoryPages.BURN)
+        assertEquals(5, pages.indexOfChart(3))
+        assertEquals(6, pages.indexOfChart(5))
+        assertEquals(HistoryPage.NewChart, pages[7])
+        assertEquals(5, HistoryPages.afterDelete(charts, 5))
+        assertEquals(HistoryPages.BURN, HistoryPages.afterDelete(charts, 3))
+    }
+
+    @Test
+    fun `Kulutus in a chart keeps each day's total and split, on the kcal scale`() {
+        val burn = listOf(
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today.minusDays(1), 2_300, 450)!!,
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today.minusDays(2), 2_200, null)!!,
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today, 900, 100)!!,
+        )
+        val data = CustomChartData.of(chart(Period.MONTH, BURN), today, zone, null, null, null, burnDays = burn)
+        val kind = data.of(BURN)!!
+        assertEquals(DayValue(today.minusDays(1), 2_300.0, active = 450.0), kind.at(today.minusDays(1)))
+        assertNull(kind.at(today.minusDays(2))!!.active)
+        assertEquals(3_000.0, kind.max)
+        assertEquals(2_250.0, kind.average, "today left out")
+        assertNull(CustomChartData.of(chart(Period.MONTH, BURN), today, zone, null, null, null).of(BURN)!!.values)
     }
 
     @Test

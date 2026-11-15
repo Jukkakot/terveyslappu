@@ -284,7 +284,7 @@
     <string name="home_food_bars">Päivittäiset kilokalorit jaksolla, %1$d kirjattua päivää</string>
     <string name="home_food_average">keskim. %1$s/pv</string>
     <string name="home_food_no_average">ei vielä keskiarvoa</string>
-    <string name="home_open_energy">Avaa energia</string>
+    <string name="home_open_energy">Avaa Syöty</string>
     <string name="home_open_food">Avaa päivän ruoat</string>
     <string name="home_food_add">Annos</string>
     <string name="home_weigh">Punnitse</string>
@@ -430,10 +430,10 @@
     <string name="steps_source_line_auto_all">Lähde: kaikki sovellukset (automaattinen)</string>
     <string name="steps_empty_app">%1$s: ei askelia tällä jaksolla</string>
     <string name="steps_change_source">Vaihda lähde</string>
-    <string name="quantity_energy">Energia</string>
-    <string name="energy_reason">Energia vaatii luvan ravintotietoihin</string>
+    <string name="quantity_energy">Syöty</string>
+    <string name="energy_reason">Syöty vaatii luvan ravintotietoihin</string>
     <string name="energy_empty">Tällä jaksolla ei ole kirjattuja päiviä.</string>
-    <string name="energy_chart_description">Energia, %1$d palkkia</string>
+    <string name="energy_chart_description">Syöty, %1$d palkkia</string>
     <string name="energy_stat_average">Keskimäärin</string>
     <string name="energy_stat_treats">Herkut</string>
     <string name="energy_stat_days">Kirjattu</string>
@@ -449,7 +449,7 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d ruokaa ja %3$d tuotetta</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d ruokaa jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruokakirjaus</string>
-    <string name="help_food_body">Lisää annos etusivun ruokakortin + Annos -napista, Ruoka-näkymästä, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin lisäysikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän ruoat ja pylväät Historian Energia-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus kirjaa heti, kynä avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja punainen roskakori poistaa oman tuotteen (kirjatut annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Energia-välilehti näyttää päivät. Ruoka-annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo ruoka-annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruoassa ja lisäysikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Ruoan ja tuotteiden riveillä kynä muokkaa ja punainen roskakori poistaa (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
+    <string name="help_food_body">Lisää annos etusivun ruokakortin + Annos -napista, Ruoka-näkymästä, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin lisäysikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän ruoat ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus kirjaa heti, kynä avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja punainen roskakori poistaa oman tuotteen (kirjatut annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee tuote, jonka kcal voi täydentää myöhemmin; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Ruoka-annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo ruoka-annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruoassa ja lisäysikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Ruoan ja tuotteiden riveillä kynä muokkaa ja punainen roskakori poistaa (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit perustuotteet ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita.</string>
     <string name="home_food_average_long">keskim. %1$s kcal/pv</string>
     <string name="home_steps_average_long">keskim. %1$s askelta/pv</string>
     <!-- home-card-layout: the front page's edit mode -->
@@ -478,7 +478,7 @@
     <string name="help_home_body">Pidä korttia painettuna, niin etusivun muokkaus alkaa. Raahaa kortti uuteen paikkaan; kortin valikosta voit vaihtaa koon (pieni, leveä, iso), siirtää korttia tai piilottaa sen, ja Lisää kortti tuo piilotetun takaisin. Valmis tallentaa, Peruuta tai takaisin-ele hylkää muutokset.</string>
     <!-- custom-charts -->
     <string name="chart_new">Uusi kaavio</string>
-    <string name="chart_new_intro">Omassa kaaviossa näet painon, energian ja askeleet yhdessä, omalla jaksollaan, pylväinä tai viivana.</string>
+    <string name="chart_new_intro">Omassa kaaviossa näet painon, syödyn ja kulutetun energian sekä askeleet yhdessä, omalla jaksollaan, pylväinä tai viivana.</string>
     <string name="chart_edit">Muokkaa</string>
     <string name="chart_edit_title">Muokkaa kaaviota</string>
     <string name="chart_name">Nimi</string>
@@ -509,7 +509,7 @@
     <string name="custom_chart_description">Oma kaavio %1$s</string>
     <string name="home_open_chart">Avaa kaavio</string>
     <string name="help_charts_title">Omat kaaviot</string>
-    <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Paino, energia ja askeleet voivat olla pylväinä tai viivana, allekkain tai päällekkäin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
+    <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Paino, Syöty, Kulutus ja Askeleet voivat olla pylväinä tai viivana, allekkain tai päällekkäin, kullekin voi valita värin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
     <!-- garmin-steps-history -->
     <string name="garmin_title">Garminin historia</string>
     <string name="garmin_preview">%1$s – %2$s</string>
@@ -525,4 +525,47 @@
     <string name="garmin_row_empty">Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedot</string>
     <string name="garmin_delete">Poista</string>
     <string name="garmin_confirm">Tuo</string>
+    <!-- energy-burn -->
+    <string name="quantity_burn">Kulutus</string>
+    <string name="burn_reason">Kulutus luetaan Health Connectista, joten sovellus tarvitsee luvan lukea kulutetun energian tietoja (kokonais ja aktiivinen). Sovellus ei koskaan kirjoita niitä.</string>
+    <string name="burn_denied_reason">Kulutustietojen lupaa ei annettu. Voit kysyä sitä uudelleen tai antaa sen Health Connectin asetuksissa.</string>
+    <string name="burn_unavailable">Kulutus: ei saatavilla</string>
+    <string name="burn_today_permission">Kulutus: anna lupa</string>
+    <string name="burn_read_failed">Kulutusta ei voitu lukea</string>
+    <string name="burn_empty">Tällä jaksolla ei ole kulutustietoja.</string>
+    <string name="burn_empty_app">%1$s: ei kulutustietoja tällä jaksolla</string>
+    <string name="burn_chart_description">Kulutus, %1$d palkkia</string>
+    <string name="burn_legend_rest">lepo</string>
+    <string name="burn_legend_active">aktiivinen</string>
+    <string name="burn_legend_total">kokonais</string>
+    <string name="burn_legend">kulutus</string>
+    <string name="burn_point">%1$s · %2$s kcal · aktiivinen %3$s · lepo %4$s</string>
+    <string name="burn_point_active">%1$s · %2$s kcal · aktiivinen %3$s</string>
+    <string name="burn_point_total">%1$s · %2$s kcal</string>
+    <string name="burn_stat_active">Aktiivinen keskim.</string>
+    <string name="burn_stat_days">Päiviä</string>
+    <string name="burn_active_line">aktiivinen %1$s kcal</string>
+    <string name="burn_value_split">%1$s kcal · aktiivinen %2$s</string>
+    <string name="home_burn_title">Kulutettu tänään</string>
+    <string name="home_burn_average">%1$s/pv</string>
+    <string name="home_burn_average_long">keskim. %1$s kcal/pv</string>
+    <string name="home_burn_bars">Päivittäinen kulutus jaksolla, %1$d päivää</string>
+    <string name="home_open_burn">Avaa Kulutus</string>
+    <string name="home_card_burn">Kulutus</string>
+    <string name="chart_empty_burn">Ei kulutustietoja tällä jaksolla</string>
+    <string name="steps_source_burn">Lähde koskee myös Kulutusta.</string>
+    <string name="chart_colour">Väri: %1$s</string>
+    <string name="chart_colour_default">Oletus</string>
+    <string name="chart_colour_sininen">sininen</string>
+    <string name="chart_colour_vihrea">vihreä</string>
+    <string name="chart_colour_oranssi">oranssi</string>
+    <string name="chart_colour_punainen">punainen</string>
+    <string name="chart_colour_violetti">violetti</string>
+    <string name="chart_colour_turkoosi">turkoosi</string>
+    <string name="chart_colour_keltainen">keltainen</string>
+    <string name="chart_colour_harmaa">harmaa</string>
+    <string name="chart_colour_chosen">valittu</string>
+    <string name="chart_colour_pick">%1$s: väri</string>
+    <string name="help_burn_title">Kulutus</string>
+    <string name="help_burn_body">Kulutus näyttää päivän kuluttaman energian sellaisena kuin Garmin (tai muu sovellus) sen Health Connectiin kirjoittaa: lepo alhaalla vaaleampana ja aktiivinen päällä. Sovellus ei laske kulutusta itse eikä kirjoita sitä minnekään. Lähde on sama kuin askelilla (Asetukset → Askeleet), ja Garminin tietojen latauksen ZIP tuo myös vanhan kulutuksen. Kortin saa etusivulle muokkauksen Lisää kortti -valikosta. Syöty ja Kulutus ovat erillään; omassa kaaviossa ne voi näyttää yhdessä.</string>
 </resources>

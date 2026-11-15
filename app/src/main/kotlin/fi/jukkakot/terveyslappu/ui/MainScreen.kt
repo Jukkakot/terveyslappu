@@ -76,6 +76,8 @@ class MainActions(
     val onOpenSteps: () -> Unit = {},
     /** Historia opened on Askeleet after the steps card. */
     val onStepsShown: () -> Unit = {},
+    /** Historia opened on Kulutus after its card. */
+    val onBurnShown: () -> Unit = {},
     /** The food card: Historia on Energia. */
     val onOpenEnergy: () -> Unit = {},
     /** Ruoka's Viikko: Historia on Energia with 1 vk. */
@@ -125,14 +127,16 @@ fun MainScreen(
     steps: StepsUiState = StepsUiState(),
     stepsActions: StepsActions = StepsActions(),
     stepsSources: StepsSourcesUi = StepsSourcesUi(),
+    burn: fi.jukkakot.terveyslappu.burn.BurnUiState = fi.jukkakot.terveyslappu.burn.BurnUiState(),
+    burnActions: BurnActions = BurnActions(),
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
     val screen = if ((state.screen == Screen.HISTORY || state.screen == Screen.FOOD) && !granted) Screen.HOME else state.screen
     BackHandler(enabled = screen != Screen.HOME) { actions.onBack() }
     when (screen) {
-        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions, steps, stepsActions)
-        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions, steps, stepsActions)
+        Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions, steps, stepsActions, burn, burnActions)
+        Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions, steps, stepsActions, burn, burnActions)
         Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions, steps, stepsSources, stepsActions)
         Screen.HELP -> HelpScreen(actions)
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)

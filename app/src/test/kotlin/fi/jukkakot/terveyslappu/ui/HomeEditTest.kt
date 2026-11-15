@@ -294,7 +294,7 @@ class HomeEditTest {
         menu(STEPS, "editHide-steps")
         node("editDone").performClick()
         assertEquals(listOf(WEIGHT, FOOD), order())
-        assertEquals(listOf(STEPS), saved?.hidden?.map { it.id })
+        assertEquals(listOf(HomeLayout.BURN, STEPS), saved?.hidden?.map { it.id })
     }
 
     @Test

@@ -27,7 +27,7 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
     /** The grid's rows in order (see [rows]). */
     fun rows(): List<List<HomeCard>> = rows(shown)
 
-    /** The fixed cards in default order and sizes, nothing hidden and no chart card in either list (custom-charts design 2). */
+    /** The fixed cards in default order and sizes, only the hidden-by-default cards hidden and no chart card in either list (custom-charts design 2). */
     val isDefault: Boolean get() = this == DEFAULT
 
     fun contains(id: String): Boolean = shown.any { it.id == id } || hidden.any { it.id == id }
@@ -97,6 +97,7 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
         const val WEIGHT = "weight"
         const val FOOD = "food"
         const val STEPS = "steps"
+        const val BURN = "burn"
 
         /** The fixed cards at their default sizes, in default order. */
         val FIXED: List<HomeCard> = listOf(
@@ -105,7 +106,10 @@ data class HomeLayout(val shown: List<HomeCard>, val hidden: List<HomeCard> = em
             HomeCard(STEPS, CardSize.SMALL),
         )
 
-        val DEFAULT = HomeLayout(FIXED)
+        /** Feature cards hidden by default, added from Lisää kortti (energy-burn design 10). */
+        val HIDDEN_DEFAULT: List<HomeCard> = listOf(HomeCard(BURN, CardSize.SMALL))
+
+        val DEFAULT = HomeLayout(FIXED, HIDDEN_DEFAULT)
 
         /** A card of an own chart (`chart:<id>`, custom-charts). */
         fun isChart(id: String): Boolean = id.startsWith("chart:")

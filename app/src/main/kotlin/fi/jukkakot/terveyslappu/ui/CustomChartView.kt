@@ -52,6 +52,7 @@ import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.ChartLayout
 import fi.jukkakot.terveyslappu.chart.CustomChartData
 import fi.jukkakot.terveyslappu.chart.KindData
+import fi.jukkakot.terveyslappu.chart.SeriesColour
 import fi.jukkakot.terveyslappu.chart.SeriesKind
 import fi.jukkakot.terveyslappu.chart.SeriesStyle
 import fi.jukkakot.terveyslappu.home.CardSize
@@ -134,16 +135,29 @@ internal fun CustomChartView(
 
 private fun <T : Comparable<T>> T.coerceIn(from: T, to: T): T = if (this < from) from else if (this > to) to else this
 
-/** The kind's own tone: weight secondary, energy primary, steps tertiary when overlaid (its tab's primary when stacked). */
+/**
+ * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else Oletus = weight
+ * secondary, Syöty primary, Kulutus oranssi, steps tertiary when overlaid (its tab's primary when stacked).
+ */
 @Composable
-private fun toneOf(kind: SeriesKind, overlaid: Boolean): Color {
+private fun toneOf(kind: SeriesKind, colour: SeriesColour?, overlaid: Boolean): Color {
+    if (colour != null) return paletteColour(colour)
     val c = MaterialTheme.colorScheme
     return when (kind) {
         SeriesKind.WEIGHT -> c.secondary
         SeriesKind.ENERGY -> c.primary
+        SeriesKind.BURN -> burnColour()
         SeriesKind.STEPS -> if (overlaid) c.tertiary else c.primary
     }
 }
+
+@Composable
+private fun CustomChartData.toneOf(kind: SeriesKind, overlaid: Boolean): Color = toneOf(kind, chart.colourOf(kind), overlaid)
+
+/** Syöty's treat share: the lighter tone of a chosen colour, else today's tertiary (old charts unchanged). */
+@Composable
+private fun CustomChartData.treatTone(tone: Color): Color =
+    if (chart.colourOf(SeriesKind.ENERGY) != null) tone.copy(alpha = ChartPalette.LIGHT_ALPHA) else MaterialTheme.colorScheme.tertiary
 
 /** "82 kg", "2 500 kcal", "14 000 askelta". */
 @Composable
@@ -152,7 +166,7 @@ private fun axisLabels(kind: KindData): List<String> = kind.ticks.map { valueTex
 @Composable
 internal fun valueText(kind: SeriesKind, value: Double): String = when (kind) {
     SeriesKind.WEIGHT -> stringResource(R.string.kg_value, formatAxisKg(value))
-    SeriesKind.ENERGY -> stringResource(R.string.food_kcal, formatKcal(value))
+    SeriesKind.ENERGY, SeriesKind.BURN -> stringResource(R.string.food_kcal, formatKcal(value))
     SeriesKind.STEPS -> stringResource(R.string.steps_value, formatSteps(value.toLong()))
 }
 
@@ -161,16 +175,25 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
     when (kind) {
         SeriesKind.WEIGHT -> R.string.chart_empty_weight
         SeriesKind.ENERGY -> R.string.chart_empty_energy
+        SeriesKind.BURN -> R.string.chart_empty_burn
         SeriesKind.STEPS -> R.string.chart_empty_steps
     },
 )
 
-/** Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16). */
-private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true) {
+/**
+ * Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16);
+ * Kulutus bars split into lepo and aktiivinen when [burnSplit] (Allekkain), else one tone.
+ */
+private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false) {
     val values = kind.values.orEmpty()
     fun y(v: Double) = size.height * (1 - kind.fraction(v))
     if (kind.style == SeriesStyle.BARS) {
-        if (barsToo) drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
+        if (!barsToo) return
+        if (kind.kind == SeriesKind.BURN && burnSplit) {
+            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots)
+        } else {
+            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
+        }
     } else if (linesToo) {
         drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT)
     }
@@ -202,11 +225,11 @@ private fun ColumnScope.Stacked(data: CustomChartData, mode: ChartMode, states: 
             }
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 if (kind.drawn) {
-                    val tone = toneOf(kind.kind, overlaid = false)
-                    val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) colors.tertiary else null
+                    val tone = data.toneOf(kind.kind, overlaid = false)
+                    val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) data.treatTone(tone) else null
                     Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
                         drawGuidelines(colors.outlineVariant, kind.ticks.map { size.height * (1 - kind.fraction(it)) })
-                        drawKind(kind, data.axis, tone, treat, linesToo = false)
+                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true)
                         if (data.chart.showAverage) drawKindAverage(kind, colors.onSurfaceVariant)
                         drawKind(kind, data.axis, tone, treat, barsToo = false)
                     }
@@ -241,7 +264,7 @@ private fun ColumnScope.Overlaid(data: CustomChartData, mode: ChartMode, states:
     val rightLabels = axisLabels(right)
     val leftWidth = if (labels) axisLabelWidth(leftLabels) else 0.dp
     val rightWidth = if (labels) axisLabelWidth(rightLabels) else 0.dp
-    val tones = drawn.associate { it.kind to toneOf(it.kind, overlaid = true) }
+    val tones = drawn.associate { it.kind to data.toneOf(it.kind, overlaid = true) }
     val plot = Modifier.fillMaxWidth().then(if (card != null) Modifier.weight(1f).heightIn(min = MIN_CARD_PANEL) else Modifier.height(OVERLAID_PLOT))
     Row(plot.padding(top = 4.dp).testTag("plot-overlaid")) {
         if (labels) YAxisLabels(leftLabels, listOf(0f, 0.5f, 1f), leftWidth, OVERLAID_PLOT - 4.dp, "axisLeft-${left.kind.name}", tones.getValue(left.kind))
@@ -287,12 +310,25 @@ private fun DatesAndLegend(data: CustomChartData, mode: ChartMode, start: Dp, ov
     val food = stringResource(R.string.energy_legend_food)
     val treat = stringResource(R.string.energy_legend_treat)
     val steps = stringResource(R.string.steps_legend)
+    val burn = stringResource(R.string.burn_legend)
+    val rest = stringResource(R.string.burn_legend_rest)
+    val active = stringResource(R.string.burn_legend_active)
+    val whole = stringResource(R.string.burn_legend_total)
     val entries = data.drawn.flatMap { kind ->
         val line = kind.style == SeriesStyle.LINE
-        val tone = toneOf(kind.kind, overlaid)
+        val tone = data.toneOf(kind.kind, overlaid)
         when (kind.kind) {
             SeriesKind.WEIGHT -> listOf(LegendEntry(weight, tone, line))
-            SeriesKind.ENERGY -> if (!overlaid && !line) listOf(LegendEntry(food, tone), LegendEntry(treat, colors.tertiary)) else listOf(LegendEntry(food, tone, line))
+            SeriesKind.ENERGY -> if (!overlaid && !line) listOf(LegendEntry(food, tone), LegendEntry(treat, data.treatTone(tone))) else listOf(LegendEntry(food, tone, line))
+            SeriesKind.BURN -> if (!overlaid && !line) {
+                listOfNotNull(
+                    LegendEntry(rest, tone.copy(alpha = ChartPalette.LIGHT_ALPHA)),
+                    LegendEntry(active, tone),
+                    LegendEntry(whole, tone.copy(alpha = ChartPalette.TOTAL_ALPHA)).takeIf { kind.values.orEmpty().any { it.active == null } },
+                )
+            } else {
+                listOf(LegendEntry(burn, tone, line))
+            }
             SeriesKind.STEPS -> listOf(LegendEntry(steps, tone, line))
         }
     }

@@ -10,13 +10,15 @@ import kotlinx.serialization.json.Json
  * [fixed] are the cards every layout holds (with their default sizes, in default order): a fixed id
  * missing from both lists is appended to `shown`. [allowedExtra] ids (`custom-charts`' `chart:<n>`)
  * are kept when listed and never appended; any other id is dropped. An unreadable value, an unknown
- * `v` or an empty `shown` means the default layout ([fixed], nothing hidden).
+ * `v` or an empty `shown` means the default layout ([fixed], [hiddenByDefault] hidden).
  */
 class HomeLayoutCodec(
     private val fixed: List<HomeCard> = HomeLayout.FIXED,
     private val allowedExtra: Set<String> = emptySet(),
     /** The size of a listed extra card whose stored size is unknown. */
     private val extraSize: CardSize = CardSize.WIDE,
+    /** Feature cards a layout lacking them gets in `hidden`, not appended to `shown` (energy-burn design 10). */
+    private val hiddenByDefault: List<HomeCard> = HomeLayout.HIDDEN_DEFAULT,
 ) {
     @Serializable
     private data class Card(val id: String, val size: String)
@@ -26,7 +28,7 @@ class HomeLayoutCodec(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val default get() = HomeLayout(fixed)
+    private val default get() = HomeLayout(fixed, hiddenByDefault)
 
     fun encode(layout: HomeLayout): String =
         json.encodeToString(Stored.serializer(), Stored(VERSION, layout.shown.map(::card), layout.hidden.map(::card)))
@@ -46,11 +48,11 @@ class HomeLayoutCodec(
         val missing = fixed.filter { it.id !in seen }
         val all = shown + missing
         if (all.isEmpty()) return default
-        return HomeLayout(all, hidden)
+        return HomeLayout(all, hidden + hiddenByDefault.filter { it.id !in seen })
     }
 
     private fun defaultSize(id: String): CardSize? =
-        fixed.firstOrNull { it.id == id }?.size ?: extraSize.takeIf { id in allowedExtra }
+        (fixed + hiddenByDefault).firstOrNull { it.id == id }?.size ?: extraSize.takeIf { id in allowedExtra }
 
     private fun card(card: HomeCard) = Card(card.id, card.size.name.lowercase())
 

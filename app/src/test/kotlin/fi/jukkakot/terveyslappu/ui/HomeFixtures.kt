@@ -45,6 +45,16 @@ internal object HomeFixtures {
         days = listOf(StepsDay(today, 6420), StepsDay(today.minusDays(1), 11_400), StepsDay(today.minusDays(3), 7600), StepsDay(today.minusDays(5), 5200)),
     )
 
+    /** Made-up burned energy: today 900 (100 active), a split day, a kokonais day; scale top 3 000. */
+    val burn = fi.jukkakot.terveyslappu.burn.BurnUiState(
+        access = StepsAccess.GRANTED,
+        days = listOfNotNull(
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today, 900, 100),
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today.minusDays(1), 2_300, 450),
+            fi.jukkakot.terveyslappu.burn.BurnDay.of(today.minusDays(2), 2_200, null),
+        ).sortedBy { it.day },
+    )
+
     /** The node lies fully inside [container] and has a height (nothing cut off or squeezed away). */
     fun assertInside(node: SemanticsNodeInteraction, container: SemanticsNodeInteraction, what: String) {
         val b = node.getUnclippedBoundsInRoot()

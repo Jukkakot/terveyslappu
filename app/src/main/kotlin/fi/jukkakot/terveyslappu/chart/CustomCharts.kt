@@ -2,8 +2,14 @@ package fi.jukkakot.terveyslappu.chart
 
 import java.text.BreakIterator
 
-/** The data an own chart can show, in their drawing and listing order (weight-chart "Custom charts"). */
-enum class SeriesKind { WEIGHT, ENERGY, STEPS }
+/** The data an own chart can show, in their drawing and listing order (weight-chart "Custom charts"): Paino, Syöty, Kulutus, Askeleet. */
+enum class SeriesKind { WEIGHT, ENERGY, BURN, STEPS }
+
+/**
+ * A data's fixed colour in an own chart (weight-chart "Data colours in own charts"); null on a
+ * [ChartSeries] = Oletus (the theme tone; Kulutus's is oranssi). Shades live in `ui/ChartPalette`.
+ */
+enum class SeriesColour { SININEN, VIHREA, ORANSSI, PUNAINEN, VIOLETTI, TURKOOSI, KELTAINEN, HARMAA }
 
 /** Pylväät or Viiva. */
 enum class SeriesStyle { BARS, LINE }
@@ -11,7 +17,7 @@ enum class SeriesStyle { BARS, LINE }
 /** Allekkain (one panel per data) or Päällekkäin (one plot). */
 enum class ChartLayout { STACKED, OVERLAID }
 
-data class ChartSeries(val kind: SeriesKind, val style: SeriesStyle)
+data class ChartSeries(val kind: SeriesKind, val style: SeriesStyle, val colour: SeriesColour? = null)
 
 /**
  * One own chart (custom-charts design 1): shown as its own Historia tab and, when added, as a front
@@ -31,6 +37,8 @@ data class CustomChart(
     fun has(kind: SeriesKind): Boolean = series.any { it.kind == kind }
 
     fun styleOf(kind: SeriesKind): SeriesStyle? = series.firstOrNull { it.kind == kind }?.style
+
+    fun colourOf(kind: SeriesKind): SeriesColour? = series.firstOrNull { it.kind == kind }?.colour
 
     companion object {
         const val CARD_PREFIX = "chart:"
@@ -55,16 +63,20 @@ data class ChartDraft(
     val layout: ChartLayout,
     val period: Period,
     val showAverage: Boolean = false,
+    /** Every kind keeps its colour (null = Oletus), also while off. */
+    val colours: Map<SeriesKind, SeriesColour?> = emptyMap(),
 ) {
     val isNew: Boolean get() = id == 0
 
     fun styleOf(kind: SeriesKind): SeriesStyle = styles[kind] ?: CustomCharts.defaultStyle(kind)
 
+    fun colourOf(kind: SeriesKind): SeriesColour? = colours[kind]
+
     /** The chart this draft saves as (name trimmed); [id] is given by [CustomCharts.add] for a new one. */
     fun toChart(id: Int = this.id): CustomChart = CustomChart(
         id = id,
         name = name.trim(),
-        series = SeriesKind.entries.filter { it in on }.map { ChartSeries(it, styleOf(it)) },
+        series = SeriesKind.entries.filter { it in on }.map { ChartSeries(it, styleOf(it), colourOf(it)) },
         layout = layout,
         period = period,
         showAverage = showAverage,
@@ -79,6 +91,7 @@ data class ChartDraft(
             layout = chart.layout,
             period = chart.period,
             showAverage = chart.showAverage,
+            colours = chart.series.associate { it.kind to it.colour },
         )
     }
 }
@@ -101,11 +114,11 @@ object CustomCharts {
         return "Kaavio $n"
     }
 
-    /** A new chart: all three data on, Paino as a line, the others as bars, Allekkain, 1 kk. */
+    /** A new chart: every data but Kulutus on, Paino as a line, the others as bars, Allekkain, 1 kk, Oletus colours. */
     fun newDraft(existing: List<CustomChart>): ChartDraft = ChartDraft(
         id = 0,
         name = defaultName(existing),
-        on = SeriesKind.entries.toSet(),
+        on = SeriesKind.entries.toSet() - SeriesKind.BURN,
         styles = SeriesKind.entries.associateWith(::defaultStyle),
         layout = ChartLayout.STACKED,
         period = DEFAULT_PERIOD,
@@ -146,6 +159,8 @@ object CustomCharts {
 
     fun setStyle(draft: ChartDraft, kind: SeriesKind, style: SeriesStyle): ChartDraft = draft.copy(styles = draft.styles + (kind to style))
 
+    fun setColour(draft: ChartDraft, kind: SeriesKind, colour: SeriesColour?): ChartDraft = draft.copy(colours = draft.colours + (kind to colour))
+
     fun setShowAverage(draft: ChartDraft, on: Boolean): ChartDraft = draft.copy(showAverage = on)
 
     fun setPeriod(chart: CustomChart, period: Period): CustomChart = chart.copy(period = period)
@@ -163,13 +178,24 @@ object CustomCharts {
      * The first day the front page reads steps from (custom-charts design 13): the steps card's start
      * or, earlier, the start of a shown chart card with steps; null (everything) for such a card on Kaikki.
      */
-    fun homeStepsFrom(stepsDays: Long, shownCardIds: List<String>, charts: List<CustomChart>, today: java.time.LocalDate): java.time.LocalDate? {
-        val card = today.minusDays(stepsDays - 1)
-        val starts = charts.filter { it.cardId in shownCardIds && it.has(SeriesKind.STEPS) }.map { chart ->
+    fun homeStepsFrom(stepsDays: Long, shownCardIds: List<String>, charts: List<CustomChart>, today: java.time.LocalDate): java.time.LocalDate? =
+        homeFrom(SeriesKind.STEPS, stepsDays, shownCardIds, charts, today)
+
+    /** Whether the front page shows Kulutus: its card ([burnCard]) or a shown chart card with it. */
+    fun homeShowsBurn(burnCard: Boolean, shownCardIds: List<String>, charts: List<CustomChart>): Boolean =
+        burnCard || charts.any { it.cardId in shownCardIds && it.has(SeriesKind.BURN) }
+
+    /** The same as [homeStepsFrom] for Kulutus: [burnDays] null when its card is hidden. */
+    fun homeBurnFrom(burnDays: Long?, shownCardIds: List<String>, charts: List<CustomChart>, today: java.time.LocalDate): java.time.LocalDate? =
+        homeFrom(SeriesKind.BURN, burnDays, shownCardIds, charts, today)
+
+    private fun homeFrom(kind: SeriesKind, cardDays: Long?, shownCardIds: List<String>, charts: List<CustomChart>, today: java.time.LocalDate): java.time.LocalDate? {
+        val card = cardDays?.let { today.minusDays(it - 1) }
+        val starts = charts.filter { it.cardId in shownCardIds && it.has(kind) }.map { chart ->
             if (chart.period == Period.All) return null
             AxisTicks.periodDates(chart.period, today, null).first
         }
-        return (starts + card).min()
+        return (starts + listOfNotNull(card)).minOrNull() ?: today
     }
 
     /** The period in the log (`last30`, `all`, `custom`): never dates (design 17). */

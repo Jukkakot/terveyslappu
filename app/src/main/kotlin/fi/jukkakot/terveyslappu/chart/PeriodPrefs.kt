@@ -25,10 +25,16 @@ class PeriodPrefs(context: Context) {
 
     fun saveStepsDays(days: Long) = prefs.edit().putLong(STEPS_KEY, days).apply()
 
+    /** The Kulutus card's own period in days (energy-burn "Kulutus card"). */
+    fun loadBurnDays(): Long = HomeSummary.homeDays(prefs.getLong(BURN_KEY, HomeSummary.DEFAULT_DAYS))
+
+    fun saveBurnDays(days: Long) = prefs.edit().putLong(BURN_KEY, days).apply()
+
     private companion object {
         const val KEY = "period"
         const val HOME_KEY = "homeDays"
         const val FOOD_KEY = "foodDays"
         const val STEPS_KEY = "stepsDays"
+        const val BURN_KEY = "burnDays"
     }
 }

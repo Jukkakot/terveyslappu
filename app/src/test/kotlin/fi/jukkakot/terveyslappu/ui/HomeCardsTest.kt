@@ -16,6 +16,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.R
@@ -37,7 +38,10 @@ class HomeCardsTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun data(state: MainUiState) = HomeCardsData(state, MainActions(), HomeFixtures.food, FoodActions(), HomeFixtures.steps, StepsActions())
+    private var burnOpened = 0
+
+    private fun data(state: MainUiState) =
+        HomeCardsData(state, MainActions(), HomeFixtures.food, FoodActions(), HomeFixtures.steps, StepsActions(), HomeFixtures.burn, BurnActions(onOpen = { burnOpened++ }))
 
     private fun home(layout: HomeLayout = HomeLayout.DEFAULT, questioned: Boolean = false) {
         val state = MainUiState(
@@ -155,6 +159,28 @@ class HomeCardsTest {
         node("stepsScaleTop").assertDoesNotExist()
     }
 
+    @Test
+    fun `Kulutus card shows today, aktiivinen, the short average and opens Kulutus`() {
+        cell = HomeCard(HomeLayout.BURN, CardSize.SMALL)
+        cells()
+        node("burnTodayValue").assertTextEquals(formatKcal(900))
+        node("burnTodayActive").assertTextEquals(compose.activity.getString(R.string.burn_active_line, formatKcal(100)))
+        node("burnAverage").assertTextEquals(compose.activity.getString(R.string.home_burn_average, formatKcal(2250)))
+        node("burnScaleTop").assertDoesNotExist()
+        node("burnCard").performClick()
+        assertEquals(1, burnOpened)
+        cell = HomeCard(HomeLayout.BURN, CardSize.BIG)
+        compose.waitForIdle()
+        node("burnScaleTop").assertTextEquals(compose.activity.getString(R.string.food_kcal, formatKcal(3000)))
+    }
+
+    @Test
+    fun `the default layout has no Kulutus card`() {
+        home()
+        node("homeSlot-burn").assertDoesNotExist()
+        node("homeSlot-steps").assertIsDisplayed()
+    }
+
     /**
      * home-card-layout design 2 / task 2.4: every card at every size at 360 dp and 130 % text keeps its
      * key parts inside the card. ROW_UNIT is the smallest value that passes.
@@ -166,6 +192,7 @@ class HomeCardsTest {
             HomeLayout.WEIGHT to listOf("latestKg", "change", "weighIn", "homePeriod"),
             HomeLayout.FOOD to listOf("foodTodayValue", "foodPeriod", "homeFoodAdd", "foodAverage"),
             HomeLayout.STEPS to listOf("stepsTodayValue", "stepsPeriod", "stepsAverage"),
+            HomeLayout.BURN to listOf("burnTodayValue", "burnPeriod", "burnAverage"),
         )
         cells()
         for ((id, tags) in keys) for (size in CardSize.entries) {
@@ -175,6 +202,7 @@ class HomeCardsTest {
                 size != CardSize.BIG -> emptyList()
                 id == HomeLayout.WEIGHT -> listOf("sparkScaleTop", "sparkScaleBottom")
                 id == HomeLayout.FOOD -> listOf("foodScaleTop")
+                id == HomeLayout.BURN -> listOf("burnScaleTop")
                 else -> listOf("stepsScaleTop")
             }
             for (tag in tags + extra) assertInside(node(tag), node("cell"), "$id/$size: $tag")

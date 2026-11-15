@@ -13,11 +13,11 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Rename the Energia label to Syöty everywhere visible (tab, editor, legends, readouts, Ohje); tab order Paino, BMI, Syöty, Askeleet, Kulutus.
-- [ ] 3.2 Kulutus tab (`ui/BurnPage`): chart with two-tone bars, average line, legend, range line, weekday axis; stats; day list; permission/empty states.
-- [ ] 3.3 Kulutus card at three sizes, hidden by default; `HomeLayoutCodec` and Lisää kortti; smoke test.
-- [ ] 3.4 Own charts: `SeriesKind.BURN`, `SeriesColour` (palette, defaults, codec), editor rows with colour dots, drawing with chosen colours and the lighter tone for treats/lepo; contrast unit test; codec round trip and old JSON.
-- [ ] 3.5 Asetukset → Askeleet: the line that the source also applies to Kulutus.
+- [x] 3.1 Rename the Energia label to Syöty everywhere visible (tab, editor, legends, readouts, Ohje); tab order Paino, BMI, Syöty, Askeleet, Kulutus.
+- [x] 3.2 Kulutus tab (`ui/BurnPage`): chart with two-tone bars, average line, legend, range line, weekday axis; stats; day list; permission/empty states.
+- [x] 3.3 Kulutus card at three sizes, hidden by default; `HomeLayoutCodec` and Lisää kortti; smoke test.
+- [x] 3.4 Own charts: `SeriesKind.BURN`, `SeriesColour` (palette, defaults, codec), editor rows with colour dots, drawing with chosen colours and the lighter tone for treats/lepo; contrast unit test; codec round trip and old JSON.
+- [x] 3.5 Asetukset → Askeleet: the line that the source also applies to Kulutus.
 
 ## 4. Context
 

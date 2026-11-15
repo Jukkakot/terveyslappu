@@ -54,6 +54,13 @@ internal fun StepsSourceContent(steps: StepsUiState, sources: StepsSourcesUi, ac
         actions.onSourceShown()
         onDispose { actions.onSourceHidden() }
     }
+    // The chosen source is Kulutus's too (energy-burn design 3).
+    Text(
+        stringResource(R.string.steps_source_burn),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).testTag("stepsSourceBurn"),
+    )
     if (steps.access != StepsAccess.GRANTED) {
         StepsReason(steps.access, actions)
         return

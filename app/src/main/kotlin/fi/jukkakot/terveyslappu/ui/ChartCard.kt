@@ -38,8 +38,8 @@ internal fun ChartCard(chart: CustomChart, data: HomeCardsData, size: CardSize, 
     val colors = MaterialTheme.colorScheme
     val zone = ZoneId.systemDefault()
     val today = LocalDate.now(zone)
-    val chartData = rememberChartData(chart, data.state, data.food, data.steps, today, zone)
-    val states = chartStates(data.food, data.foodActions, data.steps, data.stepsActions)
+    val chartData = rememberChartData(chart, data.state, data.food, data.steps, today, zone, data.burn)
+    val states = chartStates(data.food, data.foodActions, data.steps, data.stepsActions, data.burn, data.burnActions)
     Column(
         modifier
             .clip(homeCardShape)

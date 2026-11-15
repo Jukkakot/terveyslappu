@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.chart.ChartLayout
@@ -36,12 +37,13 @@ class CustomChartViewTest {
     private fun chart(layout: ChartLayout, vararg series: Pair<SeriesKind, SeriesStyle>) =
         CustomChart(1, "Liike", series.map { ChartSeries(it.first, it.second) }, layout, Period.MONTH)
 
-    private fun show(chart: CustomChart, weights: Boolean = true, food: Boolean = true, steps: Boolean = true, states: Map<SeriesKind, PanelState> = emptyMap()) {
+    private fun show(chart: CustomChart, weights: Boolean = true, food: Boolean = true, steps: Boolean = true, states: Map<SeriesKind, PanelState> = emptyMap(), burn: Boolean = true) {
         val data = CustomChartData.of(
             chart, HomeFixtures.today, zone,
             if (weights) HomeFixtures.weights else emptyList(),
             if (food) HomeFixtures.foodItems else emptyList(),
             if (steps) HomeFixtures.steps.days else null,
+            burnDays = if (burn) HomeFixtures.burn.days else null,
         )
         compose.setContent { TerveysTheme { CustomChartView(data, ChartMode.Tab, states) } }
     }
@@ -54,9 +56,25 @@ class CustomChartViewTest {
     @Test
     fun `three stacked panels`() {
         show(chart(ChartLayout.STACKED, *all))
-        for (kind in SeriesKind.entries) node("plot-${kind.name}").assertIsDisplayed()
+        for ((kind, _) in all) node("plot-${kind.name}").assertIsDisplayed()
         node("chartDates").assertIsDisplayed()
         node("chartLegend").assertIsDisplayed()
+    }
+
+    @Test
+    fun `four stacked panels with Kulutus split into lepo and aktiivinen`() {
+        show(chart(ChartLayout.STACKED, WEIGHT to SeriesStyle.LINE, ENERGY to SeriesStyle.BARS, SeriesKind.BURN to SeriesStyle.BARS, STEPS to SeriesStyle.BARS))
+        for (kind in SeriesKind.entries) node("plot-${kind.name}").assertIsDisplayed()
+        compose.onNodeWithText("lepo", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("aktiivinen", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `Kulutus without permission shows its reason in its panel`() {
+        val gated = PanelState.Gated("Kulutus vaatii luvan", listOf("Anna lupa" to {}))
+        show(chart(ChartLayout.STACKED, SeriesKind.BURN to SeriesStyle.BARS, STEPS to SeriesStyle.BARS), burn = false, states = mapOf(SeriesKind.BURN to gated))
+        node("panelMessage-BURN").assertIsDisplayed()
+        node("grant-BURN").assertExists()
     }
 
     @Test

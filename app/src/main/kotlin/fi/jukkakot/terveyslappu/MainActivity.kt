@@ -55,6 +55,7 @@ import fi.jukkakot.terveyslappu.ui.FoodClipboard
 import fi.jukkakot.terveyslappu.ui.FoodViewModel
 import fi.jukkakot.terveyslappu.ui.showTimed
 import fi.jukkakot.terveyslappu.ui.Access
+import fi.jukkakot.terveyslappu.ui.BurnActions
 import fi.jukkakot.terveyslappu.ui.StepsActions
 import fi.jukkakot.terveyslappu.ui.StepsViewModel
 import kotlinx.coroutines.flow.merge
@@ -153,6 +154,16 @@ class MainActivity : ComponentActivity() {
                 )
                 LaunchedEffect(homeShown, homeStepsFrom) {
                     if (homeShown) stepsModel.show(homeStepsFrom)
+                }
+                // Kulutus is read for the front page only while its card or a chart card with it is shown (energy-burn).
+                val shownIds = state.homeLayout.shown.map { it.id }
+                val burnCard = fi.jukkakot.terveyslappu.home.HomeLayout.BURN in shownIds
+                val homeBurn = fi.jukkakot.terveyslappu.chart.CustomCharts.homeShowsBurn(burnCard, shownIds, state.charts)
+                val homeBurnFrom = fi.jukkakot.terveyslappu.chart.CustomCharts.homeBurnFrom(
+                    state.burnDays.takeIf { burnCard }, shownIds, state.charts, LocalDate.now(),
+                )
+                LaunchedEffect(homeShown, homeBurn, homeBurnFrom) {
+                    if (homeShown && homeBurn) stepsModel.showBurn(homeBurnFrom)
                 }
                 val permissionLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -266,6 +277,15 @@ class MainActivity : ComponentActivity() {
                         onGarminDelete = viewModel::deleteGarmin,
                     ),
                     stepsSources = stepsSources,
+                    burn = burn,
+                    burnActions = BurnActions(
+                        onGrant = ::grantBurn,
+                        onOpenSettings = { open(Intent(HealthConnectManager.ACTION_MANAGE_HEALTH_PERMISSIONS).putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)) },
+                        onOpen = viewModel::openBurn,
+                        onPeriod = viewModel::onBurnPeriod,
+                        onShown = stepsModel::showBurn,
+                        onOpenSource = viewModel::openBurnSource,
+                    ),
                     foodActions = FoodActions(
                         onOpenDay = ::openFoodDay,
                         onAdd = { day ->
@@ -382,6 +402,7 @@ class MainActivity : ComponentActivity() {
                         onStepsPeriod = viewModel::onStepsPeriod,
                         onOpenSteps = viewModel::openSteps,
                         onStepsShown = viewModel::stepsShown,
+                        onBurnShown = viewModel::burnShown,
                         onOpenWeek = viewModel::openWeek,
                         onListenEnabled = { on ->
                             listen.setEnabled(on)

@@ -14,13 +14,28 @@ class CustomChartsTest {
     private fun chart(id: Int, name: String) = CustomCharts.newDraft(emptyList()).copy(name = name).toChart(id)
 
     @Test
-    fun `a new draft has all three data, weight as a line, stacked, 1 kk`() {
+    fun `a new draft has all data but Kulutus, weight as a line, stacked, 1 kk`() {
         val draft = CustomCharts.newDraft(emptyList())
         assertEquals("Kaavio 1", draft.name)
         val chart = draft.toChart(1)
         assertEquals(listOf(ChartSeries(WEIGHT, LINE), ChartSeries(ENERGY, BARS), ChartSeries(STEPS, BARS)), chart.series)
         assertEquals(ChartLayout.STACKED, chart.layout)
         assertEquals(Period.Last(30), chart.period)
+        assertEquals(listOf(null, null, null), chart.series.map { it.colour })
+    }
+
+    @Test
+    fun `a colour is kept per data, also while off, and Kulutus sorts after Syöty`() {
+        var draft = CustomCharts.newDraft(emptyList())
+        draft = CustomCharts.toggle(draft, SeriesKind.BURN)
+        draft = CustomCharts.setColour(draft, SeriesKind.BURN, SeriesColour.TURKOOSI)
+        draft = CustomCharts.setColour(draft, STEPS, SeriesColour.PUNAINEN)
+        val chart = draft.toChart(1)
+        assertEquals(listOf(WEIGHT, ENERGY, SeriesKind.BURN, STEPS), chart.series.map { it.kind })
+        assertEquals(SeriesColour.TURKOOSI, chart.colourOf(SeriesKind.BURN))
+        val off = CustomCharts.toggle(draft, STEPS)
+        assertEquals(SeriesColour.PUNAINEN, off.colourOf(STEPS))
+        assertEquals(chart, ChartDraft.of(chart).toChart(1))
     }
 
     @Test

@@ -24,6 +24,25 @@ class ChartCodecTest {
     }
 
     @Test
+    fun `colours and Kulutus round trip, an old chart reads as Oletus`() {
+        val series = listOf(
+            ChartSeries(SeriesKind.ENERGY, SeriesStyle.BARS, SeriesColour.VIHREA),
+            ChartSeries(SeriesKind.BURN, SeriesStyle.LINE),
+            ChartSeries(SeriesKind.STEPS, SeriesStyle.BARS, SeriesColour.PUNAINEN),
+        )
+        val list = ChartList(listOf(chart(1, Period.MONTH).copy(series = series)), next = 2)
+        val text = ChartCodec.encode(list)
+        assertEquals(list, ChartCodec.decode(text))
+        assertEquals(true, """{"kind":"burn","style":"line"}""" in text && """"colour":"punainen"""" in text, text)
+        val old = """{"v":1,"next":2,"charts":[{"id":1,"name":"A","layout":"stacked","period":{"k":"all"},"series":[{"kind":"steps","style":"bars"},{"kind":"weight","style":"line"}]}]}"""
+        val read = ChartCodec.decode(old)!!.charts.single()
+        assertEquals(listOf(SeriesKind.WEIGHT, SeriesKind.STEPS), read.series.map { it.kind })
+        assertEquals(listOf(null, null), read.series.map { it.colour })
+        val unknown = old.replace("""{"kind":"steps","style":"bars"}""", """{"kind":"steps","style":"bars","colour":"pinkki"}""")
+        assertNull(ChartCodec.decode(unknown)!!.charts.single().colourOf(SeriesKind.STEPS))
+    }
+
+    @Test
     fun `nothing stored is no charts, a bad value is null`() {
         assertEquals(ChartList(), ChartCodec.decode(null))
         assertEquals(ChartList(), ChartCodec.decode(""))

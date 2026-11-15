@@ -52,6 +52,32 @@ internal fun DrawScope.drawBars(
     }
 }
 
+/** A Kulutus bar: [total] high, [active] (null: a kokonais day) on top of the lepo part. */
+internal data class BurnBarSpec(val from: LocalDate, val days: Int, val total: Double, val active: Double?)
+
+/**
+ * Kulutus's two-tone bars (energy-burn "Kulutus tab"): lepo at the bottom in the light tone, aktiivinen
+ * on top in the full [color]; a kokonais day in the kokonais tone. Same geometry as [drawBars].
+ */
+internal fun DrawScope.drawBurnBars(axis: ChartAxis, bars: List<BurnBarSpec>, yOf: (Double) -> Float, color: Color, slot: Int = 0, slots: Int = 1, base: Float = size.height) {
+    val rest = color.copy(alpha = color.alpha * ChartPalette.LIGHT_ALPHA)
+    val whole = color.copy(alpha = color.alpha * ChartPalette.TOTAL_ALPHA)
+    val dayW = axis.dayWidth(size.width)
+    for (bar in bars) {
+        val span = bar.days * dayW / slots
+        val left = axis.left(bar.from, size.width) + span * slot + span * 0.15f
+        val width = max(span * 0.7f, 1.dp.toPx())
+        val top = yOf(bar.total).coerceAtMost(base)
+        if (bar.active == null) {
+            drawRect(whole, Offset(left, top), Size(width, base - top))
+            continue
+        }
+        val restTop = yOf((bar.total - bar.active).coerceAtLeast(0.0)).coerceAtMost(base)
+        if (restTop < base) drawRect(rest, Offset(left, restTop), Size(width, base - restTop))
+        drawRect(color, Offset(left, top), Size(width, restTop - top))
+    }
+}
+
 /** A 2 dp line joining the [points] at their days' centres; [dots] (weight): every dot when they fit, else the last. */
 internal fun DrawScope.drawValueLine(axis: ChartAxis, points: List<Pair<LocalDate, Double>>, yOf: (Double) -> Float, color: Color, dots: Boolean = false) {
     if (points.isEmpty()) return

@@ -61,7 +61,7 @@ class ChartViewModelTest {
         val a = save("Liike")
         val b = save("Ilta")
         model.onChartPeriod(a, Period.QUARTER)
-        val layout = HomeLayout(listOf(HomeCard(HomeLayout.WEIGHT, CardSize.WIDE), HomeCard(CustomChart.cardId(a), CardSize.BIG)), HomeLayout.FIXED.drop(1))
+        val layout = HomeLayout(listOf(HomeCard(HomeLayout.WEIGHT, CardSize.WIDE), HomeCard(CustomChart.cardId(a), CardSize.BIG)), HomeLayout.FIXED.drop(1) + HomeLayout.HIDDEN_DEFAULT)
         model.onHomeLayout(layout)
         val charts = model.state.value.charts
         val got = mutableListOf<UiMessage>()

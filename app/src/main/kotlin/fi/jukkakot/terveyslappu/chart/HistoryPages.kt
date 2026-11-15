@@ -7,11 +7,12 @@ sealed interface HistoryPage {
     data class Fixed(val quantity: Quantity) : HistoryPage
     data object Energy : HistoryPage
     data object Steps : HistoryPage
+    data object Burn : HistoryPage
     data class Custom(val id: Int) : HistoryPage
     data object NewChart : HistoryPage
 }
 
-/** Historia's pages in tab order: Paino, BMI, Energia, Askeleet, the own charts, Uusi kaavio. Pure. */
+/** Historia's pages in tab order: Paino, BMI, Syöty, Askeleet, Kulutus, the own charts, Uusi kaavio. Pure. */
 class HistoryPages private constructor(val pages: List<HistoryPage>) {
     val size: Int get() = pages.size
 
@@ -25,9 +26,10 @@ class HistoryPages private constructor(val pages: List<HistoryPage>) {
     companion object {
         val ENERGY = Quantity.entries.size
         val STEPS = ENERGY + 1
+        val BURN = STEPS + 1
 
         fun of(charts: List<CustomChart>): HistoryPages = HistoryPages(
-            Quantity.entries.map { HistoryPage.Fixed(it) } + HistoryPage.Energy + HistoryPage.Steps +
+            Quantity.entries.map { HistoryPage.Fixed(it) } + HistoryPage.Energy + HistoryPage.Steps + HistoryPage.Burn +
                 charts.map { HistoryPage.Custom(it.id) } + HistoryPage.NewChart,
         )
 

@@ -103,11 +103,11 @@ class HistoryChartsTest {
     }
 
     @Test
-    fun `two charts give seven tabs in order`() {
+    fun `two charts give eight tabs in order`() {
         add("Paino ja ruoka")
         add("Liike")
         show()
-        val tags = listOf("tab-WEIGHT", "tab-BMI", "tab-ENERGY", "tab-STEPS", "tab-chart-1", "tab-chart-2", "tab-NEW")
+        val tags = listOf("tab-WEIGHT", "tab-BMI", "tab-ENERGY", "tab-STEPS", "tab-BURN", "tab-chart-1", "tab-chart-2", "tab-NEW")
         tags.forEach { assertTrue(exists(it), it) }
         val lefts = tags.map { node(it).getUnclippedBoundsInRoot().left.value }
         assertEquals(lefts.sorted(), lefts)
@@ -289,6 +289,24 @@ class HistoryChartsTest {
         assertEquals(listOf(ChartSeries(SeriesKind.STEPS, SeriesStyle.LINE)), made.series)
         assertEquals(Period.MONTH, made.period)
         node("page-chart-${made.id}").assertIsDisplayed()
+    }
+
+    @Test
+    fun `a colour picked in the editor is saved, Kulutus starts off with its dot disabled`() {
+        show()
+        openTab("tab-NEW")
+        node("chartNew").performClick()
+        node("chartColour-BURN").assertIsNotEnabled()
+        node("chartColour-STEPS").performScrollTo().performClick()
+        node("colourPicker").assertIsDisplayed()
+        node("colourChoice-PUNAINEN").performClick()
+        node("colourPicker").assertDoesNotExist()
+        node("chartSave").performScrollTo().performClick()
+        compose.waitForIdle()
+        val made = list.charts.last()
+        assertEquals(listOf(SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.STEPS), made.series.map { it.kind })
+        assertEquals(fi.jukkakot.terveyslappu.chart.SeriesColour.PUNAINEN, made.colourOf(SeriesKind.STEPS))
+        assertEquals(null, made.colourOf(SeriesKind.WEIGHT))
     }
 
     @Test

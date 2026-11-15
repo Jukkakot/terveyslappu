@@ -107,6 +107,8 @@ internal fun HomeScreen(
     foodActions: FoodActions = FoodActions(),
     steps: StepsUiState = StepsUiState(),
     stepsActions: StepsActions = StepsActions(),
+    burn: fi.jukkakot.terveyslappu.burn.BurnUiState = fi.jukkakot.terveyslappu.burn.BurnUiState(),
+    burnActions: BurnActions = BurnActions(),
 ) {
     // Chart cards are kept in the saved draft only while their chart exists (custom-charts design 2).
     val chartIds = remember(state.charts) { state.charts.map { it.cardId }.toSet() }
@@ -171,7 +173,7 @@ internal fun HomeScreen(
                 Access.NEEDS_UPDATE -> Notice(stringResource(R.string.hc_needs_update), stringResource(R.string.hc_open_store), actions.onOpenStore)
                 Access.NEEDS_PERMISSION -> Notice(stringResource(R.string.hc_permission_intro), stringResource(R.string.hc_permission_grant), actions.onRequestPermission)
                 Access.DENIED -> Notice(stringResource(R.string.hc_permission_denied), stringResource(R.string.hc_open_settings), actions.onOpenSettings)
-                Access.GRANTED -> HomeGrid(HomeCardsData(state, actions, food, foodActions, steps, stepsActions), backup, edit)
+                Access.GRANTED -> HomeGrid(HomeCardsData(state, actions, food, foodActions, steps, stepsActions, burn, burnActions), backup, edit)
             }
         }
     }
@@ -552,6 +554,7 @@ private fun cardLabel(id: String, charts: List<CustomChart>): String =
 private fun cardName(id: String): Int = when (id) {
     HomeLayout.WEIGHT -> R.string.home_card_weight
     HomeLayout.FOOD -> R.string.home_card_food
+    HomeLayout.BURN -> R.string.home_card_burn
     else -> R.string.home_card_steps
 }
 
@@ -559,6 +562,7 @@ private fun cardIcon(id: String): Int = when (id) {
     HomeLayout.WEIGHT -> R.drawable.ic_scale
     HomeLayout.FOOD -> R.drawable.ic_restaurant
     HomeLayout.STEPS -> R.drawable.ic_walk
+    HomeLayout.BURN -> R.drawable.ic_burn
     else -> R.drawable.ic_chart
 }
 

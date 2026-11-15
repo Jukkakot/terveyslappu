@@ -36,31 +36,41 @@ import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.chart.CustomChartData
 import fi.jukkakot.terveyslappu.chart.Readout
 import fi.jukkakot.terveyslappu.chart.SeriesKind
+import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import java.time.LocalDate
 import java.time.ZoneId
 
 /** Whether a kind can be read (weights always, once Historia shows anything). */
-internal fun chartAccess(kind: SeriesKind, food: FoodUiState, steps: StepsUiState): Boolean = when (kind) {
+internal fun chartAccess(kind: SeriesKind, food: FoodUiState, steps: StepsUiState, burn: BurnUiState = BurnUiState()): Boolean = when (kind) {
     SeriesKind.WEIGHT -> true
     SeriesKind.ENERGY -> food.access == FoodAccess.GRANTED
+    SeriesKind.BURN -> burn.access == StepsAccess.GRANTED
     SeriesKind.STEPS -> steps.access == StepsAccess.GRANTED
 }
 
 /** One chart's data from the screens' states; data without access or not loaded is null (design 7, 15). */
 @Composable
-internal fun rememberChartData(chart: CustomChart, state: MainUiState, food: FoodUiState, steps: StepsUiState, today: LocalDate, zone: ZoneId): CustomChartData {
+internal fun rememberChartData(chart: CustomChart, state: MainUiState, food: FoodUiState, steps: StepsUiState, today: LocalDate, zone: ZoneId, burn: BurnUiState = BurnUiState()): CustomChartData {
     val foodItems = food.items.takeIf { food.access == FoodAccess.GRANTED }
     val stepDays = steps.days.takeIf { steps.access == StepsAccess.GRANTED }
-    return remember(chart, state.weights, state.questioned, foodItems, stepDays, today) {
-        CustomChartData.of(chart, today, zone, state.weights, foodItems, stepDays, state.questioned)
+    val burnDays = burn.days.takeIf { burn.access == StepsAccess.GRANTED }
+    return remember(chart, state.weights, state.questioned, foodItems, stepDays, burnDays, today) {
+        CustomChartData.of(chart, today, zone, state.weights, foodItems, stepDays, state.questioned, burnDays)
     }
 }
 
 /** Why each kind of a chart has nothing to draw (spec "Chart data without values"); the chart never asks by itself. */
 @Composable
-internal fun chartStates(food: FoodUiState, foodActions: FoodActions, steps: StepsUiState, stepsActions: StepsActions): Map<SeriesKind, PanelState> {
+internal fun chartStates(
+    food: FoodUiState,
+    foodActions: FoodActions,
+    steps: StepsUiState,
+    stepsActions: StepsActions,
+    burn: BurnUiState = BurnUiState(),
+    burnActions: BurnActions = BurnActions(),
+): Map<SeriesKind, PanelState> {
     val grant = stringResource(R.string.food_permission_grant)
     val energy = when (food.access) {
         FoodAccess.GRANTED -> if (food.items == null) PanelState.Loading else PanelState.Ready
@@ -82,7 +92,22 @@ internal fun chartStates(food: FoodUiState, foodActions: FoodActions, steps: Ste
             listOf(stringResource(R.string.steps_ask_again) to stepsActions.onGrant, stringResource(R.string.food_permission_settings) to stepsActions.onOpenSettings),
         )
     }
-    return mapOf(SeriesKind.ENERGY to energy, SeriesKind.STEPS to stepsState)
+    // Kulutus's panel button may ask its permissions too, as for steps (energy-burn design 9).
+    val burnState = when (burn.access) {
+        StepsAccess.GRANTED -> when {
+            burn.days != null -> PanelState.Ready
+            burn.loadFailed -> PanelState.Failed(stringResource(R.string.burn_read_failed))
+            else -> PanelState.Loading
+        }
+        StepsAccess.CHECKING -> PanelState.Loading
+        StepsAccess.UNAVAILABLE -> PanelState.Failed(stringResource(R.string.burn_unavailable))
+        StepsAccess.NEEDS -> PanelState.Gated(stringResource(R.string.burn_reason), listOf(grant to burnActions.onGrant))
+        StepsAccess.DENIED -> PanelState.Gated(
+            stringResource(R.string.burn_denied_reason),
+            listOf(stringResource(R.string.steps_ask_again) to burnActions.onGrant, stringResource(R.string.food_permission_settings) to burnActions.onOpenSettings),
+        )
+    }
+    return mapOf(SeriesKind.ENERGY to energy, SeriesKind.BURN to burnState, SeriesKind.STEPS to stepsState)
 }
 
 /**
@@ -150,6 +175,7 @@ internal fun readoutText(readout: Readout): String {
         if (value != null) {
             when (kind) {
                 SeriesKind.WEIGHT -> stringResource(R.string.kg_value, formatKg(value.value))
+                SeriesKind.BURN -> burnValueText(value)
                 else -> valueText(kind, value.value)
             }
         } else {
@@ -157,13 +183,19 @@ internal fun readoutText(readout: Readout): String {
                 when (kind) {
                     SeriesKind.WEIGHT -> R.string.chart_no_weight
                     SeriesKind.ENERGY -> R.string.chart_no_food
-                    SeriesKind.STEPS -> R.string.chart_no_steps
+                    SeriesKind.BURN, SeriesKind.STEPS -> R.string.chart_no_steps
                 },
             )
         }
     }
     return (listOf(formatShortDay(readout.day)) + parts).joinToString(" · ")
 }
+
+/** "2 300 kcal · aktiivinen 450"; a day without a split "2 300 kcal" (weight-chart "Kulutus in own charts"). */
+@Composable
+internal fun burnValueText(value: fi.jukkakot.terveyslappu.chart.DayValue): String = value.active?.let {
+    stringResource(R.string.burn_value_split, formatKcal(value.value), formatKcal(it))
+} ?: stringResource(R.string.food_kcal, formatKcal(value.value))
 
 /** The last tab: what own charts are and the Uusi kaavio button. */
 @Composable

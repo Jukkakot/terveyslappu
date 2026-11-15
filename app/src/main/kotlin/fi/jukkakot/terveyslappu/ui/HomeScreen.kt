@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -68,6 +69,8 @@ import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.home.CardSize
 import fi.jukkakot.terveyslappu.home.HomeCard
 import fi.jukkakot.terveyslappu.home.HomeLayout
+import fi.jukkakot.terveyslappu.burn.BurnUiState
+import fi.jukkakot.terveyslappu.burn.HomeBurn
 import fi.jukkakot.terveyslappu.steps.HomeSteps
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -100,6 +103,8 @@ internal class HomeCardsData(
     val foodActions: FoodActions,
     val steps: StepsUiState,
     val stepsActions: StepsActions,
+    val burn: BurnUiState = BurnUiState(),
+    val burnActions: BurnActions = BurnActions(),
 )
 
 /** One front page card at its size, filling [modifier]'s size (home-screen "Card sizes"). */
@@ -117,6 +122,7 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
         }
         HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.actions.onOpenEnergy, data.foodActions, modifier)
         HomeLayout.STEPS -> StepsCard(data.steps, state.stepsDays, today, card.size, data.stepsActions, modifier)
+        HomeLayout.BURN -> BurnCard(data.burn, state.burnDays, today, card.size, data.burnActions, modifier)
         else -> state.charts.firstOrNull { it.cardId == card.id }?.let { ChartCard(it, data, card.size, modifier) }
     }
 }
@@ -412,6 +418,115 @@ private fun StepsBars(summary: HomeSteps, color: Color, top: Double?, average: D
         if (average != null) averageLine(average.toFloat() / max, line)
     }
 }
+
+/**
+ * The Kulutus card (energy-burn "Kulutus card"), built like the steps card: today's total kcal with
+ * "aktiivinen N kcal" under it (dropped first when the chart has no room), two-tone daily bars of its
+ * own period, the dates and the average; big adds the scale top and the dashed average.
+ */
+@Composable
+private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: CardSize, actions: BurnActions, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val tone = burnColour()
+    val summary = remember(burn.days, days, today) { HomeBurn.of(burn.days.orEmpty(), days, today) }
+    val onTap: (() -> Unit)? = when (burn.access) {
+        StepsAccess.NEEDS -> actions.onGrant
+        StepsAccess.DENIED, StepsAccess.GRANTED -> actions.onOpen
+        StepsAccess.UNAVAILABLE, StepsAccess.CHECKING -> null
+    }
+    val shows = burn.access == StepsAccess.GRANTED && burn.days != null
+    Column(
+        modifier
+            .clip(cardShape)
+            .background(colors.surfaceContainer)
+            .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_burn), onClick = onTap) else Modifier)
+            .padding(8.dp)
+            .testTag("burnCard"),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("burnToday")) {
+            CardTitle(R.drawable.ic_burn, stringResource(R.string.home_burn_title), chevron = onTap != null)
+            if (shows) {
+                val now = summary.today
+                if (now != null) {
+                    Text(formatKcal(now.total.toDouble()), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("burnTodayValue"))
+                } else {
+                    Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
+                }
+            }
+        }
+        if (!shows) {
+            GatedBox {
+                val gated = MaterialTheme.typography.titleLarge
+                when {
+                    burn.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.burn_unavailable), style = gated)
+                    burn.access == StepsAccess.NEEDS || burn.access == StepsAccess.DENIED -> Text(stringResource(R.string.burn_today_permission), style = gated)
+                    burn.access == StepsAccess.CHECKING || !burn.loadFailed -> CircularProgressIndicator(Modifier.size(24.dp))
+                    else -> Text(stringResource(R.string.burn_read_failed), style = gated, modifier = Modifier.testTag("burnFailed"))
+                }
+            }
+            return@Column
+        }
+        val small = MaterialTheme.typography.labelSmall
+        val big = size == CardSize.BIG
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp)) {
+            val activeFits = maxHeight >= MIN_CHART + ACTIVE_LINE
+            Column(Modifier.fillMaxSize().testTag("burnBars")) {
+                val active = summary.today?.active
+                if (active != null && activeFits) {
+                    Text(
+                        stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.onSurfaceVariant,
+                        maxLines = 1,
+                        modifier = Modifier.testTag("burnTodayActive"),
+                    )
+                }
+                Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
+                    if (summary.bars.isNotEmpty()) {
+                        val description = stringResource(R.string.home_burn_bars, summary.bars.size)
+                        val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.total }.toDouble(), KCAL_STEP).last() else null
+                        BurnBars(summary, tone, top, summary.averageTotal?.toDouble()?.takeIf { big }, colors.onSurfaceVariant, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                        if (top != null) ScaleTop(stringResource(R.string.food_kcal, formatKcal(top)), "burnScaleTop")
+                    }
+                }
+                Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+                    Text(formatShortDay(summary.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            HomePeriodLabel(days, actions.onPeriod, "burnPeriod")
+            Text(
+                summary.averageTotal?.let {
+                    stringResource(if (size == CardSize.SMALL) R.string.home_burn_average else R.string.home_burn_average_long, formatKcal(it.toDouble()))
+                } ?: stringResource(R.string.home_food_no_average),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("burnAverage"),
+            )
+        }
+        if (burn.stale) {
+            Text(stringResource(R.string.steps_stale), style = small, color = colors.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp).testTag("burnStale"))
+        }
+    }
+}
+
+/** The card's two-tone daily bars without axes; big: on the scale [top] with a dashed [average]. */
+@Composable
+private fun BurnBars(summary: HomeBurn, color: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
+    Canvas(modifier) {
+        val max = (top ?: summary.bars.maxOf { it.total }.toDouble()).coerceAtLeast(1.0)
+        val axis = fi.jukkakot.terveyslappu.chart.ChartAxis(summary.from, summary.to)
+        drawBurnBars(axis, summary.bars.map { it.spec() }, { v -> size.height * (1 - (v / max)).toFloat() }, color)
+        drawLine(color.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+        if (average != null) averageLine((average / max).toFloat(), line)
+    }
+}
+
+/** Room the card's "aktiivinen N kcal" line needs above the chart's least height. */
+private val ACTIVE_LINE = 20.dp
 
 private val cardShape = RoundedCornerShape(24.dp)
 internal val homeCardShape get() = cardShape

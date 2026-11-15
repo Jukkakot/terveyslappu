@@ -68,6 +68,8 @@ import fi.jukkakot.terveyslappu.derived.Derived
 import fi.jukkakot.terveyslappu.derived.Quantity
 import fi.jukkakot.terveyslappu.food.EnergySeries
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.burn.BurnSeries
+import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsSeries
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -95,6 +97,8 @@ internal fun HistoryScreen(
     foodActions: FoodActions = FoodActions(),
     steps: StepsUiState = StepsUiState(),
     stepsActions: StepsActions = StepsActions(),
+    burn: BurnUiState = BurnUiState(),
+    burnActions: BurnActions = BurnActions(),
 ) {
     Scaffold(
         topBar = {
@@ -111,7 +115,7 @@ internal fun HistoryScreen(
             when {
                 state.loadFailed && all == null -> Notice(stringResource(R.string.recent_failed))
                 all == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> PeriodList(state, all, actions, profile, food, foodActions, steps, stepsActions)
+                else -> PeriodList(state, all, actions, profile, food, foodActions, steps, stepsActions, burn, burnActions)
             }
         }
     }
@@ -129,6 +133,8 @@ private fun PeriodList(
     foodActions: FoodActions,
     steps: StepsUiState,
     stepsActions: StepsActions,
+    burn: BurnUiState,
+    burnActions: BurnActions,
 ) {
     val zone = ZoneId.systemDefault()
     val now = remember(state.loadedAt, state.period) { state.loadedAt ?: Instant.now() }
@@ -175,13 +181,14 @@ private fun PeriodList(
         )
     }
     // Not saved: leaving Historia and coming back starts on Paino (weight-chart "One quantity at a time").
-    // Paino, BMI, Energia (food-log), then Askeleet (steps); back from Ruoka opened from Energia returns to it.
+    // Paino, BMI, Syöty (food-log), Askeleet (steps), then Kulutus (energy-burn); back from Ruoka opened from Syöty returns to it.
     // Fixed tabs, the own charts, then Uusi kaavio (custom-charts design 11).
     val pages = remember(state.charts) { HistoryPages.of(state.charts) }
     val pageCount by rememberUpdatedState(pages.size)
     val initialPage = when {
         state.historyChart != null -> pages.indexOfChart(state.historyChart).coerceAtLeast(0)
         state.historyOnSteps -> STEPS_PAGE
+        state.historyOnBurn -> BURN_PAGE
         state.historyOnEnergy -> ENERGY_PAGE
         else -> 0
     }
@@ -189,11 +196,13 @@ private fun PeriodList(
     LaunchedEffect(Unit) {
         if (state.historyOnEnergy) actions.onEnergyShown()
         if (state.historyOnSteps) actions.onStepsShown()
+        if (state.historyOnBurn) actions.onBurnShown()
         if (state.historyChart != null) actions.onChartShown()
     }
     val page = pages[pager.currentPage]
     val onEnergy = page == HistoryPage.Energy
     val onSteps = page == HistoryPage.Steps
+    val onBurn = page == HistoryPage.Burn
     val chart = (page as? HistoryPage.Custom)?.let { p -> state.charts.firstOrNull { it.id == p.id } }
     // The period the chips show: the chart's own on its tab, otherwise the shared one.
     val chipPeriod = chart?.period ?: state.period
@@ -202,11 +211,15 @@ private fun PeriodList(
     LaunchedEffect(onSteps, state.period) {
         if (onSteps) stepsActions.onShown(if (state.period == Period.All) null else StepsSeries.dates(state.period, today, null).first)
     }
+    LaunchedEffect(onBurn, state.period) {
+        if (onBurn) burnActions.onShown(if (state.period == Period.All) null else BurnSeries.dates(state.period, today, null).first)
+    }
     // An own chart reads what it shows like the fixed tabs, and never asks a permission (design 15).
     LaunchedEffect(chart?.id, chart?.period) {
         val shown = chart ?: return@LaunchedEffect
         AppLog.i("chart.custom", "shown", "id" to shown.id, "period" to CustomCharts.logPeriod(shown.period))
         if (shown.has(SeriesKind.STEPS)) stepsActions.onShown(if (shown.period == Period.All) null else StepsSeries.dates(shown.period, today, null).first)
+        if (shown.has(SeriesKind.BURN)) burnActions.onShown(if (shown.period == Period.All) null else BurnSeries.dates(shown.period, today, null).first)
     }
     // The crosshair of the shown chart page: cleared on a tab or period change and when its day leaves the axis (design 10).
     var crosshair by rememberSaveable { mutableStateOf<LocalDate?>(null) }
@@ -242,6 +255,7 @@ private fun PeriodList(
         )
     }
     val stepsSeries = remember(steps.days, state.period, today) { StepsSeries.of(steps.days.orEmpty(), state.period, today) }
+    val burnSeries = remember(burn.days, state.period, today) { BurnSeries.of(burn.days.orEmpty(), state.period, today) }
     // The nutrition permission is asked when Energia is first opened (review decision).
     LaunchedEffect(onEnergy) { if (onEnergy && food.access == FoodAccess.NEEDS) foodActions.onGrant() }
     val series = remember(food.items, state.period, today) { EnergySeries.of(food.items.orEmpty(), state.period, today) }
@@ -286,6 +300,12 @@ private fun PeriodList(
                     text = { Text(stringResource(R.string.quantity_steps), maxLines = 1) },
                     modifier = Modifier.testTag("tab-STEPS"),
                 )
+                Tab(
+                    selected = onBurn,
+                    onClick = { scope.launch { pager.animateScrollToPage(BURN_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_burn), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-BURN"),
+                )
                 state.charts.forEach { c ->
                     val index = pages.indexOfChart(c.id)
                     Tab(
@@ -309,13 +329,13 @@ private fun PeriodList(
                 if (shownPage is HistoryPage.Custom) {
                     val c = state.charts.firstOrNull { it.id == shownPage.id }
                     if (c != null) {
-                        val data = rememberChartData(c, state, food, steps, today, zone)
+                        val data = rememberChartData(c, state, food, steps, today, zone, burn)
                         val current = index == pager.currentPage
                         LaunchedEffect(data.axis, current) { if (current && crosshair?.let { it !in data.axis } == true) crosshair = null }
                         ChartPage(
                             data,
-                            chartStates(food, foodActions, steps, stepsActions),
-                            access = { chartAccess(it, food, steps) },
+                            chartStates(food, foodActions, steps, stepsActions, burn, burnActions),
+                            access = { chartAccess(it, food, steps, burn) },
                             crosshair = crosshair.takeIf { current },
                             onDay = { crosshair = it },
                             onEdit = { editor = c.id },
@@ -325,6 +345,8 @@ private fun PeriodList(
                     NewChartPage { editor = 0 }
                 } else if (index == STEPS_PAGE) {
                     StepsTab(steps, stepsSeries, stepsActions)
+                } else if (index == BURN_PAGE) {
+                    BurnTab(burn, burnSeries, burnActions)
                 } else if (index == ENERGY_PAGE) {
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
@@ -336,7 +358,13 @@ private fun PeriodList(
                 }
             }
         }
-        if (onSteps) {
+        if (onBurn) {
+            val burnDays = if (burn.access == StepsAccess.GRANTED && burn.days != null) burnSeries.days else emptyList()
+            items(burnDays, key = { "burn-${it.day}" }) { day ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                BurnDayRow(day, today)
+            }
+        } else if (onSteps) {
             val stepDays = if (steps.access == StepsAccess.GRANTED && steps.days != null) stepsSeries.days else emptyList()
             items(stepDays, key = { "steps-${it.day}" }) { day ->
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -366,6 +394,7 @@ private fun PeriodList(
 
 private val ENERGY_PAGE = HistoryPages.ENERGY
 private val STEPS_PAGE = HistoryPages.STEPS
+private val BURN_PAGE = HistoryPages.BURN
 
 /** Energia without the nutrition permission: the reason and a button to grant it (weight-chart). */
 @Composable
