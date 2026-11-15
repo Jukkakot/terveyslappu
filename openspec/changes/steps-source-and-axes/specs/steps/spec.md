@@ -8,7 +8,7 @@ for the same day never fill its gaps. With "Kaikki (Health Connectin järjestys)
 Health Connect's merged daily total over all apps. Steps SHALL be shown only inside the app (no
 widget, tile or notification).
 
-#### Scenario: Two sources, one app
+#### Scenario: Two sources, one total
 - **GIVEN** Garmin Connect wrote 9 000 steps for yesterday and the phone's own counter wrote 2 000
   steps for hours in which Garmin wrote nothing
 - **WHEN** the source is Garmin Connect and yesterday's steps are shown

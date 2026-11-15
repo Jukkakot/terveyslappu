@@ -18,6 +18,10 @@ period statistics SHALL show `kg`. BMI has no unit and its axis labels SHALL be 
 - **WHEN** the period statistics are shown
 - **THEN** the latest, average, lowest and highest weight read like `82,0 kg`
 
+#### Scenario: Basal metabolic rate axis
+- **WHEN** Historia shows Paino or BMI
+- **THEN** no axis label or statistic reads `kcal`
+
 ### Requirement: Askeleet without data
 When the chosen period holds no step days at all, the Askeleet tab SHALL show one line instead of
 an empty chart: with "Kaikki (Health Connectin järjestys)", or "Automaattinen" with no app found,
