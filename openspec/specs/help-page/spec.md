@@ -29,3 +29,13 @@ Back from Ohje SHALL return to the home screen.
 #### Scenario: Front page editing
 - **WHEN** the user reads the front page section
 - **THEN** it says a long-press on a card starts editing, and that Valmis saves and Peruuta discards
+
+### Requirement: Custom charts in Ohje
+Ohje SHALL have a section on own charts, one to three sentences: how a chart is made (Historia's
+"Uusi kaavio" tab or the front page's Lisää kortti), that each data can be bars or a line, the
+chart stacked or overlaid, with its own period, and that a tap or a press-and-hold on the chart
+shows the day's values.
+
+#### Scenario: Charts explained
+- **WHEN** the user reads Ohje
+- **THEN** a section tells where own charts are made and how to read a day's values
