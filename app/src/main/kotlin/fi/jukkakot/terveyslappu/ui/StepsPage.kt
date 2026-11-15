@@ -211,6 +211,7 @@ private fun StepsChart(series: StepsSeries) {
     // A tapped bar shows its day (a week: its Monday) and steps (weight-chart "Day details").
     var picked by remember(series) { mutableStateOf<StepsDay?>(null) }
     Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }) {
+        RangeLine(series.from, series.to, "stepsRange")
         Row(Modifier.fillMaxWidth()) {
             YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "stepsAxis")
             Canvas(

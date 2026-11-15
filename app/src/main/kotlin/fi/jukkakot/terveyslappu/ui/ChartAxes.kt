@@ -130,6 +130,17 @@ internal fun DateAxis(from: LocalDate, to: LocalDate, tag: String, modifier: Mod
     }
 }
 
+/** The period's first and last day with years, at the top of a chart card (period-range-line). */
+@Composable
+internal fun RangeLine(from: LocalDate, to: LocalDate, tag: String, modifier: Modifier = Modifier) {
+    Text(
+        AxisTicks.rangeText(from, to),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.fillMaxWidth().padding(bottom = 4.dp).testTag(tag),
+    )
+}
+
 /** One legend entry: a bar swatch, a line, or plain text ("viikoittain"). */
 data class LegendEntry(val label: String, val color: Color? = null, val line: Boolean = false, val dashed: Boolean = false)
 

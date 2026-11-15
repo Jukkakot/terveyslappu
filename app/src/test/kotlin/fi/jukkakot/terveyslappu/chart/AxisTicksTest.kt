@@ -137,4 +137,12 @@ class AxisTicksTest {
         assertEquals(50f - 10f, b.first().start, 1e-3f)
         assertEquals(650f + 10f, b.last().endInclusive, 1e-3f)
     }
+
+    @Test
+    fun `range text of a week, across a year and one day`() {
+        val to = LocalDate.of(2026, 11, 15)
+        assertEquals("9.11.2026 \u2013 15.11.2026", AxisTicks.rangeText(to.minusDays(6), to))
+        assertEquals("16.11.2025 \u2013 15.11.2026", AxisTicks.rangeText(to.minusYears(1).plusDays(1), to))
+        assertEquals("3.11.2026", AxisTicks.rangeText(LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 3)))
+    }
 }

@@ -21,6 +21,12 @@ object AxisTicks {
     /** A weight or BMI line: the scale's ends and their midpoint. */
     fun line(min: Double, max: Double): List<Double> = listOf(min, (min + max) / 2, max)
 
+    /** The period range line (period-range-line): "15.8.2026 – 15.11.2026", one date when [from] equals [to]. */
+    fun rangeText(from: LocalDate, to: LocalDate): String =
+        if (from == to) dayYear(from) else "${dayYear(from)} – ${dayYear(to)}"
+
+    private fun dayYear(day: LocalDate) = "${day.dayOfMonth}.${day.monthValue}.${day.year}"
+
     fun days(from: LocalDate, to: LocalDate): Long = ChronoUnit.DAYS.between(from, to)
 
     /**

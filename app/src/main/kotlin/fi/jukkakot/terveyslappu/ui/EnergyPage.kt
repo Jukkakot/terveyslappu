@@ -95,6 +95,7 @@ private fun EnergyChart(series: EnergySeries, onOpenDay: (LocalDate) -> Unit) {
     val labels = ticks.map { stringResource(R.string.food_kcal, formatKcal(it)) }
     val labelWidth = axisLabelWidth(labels)
     Column(Modifier.fillMaxWidth().testTag("energyChart").semantics { contentDescription = description }) {
+        RangeLine(series.from, series.to, "energyRange")
         Row(Modifier.fillMaxWidth()) {
             YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "energyAxis")
             Canvas(

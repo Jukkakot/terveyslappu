@@ -185,6 +185,7 @@ fun WeightChart(
             series(data.xs, data.ys)
         }) }
         Column(modifier.fillMaxWidth()) {
+            RangeLine(data.from, data.to, "chartRange", Modifier.padding(start = 8.dp))
             Box(Modifier.fillMaxWidth().testTag("chart").semantics { contentDescription = description }) {
                 CartesianChartHost(
                     chart = chart,

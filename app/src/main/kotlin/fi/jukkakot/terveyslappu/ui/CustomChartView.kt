@@ -121,6 +121,7 @@ internal fun CustomChartView(
             Message(stringResource(R.string.chart_empty), "chartEmpty", Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(panelHeight(1))))
             return@Column
         }
+        if (mode == ChartMode.Tab) RangeLine(data.axis.from, data.axis.to, "chartRange")
         val overlaidLayout = data.chart.layout == ChartLayout.OVERLAID
         if (overlaidLayout && data.drawn.size > 1) {
             Overlaid(data, mode, states, crosshair, onDay)
