@@ -242,6 +242,11 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     that lets another app fill its gaps; the source is Automaattinen (most steps in 30 days) by
     default, one app, or Kaikki (Health Connectin järjestys), set in Asetukset → Askeleet and kept
     only on the phone; the source holds for the whole history (no per-day fallback).
+  - Decided (garmin-steps-history, v1.41): Garmin's account data export ZIP is read in Tuo tiedot
+    (only the UDSFile daily summaries) and kept as day -> steps in app storage
+    (`garmin-steps.json`, in Android backup and transfer, not in the data file); Health Connect
+    stays read only. The import fills days with Garmin Connect or Kaikki as the source, the larger
+    count wins on a shared day, today never comes from it; Asetukset -> Askeleet shows and deletes it.
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.

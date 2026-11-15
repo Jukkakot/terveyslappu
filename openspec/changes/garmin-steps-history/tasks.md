@@ -14,15 +14,24 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Tuo tiedot: picker MIME types include `application/zip` (and `application/x-zip-compressed`); detect a ZIP by its magic bytes `PK\x03\x04` before the other formats; show the Garmin preview (range with years, day count, Peruuta/Tuo); messages as specified.
-- [ ] 3.2 Asetukset → Askeleet: the "Garminin askelhistoria" row with range, count and red Poista + Kumoa bar (`AppSnackbar.showTimed`); the hint line when empty; visible without the steps permission.
-- [ ] 3.3 Log events as specified; add them to the log list in `.claude/CLAUDE.md`, and the new store to the map there.
-- [ ] 3.4 Smoke test: the Asetukset row shows the range after an import.
+- [x] 3.1 Tuo tiedot: picker MIME types include `application/zip` (and `application/x-zip-compressed`); detect a ZIP by its magic bytes `PK\x03\x04` before the other formats; show the Garmin preview (range with years, day count, Peruuta/Tuo); messages as specified.
+- [x] 3.2 Asetukset → Askeleet: the "Garminin askelhistoria" row with range, count and red Poista + Kumoa bar (`AppSnackbar.showTimed`); the hint line when empty; visible without the steps permission.
+- [x] 3.3 Log events as specified; add them to the log list in `.claude/CLAUDE.md`, and the new store to the map there.
+- [x] 3.4 Smoke test: the Asetukset row shows the range after an import.
 
 ## 4. Context
 
-- [ ] 4.0 Ohje: one sentence that the imported history shows with Garmin Connect or Kaikki as the source.
+- [x] 4.0 Ohje: one sentence that the imported history shows with Garmin Connect or Kaikki as the source.
 
-- [ ] 4.1 `product.md`: steps decision updated (Garmin history imported into app storage, HC still read-only); roadmap backlog entry done.
-- [ ] 4.2 Bump MINOR of `appVersion` in `gradle.properties`.
+- [x] 4.1 `product.md`: steps decision updated (Garmin history imported into app storage, HC still read-only); roadmap backlog entry done.
+- [x] 4.2 Bump MINOR of `appVersion` in `gradle.properties`.
 - [ ] 4.3 Run `./gradlew test lint assembleDebug`.
+
+## Implementer's notes (decisions the spec left open)
+
+- Not-a-Garmin ZIP / no steps: the text is shown inside the import dialog with Sulje (like the weight import's "nothing found").
+- A failed save on Tuo shows "Askelhistoriaa ei voitu tallentaa. Syy on lokissa." and logs `steps.garmin.import failed cause=`.
+- The preview's text: "18.7.2023 – 8.11.2026, 1 206 päivää" under the dialog title "Garminin askelhistoria"; the count uses the steps number format (narrow no-break space).
+- The "näkyy, kun lähde on …" suffix is decided from the stored choice and pick (no source check runs on Tuo).
+- Asetukset → Askeleet: the row is its own group below Lähde; Poista is a red text button.
+- Peruuta while reading drops the result; the stream read itself runs to its end in the background.

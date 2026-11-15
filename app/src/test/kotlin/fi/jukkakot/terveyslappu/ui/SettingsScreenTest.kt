@@ -37,6 +37,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.assertTextContains
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -130,6 +131,28 @@ class SettingsScreenTest {
         assertEquals(0, grants)
         compose.onNodeWithTag("stepsGrant").performClick()
         assertEquals(1, grants)
+    }
+
+    @Test
+    fun `the Garmin history row shows the range and deletes, also without the permission`() {
+        var deleted = 0
+        val summary = fi.jukkakot.terveyslappu.steps.GarminSummary(java.time.LocalDate.of(2023, 7, 18), java.time.LocalDate.of(2026, 11, 8), 1206)
+        show(
+            page = SettingsPage.STEPS,
+            steps = StepsUiState(access = StepsAccess.NEEDS),
+            sources = StepsSourcesUi(garmin = summary),
+            stepsActions = StepsActions(onGarminDelete = { deleted++ }),
+        )
+        compose.onNodeWithTag("garminHistoryLine").assertTextContains("18.7.2023 – 8.11.2026", substring = true)
+        compose.onNodeWithTag("garminDelete").performClick()
+        assertEquals(1, deleted)
+    }
+
+    @Test
+    fun `without an import the Garmin row gives the hint and no Poista`() {
+        show(page = SettingsPage.STEPS, steps = StepsUiState(access = StepsAccess.GRANTED))
+        compose.onNodeWithTag("garminHistoryLine").assertExists()
+        compose.onNodeWithTag("garminDelete").assertDoesNotExist()
     }
 
     @Test
