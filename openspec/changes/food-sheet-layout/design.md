@@ -74,6 +74,22 @@ done keys are in `FoodViewModel` (`clipOffer`, `food.import.offer`), the import 
 - **Front page** (user 2026-11-15): the same card replaces `ClipOfferNotice`; its messages use the snackbar.
 - **Sheet line** stays until the next action (user 2026-11-15).
 
+Implementation decisions (apply, 2026-11-15; simplest option where the spec was open):
+
+- Front page Lisää kaikki adds to today and stays on the front page (no jump to Ruoka); its
+  Kumoa is the snackbar. Without the nutrition permission it asks first, then adds.
+- Muokkaa makes the same key check as Lisää kaikki ("Leikepöytä muuttui" when the clip changed).
+- When the card appears after the keyboard rose (the widget sheet reads the clip on focus), the
+  keyboard is put down while the field is empty.
+- List headings show only over rows ("Tuotteet" only when there are matches).
+- Base rows keep an empty 48 dp slot where the trash would be, so the pencils line up.
+- "Tallenna tuotteet" has no day suffix (products have no day).
+- A clip cache from v1.33 (no parsed content) is read again once.
+- Card: `surfaceContainerHigh`, rounded 16 dp, total on the title row; lines "name · amount",
+  treat sign, kcal at the end.
+- Bars are dismissed on a screen or Asetukset sub-page change and when a sheet opens; the item
+  editor and the preview (dialogs) do not dismiss them.
+
 ## Risks / Trade-offs
 
 - [Lisää kaikki skips the preview's day choice] → the card adds to the day shown; another day goes

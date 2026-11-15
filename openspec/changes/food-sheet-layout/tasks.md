@@ -20,4 +20,4 @@
 
 ## 5. Docs and release
 
-- [ ] 5.1 Ohje text (card, delete), CLAUDE.md log events (`food.import.offer addall`, `food.product.delete`), roadmap: this done and a backlog item "consistency pass: rows, buttons, delete and Kumoa the same on every screen"; bump MINOR; `./gradlew test lint assembleDebug` green
+- [x] 5.1 Ohje text (card, delete), CLAUDE.md log events (`food.import.offer addall`, `food.product.delete`), roadmap: this done and a backlog item "consistency pass: rows, buttons, delete and Kumoa the same on every screen"; bump MINOR; `./gradlew test lint assembleDebug` green
