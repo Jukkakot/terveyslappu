@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
@@ -22,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.steps.GarminSummary
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
@@ -131,3 +134,36 @@ internal fun stepsSourceLineText(steps: StepsUiState): String {
         StepsSourceLabel.All -> stringResource(R.string.steps_source_line_all)
     }
 }
+
+/**
+ * Asetukset → Askeleet's "Garminin askelhistoria" (steps "Imported history in Asetukset"): the
+ * imported range and day count with a red Poista, or the hint line; shown also without the steps permission.
+ */
+@Composable
+internal fun GarminHistoryRow(garmin: GarminSummary?, actions: StepsActions) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp).testTag("garminHistory"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.garmin_title), style = MaterialTheme.typography.bodyLarge)
+            val detail = if (garmin == null) {
+                stringResource(R.string.garmin_row_empty)
+            } else {
+                stringResource(R.string.garmin_row, formatFullDay(garmin.first), formatFullDay(garmin.last), formatSteps(garmin.count.toLong()))
+            }
+            Text(detail, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.testTag("garminHistoryLine"))
+        }
+        if (garmin != null) {
+            TextButton(onClick = actions.onGarminDelete, colors = ButtonDefaults.textButtonColors(contentColor = colors.error), modifier = Modifier.testTag("garminDelete")) {
+                Text(stringResource(R.string.garmin_delete))
+            }
+        }
+    }
+}
+
+private val fullDay = java.time.format.DateTimeFormatter.ofPattern("d.M.yyyy")
+
+private fun formatFullDay(day: java.time.LocalDate): String = fullDay.format(day)

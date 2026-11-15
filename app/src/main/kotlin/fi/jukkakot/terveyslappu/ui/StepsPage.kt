@@ -78,6 +78,8 @@ class StepsActions(
     /** Asetukset → Askeleet entered / left. */
     val onSourceShown: () -> Unit = {},
     val onSourceHidden: () -> Unit = {},
+    /** Asetukset → Askeleet: Poista of the imported Garmin history (Kumoa comes as a bar). */
+    val onGarminDelete: () -> Unit = {},
 )
 
 /** "6 420": thousands with a narrow no-break space. */

@@ -87,6 +87,7 @@ internal fun SettingsScreen(
         }
         SettingsPage.STEPS -> SubPage(R.string.settings_steps, actions, snackbar, "stepsSourcePage") {
             Section(R.string.steps_source_title) { StepsSourceContent(steps, stepsSources, stepsActions) }
+            Section(null) { GarminHistoryRow(stepsSources.garmin, stepsActions) }
         }
         SettingsPage.PROFILE -> SubPage(R.string.profile_section, actions, snackbar, "profilePage") {
             Section(null) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }

@@ -254,6 +254,7 @@ class MainActivity : ComponentActivity() {
                         onChoice = stepsModel::setChoice,
                         onSourceShown = stepsModel::subScreenShown,
                         onSourceHidden = stepsModel::subScreenHidden,
+                        onGarminDelete = viewModel::deleteGarmin,
                     ),
                     stepsSources = stepsSources,
                     foodActions = FoodActions(
@@ -508,9 +509,9 @@ class MainActivity : ComponentActivity() {
             .putExtra(EXTRA_SCREEN, SCREEN_HISTORY)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-        /** Text tables; some file managers label CSV files as octet-stream. */
+        /** Text tables (some file managers label CSV files as octet-stream) and Garmin's export ZIP. */
         private const val BACKUP_FILE_NAME = "terveyslappu-varmuuskopio.csv"
-        private val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/json", "application/octet-stream")
+        private val IMPORT_TYPES = arrayOf("text/*", "application/csv", "text/comma-separated-values", "application/vnd.ms-excel", "application/json", "application/octet-stream", "application/zip", "application/x-zip-compressed")
         private const val STORE_URL = "market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding"
     }
 }

@@ -19,6 +19,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import fi.jukkakot.terveyslappu.steps.GarminMerge
+import fi.jukkakot.terveyslappu.steps.GarminRead
+import fi.jukkakot.terveyslappu.steps.GarminStepsReader
+import fi.jukkakot.terveyslappu.steps.StepsSourceRules
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import fi.jukkakot.terveyslappu.TerveysApp
@@ -535,14 +541,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         null
     }
 
-    /** Reads and parses the picked history file, then shows the preview (history-import). */
+    /** Reads and parses the picked history file, then shows the preview (history-import); a ZIP is Garmin's export. */
     fun onImportFile(uri: Uri) {
         _state.update { it.copy(import = ImportState.Reading) }
         viewModelScope.launch {
             val started = System.nanoTime()
+            val resolver = getApplication<Application>().contentResolver
+            val zip = withContext(Dispatchers.IO) {
+                runCatching { resolver.openInputStream(uri)?.use { GarminStepsReader.isZip(it.readNBytes(4)) } }.getOrNull() == true
+            }
+            if (zip) {
+                readGarmin(uri, started)
+                return@launch
+            }
             val file = withContext(Dispatchers.IO) {
                 runCatching {
-                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
+                    resolver.openInputStream(uri)?.use { input ->
                         val bytes = input.readNBytes(MAX_IMPORT_BYTES + 1)
                         require(bytes.size <= MAX_IMPORT_BYTES) { "file larger than $MAX_IMPORT_BYTES bytes" }
                         bytes
@@ -583,7 +597,76 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return Triple(HistoryParser.parse(sheet.text, zone, Instant.now()), sheet, "xls")
     }
 
+    private var garminJob: Job? = null
+
+    /** Garmin's export (garmin-steps-history design 7, 8): the URI reopened and streamed; Peruuta cancels. */
+    private fun readGarmin(uri: Uri, started: Long) {
+        _state.update { it.copy(import = ImportState.GarminReading) }
+        garminJob = viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { GarminStepsReader.read(it, LocalDate.now()) }
+                        ?: error("no input stream")
+                }
+            }
+            if (_state.value.import != ImportState.GarminReading) return@launch
+            result.onFailure { error ->
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                AppLog.e("steps.garmin.read", error, "failed", "cause" to error.javaClass.simpleName)
+                _state.update { it.copy(import = ImportState.ReadFailed) }
+            }.onSuccess { read ->
+                AppLog.i(
+                    "steps.garmin.read", "ok",
+                    "days" to read.days.size,
+                    "first" to (read.days.firstOrNull()?.day ?: "none"),
+                    "last" to (read.days.lastOrNull()?.day ?: "none"),
+                    "entries" to read.entries,
+                    "ms" to msSince(started),
+                )
+                _state.update { it.copy(import = if (read.days.isEmpty()) ImportState.GarminNone else ImportState.Garmin(read)) }
+            }
+        }
+    }
+
+    /** Tuo of the Garmin preview: replaces the stored history in one write (design 7, 11). */
+    private fun confirmGarmin(read: GarminRead) {
+        _state.update { it.copy(import = null) }
+        viewModelScope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                runCatching { terveys.garminSteps.replace(read.days) }
+                    .onFailure { AppLog.e("steps.garmin.import", it, "failed", "cause" to it.javaClass.simpleName) }
+                    .isSuccess
+            }
+            if (!saved) {
+                _messages.tryEmit(UiMessage(R.string.garmin_import_failed))
+                return@launch
+            }
+            AppLog.i("steps.garmin.import", "ok", "days" to read.days.size)
+            val prefs = terveys.stepsPrefs
+            val source = StepsSourceRules.resolve(prefs.choice, prefs.autoPick, null, false, prefs.phonePackages)
+            val text = if (GarminMerge.uses(source)) R.string.garmin_imported else R.string.garmin_imported_hidden
+            _messages.tryEmit(UiMessage(text, listOf(read.days.size)))
+        }
+    }
+
+    /** Asetukset → Askeleet's Poista: at once, with Kumoa restoring from memory (design 11). */
+    fun deleteGarmin() {
+        viewModelScope.launch {
+            val old = withContext(Dispatchers.IO) { runCatching { terveys.garminSteps.delete() }.getOrNull() } ?: return@launch
+            AppLog.i("steps.garmin.delete", "")
+            _messages.tryEmit(
+                UiMessage(R.string.garmin_deleted, action = UiAction(R.string.undo) {
+                    viewModelScope.launch {
+                        withContext(Dispatchers.IO) { runCatching { terveys.garminSteps.restore(old) } }
+                        AppLog.i("steps.garmin.undo", "")
+                    }
+                }),
+            )
+        }
+    }
+
     fun confirmImport() {
+        (_state.value.import as? ImportState.Garmin)?.let { return confirmGarmin(it.read) }
         val parsed = when (val current = _state.value.import) {
             is ImportState.Preview -> current.parsed
             is ImportState.Failed -> current.parsed
@@ -595,6 +678,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun dismissImport() {
         if (_state.value.import is ImportState.Writing) return
+        if (_state.value.import == ImportState.GarminReading) garminJob?.cancel()
         _state.update { it.copy(import = null) }
     }
 

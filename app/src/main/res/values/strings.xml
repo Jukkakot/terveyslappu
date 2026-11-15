@@ -56,7 +56,7 @@
     <string name="help_history_title">Historia</string>
     <string name="help_history_body">Historiassa näet painokaavion, valittavat jaksot ja tilastot sekä listan punnituksista. Avaa se etusivun painokortista.</string>
     <string name="help_steps_title">Askeleet</string>
-    <string name="help_steps_body">Askeleet luetaan Health Connectista, eikä sovellus koskaan kirjoita tai muuta niitä; luvan voi antaa napauttamalla etusivun askelkorttia. Kun sekä kello (esim. Garmin Connect) että puhelin kirjaavat askelia, sovellus näyttää yhden sovelluksen oman päiväsumman, jotta toisen sovelluksen askeleet eivät täytä sen aukkoja. Lähteen voi valita kohdasta Asetukset → Askeleet: Automaattinen käyttää sovellusta, jolla on eniten askelia viimeisen 30 päivän aikana; Kaikki (Health Connectin järjestys) yhdistää kaikki sovellukset Health Connectin sovellusjärjestyksen mukaan ja näyttää koko historian. Puhelimen oma askellaskuri alkaa laskea vasta luvan antamisesta.</string>
+    <string name="help_steps_body">Askeleet luetaan Health Connectista, eikä sovellus koskaan kirjoita tai muuta niitä; luvan voi antaa napauttamalla etusivun askelkorttia. Kun sekä kello (esim. Garmin Connect) että puhelin kirjaavat askelia, sovellus näyttää yhden sovelluksen oman päiväsumman, jotta toisen sovelluksen askeleet eivät täytä sen aukkoja. Lähteen voi valita kohdasta Asetukset → Askeleet: Automaattinen käyttää sovellusta, jolla on eniten askelia viimeisen 30 päivän aikana; Kaikki (Health Connectin järjestys) yhdistää kaikki sovellukset Health Connectin sovellusjärjestyksen mukaan ja näyttää koko historian. Puhelimen oma askellaskuri alkaa laskea vasta luvan antamisesta. Garminin tietojen latauksen ZIP-tiedoston voi tuoda kohdasta Tuo tiedot: sen askelhistoria näkyy, kun lähde on Garmin Connect tai Kaikki, ja automaattisen lähteen vaihtuessa muuhun sovellukseen se piiloutuu.</string>
     <string name="help_profile_title">Omat tiedot ja BMI</string>
     <string name="help_profile_body">Kun lisäät Asetuksissa pituutesi ja muut omat tietosi, Historian BMI-välilehti näyttää painoindeksin (BMI) ja sen luokan.</string>
     <string name="help_data_title">Tuo ja vie tiedot</string>
@@ -510,4 +510,16 @@
     <string name="home_open_chart">Avaa kaavio</string>
     <string name="help_charts_title">Omat kaaviot</string>
     <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Paino, energia ja askeleet voivat olla pylväinä tai viivana, allekkain tai päällekkäin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
+    <!-- garmin-steps-history -->
+    <string name="garmin_title">Garminin askelhistoria</string>
+    <string name="garmin_preview">%1$s – %2$s, %3$s päivää</string>
+    <string name="garmin_none">Tiedostosta ei löytynyt Garminin askelia</string>
+    <string name="garmin_imported">Askelhistoria tuotu: %1$d päivää</string>
+    <string name="garmin_imported_hidden">Askelhistoria tuotu: %1$d päivää · näkyy, kun lähde on Garmin Connect tai Kaikki</string>
+    <string name="garmin_import_failed">Askelhistoriaa ei voitu tallentaa. Syy on lokissa.</string>
+    <string name="garmin_deleted">Askelhistoria poistettu</string>
+    <string name="garmin_row">%1$s – %2$s · %3$s päivää</string>
+    <string name="garmin_row_empty">Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedot</string>
+    <string name="garmin_delete">Poista</string>
+    <string name="garmin_confirm">Tuo</string>
 </resources>

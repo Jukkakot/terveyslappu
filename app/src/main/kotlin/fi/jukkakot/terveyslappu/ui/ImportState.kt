@@ -4,6 +4,7 @@ import fi.jukkakot.terveyslappu.history.ParsedHistory
 import fi.jukkakot.terveyslappu.history.SheetText
 import fi.jukkakot.terveyslappu.history.SkipReason
 import fi.jukkakot.terveyslappu.log.AppLog
+import fi.jukkakot.terveyslappu.steps.GarminRead
 
 /** The history import dialog's state (history-import spec); null in [MainUiState] = no dialog. */
 sealed interface ImportState {
@@ -13,6 +14,11 @@ sealed interface ImportState {
     data class Failed(val parsed: ParsedHistory, val saved: Int) : ImportState
     /** The file could not be opened or read at all. */
     data object ReadFailed : ImportState
+
+    /** Garmin's export ZIP (garmin-steps-history design 7): reading (Peruuta cancels), preview, nothing found. */
+    data object GarminReading : ImportState
+    data class Garmin(val read: GarminRead) : ImportState
+    data object GarminNone : ImportState
 }
 
 /** Logs what the parser decided, so a file it cannot read can be supported from a shared log. */

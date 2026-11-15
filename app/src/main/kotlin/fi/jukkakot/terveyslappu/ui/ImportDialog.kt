@@ -34,7 +34,7 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(dismissOnBackPress = !writing, dismissOnClickOutside = !writing),
-        title = { Text(stringResource(R.string.import_title)) },
+        title = { Text(stringResource(if (state is ImportState.Garmin) R.string.garmin_title else R.string.import_title)) },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
@@ -56,6 +56,20 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
                         )
                     }
                     is ImportState.Failed -> Text(stringResource(R.string.import_failed, state.saved, state.parsed.weights.size))
+                    ImportState.GarminReading -> {
+                        Text(stringResource(R.string.import_reading))
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                    is ImportState.Garmin -> Text(
+                        stringResource(
+                            R.string.garmin_preview,
+                            importDate.format(state.read.days.first().day),
+                            importDate.format(state.read.days.last().day),
+                            formatSteps(state.read.days.size.toLong()),
+                        ),
+                        modifier = Modifier.testTag("garminPreview"),
+                    )
+                    ImportState.GarminNone -> Text(stringResource(R.string.garmin_none))
                 }
             }
         },
@@ -73,12 +87,14 @@ fun ImportDialog(state: ImportState, onConfirm: () -> Unit, onDismiss: () -> Uni
                     }
                 }
                 is ImportState.Failed -> Button(onClick = onConfirm) { Text(stringResource(R.string.import_retry)) }
+                is ImportState.Garmin -> Button(onClick = onConfirm, modifier = Modifier.testTag("importConfirm")) { Text(stringResource(R.string.garmin_confirm)) }
                 else -> {}
             }
         },
         dismissButton = {
             if (!writing) {
-                val label = if (state is ImportState.Preview && state.parsed.hasData()) R.string.cancel else R.string.close
+                val cancel = (state is ImportState.Preview && state.parsed.hasData()) || state is ImportState.Garmin || state is ImportState.GarminReading
+                val label = if (cancel) R.string.cancel else R.string.close
                 TextButton(onClick = onDismiss) { Text(stringResource(label)) }
             }
         },
