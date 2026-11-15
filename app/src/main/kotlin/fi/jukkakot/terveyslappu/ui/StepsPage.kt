@@ -3,7 +3,6 @@ package fi.jukkakot.terveyslappu.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,19 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -44,19 +34,16 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
+import fi.jukkakot.terveyslappu.chart.TabReadouts
+import androidx.compose.ui.draw.clipToBounds
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
 import fi.jukkakot.terveyslappu.steps.StepsDay
 import fi.jukkakot.terveyslappu.steps.StepsSeries
 import fi.jukkakot.terveyslappu.steps.StepsUiState
-import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.text.NumberFormat
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
 import kotlin.math.max
 
 /** What the steps card and the Askeleet tab can ask for; the activity wires these (steps design 5, 8). */
@@ -91,7 +78,7 @@ fun formatSteps(steps: Long): String = NumberFormat.getIntegerInstance(java.util
  * otherwise bars of the days with steps, the 7-day line and the statistics.
  */
 @Composable
-internal fun StepsTab(steps: StepsUiState, series: StepsSeries, actions: StepsActions) {
+internal fun StepsTab(steps: StepsUiState, series: StepsSeries, actions: StepsActions, crosshair: LocalDate? = null, onDay: (LocalDate?) -> Unit = {}) {
     when {
         steps.access != StepsAccess.GRANTED -> StepsReason(steps.access, actions)
         steps.days == null && steps.loadFailed -> Column {
@@ -102,7 +89,7 @@ internal fun StepsTab(steps: StepsUiState, series: StepsSeries, actions: StepsAc
             Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             StepsSourceLine(steps, actions)
         }
-        else -> StepsPage(series, steps, actions)
+        else -> StepsPage(series, steps, actions, crosshair, onDay)
     }
 }
 
@@ -168,7 +155,7 @@ internal fun StepsReason(access: StepsAccess, actions: StepsActions) {
 }
 
 @Composable
-private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsActions) {
+private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsActions, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
     Column(Modifier.fillMaxWidth().testTag("page-STEPS")) {
         StepsBox {
             val app = steps.source.appId
@@ -181,7 +168,7 @@ private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsAc
             } else if (series.bars.isEmpty()) {
                 StepsMessage(stringResource(R.string.steps_empty), "stepsEmpty")
             } else {
-                Box(Modifier.padding(12.dp)) { StepsChart(series) }
+                Box(Modifier.padding(12.dp)) { StepsChart(series, crosshair, onDay) }
             }
         }
         StepsSourceLine(steps, actions)
@@ -198,51 +185,33 @@ private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsAc
 }
 
 @Composable
-private fun StepsChart(series: StepsSeries) {
+private fun StepsChart(series: StepsSeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val barColor = colors.primary
     val line = colors.onSurfaceVariant
     val grid = colors.outlineVariant
-    val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
+    val marker = colors.onSurface
     val top = max(series.bars.maxOf { it.steps }, series.stats.averageSteps ?: 0L)
     val ticks = AxisTicks.bars(top.toDouble(), STEPS_STEP)
     val maxSteps = ticks.last()
     val description = stringResource(R.string.steps_chart_description, series.bars.size)
     val labels = ticks.map { stringResource(R.string.steps_value, formatSteps(it.toLong())) }
     val labelWidth = axisLabelWidth(labels)
-    // A tapped bar shows its day (a week: its Monday) and steps (weight-chart "Day details").
-    var picked by remember(series) { mutableStateOf<StepsDay?>(null) }
-    Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }) {
+    val axis = remember(series) { ChartAxis(series.from, series.to, series.weekly) }
+    ClearOffAxis(axis, crosshair) { onDay(null) }
+    // The crosshair (weight-chart "Crosshair on every Historia chart"): a day, or a week's Monday on weekly bars.
+    Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }.crosshairActions(axis, crosshair) { onDay(it) }) {
+        TabReadout(crosshair?.let { TabReadouts.steps(series, it, LocalDate.now()) }, onClear = { onDay(null) })
         RangeLine(series.from, series.to, "stepsRange")
         Row(Modifier.fillMaxWidth()) {
             YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "stepsAxis")
-            Canvas(
-                Modifier.weight(1f).height(BAR_PLOT).testTag("stepsBars").pointerInput(series) {
-                    detectTapGestures { offset ->
-                        val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
-                        val day = series.from.plusDays(index.toLong())
-                        picked = if (series.weekly) {
-                            val monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                            series.bars.firstOrNull { it.from == monday }?.let { StepsDay(it.from, it.steps) }
-                        } else {
-                            series.days.firstOrNull { it.day == day }
-                        }
-                    }
-                },
-            ) {
-                val axis = ChartAxis(series.from, series.to, series.weekly)
+            Canvas(Modifier.weight(1f).height(BAR_PLOT).clipToBounds().crosshairGestures(axis) { onDay(it) }.testTag("stepsBars")) {
                 fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
-                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.steps.toDouble()) }, ::y, barColor)
+                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.steps.toDouble()) }, ::y, barColor, chosen = crosshair)
                 series.stats.averageSteps?.let { drawAverageLine(y(it.toDouble()), line) }
+                crosshair?.let { drawCrosshair(axis, it, marker) }
             }
-        }
-        picked?.let {
-            Text(
-                stringResource(R.string.steps_point, formatShortDay(it.day), formatSteps(it.steps)),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(top = 4.dp, start = labelWidth).testTag("stepsPicked"),
-            )
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             Spacer(Modifier.width(labelWidth))

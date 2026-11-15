@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -45,6 +46,14 @@ internal fun ChartAxis.pick(day: LocalDate): LocalDate = if (weekly) weekOf(day)
 
 /** Whether a chosen [day] (a Monday on weekly bars) is still on this axis. */
 internal fun ChartAxis.shows(day: LocalDate): Boolean = if (weekly) !day.plusDays(6).isBefore(from) && !day.isAfter(to) else day in this
+
+/** A data reload keeps the crosshair; it is removed only when its day is no longer on the [axis]. */
+@Composable
+internal fun ClearOffAxis(axis: ChartAxis, crosshair: LocalDate?, onClear: () -> Unit) {
+    val current by rememberUpdatedState(crosshair)
+    val clear by rememberUpdatedState(onClear)
+    LaunchedEffect(axis) { if (current?.let { !axis.shows(it) } == true) clear() }
+}
 
 /**
  * The crosshair gestures (custom-charts design 10): a tap sets the day; a press held past the

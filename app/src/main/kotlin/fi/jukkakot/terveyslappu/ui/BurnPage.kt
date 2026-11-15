@@ -3,7 +3,6 @@ package fi.jukkakot.terveyslappu.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,14 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -43,15 +38,12 @@ import fi.jukkakot.terveyslappu.burn.BurnSeries
 import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
+import fi.jukkakot.terveyslappu.chart.TabReadouts
+import androidx.compose.ui.draw.clipToBounds
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
 import fi.jukkakot.terveyslappu.steps.StepsUiState
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAdjusters
-import java.util.Locale
 import kotlin.math.max
 
 /** What the Kulutus card and tab can ask for; the activity wires these (energy-burn design 9). */
@@ -70,25 +62,12 @@ class BurnActions(
     val onOpenSource: () -> Unit = {},
 )
 
-private val readoutDay = DateTimeFormatter.ofPattern("EEE d.M.", Locale.forLanguageTag("fi"))
-
-/** "Ma 12.11." (decision 12). */
-internal fun burnDayLabel(day: LocalDate): String = readoutDay.format(day).replaceFirstChar { it.titlecase(Locale.forLanguageTag("fi")) }
-
-/** "Ma 12.11. · 2 300 kcal · aktiivinen 450 · lepo 1 850"; a kokonais day "… · 2 300 kcal". */
-@Composable
-internal fun burnPointText(day: LocalDate, total: Long, active: Long?, rest: Long?): String = when {
-    active != null && rest != null -> stringResource(R.string.burn_point, burnDayLabel(day), formatKcal(total.toDouble()), formatKcal(active.toDouble()), formatKcal(rest.toDouble()))
-    active != null -> stringResource(R.string.burn_point_active, burnDayLabel(day), formatKcal(total.toDouble()), formatKcal(active.toDouble()))
-    else -> stringResource(R.string.burn_point_total, burnDayLabel(day), formatKcal(total.toDouble()))
-}
-
 /**
  * The Kulutus tab (energy-burn "Kulutus tab"): the reason without access, otherwise the two-tone
  * bars, the average line, the source line and the statistics. Burned energy only.
  */
 @Composable
-internal fun BurnTab(burn: BurnUiState, series: BurnSeries, actions: BurnActions) {
+internal fun BurnTab(burn: BurnUiState, series: BurnSeries, actions: BurnActions, crosshair: LocalDate? = null, onDay: (LocalDate?) -> Unit = {}) {
     when {
         burn.access != StepsAccess.GRANTED -> BurnReason(burn.access, actions)
         burn.days == null && burn.loadFailed -> Column {
@@ -99,7 +78,7 @@ internal fun BurnTab(burn: BurnUiState, series: BurnSeries, actions: BurnActions
             Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             BurnSourceLine(burn, actions)
         }
-        else -> BurnPage(series, burn, actions)
+        else -> BurnPage(series, burn, actions, crosshair, onDay)
     }
 }
 
@@ -160,7 +139,7 @@ internal fun BurnReason(access: StepsAccess, actions: BurnActions) {
 }
 
 @Composable
-private fun BurnPage(series: BurnSeries, burn: BurnUiState, actions: BurnActions) {
+private fun BurnPage(series: BurnSeries, burn: BurnUiState, actions: BurnActions, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
     Column(Modifier.fillMaxWidth().testTag("page-BURN")) {
         BurnBox {
             val app = burn.source.appId
@@ -172,7 +151,7 @@ private fun BurnPage(series: BurnSeries, burn: BurnUiState, actions: BurnActions
             } else if (series.bars.isEmpty()) {
                 BurnMessage(stringResource(R.string.burn_empty), "burnEmpty")
             } else {
-                Box(Modifier.padding(12.dp)) { BurnChart(series) }
+                Box(Modifier.padding(12.dp)) { BurnChart(series, crosshair, onDay) }
             }
         }
         BurnSourceLine(burn, actions)
@@ -191,46 +170,33 @@ private fun BurnPage(series: BurnSeries, burn: BurnUiState, actions: BurnActions
 internal fun BurnBar.spec() = BurnBarSpec(from, days, total.toDouble(), active?.toDouble())
 
 @Composable
-private fun BurnChart(series: BurnSeries) {
+private fun BurnChart(series: BurnSeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val tone = burnColour()
     val line = colors.onSurfaceVariant
     val grid = colors.outlineVariant
-    val days = (ChronoUnit.DAYS.between(series.from, series.to) + 1).toInt().coerceAtLeast(1)
+    val marker = colors.onSurface
     val top = max(series.bars.maxOf { it.total }, series.stats.averageTotal ?: 0L)
     val ticks = AxisTicks.bars(top.toDouble(), KCAL_STEP)
     val maxKcal = ticks.last()
     val description = stringResource(R.string.burn_chart_description, series.bars.size)
     val labels = ticks.map { stringResource(R.string.food_kcal, formatKcal(it)) }
     val labelWidth = axisLabelWidth(labels)
-    var picked by remember(series) { mutableStateOf<BurnBar?>(null) }
-    Column(Modifier.fillMaxWidth().testTag("burnChart").semantics { contentDescription = description }) {
+    val axis = remember(series) { ChartAxis(series.from, series.to, series.weekly) }
+    ClearOffAxis(axis, crosshair) { onDay(null) }
+    // The crosshair (weight-chart "Crosshair on every Historia chart"): a day, or a week's Monday on weekly bars.
+    Column(Modifier.fillMaxWidth().testTag("burnChart").semantics { contentDescription = description }.crosshairActions(axis, crosshair) { onDay(it) }) {
+        TabReadout(crosshair?.let { TabReadouts.burn(series, it, LocalDate.now()) }, onClear = { onDay(null) })
         RangeLine(series.from, series.to, "burnRange")
         Row(Modifier.fillMaxWidth()) {
             YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "burnAxis")
-            Canvas(
-                Modifier.weight(1f).height(BAR_PLOT).testTag("burnBars").pointerInput(series) {
-                    detectTapGestures { offset ->
-                        val index = (offset.x / size.width * days).toInt().coerceIn(0, days - 1)
-                        val day = series.from.plusDays(index.toLong())
-                        val key = if (series.weekly) day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) else day
-                        picked = series.bars.firstOrNull { it.from == key }
-                    }
-                },
-            ) {
-                val axis = ChartAxis(series.from, series.to, series.weekly)
+            Canvas(Modifier.weight(1f).height(BAR_PLOT).clipToBounds().crosshairGestures(axis) { onDay(it) }.testTag("burnBars")) {
                 fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
                 drawGuidelines(grid, ticks.map { y(it) })
-                drawBurnBars(axis, series.bars.map { it.spec() }, ::y, tone)
+                drawBurnBars(axis, series.bars.map { it.spec() }, ::y, tone, chosen = crosshair)
                 series.stats.averageTotal?.let { drawAverageLine(y(it.toDouble()), line) }
+                crosshair?.let { drawCrosshair(axis, it, marker) }
             }
-        }
-        picked?.let {
-            Text(
-                burnPointText(it.from, it.total, it.active, it.rest),
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(top = 4.dp, start = labelWidth).testTag("burnPicked"),
-            )
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             Spacer(Modifier.width(labelWidth))

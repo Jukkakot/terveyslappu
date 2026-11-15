@@ -8,8 +8,8 @@
 
 ## 2. Tabs
 
-- [ ] 2.1 Paino and BMI (`WeightChart`): crosshair by day, value = the day's last non-"?" weight with its time; replaces the old dot text.
-- [ ] 2.2 Syöty, Askeleet, Kulutus: crosshair by day or week; Syöty's readout ends with "Avaa päivä ›" (opens Ruoka on that day, back returns to Syöty); replaces the old bar-tap texts and Syöty's direct jump.
+- [x] 2.1 Paino and BMI (`WeightChart`): crosshair by day, value = the day's last non-"?" weight with its time; replaces the old dot text.
+- [x] 2.2 Syöty, Askeleet, Kulutus: crosshair by day or week; Syöty's readout ends with "Avaa päivä ›" (opens Ruoka on that day, back returns to Syöty); replaces the old bar-tap texts and Syöty's direct jump.
 - [ ] 2.3 Smoke tests: a tap on Askeleet shows the readout; Syöty's "Avaa päivä" opens Ruoka.
 
 ## 3. Context

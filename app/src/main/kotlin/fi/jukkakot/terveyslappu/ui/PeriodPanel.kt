@@ -105,12 +105,12 @@ fun HistoryNotice(onGrant: () -> Unit) {
 
 /** The chart, or the empty-period text in the same space. */
 @Composable
-fun ChartArea(data: ChartData?) {
+fun ChartArea(data: ChartData?, crosshair: LocalDate? = null, onDay: (LocalDate?) -> Unit = {}) {
     if (data == null) {
         Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.period_empty), style = MaterialTheme.typography.bodyLarge)
         }
     } else {
-        WeightChart(data, stringResource(R.string.chart_description, data.entries.size))
+        WeightChart(data, stringResource(R.string.chart_description, data.entries.size), crosshair = crosshair, onDay = onDay)
     }
 }

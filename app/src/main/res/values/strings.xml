@@ -403,7 +403,6 @@
     <string name="steps_stat_days">Askelpäiviä</string>
     <string name="steps_per_day">%1$s askelta/pv</string>
     <string name="steps_value">%1$s askelta</string>
-    <string name="steps_point">%1$s: %2$s askelta</string>
     <string name="steps_legend">askeleet</string>
     <string name="legend_weight">paino</string>
     <string name="legend_bmi">BMI</string>
@@ -506,6 +505,7 @@
     <string name="chart_no_weight">ei painoa</string>
     <string name="chart_no_food">ei kirjauksia</string>
     <string name="chart_no_steps">ei tietoa</string>
+    <string name="chart_open_day">Avaa päivä ›</string>
     <string name="custom_chart_description">Oma kaavio %1$s</string>
     <string name="home_open_chart">Avaa kaavio</string>
     <string name="help_charts_title">Omat kaaviot</string>
@@ -539,9 +539,6 @@
     <string name="burn_legend_active">aktiivinen</string>
     <string name="burn_legend_total">kokonais</string>
     <string name="burn_legend">kulutus</string>
-    <string name="burn_point">%1$s · %2$s kcal · aktiivinen %3$s · lepo %4$s</string>
-    <string name="burn_point_active">%1$s · %2$s kcal · aktiivinen %3$s</string>
-    <string name="burn_point_total">%1$s · %2$s kcal</string>
     <string name="burn_stat_active">Aktiivinen keskim.</string>
     <string name="burn_stat_days">Päiviä</string>
     <string name="burn_active_line">aktiivinen %1$s kcal</string>

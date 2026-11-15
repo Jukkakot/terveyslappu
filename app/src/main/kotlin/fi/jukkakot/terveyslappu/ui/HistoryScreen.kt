@@ -221,9 +221,9 @@ private fun PeriodList(
         if (shown.has(SeriesKind.STEPS)) stepsActions.onShown(if (shown.period == Period.All) null else StepsSeries.dates(shown.period, today, null).first)
         if (shown.has(SeriesKind.BURN)) burnActions.onShown(if (shown.period == Period.All) null else BurnSeries.dates(shown.period, today, null).first)
     }
-    // The crosshair of the shown chart page: cleared on a tab or period change and when its day leaves the axis (design 10).
+    // The crosshair of the shown chart page (every Historia chart): cleared on a tab or period change and when its day leaves the axis (design 10).
     var crosshair by rememberSaveable { mutableStateOf<LocalDate?>(null) }
-    LaunchedEffect(pager.currentPage, chart?.period) { crosshair = null }
+    LaunchedEffect(pager.currentPage, chipPeriod) { crosshair = null }
     // The editor: null closed, 0 a new chart, else the chart's id.
     var editor by rememberSaveable(saver = EditorTargetSaver) { mutableStateOf(null) }
     var goTo by remember { mutableStateOf<Int?>(null) }
@@ -326,6 +326,8 @@ private fun PeriodList(
         item(key = "pager") {
             HorizontalPager(pager, verticalAlignment = Alignment.Top) { index ->
                 val shownPage = pages[index]
+                val here = crosshair.takeIf { index == pager.currentPage }
+                val onDay: (LocalDate?) -> Unit = { crosshair = it }
                 if (shownPage is HistoryPage.Custom) {
                     val c = state.charts.firstOrNull { it.id == shownPage.id }
                     if (c != null) {
@@ -344,17 +346,17 @@ private fun PeriodList(
                 } else if (shownPage == HistoryPage.NewChart) {
                     NewChartPage { editor = 0 }
                 } else if (index == STEPS_PAGE) {
-                    StepsTab(steps, stepsSeries, stepsActions)
+                    StepsTab(steps, stepsSeries, stepsActions, here, onDay)
                 } else if (index == BURN_PAGE) {
-                    BurnTab(burn, burnSeries, burnActions)
+                    BurnTab(burn, burnSeries, burnActions, here, onDay)
                 } else if (index == ENERGY_PAGE) {
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
                         food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                        else -> EnergyPage(series) { foodActions.onOpenDay(it) }
+                        else -> EnergyPage(series, here, onDay) { foodActions.onOpenDay(it) }
                     }
                 } else {
-                    QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile)
+                    QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile, here, onDay)
                 }
             }
         }
@@ -424,6 +426,8 @@ private fun QuantityPage(
     zone: ZoneId,
     profile: OwnerProfile,
     onOpenProfile: () -> Unit,
+    crosshair: LocalDate? = null,
+    onDay: (LocalDate?) -> Unit = {},
 ) {
     val value: (WeightEntry) -> Double? = remember(quantity, profile) { { quantity.valueOf(it, profile) } }
     val data = remember(shown, quantity, profile) { ChartData.of(period, shown, now, zone, value) { quantity.scale(it, profile) } }
@@ -447,7 +451,7 @@ private fun QuantityPage(
                     TextButton(onClick = onOpenProfile, modifier = Modifier.testTag("openProfile")) { Text(stringResource(R.string.derived_open_profile)) }
                 }
             } else if (quantity == Quantity.WEIGHT || data == null) {
-                ChartArea(data)
+                ChartArea(data, crosshair, onDay)
             } else {
                                 WeightChart(
                     data,
@@ -456,6 +460,9 @@ private fun QuantityPage(
                     pointLabel = quantity::point,
                     bands = bmiBands(),
                     legend = stringResource(R.string.legend_bmi),
+                    crosshair = crosshair,
+                    onDay = onDay,
+                    zone = zone,
                 )
             }
         }
