@@ -237,7 +237,15 @@ internal fun FoodScreen(
                             Column(Modifier.fillMaxWidth()) {
                                 items.forEachIndexed { i, item ->
                                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    FoodRow(item, ZoneId.systemDefault(), Modifier.clickable { actions.onEdit(item) })
+                                    FoodRow(item, ZoneId.systemDefault(), Modifier.clickable { actions.onEdit(item) }) {
+                                        RowActions(
+                                            stringResource(R.string.food_edit_item, item.name),
+                                            stringResource(R.string.food_delete_item, item.name),
+                                            { actions.onEdit(item) },
+                                            { actions.onDelete(item) },
+                                            "food-${item.uuid}",
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -270,7 +278,7 @@ internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier
     Row(
         modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("food-${item.uuid}"),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -288,8 +296,20 @@ internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (item.kcal != null) FontWeight.SemiBold else FontWeight.Normal,
             color = if (item.kcal != null) colors.onSurface else colors.onSurfaceVariant,
+            modifier = Modifier.padding(end = 8.dp),
         )
         trailing()
+    }
+}
+
+/** The row's end: the pencil (editor) then the red trash (delete with Kumoa), 48 dp each; tags `<tag>-edit` / `<tag>-delete`. */
+@Composable
+internal fun RowActions(editLabel: String, deleteLabel: String, onEdit: () -> Unit, onDelete: () -> Unit, tag: String) {
+    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag("$tag-edit")) {
+        Icon(painterResource(R.drawable.ic_edit), contentDescription = editLabel)
+    }
+    IconButton(onClick = onDelete, modifier = Modifier.size(48.dp).testTag("$tag-delete")) {
+        Icon(painterResource(R.drawable.ic_delete), contentDescription = deleteLabel, tint = MaterialTheme.colorScheme.error)
     }
 }
 

@@ -56,7 +56,7 @@ internal fun ProductList(products: List<Product>, actions: FoodActions) {
         Row(
             Modifier.fillMaxWidth().clickable { editing = p }.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("product-${p.name}"),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Column(Modifier.weight(1f)) {
                 Text(p.name, style = MaterialTheme.typography.bodyLarge)
@@ -64,6 +64,13 @@ internal fun ProductList(products: List<Product>, actions: FoodActions) {
                 Text(line, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (p.treat) TreatSign()
+            RowActions(
+                stringResource(R.string.food_edit_item, p.name),
+                stringResource(R.string.food_product_delete, p.name),
+                { editing = p },
+                { actions.onRemoveProduct(p.key) },
+                "product-${p.name}",
+            )
         }
     }
     editing?.let { p ->

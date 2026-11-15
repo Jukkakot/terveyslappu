@@ -214,6 +214,7 @@ private fun SectionTitle(text: String) {
 /** A row: tap edits; the remove button has its own column at the edge. */
 @Composable
 private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabel: String, tag: String, onEdit: () -> Unit, onRemove: () -> Unit) {
+    val editLabel = stringResource(R.string.food_edit_item, name)
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).clickable(onClick = onEdit).padding(vertical = 6.dp).testTag(tag)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -222,7 +223,10 @@ private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabe
             }
             Text(details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        IconButton(onClick = onRemove, modifier = Modifier.testTag("$tag-remove")) {
+        IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag("$tag-edit")) {
+            Icon(painterResource(R.drawable.ic_edit), contentDescription = editLabel)
+        }
+        IconButton(onClick = onRemove, modifier = Modifier.size(48.dp).testTag("$tag-remove")) {
             Icon(painterResource(R.drawable.ic_delete), contentDescription = removeLabel, tint = MaterialTheme.colorScheme.error)
         }
     }

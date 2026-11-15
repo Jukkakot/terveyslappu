@@ -50,6 +50,8 @@ class FoodScreenTest {
 
     private var picked: Suggestion? = null
     private var editPicked: Suggestion? = null
+    private var editedItem: String? = null
+    private var deletedItem: String? = null
 
     private fun show(start: MainUiState, foodStart: FoodUiState) {
         compose.setContent {
@@ -75,6 +77,8 @@ class FoodScreenTest {
                         onAdd = { food = food.copy(sheetDay = it) },
                         onPick = { picked = it },
                         onEditPick = { editPicked = it },
+                        onEdit = { editedItem = it.name },
+                        onDelete = { deletedItem = it.name },
                         onCloseSheet = { food = food.copy(sheetDay = null) },
                         onClipSkip = { food = food.copy(clipOffer = null) },
                     ),
@@ -127,6 +131,26 @@ class FoodScreenTest {
         compose.onNodeWithTag("clipSkip").performClick()
         compose.onNodeWithTag("clipOffer").assertDoesNotExist()
         compose.onNodeWithTag("foodCard").assertExists()
+    }
+
+    @Test
+    fun `Ruoka rows show a pencil and a trash that act`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
+        compose.onNodeWithTag("food-a-edit").performClick()
+        assertEquals("Rahka", editedItem)
+        compose.onNodeWithTag("food-b-delete").performClick()
+        assertEquals("Pullo", deletedItem)
+    }
+
+    @Test
+    fun `Ruokakirjaus rows show a pencil and a trash that act`() {
+        var removed: String? = null
+        compose.setContent {
+            TerveysTheme { ProductList(listOf(Product("Rahka")), FoodActions(onRemoveProduct = { removed = it })) }
+        }
+        compose.onNodeWithTag("product-Rahka-edit").assertExists()
+        compose.onNodeWithTag("product-Rahka-delete").performClick()
+        assertEquals("rahka", removed?.lowercase())
     }
 
     @Test
