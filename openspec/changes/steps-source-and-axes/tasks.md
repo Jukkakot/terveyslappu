@@ -137,7 +137,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   SPN rule (`android` + SPN, `getCurrentDeviceDataSource`, don't hard-code) and the
   `READ_STEPS`-reads-origins fact, with sources; product.md decision line for the one-source rule;
   roadmap: note the item done. Leave `context/questions.md` alone unless the master says otherwise.
-- [ ] 5.3 Bump MINOR of `appVersion` in `gradle.properties` (MINOR +1) as the last commit; run
+- [x] 5.3 Bump MINOR of `appVersion` in `gradle.properties` (MINOR +1) as the last commit; run
   `./gradlew test lint assembleDebug`.
 
 ## Workflow follow-up
