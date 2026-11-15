@@ -33,6 +33,7 @@ import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.chart.Period
 import fi.jukkakot.terveyslappu.listen.ListenSettings
 import fi.jukkakot.terveyslappu.listen.ListenUi
+import fi.jukkakot.terveyslappu.steps.StepsSourcesUi
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.LocalDateTime
@@ -111,6 +112,7 @@ fun MainScreen(
     baseProducts: List<fi.jukkakot.terveyslappu.food.BaseProduct> = emptyList(),
     steps: StepsUiState = StepsUiState(),
     stepsActions: StepsActions = StepsActions(),
+    stepsSources: StepsSourcesUi = StepsSourcesUi(),
 ) {
     val granted = state.access == Access.GRANTED
     // Historia needs Health Connect; if access went away meanwhile, the home screen explains why.
@@ -119,7 +121,7 @@ fun MainScreen(
     when (screen) {
         Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions, steps, stepsActions)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions, steps, stepsActions)
-        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions)
+        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions, steps, stepsSources, stepsActions)
         Screen.HELP -> HelpScreen(actions)
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)
     }

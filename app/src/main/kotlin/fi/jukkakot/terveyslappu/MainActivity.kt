@@ -127,6 +127,7 @@ class MainActivity : ComponentActivity() {
                     if (foodModel.state.value.access == FoodAccess.NEEDS) grantFood()
                 }
                 val steps by stepsModel.state.collectAsStateWithLifecycle()
+                val stepsSources by stepsModel.sources.collectAsStateWithLifecycle()
                 // steps design 8: only READ_STEPS, asked from the steps card or the Askeleet tab.
                 val stepsLauncher = rememberLauncherForActivityResult(
                     PermissionController.createRequestPermissionResultContract(),
@@ -239,7 +240,12 @@ class MainActivity : ComponentActivity() {
                         onOpen = viewModel::openSteps,
                         onPeriod = viewModel::onStepsPeriod,
                         onShown = stepsModel::show,
+                        onOpenSource = viewModel::openStepsSource,
+                        onChoice = stepsModel::setChoice,
+                        onSourceShown = stepsModel::subScreenShown,
+                        onSourceHidden = stepsModel::subScreenHidden,
                     ),
+                    stepsSources = stepsSources,
                     foodActions = FoodActions(
                         onOpenDay = ::openFoodDay,
                         onAdd = { day ->

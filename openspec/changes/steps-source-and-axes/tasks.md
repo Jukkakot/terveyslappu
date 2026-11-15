@@ -70,7 +70,7 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
 
 ## 3. Asetukset → Askeleet and the Askeleet source line
 
-- [ ] 3.1 `SettingsPage.STEPS`, the row "Askeleet" (`rowSteps`, `ic_walk`) after Ruokakirjaus and
+- [x] 3.1 `SettingsPage.STEPS`, the row "Askeleet" (`rowSteps`, `ic_walk`) after Ruokakirjaus and
   before Ulkoasu with the `StepsLine` text (warning look as the other rows), the sub-screen
   (`stepsSourcePage`) per decision 7: radio rows with Automaattinen + "Nyt: …", one row per app with
   "keskim. N askelta/pv" (and "ei askelia 30 päivään" / "viimeksi d.M." for a no-recent app),
@@ -80,13 +80,13 @@ after each group: `./gradlew test lint assembleDebug`. Commit after each group.
   30-day total, most first; a chosen app missing from the check last. While the source changes, the
   home card and Askeleet show their existing loading state. Back rule unchanged
   (`MainUiState.back()`).
-- [ ] 3.2 Askeleet: the source line (`stepsSource`) whenever access is granted (loading, empty and
+- [x] 3.2 Askeleet: the source line (`stepsSource`) whenever access is granted (loading, empty and
   stale states too), directly under the chart or the empty-period message and above the statistics;
   tap → `withSettings(STEPS, HISTORY)` returning to Askeleet. The empty-period message for one app,
   chosen or Auto-picked: "<app>: ei askelia tällä jaksolla" + "Vaihda lähde" button; All or Auto
   with no pick keeps the connect-Garmin text. The home card only follows the state (no line, its
   empty text unchanged).
-- [ ] 3.3 Smoke tests (`SettingsScreenTest`, `StepsScreenTest`): the row shows "Automaattinen:
+- [x] 3.3 Smoke tests (`SettingsScreenTest`, `StepsScreenTest`): the row shows "Automaattinen:
   Garmin Connect" from the stored pick before any check; "Ei lupaa" for NEEDS and DENIED; the
   sub-screen lists the apps and a tap on an app calls `setChoice`; Askeleet shows the source line
   (also while loading) and its tap opens the sub-screen; Auto-picked app with no steps in the period

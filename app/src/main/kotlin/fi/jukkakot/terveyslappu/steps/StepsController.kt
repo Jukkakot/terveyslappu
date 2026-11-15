@@ -32,6 +32,8 @@ data class StepsSourcesUi(
     val source: StepsSourceState = StepsSourceRules.resolve(StepsChoice.Auto, null, null, false),
     /** Readable name of the app in use (null: all apps). */
     val sourceName: String? = null,
+    /** Readable name of the stored automatic pick (Automaattinen's "Nyt:"), null = none. */
+    val pickName: String? = null,
     /** The list; empty until a check finished in this run. */
     val rows: List<StepsSourceRow> = emptyList(),
     val checking: Boolean = false,
@@ -258,7 +260,7 @@ class StepsController(
             StepsSourceRules.listed(list, choice).map { StepsSourceRow(it.app.id, names(it.app.id), it.total, it.averageExToday, seen[it.app.id]) }
         }.orEmpty()
         val name = src.appId?.let(names)
-        _sources.update { it.copy(choice = choice, source = src, sourceName = name, rows = rows) }
+        _sources.update { it.copy(choice = choice, source = src, sourceName = name, pickName = pick?.let(names), rows = rows) }
         _state.update { it.copy(source = src, sourceName = name) }
     }
 }

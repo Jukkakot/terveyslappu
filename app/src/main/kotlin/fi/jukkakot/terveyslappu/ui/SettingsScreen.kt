@@ -54,6 +54,8 @@ import fi.jukkakot.terveyslappu.data.DataFormat
 import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.steps.StepsSourcesUi
+import fi.jukkakot.terveyslappu.steps.StepsUiState
 import java.time.Instant
 
 /**
@@ -74,12 +76,18 @@ internal fun SettingsScreen(
     listen: ListenUi = ListenUi(),
     food: FoodUiState = FoodUiState(),
     foodActions: FoodActions = FoodActions(),
+    steps: StepsUiState = StepsUiState(),
+    stepsSources: StepsSourcesUi = StepsSourcesUi(),
+    stepsActions: StepsActions = StepsActions(),
 ) {
     val shown = if (page == SettingsPage.DATA && !granted) SettingsPage.LIST else page
     when (shown) {
-        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen, food.products.size)
+        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen, food.products.size, steps, stepsSources)
         SettingsPage.FOOD -> SubPage(R.string.settings_food, actions, snackbar, "foodPage") {
             Section(null) { ProductList(food.products, foodActions) }
+        }
+        SettingsPage.STEPS -> SubPage(R.string.settings_steps, actions, snackbar, "stepsSourcePage") {
+            Section(R.string.steps_source_title) { StepsSourceContent(steps, stepsSources, stepsActions) }
         }
         SettingsPage.PROFILE -> SubPage(R.string.profile_section, actions, snackbar, "profilePage") {
             Section(null) { OwnerFields(profile, heightInHealthConnect, actions.onProfile) }
@@ -177,6 +185,8 @@ private fun SettingsList(
     snackbar: SnackbarHostState,
     listen: ListenUi,
     productCount: Int = 0,
+    steps: StepsUiState = StepsUiState(),
+    stepsSources: StepsSourcesUi = StepsSourcesUi(),
 ) {
     val none = stringResource(R.string.settings_none)
     val male = stringResource(R.string.gender_male)
@@ -211,6 +221,10 @@ private fun SettingsList(
                 }
                 PageRow(R.drawable.ic_restaurant, R.string.settings_food, "rowFood", { actions.onSettingsPage(SettingsPage.FOOD) }) {
                     StateLine(stringResource(R.string.settings_food_line, productCount))
+                }
+                PageRow(R.drawable.ic_walk, R.string.settings_steps, "rowSteps", { actions.onSettingsPage(SettingsPage.STEPS) }) {
+                    val line = SettingsSummary.steps(steps.access, stepsSources.source)
+                    StateLine(stepsLineText(line, stepsSources.sourceName), warn = line.warn)
                 }
                 PageRow(R.drawable.ic_palette, R.string.settings_appearance, "rowAppearance", { actions.onSettingsPage(SettingsPage.APPEARANCE) }) {
                     StateLine(stringResource(R.string.settings_theme_line, stringResource(themeMode.label())))

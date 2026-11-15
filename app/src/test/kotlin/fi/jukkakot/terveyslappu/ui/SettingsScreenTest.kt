@@ -25,6 +25,15 @@ import fi.jukkakot.terveyslappu.backup.BackupStatus
 import fi.jukkakot.terveyslappu.data.DataFormat
 import fi.jukkakot.terveyslappu.profile.Gender
 import fi.jukkakot.terveyslappu.profile.OwnerProfile
+import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsChoice
+import fi.jukkakot.terveyslappu.steps.StepsSourceRow
+import fi.jukkakot.terveyslappu.steps.StepsSourceRules
+import fi.jukkakot.terveyslappu.steps.StepsSourcesUi
+import fi.jukkakot.terveyslappu.steps.StepsUiState
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -51,10 +60,76 @@ class SettingsScreenTest {
         profile: OwnerProfile = OwnerProfile(),
         heightInHc: Boolean = true,
         page: SettingsPage = SettingsPage.LIST,
+        steps: StepsUiState = StepsUiState(),
+        sources: StepsSourcesUi = StepsSourcesUi(),
+        stepsActions: StepsActions = StepsActions(),
     ) {
         compose.setContent {
-            TerveysTheme { SettingsScreen(page, granted, ThemeMode.SYSTEM, profile, heightInHc, backup, "0.1.1-test", actions, SnackbarHostState()) }
+            TerveysTheme {
+                SettingsScreen(page, granted, ThemeMode.SYSTEM, profile, heightInHc, backup, "0.1.1-test", actions, SnackbarHostState(), steps = steps, stepsSources = sources, stepsActions = stepsActions)
+            }
         }
+    }
+
+    private val garmin = "com.garmin.android.apps.connectmobile"
+
+    @Test
+    fun `the list has seven rows in order and Askeleet reads the stored pick`() {
+        val stored = StepsSourceRules.resolve(StepsChoice.Auto, garmin, null, checkedToday = false)
+        show(steps = StepsUiState(access = StepsAccess.GRANTED), sources = StepsSourcesUi(source = stored, sourceName = "Garmin Connect"))
+        val tops = listOf("rowProfile", "rowListen", "rowData", "rowFood", "rowSteps", "rowAppearance", "rowSupport").map {
+            compose.onNodeWithTag(it).assertExists().getBoundsInRoot().top
+        }
+        assertEquals(tops.sorted(), tops)
+        compose.onNodeWithText("Automaattinen: Garmin Connect").assertExists()
+    }
+
+    @Test
+    fun `Askeleet row says Ei lupaa without the permission`() {
+        var access by mutableStateOf(StepsAccess.NEEDS)
+        compose.setContent {
+            TerveysTheme { SettingsScreen(SettingsPage.LIST, true, ThemeMode.SYSTEM, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState(), steps = StepsUiState(access = access)) }
+        }
+        compose.onNodeWithText("Ei lupaa").assertExists()
+        access = StepsAccess.DENIED
+        compose.onNodeWithText("Ei lupaa").assertExists()
+        access = StepsAccess.CHECKING
+        compose.onNodeWithText("Ei lupaa").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the source sub-screen lists the apps and a tap picks one`() {
+        var picked: StepsChoice? = null
+        var shown = 0
+        val rows = listOf(
+            StepsSourceRow(garmin, "Garmin Connect", 150_000, 5_000, null),
+            StepsSourceRow("phone", "Puhelin", 120_000, 10_000, null),
+        )
+        show(
+            page = SettingsPage.STEPS,
+            steps = StepsUiState(access = StepsAccess.GRANTED),
+            sources = StepsSourcesUi(rows = rows, checked = true, pickName = "Garmin Connect"),
+            stepsActions = StepsActions(onChoice = { picked = it }, onSourceShown = { shown++ }),
+        )
+        assertEquals(1, shown)
+        compose.onNodeWithTag("stepsSource-auto").assertIsSelected()
+        compose.onNodeWithText("Nyt: Garmin Connect").assertExists()
+        assertEquals(2, compose.onAllNodesWithText("askelta/pv", substring = true).fetchSemanticsNodes().size)
+        assertTrue(compose.onNodeWithTag("stepsSource-$garmin").getBoundsInRoot().top < compose.onNodeWithTag("stepsSource-phone").getBoundsInRoot().top)
+        compose.onNodeWithTag("stepsSource-phone").performClick()
+        assertEquals(StepsChoice.App("phone"), picked)
+        compose.onNodeWithTag("stepsSource-all").assertExists()
+    }
+
+    @Test
+    fun `the source sub-screen without the permission gives the reason`() {
+        var grants = 0
+        show(page = SettingsPage.STEPS, steps = StepsUiState(access = StepsAccess.NEEDS), stepsActions = StepsActions(onGrant = { grants++ }))
+        compose.onNodeWithTag("stepsReason").assertExists()
+        compose.onNodeWithTag("stepsSourceList").assertDoesNotExist()
+        assertEquals(0, grants)
+        compose.onNodeWithTag("stepsGrant").performClick()
+        assertEquals(1, grants)
     }
 
     @Test

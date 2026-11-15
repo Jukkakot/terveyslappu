@@ -20,6 +20,9 @@ import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.FoodItem
 import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsChoice
+import fi.jukkakot.terveyslappu.steps.StepsSourceRules
+import androidx.compose.ui.test.onNodeWithText
 import fi.jukkakot.terveyslappu.steps.StepsDay
 import fi.jukkakot.terveyslappu.steps.StepsUiState
 import fi.jukkakot.terveyslappu.weight.weightEntry
@@ -57,6 +60,7 @@ class StepsScreenTest {
     }
 
     private var grants = 0
+    private var sourceOpened = 0
     private var shownFrom = mutableListOf<LocalDate?>()
 
     private fun show(start: MainUiState, steps: StepsUiState, food: FoodUiState = FoodUiState(access = FoodAccess.GRANTED, items = foodToday)) {
@@ -77,6 +81,7 @@ class StepsScreenTest {
                         onGrant = { grants++ },
                         onOpen = { state = state.copy(screen = Screen.HISTORY, historyOnSteps = true) },
                         onShown = { shownFrom += it },
+                        onOpenSource = { sourceOpened++ },
                     ),
                 )
             }
@@ -132,6 +137,33 @@ class StepsScreenTest {
         assertTrue(diff in 0.dp..8.dp, "bottoms differ by $diff")
         val topDiff = compose.onNodeWithTag("foodCard").getBoundsInRoot().top - compose.onNodeWithTag("stepsCard").getBoundsInRoot().top
         assertEquals(diff, topDiff)
+    }
+
+    @Test
+    fun `Askeleet shows the source line, also while loading, and its tap opens the setting`() {
+        val garmin = "com.garmin.android.apps.connectmobile"
+        val source = StepsSourceRules.resolve(StepsChoice.Auto, garmin, null, false)
+        show(
+            MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true),
+            StepsUiState(access = StepsAccess.GRANTED, source = source, sourceName = "Garmin Connect"),
+        )
+        compose.onNodeWithText("Lähde: Garmin Connect (automaattinen)").assertExists()
+        compose.onNodeWithTag("stepsSource").performClick()
+        assertEquals(1, sourceOpened)
+    }
+
+    @Test
+    fun `an Auto-picked app without steps in the period offers to change the source`() {
+        val garmin = "com.garmin.android.apps.connectmobile"
+        val source = StepsSourceRules.resolve(StepsChoice.Auto, garmin, null, false)
+        show(
+            MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.WEEK),
+            StepsUiState(access = StepsAccess.GRANTED, days = emptyList(), source = source, sourceName = "Garmin Connect"),
+        )
+        compose.onNodeWithText("Garmin Connect: ei askelia tällä jaksolla").assertExists()
+        compose.onNodeWithTag("stepsChangeSource").performClick()
+        assertEquals(1, sourceOpened)
+        compose.onNodeWithTag("stepsSource").assertExists()
     }
 
     @Test

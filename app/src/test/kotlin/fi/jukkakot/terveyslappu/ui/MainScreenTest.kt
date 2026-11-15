@@ -157,7 +157,7 @@ class MainScreenTest {
     @Test
     fun `an Asetukset row opens its sub-screen and back returns to the list`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.SETTINGS))
-        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowAppearance", "rowSupport")) compose.onNodeWithTag(tag).assertExists()
+        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowFood", "rowSteps", "rowAppearance", "rowSupport")) compose.onNodeWithTag(tag).assertExists()
         compose.onNodeWithTag("rowSupport").performClick()
         compose.onNodeWithTag("shareLog").assertExists()
         compose.onNodeWithTag("back").performClick()

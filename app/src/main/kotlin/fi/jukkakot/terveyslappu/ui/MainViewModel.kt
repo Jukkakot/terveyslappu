@@ -57,7 +57,7 @@ enum class Access { CHECKING, UNAVAILABLE, NEEDS_UPDATE, NEEDS_PERMISSION, DENIE
 enum class Screen { HOME, HISTORY, SETTINGS, HELP, FOOD }
 
 /** Asetukset' list and its sub-screens (settings-list design 1; FOOD = Ruokakirjaus, food-log). */
-enum class SettingsPage { LIST, PROFILE, LISTEN, DATA, FOOD, APPEARANCE, SUPPORT }
+enum class SettingsPage { LIST, PROFILE, LISTEN, DATA, FOOD, STEPS, APPEARANCE, SUPPORT }
 
 data class MainUiState(
     val access: Access = Access.CHECKING,
@@ -132,6 +132,10 @@ data class MainUiState(
     /** A sub-screen (or the list) of Asetukset, opened from [from]. */
     fun withSettings(page: SettingsPage, from: Screen): MainUiState =
         copy(screen = Screen.SETTINGS, settingsPage = page, settingsOrigin = from, historyTarget = null)
+
+    /** Asetukset → Askeleet from the Askeleet source line; back returns to Historia on Askeleet. */
+    fun withStepsSource(): MainUiState =
+        withSettings(SettingsPage.STEPS, screen).copy(historyOnSteps = screen == Screen.HISTORY)
 
     /** The state after a successful read at [at]. */
     fun loaded(entries: List<WeightEntry>, history: HistoryAccess, at: Instant) =
@@ -284,6 +288,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun openSettingsPage(page: SettingsPage) = _state.update { it.withSettings(page, Screen.SETTINGS) }
 
     /** The home backup notice: Tiedot ja varmuuskopio. */
+    fun openStepsSource() = _state.update { it.withStepsSource() }
+
     fun openBackupSettings() = _state.update { it.withSettings(SettingsPage.DATA, Screen.HOME) }
 
     /** The home notice: Historia with the newest "?" weight shown (home-screen). */

@@ -57,6 +57,18 @@ class SettingsBackRuleTest {
     }
 
     @Test
+    fun `the steps source opened from Askeleet returns to Askeleet`() {
+        val opened = MainUiState(screen = Screen.HISTORY).withStepsSource()
+        assertEquals(Screen.SETTINGS, opened.screen)
+        assertEquals(SettingsPage.STEPS, opened.settingsPage)
+        val back = opened.back()
+        assertEquals(Screen.HISTORY, back.screen)
+        assertEquals(true, back.historyOnSteps)
+        val fromList = MainUiState().withSettings(SettingsPage.STEPS, Screen.SETTINGS).back()
+        assertEquals(SettingsPage.LIST, fromList.settingsPage)
+    }
+
+    @Test
     fun `a deep-linked sub-screen returns to its origin`() {
         for (from in listOf(Screen.HOME, Screen.HISTORY)) {
             val back = MainUiState(screen = from).withSettings(SettingsPage.PROFILE, from).back()

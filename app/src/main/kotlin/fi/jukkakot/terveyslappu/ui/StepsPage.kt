@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.steps.StepsAccess
+import fi.jukkakot.terveyslappu.steps.StepsChoice
+import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
 import fi.jukkakot.terveyslappu.steps.StepsDay
 import fi.jukkakot.terveyslappu.steps.StepsSeries
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -66,6 +69,13 @@ class StepsActions(
     val onPeriod: (Long) -> Unit = {},
     /** A screen shows steps from this day (null: Kaikki): read them. */
     val onShown: (LocalDate?) -> Unit = {},
+    /** The source line or "Vaihda lähde": Asetukset → Askeleet (steps-source-and-axes design 7). */
+    val onOpenSource: () -> Unit = {},
+    /** A source picked in Asetukset → Askeleet. */
+    val onChoice: (StepsChoice) -> Unit = {},
+    /** Asetukset → Askeleet entered / left. */
+    val onSourceShown: () -> Unit = {},
+    val onSourceHidden: () -> Unit = {},
 )
 
 /** "6 420": thousands with a narrow no-break space. */
@@ -80,9 +90,33 @@ fun formatSteps(steps: Long): String = NumberFormat.getIntegerInstance(java.util
 internal fun StepsTab(steps: StepsUiState, series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId, actions: StepsActions) {
     when {
         steps.access != StepsAccess.GRANTED -> StepsReason(steps.access, actions)
-        steps.days == null && steps.loadFailed -> StepsBox { StepsMessage(stringResource(R.string.steps_read_failed), "stepsFailed") }
-        steps.days == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        else -> StepsPage(series, weights, zone, steps.stale)
+        steps.days == null && steps.loadFailed -> Column {
+            StepsBox { StepsMessage(stringResource(R.string.steps_read_failed), "stepsFailed") }
+            StepsSourceLine(steps, actions)
+        }
+        steps.days == null -> Column {
+            Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            StepsSourceLine(steps, actions)
+        }
+        else -> StepsPage(series, weights, zone, steps, actions)
+    }
+}
+
+/** The quiet source line under the chart (weight-chart "Askeleet source line"); opens the setting. */
+@Composable
+private fun StepsSourceLine(steps: StepsUiState, actions: StepsActions) {
+    val colors = MaterialTheme.colorScheme
+    val warn = (steps.source.label as? StepsSourceLabel.App)?.noRecent == true
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(onClick = actions.onOpenSource)
+            .padding(horizontal = 20.dp)
+            .testTag("stepsSource"),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Text(stepsSourceLineText(steps), style = MaterialTheme.typography.labelMedium, color = if (warn) colors.error else colors.onSurfaceVariant)
     }
 }
 
@@ -102,9 +136,9 @@ private fun StepsMessage(text: String, tag: String) {
     Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(24.dp).testTag(tag))
 }
 
-/** Askeleet without access: the reason and its buttons (steps "Denied steps permission"). */
+/** Askeleet without access: the reason and its buttons (steps "Denied steps permission"); also Asetukset → Askeleet. */
 @Composable
-private fun StepsReason(access: StepsAccess, actions: StepsActions) {
+internal fun StepsReason(access: StepsAccess, actions: StepsActions) {
     StepsBox {
         Column(
             Modifier.fillMaxWidth().padding(24.dp).testTag("stepsReason"),
@@ -130,16 +164,24 @@ private fun StepsReason(access: StepsAccess, actions: StepsActions) {
 }
 
 @Composable
-private fun StepsPage(series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId, stale: Boolean) {
+private fun StepsPage(series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId, steps: StepsUiState, actions: StepsActions) {
     Column(Modifier.fillMaxWidth().testTag("page-STEPS")) {
         StepsBox {
-            if (series.bars.isEmpty()) {
+            val app = steps.source.appId
+            if (series.bars.isEmpty() && app != null) {
+                // One app as the source, chosen or picked: it has nothing in this period.
+                Column(Modifier.fillMaxWidth().padding(24.dp).testTag("stepsEmpty"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.steps_empty_app, steps.sourceName ?: app), style = MaterialTheme.typography.bodyLarge)
+                    TextButton(onClick = actions.onOpenSource, modifier = Modifier.testTag("stepsChangeSource")) { Text(stringResource(R.string.steps_change_source)) }
+                }
+            } else if (series.bars.isEmpty()) {
                 StepsMessage(stringResource(R.string.steps_empty), "stepsEmpty")
             } else {
                 Box(Modifier.padding(12.dp)) { StepsChart(series, weights, zone) }
             }
         }
-        if (stale) {
+        StepsSourceLine(steps, actions)
+        if (steps.stale) {
             Text(
                 stringResource(R.string.steps_stale),
                 style = MaterialTheme.typography.labelMedium,

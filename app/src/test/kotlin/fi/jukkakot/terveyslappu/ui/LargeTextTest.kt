@@ -60,7 +60,7 @@ class LargeTextTest {
                 SettingsScreen(page, true, ThemeMode.SYSTEM, fi.jukkakot.terveyslappu.profile.OwnerProfile(birthYear = 1990), false, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState())
             }
         }
-        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowAppearance", "rowSupport")) {
+        for (tag in listOf("rowProfile", "rowListen", "rowData", "rowFood", "rowSteps", "rowAppearance", "rowSupport")) {
             compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
         }
         page = SettingsPage.APPEARANCE
