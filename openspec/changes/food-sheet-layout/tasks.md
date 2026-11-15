@@ -2,7 +2,7 @@
 
 ## 1. Card data and Lisää kaikki
 
-- [ ] 1.1 `ClipOffer` preview lines and total from the dry-run plan; unit tests: lines and total match the preview, "+N muuta" after five, products-only lines
+- [x] 1.1 `ClipOffer` preview lines and total from the dry-run plan; unit tests: lines and total match the preview, "+N muuta" after five, products-only lines
 - [ ] 1.2 `FoodViewModel.addAllFromClip()` reads, checks the key, saves via the import path to the shown day, marks done, message with Kumoa; view-model tests: added and offer gone, changed clip saves nothing and refreshes, Kumoa removes items but offer stays gone
 
 ## 2. Sheet layout

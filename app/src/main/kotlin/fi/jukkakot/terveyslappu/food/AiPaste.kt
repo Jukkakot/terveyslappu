@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.food
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -10,12 +11,15 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /** One eaten item of an AI answer; [kcal] is the item's total. */
+@Serializable
 data class AiItem(val name: String, val amount: Amount?, val kcal: Double?, val treat: Boolean)
 
 /** One product the AI answer wants kept; [energy] per 100 g or per piece, [usual] the usual amount. */
+@Serializable
 data class AiProduct(val name: String, val energy: Energy, val usual: Amount?, val treat: Boolean)
 
 /** What was read from a text: the entries and how many were unusable. */
+@Serializable
 data class AiParsed(val items: List<AiItem>, val products: List<AiProduct>, val skipped: Int)
 
 /** Why a text gave nothing: no JSON block found, or a block without a usable entry. */

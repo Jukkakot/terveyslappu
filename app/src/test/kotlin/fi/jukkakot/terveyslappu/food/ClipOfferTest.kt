@@ -91,6 +91,44 @@ class ClipOfferTest {
     }
 
     @Test
+    fun `card lines and total are what the import would write`() {
+        val own = listOf(Product("Rahka", true, Energy(65.0, AmountUnit.G), Amount(200.0, AmountUnit.G)))
+        val parsed = parsed("""{"items":[{"name":"Rahka"},{"name":"Kahvi","kcal":5}]}""")
+        val offer = ClipOffers.offer(parsed, own, emptyList())
+        val plan = AiImport.plan(parsed.items, parsed.products, java.time.LocalDate.now(), emptyList(), own, emptyList(), java.time.Instant.now(), java.time.ZoneId.systemDefault()) { "" }
+        assertEquals(plan.items.map { ClipLine(it.name, it.amount, it.kcal, it.treat) }, offer.lines)
+        assertEquals(ClipLine("Rahka", Amount(200.0, AmountUnit.G), 130.0, true), offer.lines.first())
+        assertEquals(135, offer.kcal)
+        assertEquals(0, offer.more)
+        assertEquals(0, offer.products)
+    }
+
+    @Test
+    fun `five lines then the rest as more`() {
+        val items = (1..7).joinToString(",") { """{"name":"Ruoka $it","kcal":${it * 10}}""" }
+        val offer = ClipOffers.from("""{"items":[$items]}""")!!
+        assertEquals(5, offer.lines.size)
+        assertEquals(2, offer.more)
+        assertEquals(280, offer.kcal)
+    }
+
+    @Test
+    fun `mixed json keeps one line for its products`() {
+        val items = (1..6).joinToString(",") { """{"name":"Ruoka $it","kcal":10}""" }
+        val offer = ClipOffers.from("""{"items":[$items],"products":[{"name":"Lohikeitto","kcal":75}]}""")!!
+        assertEquals(4, offer.lines.size)
+        assertEquals(2, offer.more)
+        assertEquals(1, offer.products)
+    }
+
+    @Test
+    fun `products only lines carry the energy`() {
+        val offer = ClipOffers.from("""{"products":[{"name":"Lohikeitto","kcal":380,"per":"kpl"}]}""")!!
+        assertEquals(listOf(ClipLine("Lohikeitto", null, null, false, Energy(380.0, AmountUnit.KPL))), offer.lines)
+        assertEquals(0, offer.more)
+    }
+
+    @Test
     fun `other text offers nothing`() {
         assertNull(ClipOffers.from("https://example.com/a"))
         assertNull(ClipOffers.from("""{"items":[]}"""))
