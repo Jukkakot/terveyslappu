@@ -20,4 +20,4 @@ Start only after `fixed-tabs-single-data` is merged to `main`.
 
 ## 3. Finish
 
-- [ ] 3.1 Bump `appVersion` to the next MINOR; `./gradlew test lint assembleDebug`
+- [x] 3.1 Bump `appVersion` to the next MINOR; `./gradlew test lint assembleDebug`
