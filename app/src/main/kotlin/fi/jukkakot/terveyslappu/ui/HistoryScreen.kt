@@ -326,12 +326,12 @@ private fun PeriodList(
                 } else if (shownPage == HistoryPage.NewChart) {
                     NewChartPage { editor = 0 }
                 } else if (index == STEPS_PAGE) {
-                    StepsTab(steps, stepsSeries, shown, zone, stepsActions)
+                    StepsTab(steps, stepsSeries, stepsActions)
                 } else if (index == ENERGY_PAGE) {
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
                         food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                        else -> EnergyPage(series, shown, zone) { foodActions.onOpenDay(it) }
+                        else -> EnergyPage(series) { foodActions.onOpenDay(it) }
                     }
                 } else {
                     QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile)

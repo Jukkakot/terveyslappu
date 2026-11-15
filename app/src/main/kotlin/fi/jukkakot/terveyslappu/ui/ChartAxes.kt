@@ -38,7 +38,6 @@ private val LABEL_GAP = 8.dp
 private val COLUMN_PAD = 6.dp
 
 /** Height of the weight line under the bars (steps-source-and-axes design 8). */
-internal val WEIGHT_STRIP = 80.dp
 
 /** "12 000 askelta", "97,5 kg": a y value with at most one decimal. */
 internal fun formatAxisKg(kg: Double): String {

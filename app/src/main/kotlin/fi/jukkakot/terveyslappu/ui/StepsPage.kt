@@ -86,10 +86,10 @@ fun formatSteps(steps: Long): String = NumberFormat.getIntegerInstance(java.util
 
 /**
  * The Askeleet tab (weight-chart "Askeleet chart" … "Askeleet list"): the reason without access,
- * otherwise bars of the days with steps, the 7-day line, the weights under them and the statistics.
+ * otherwise bars of the days with steps, the 7-day line and the statistics.
  */
 @Composable
-internal fun StepsTab(steps: StepsUiState, series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId, actions: StepsActions) {
+internal fun StepsTab(steps: StepsUiState, series: StepsSeries, actions: StepsActions) {
     when {
         steps.access != StepsAccess.GRANTED -> StepsReason(steps.access, actions)
         steps.days == null && steps.loadFailed -> Column {
@@ -100,7 +100,7 @@ internal fun StepsTab(steps: StepsUiState, series: StepsSeries, weights: List<We
             Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             StepsSourceLine(steps, actions)
         }
-        else -> StepsPage(series, weights, zone, steps, actions)
+        else -> StepsPage(series, steps, actions)
     }
 }
 
@@ -166,7 +166,7 @@ internal fun StepsReason(access: StepsAccess, actions: StepsActions) {
 }
 
 @Composable
-private fun StepsPage(series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId, steps: StepsUiState, actions: StepsActions) {
+private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsActions) {
     Column(Modifier.fillMaxWidth().testTag("page-STEPS")) {
         StepsBox {
             val app = steps.source.appId
@@ -179,7 +179,7 @@ private fun StepsPage(series: StepsSeries, weights: List<WeightEntry>, zone: Zon
             } else if (series.bars.isEmpty()) {
                 StepsMessage(stringResource(R.string.steps_empty), "stepsEmpty")
             } else {
-                Box(Modifier.padding(12.dp)) { StepsChart(series, weights, zone) }
+                Box(Modifier.padding(12.dp)) { StepsChart(series) }
             }
         }
         StepsSourceLine(steps, actions)
@@ -196,7 +196,7 @@ private fun StepsPage(series: StepsSeries, weights: List<WeightEntry>, zone: Zon
 }
 
 @Composable
-private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: ZoneId) {
+private fun StepsChart(series: StepsSeries) {
     val colors = MaterialTheme.colorScheme
     val barColor = colors.primary
     val line = colors.onSurface
@@ -207,8 +207,7 @@ private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: Zo
     val maxSteps = ticks.last()
     val description = stringResource(R.string.steps_chart_description, series.bars.size)
     val labels = ticks.map { stringResource(R.string.steps_value, formatSteps(it.toLong())) }
-    val weightData = remember(series.from, series.to, weights, zone) { periodWeights(series.from, series.to, weights, zone) }
-    val labelWidth = axisLabelWidth(labels + weightData?.labels(units = true).orEmpty())
+    val labelWidth = axisLabelWidth(labels)
     // A tapped bar shows its day (a week: its Monday) and steps (weight-chart "Day details").
     var picked by remember(series) { mutableStateOf<StepsDay?>(null) }
     Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }) {
@@ -242,7 +241,6 @@ private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: Zo
                 modifier = Modifier.padding(top = 4.dp, start = labelWidth).testTag("stepsPicked"),
             )
         }
-        weightData?.let { PeriodWeights(series.from, series.to, it, labelWidth, "stepsWeights") }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             Spacer(Modifier.width(labelWidth))
             DateAxis(series.from, series.to, "stepsDates", Modifier.weight(1f))
@@ -251,7 +249,6 @@ private fun StepsChart(series: StepsSeries, weights: List<WeightEntry>, zone: Zo
             buildList {
                 add(LegendEntry(stringResource(R.string.steps_legend), barColor))
                 if (series.average.size > 1) add(LegendEntry(stringResource(R.string.energy_legend_average), line, line = true))
-                if (weightData != null) add(LegendEntry(stringResource(R.string.legend_weight), colors.secondary, line = true))
                 if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
             },
             "stepsLegend",

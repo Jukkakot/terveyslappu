@@ -56,9 +56,9 @@ class LargeTextTest {
         for (period in listOf(fi.jukkakot.terveyslappu.chart.Period.WEEK, fi.jukkakot.terveyslappu.chart.Period.MONTH, fi.jukkakot.terveyslappu.chart.Period.YEAR)) {
             shown = period
             compose.waitForIdle()
-            val boxes = listOf("stepsAxis-", "stepsWeightsAxis-").flatMap { prefix -> (0..2).flatMap { all("$prefix$it") } } +
+            val boxes = listOf("stepsAxis-").flatMap { prefix -> (0..2).flatMap { all("$prefix$it") } } +
                 all("stepsDates-label") + all("stepsLegend-entry")
-            kotlin.test.assertTrue(boxes.size >= 6 + 3 + 3, "$period: ${boxes.size} labels")
+            kotlin.test.assertTrue(boxes.size >= 3 + 3 + 2, "$period: ${boxes.size} labels")
             for (i in boxes.indices) for (j in i + 1 until boxes.size) {
                 kotlin.test.assertFalse(boxes[i].overlaps(boxes[j]), "$period: label $i ${boxes[i]} overlaps label $j ${boxes[j]}")
             }

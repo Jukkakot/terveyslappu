@@ -177,9 +177,9 @@ class StepsScreenTest {
         compose.onNodeWithTag("stepsAxis-2", useUnmergedTree = true).assertExists()
         val dates = compose.onAllNodesWithTag("stepsDates-label", useUnmergedTree = true).fetchSemanticsNodes().size
         assertTrue(dates in 3..5, "$dates dates")
-        compose.onNodeWithTag("stepsWeightsAxis-2", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("stepsLegend").assertExists()
-        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(1)
+        compose.onNodeWithTag("stepsWeights", useUnmergedTree = true).assertDoesNotExist()
+        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(0)
     }
 
     @Test
@@ -192,17 +192,10 @@ class StepsScreenTest {
     }
 
     @Test
-    fun `Energia's legend has paino only with weights in the period`() {
+    fun `Energia has no weight strip or paino entry even with weights in the period`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
         compose.onNodeWithTag("energyLegend").assertExists()
-        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(1)
-    }
-
-    @Test
-    fun `Energia without weights in the period has no paino entry`() {
-        val old = listOf(weightEntry("old", now.minusSeconds(60 * 86_400L), null, 82.0, "me", "me"))
-        show(MainUiState(access = Access.GRANTED, weights = old, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
-        compose.onNodeWithTag("energyLegend").assertExists()
+        compose.onNodeWithTag("energyWeights", useUnmergedTree = true).assertDoesNotExist()
         compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(0)
     }
 
