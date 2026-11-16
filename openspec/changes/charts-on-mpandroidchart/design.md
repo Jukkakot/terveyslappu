@@ -239,3 +239,43 @@ recommendation stands).
 5. **Hint "Napauta päivää nähdäksesi arvot".** **Recommended: drop it** with the readout row (the
    marker appears where the user taps; the chart moves up 48 dp). Alternative: keep it as a quiet
    line under the chart while nothing is chosen.
+
+
+## Review decisions (2026-11-16, override anything above that disagrees)
+
+1. Marker card: a Compose overlay over the whole chart (or the whole panel stack), positioned from
+   the chosen day's pixel x (`getPixelForValues`), clamped to the stack's bounds; it may overlap
+   lower panels. No per-chart `IMarker`. The card is driven by `chosen`, not by library highlights,
+   so a day without a value in the top panel still shows its card.
+2. Highlights: per panel, look up the exact entry of the chosen day and highlight only that exact x
+   (a weight's x includes its time); none → no highlight in that panel.
+3. X labels for ≤ 7 days: granularity 1, not forced, labelCount 7 (as the spike). Longer spans:
+   library placement; the large-text test checks the computed `xAxis.mEntries` for overlap and
+   lowers labelCount until the measured labels fit. Zoomed: the date format follows the visible
+   range (d.M. under 365 visible days).
+4. No `BarData.groupBars`: side-by-side offsets computed in the chart spec (slot 0.7 / n), mapped
+   back to the day with `dayAt(x)`.
+5. `maxHighlightDistance` ~24 dp; tap-again toggle done in our `onValueSelected` (same day as
+   `chosen` → clear). On bar charts a tap on a day without a bar clears.
+6. Gestures: a Compose `pointerInput` consumes horizontal drags inside the plot rect so the pager
+   never sees them; `isDragDecelerationEnabled = false`. Task 4.4's test (drag on the plot keeps
+   the tab) is the gate.
+7. Zoom sync across panels on scale, translate and double-tap with a reentrancy guard; identical
+   content rects (same axis label widths and offsets); test the visible x range.
+8. TalkBack: the announced text lives in its own state, set only on tap, drag end
+   (`onChartGestureEnd`) and actions, not on every drag step or reload; exposed through the host's
+   semantics (`liveRegion` polite + `stateDescription`), never an alpha-0 node; tests read it with
+   `useUnmergedTree`.
+9. Text size: `with(density) { x.sp.toPx() }` / density; the library caps axis and legend text at
+   24 dp, accepted. The overlay card is uncapped.
+10. Own charts' Kulutus row stays "kulutus 2 300 kcal · aktiivinen 450" (no lepo); month/year labels
+    at ≥ 365 days; "readout"/"crosshair" wording in unchanged requirements means the marker card;
+    in Allekkain the legend is a Compose row under the whole stack, outside panel heights.
+11. Message panels (empty, gated) are a Compose Box of the panel height inside the chart host,
+    never a chart; `setNoDataText("")`. Weekly choice = the week's first day inside the period;
+    TalkBack steps by week; a partial week's bar is centred on its days inside the axis. Stacked
+    bars `isHighlightFullBarEnabled = true`.
+12. Build: run `./gradlew assembleRelease` in the cloud too; add keep rules only if needed. Keep the
+    `robolectricRepoUrl` pass-through for native-graphics tests. Default to `AndroidView` unless
+    `MPChartCompose` exposes the chart in `update`. Note in knowledge.md that JitPack outages block a
+    cold CI cache.
