@@ -6,13 +6,13 @@ TBD - created by archiving change help-page. Update Purpose after archive.
 ## Requirements
 
 ### Requirement: Ohje screen
-The home screen's help button SHALL open a scrollable screen "Ohje" in the app theme (light and
+The help button of the front page and of Historia SHALL open a scrollable screen "Ohje" in the app theme (light and
 dark); Asetukset SHALL NOT have an Ohje row. The screen SHALL show a short intro line and then one section per
 feature, each with a title and one to three sentences: the front page (a long-press on a card edits it: order, size, hiding, "Lisää kortti"); weighing from the widget, the Quick Settings
-tile and the launcher shortcut; manual entry; Historia (chart, periods, list); the food log (adding, also from the
+tile, the launcher shortcut and the ⋮ menu; manual entry (⋮ → Lisää paino käsin); Historia (chart, periods, list); the food log (adding from the ⋮ menu, Ruoka, the
 "Lisää annos" widget and launcher shortcut, products, Herkku, the Energia tab, the base products' sources); owner details and BMI; import and export
 (including OKOK .xls); the automatic backup; Jaa loki. It SHALL NOT describe automatic weigh-in.
-Back from Ohje SHALL return to the home screen.
+Back from Ohje SHALL return to the screen it was opened from.
 
 #### Scenario: Opening the guide
 - **WHEN** the user taps the help button on the home screen
@@ -23,8 +23,9 @@ Back from Ohje SHALL return to the home screen.
 - **THEN** it says meals can be added from the Lisää annos widget and the app icon's shortcut
 
 #### Scenario: Back
+- **GIVEN** Ohje was opened from Historia
 - **WHEN** the user presses back on Ohje
-- **THEN** the home screen is shown
+- **THEN** Historia is shown
 
 #### Scenario: Front page editing
 - **WHEN** the user reads the front page section

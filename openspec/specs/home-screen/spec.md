@@ -6,31 +6,28 @@ TBD - created by archiving change main-screen-refresh. Update Purpose after arch
 ## Requirements
 
 ### Requirement: Simple home screen
-The home screen SHALL show, under the help and settings buttons of the top bar, one card per
+The home screen SHALL show, under the top bar (see App menu), one card per
 feature, placed in the user's card grid (see Card grid; by default the weight card on top across the
 whole width, and under it the food card in the left half and the steps card in the right half). The
 home screen with its notices SHALL fit a phone screen in portrait without scrolling in the default
 layout. The home screen SHALL NOT list single weights, SHALL NOT show the BMI, the normal-weight
-range or the automatic weigh-in state, and SHALL have no ⋮ menu and no action outside the cards;
+range or the automatic weigh-in state, and SHALL have no action buttons on the cards (the actions are in the App menu);
 the card edit mode (see Card edit mode) is started from the cards.
 
 The weight card SHALL show, at wide size, the latest weight this app wrote (large, with its date and
 time, the change from the weight before it with a direction sign, not by colour alone), a small line
-chart of the chosen period without axes, and a filled "Punnitse" button that opens the weigh-in
-dialog; it SHALL be the only filled action on the home screen. The small chart SHALL span the whole
+chart of the chosen period without axes. The card SHALL hold no button. The small chart SHALL span the whole
 chosen period ending now, use the weight scale of the weight chart, and show under it the first and
 last day of the period, the first and the latest weight of the period with `kg`, and the change over
 it. Both changes SHALL show a small arrow up for a gain and down for a loss next to the number, and
 no arrow when the shown value is zero. Its small and big looks are in Card sizes. Tapping the weight
-card elsewhere than its button or period label SHALL open Historia; the help button SHALL open Ohje;
-the settings button SHALL open Asetukset.
+card elsewhere than its period label SHALL open Historia; the help button SHALL open Ohje.
 
 Feature cards SHALL follow one pattern (parity, user 2026-11-14): the latest value, a small chart of
-the card's own chosen period, the feature's own quick action inside the card when it has one, and a
+the card's own chosen period, no action button (actions are in the App menu, user 2026-11-16: the front page is a dashboard), and a
 tap that opens its details; a part that means nothing for a quantity is left out. The order, the
 size and whether a card is shown SHALL be the user's (see Card grid). The steps card opens Askeleet
-from anywhere except its period label, unlike the food card's split taps (food has a quick action;
-steps have nothing to add).
+from anywhere except its period label, unlike the food card's split taps (title and number open Ruoka).
 
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
@@ -54,8 +51,9 @@ steps have nothing to add).
 - **THEN** the small chart's line looks flat
 
 #### Scenario: Weigh from the card
-- **WHEN** the user taps Punnitse in the weight card
-- **THEN** the weigh-in dialog opens, and Historia does not open
+- **WHEN** the home screen is shown
+- **THEN** the weight card holds no Punnitse button and its chart takes that room; weighing starts
+  from ⋮ → Punnitse, the widget, the tile or the launcher shortcut
 
 #### Scenario: Fits without scrolling
 - **GIVEN** the default layout, weights, food and steps today and the "?" notice shown, on a phone of
@@ -85,11 +83,11 @@ steps have nothing to add).
 - **THEN** the home screen looks the same as with all details set
 
 #### Scenario: Open Historia
-- **WHEN** the user taps the weight card outside its button and period label
+- **WHEN** the user taps the weight card outside its period label
 - **THEN** Historia opens; back returns to the home screen
 
 #### Scenario: Open Asetukset
-- **WHEN** the user taps the settings button
+- **WHEN** the user taps ⋮ and then Asetukset
 - **THEN** Asetukset opens; back returns to the home screen
 
 #### Scenario: Open Ohje
@@ -98,8 +96,8 @@ steps have nothing to add).
 
 #### Scenario: No weights yet
 - **WHEN** the app has written no weights
-- **THEN** the weight card invites to weigh with its Punnitse button instead of showing a number,
-  and the food and steps cards are still shown
+- **THEN** the weight card reads "Ei vielä painoja" and "Punnitse ⋮-valikosta tai widgetistä"
+  (TalkBack: "Punnitse Lisää toimintoja -valikosta tai widgetistä") instead of a number, and the food and steps cards are still shown
 
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
@@ -109,7 +107,7 @@ steps have nothing to add).
 
 ### Requirement: Historia screen
 Historia SHALL hold the period chips, the chart, the period statistics and the list of this app's
-weights with delete and undo, and an add button in its top bar that opens the manual entry.
+weights with delete and undo, and the App menu in its top bar (manual entry is "Lisää paino käsin" there).
 
 #### Scenario: Historia contents
 - **WHEN** the user opens Historia
@@ -193,13 +191,11 @@ The food card SHALL be built like the weight card: "Syöty tänään" with today
 the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
 days ending today, chosen from its own menu and remembered, 7 by default) with the treats' share in
 its tone as on Energia, and under them the period's first and last day and its average kcal per
-logged day (today left out, as on Energia). Inside the card SHALL be an outlined "+ Annos" that
-opens the add field for today. A tap on the card's title or today's number SHALL open Ruoka on
+logged day (today left out, as on Energia). A tap on the card's title or today's number SHALL open Ruoka on
 today; a tap on the bars or what is under them (not the period label) SHALL open Historia on
 Energia. There SHALL be no change arrow from the previous day and no separate button for today.
-Nothing on the card SHALL be a filled button. At small size the period label and the average SHALL
-share one row (the average shortens to "ka 1 900 kcal/pv", wrapping to two lines when it does not fit) and "+ Annos" SHALL sit on its own row
-under it; all parts SHALL stay readable and tappable (44 dp touch targets). Its wide and big looks
+The card SHALL hold no button (adding is "Lisää annos" in the App menu, the widget or Ruoka). At small size the period label and the average SHALL
+share one row (the average shortens to "ka 1 900 kcal/pv", wrapping to two lines when it does not fit) and the bars take the rest of the height; all parts SHALL stay readable and tappable (44 dp touch targets). Its wide and big looks
 are in Card sizes. The card SHALL be shown also when no weights exist yet; without the nutrition
 permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
 
@@ -213,7 +209,7 @@ permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
 - **THEN** the bars span 30 days, the weight card keeps its own period, and the choice stays after a restart
 
 #### Scenario: Add from the front page
-- **WHEN** the user taps + Annos
+- **WHEN** the user taps ⋮ and then Lisää annos
 - **THEN** the add field opens for today with the keyboard up
 
 #### Scenario: Today's foods
@@ -227,7 +223,7 @@ permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
 #### Scenario: Half width
 - **GIVEN** the food card is small, on a phone of about 6 inches in portrait
 - **WHEN** the front page is shown
-- **THEN** the food card fills its half with its number, bars, period label and + Annos all visible and none cut off
+- **THEN** the food card fills its half with its number, bars and period label all visible and none cut off
 
 #### Scenario: Nothing logged
 - **WHEN** nothing is logged today
@@ -338,19 +334,22 @@ which SHALL be hidden by default (in the default layout too) and is added from "
 ### Requirement: Card sizes
 Every card SHALL have a defined look at each of the three sizes, with nothing cut off and every tap
 target at least 44 dp, at the system's default text size and up to 130 % of it. A card's small
-chart SHALL take the height its size leaves free, so a bigger card has a taller chart. The card's
-own taps, quick actions and period label SHALL work the same at every size.
+chart SHALL take the height its size leaves free, so a bigger card has a taller chart, and its plot
+(the chart's height inside its inset; for an Allekkain own chart the panels together) SHALL be at
+least 56 dp high at every size and text size, so a change in the data reads at a glance (user
+2026-11-16). To make room the small weight card's title SHALL be one line with the day and time
+only ("eilen 7.05", ellipsized), and the change chip SHALL sit under the number. The card's
+own taps and period label SHALL work the same at every size.
 
 - **Weight card.** Wide: as described in Simple home screen. Small: the title row with the latest
   weight's day and time, the latest weight with `kg` and the change chip (under the number when it
   does not fit beside it), the small chart, the first and last day of the period, the period label
-  with the period's change, and the filled Punnitse across the card; the `81,0 → 82,4 kg` range
-  text is left out. Big: the wide look with a taller chart that shows the top and bottom of its
+  with the period's change; the `81,0 → 82,4 kg` range text is left out. Big: the wide look with a taller chart that shows the top and bottom of its
   weight scale with `kg` at its left edge and the weights as dots when they fit (weight-chart "Dots
   when they fit").
 - **Food card.** Small: as described in Food row on the home screen. Wide: the title, today's kcal
   and the treats' share on top, the bars across the full width, then one row with the period label,
-  the average in its long form ("keskim. 1 900 kcal/pv") and "+ Annos" at the row's end. Big: the
+  the average in its long form ("keskim. 1 900 kcal/pv"). Big: the
   wide look with taller bars, the top of the kcal scale (the Energia tab's rule, e.g. "2 500 kcal") at the bars' top left, and
   a dashed line across the bars at the period's average when there is one.
 - **Steps card.** Small: as described in Steps card on the home screen. Wide: the title and today's
@@ -363,12 +362,12 @@ own taps, quick actions and period label SHALL work the same at every size.
 
 #### Scenario: Small weight card
 - **GIVEN** the weight card is small and the latest weight is 82,4 kg, −0,5 kg from the one before
-- **THEN** the card shows 82,4 kg, the change with its arrow, the small chart, the period label and
-  Punnitse, all within the left half
+- **THEN** the card shows 82,4 kg, the change with its arrow, the small chart and the period label,
+  all within the left half
 
 #### Scenario: Wide food card
 - **GIVEN** the food card is wide and 1 900 kcal per logged day is the period's average
-- **THEN** the average reads "keskim. 1 900 kcal/pv" and "+ Annos" sits at the end of the same row
+- **THEN** the average reads "keskim. 1 900 kcal/pv" and no button is on the card
 
 #### Scenario: Big steps card
 - **GIVEN** the steps card is big and the period's highest day has 11 400 steps
@@ -384,14 +383,19 @@ own taps, quick actions and period label SHALL work the same at every size.
 - **WHEN** the default layout is shown
 - **THEN** no text or button of any card is cut off
 
+#### Scenario: A week's spike shows
+- **GIVEN** the weight card is wide, 1 vk, weights 97,3, 97,2, 98,0, 97,2, 97,2, 97,1 and 97,0 kg
+- **THEN** the plot is at least 56 dp high and the 98,0 kg point is at least a quarter of the plot's
+  height above its 97,2 kg neighbours (the 96,5–98,5 kg scale)
+
 ### Requirement: Card edit mode
 A long-press on any part of any card SHALL start edit mode, with a haptic tick, and SHALL NOT also
 trigger what that part does on a tap. Each card SHALL also offer the TalkBack action "Muokkaa
 etusivua". Edit mode SHALL be unmistakable: the top bar SHALL become an edit bar in a different tone
 with "Peruuta" (a close icon) at the start, the title "Muokkaa etusivua" and a "Valmis" text button
-at the end, replacing the help and settings buttons; every card SHALL be drawn at its size with its
+at the end, replacing the help and ⋮ menu buttons; every card SHALL be drawn at its size with its
 real, live content dimmed under an outline, and with a strip across its top holding a drag handle,
-the card's name and a menu button. While editing, the cards' own taps, buttons, period labels and
+the card's name and a menu button. While editing, the cards' own taps, period labels and
 menus SHALL do nothing, and the notices SHALL be hidden.
 
 The card's menu SHALL hold the sizes Pieni, Leveä and Iso (the current one marked), "Siirrä
@@ -411,8 +415,8 @@ background; when any other intent arrives (another screen, the food sheet, the w
 or Health Connect access is lost, edit mode SHALL end first and its edits SHALL be discarded.
 
 #### Scenario: Enter by long-press
-- **WHEN** the user presses and holds the food card's "+ Annos"
-- **THEN** edit mode starts, the add field does not open, and the edit bar reads "Muokkaa etusivua"
+- **WHEN** the user presses and holds the food card's title
+- **THEN** edit mode starts, Ruoka does not open, and the edit bar reads "Muokkaa etusivua"
   with Peruuta and Valmis
 
 #### Scenario: Long-press continues into a drag
@@ -433,7 +437,7 @@ or Health Connect access is lost, edit mode SHALL end first and its edits SHALL 
 
 #### Scenario: Cards inert while editing
 - **GIVEN** edit mode
-- **WHEN** the user taps Punnitse, a period label or the steps card
+- **WHEN** the user taps a period label, the weight card or the steps card
 - **THEN** nothing opens and nothing changes
 
 #### Scenario: Drag a card
@@ -482,7 +486,7 @@ cards (name and icon); choosing one SHALL put it last in the edited layout at th
 close the list. "Lisää kortti" SHALL always be enabled: after the hidden cards it lists the own charts
 not on the front page (added wide) and last "Uusi kaavio" (see Chart cards). A hidden card SHALL NOT be
 shown on the front page and its features SHALL stay reachable elsewhere as before (weigh-in from the
-widget, tile and shortcut; Ruoka and Askeleet from Historia).
+widget, tile, shortcut and the ⋮ menu; Ruoka and Askeleet from Historia).
 
 #### Scenario: Hide a card
 - **GIVEN** edit mode
@@ -585,3 +589,54 @@ on it SHALL open Historia on the chart's tab, and back SHALL return to the front
 #### Scenario: Eaten and burned on a big card
 - **GIVEN** a big card of a chart with Syöty and Kulutus, Päällekkäin, highest day 2 800 kcal
 - **THEN** one scale top "3 500 kcal" is shown, top left, in the neutral tone, and none on the right
+
+### Requirement: App menu
+The front page and Historia SHALL have the same top bar actions: the help button (opens Ohje) and,
+at the end, a ⋮ menu button. The menu SHALL hold, in this order: "Punnitse" (opens the weigh-in
+dialog), "Lisää paino käsin" (opens the manual entry dialog), "Lisää annos" (opens the food add
+sheet for today), a divider, and "Asetukset" (opens Asetukset). Each item SHALL have a leading icon (scale, add,
+cutlery, gear). There SHALL be no settings (gear) button and no add (+) button in either top bar, and
+no action button inside a front page card. The menu SHALL be the same on every Historia tab and SHALL
+NOT be on other screens (Ruoka keeps its own adding). The menu button SHALL be named "Lisää
+toimintoja" for TalkBack.
+
+#### Scenario: Back to where it was opened
+- **GIVEN** Historia is shown
+- **WHEN** the user opens Asetukset, Ohje, the weigh-in dialog or the add sheet from its top bar
+- **THEN** back or closing returns to Historia
+
+#### Scenario: Food always for today
+- **GIVEN** Historia on Syöty with a past day chosen
+- **WHEN** the user taps ⋮ and then Lisää annos
+- **THEN** the add sheet opens for today
+
+#### Scenario: Without Health Connect
+- **GIVEN** Health Connect access is missing
+- **WHEN** the user opens ⋮
+- **THEN** the menu is shown and each item opens its target, which explains and asks for access as
+  it does today
+
+#### Scenario: Edit mode closes the menu
+- **GIVEN** the menu is open
+- **WHEN** edit mode starts or another intent arrives
+- **THEN** the menu closes and the edit bar replaces the help and menu buttons
+
+#### Scenario: Weigh from the menu
+- **WHEN** the user taps ⋮ on the front page and then Punnitse
+- **THEN** the weigh-in dialog opens
+
+#### Scenario: Manual entry from Historia
+- **WHEN** the user taps ⋮ on Historia and then Lisää paino käsin
+- **THEN** the manual entry dialog opens with the date and time set to now
+
+#### Scenario: Add food from the menu
+- **WHEN** the user taps ⋮ on the front page and then Lisää annos
+- **THEN** the add sheet opens for today with the keyboard up
+
+#### Scenario: Settings from the menu
+- **WHEN** the user taps ⋮ and then Asetukset
+- **THEN** Asetukset opens; back returns to the screen the menu was opened on
+
+#### Scenario: No gear or plus
+- **WHEN** the front page or Historia is shown
+- **THEN** its top bar shows the help button and ⋮ only

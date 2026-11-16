@@ -31,7 +31,7 @@ Historia on Energia for 1 vk; back from there SHALL return to the Ruoka screen.
   day on Ruoka
 
 ### Requirement: Adding an item
-"Lisää annos" (on the front page and on the Ruoka screen) SHALL open the add sheet, adding to the
+"Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open the add sheet, adding to the
 day shown (today from the front page). The sheet SHALL take the full height and show the day it
 adds to, with adding kept apart at the bottom.
 

@@ -9,11 +9,11 @@ there, so other health apps on the phone can show them.
 ### Requirement: Enter and save a weight
 The app SHALL let the user enter a weight in kilograms with one decimal, plus a date and time that
 default to the current moment, and save it to Health Connect as a weight record. The form SHALL be
-a dialog opened from the add button ("Lisää paino käsin") in the Historia top bar; no other screen
-shows the form.
+a dialog opened from "Lisää paino käsin" in the ⋮ menu of the front page and Historia (home-screen
+"App menu"); no other screen shows the form.
 
 #### Scenario: Open the form
-- **WHEN** the user taps the add button on Historia
+- **WHEN** the user taps ⋮ and then Lisää paino käsin
 - **THEN** a dialog shows the weight field, date, time and Tallenna, the date and time set to now
 
 #### Scenario: Save a weight for now
