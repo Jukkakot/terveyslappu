@@ -34,7 +34,7 @@ burned only: no eaten energy, no difference, no target.
 The front page SHALL have a card "Kulutus" built like the steps card at every size: title
 "Kulutettu tänään", today's total large with "kcal" beside it in a smaller type, as the food card, with "aktiivinen N kcal" under it, small two-tone daily
 bars of the card's own period (7, 30 or 90 days, its own menu, remembered, 7 by default), the
-period's first and last day and the average total ("keskim. 2 300 kcal/pv", the same long form at
+period's first and last day and the average total ("keskim. 2 300 kcal/pv", "ka 2 300 kcal/pv" at
 small size), the big size's scale top and dashed average line. A tap anywhere but the period label
 SHALL open Historia on Kulutus. Without the permissions it SHALL read "Kulutus: anna lupa" and a
 tap SHALL ask for them. The card SHALL be hidden by default (see home-screen "Card grid"); its default size is small.

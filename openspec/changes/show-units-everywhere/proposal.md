@@ -18,8 +18,8 @@ number shown has its unit next to it, everywhere in the app.
     the home food card, Energia day list.
   - Steps and Kulutus home cards: the big number gets its unit beside it ("askelta", "kcal"), as the
     weight and food cards already have.
-  - Home card averages at small size: "keskim. 1 900/pv" and "2 300/pv" use the long form
-    ("keskim. 1 900 kcal/pv"), wrapping to two lines when needed.
+  - Home card averages at small size: "keskim. 1 900/pv" and "2 300/pv" carry the unit with the
+    short word "ka" ("ka 1 900 kcal/pv", "ka 7 800 askelta/pv"), wrapping to two lines when needed.
   - Historia group rows: "herkkuja ka 230" → "herkkuja ka 230 kcal/pv", "aktiivinen ka 450" →
     "aktiivinen ka 450 kcal/pv".
   - Weight change labels in Historia's list (day rows and group rows): "−0,3" → "−0,3 kg".
