@@ -12,4 +12,4 @@ Rule: the treat tone is `MaterialTheme.colorScheme.tertiary` at full strength (t
 ## 2. Finish
 
 - [x] 2.1 JVM test of the builder from 1.1: the plain text is unchanged and exactly one span with the given colour covers the treat substring; no treat → no span. Existing `foodSum`/`sheetSummary` tag tests stay green. Run `./gradlew test lint assembleDebug`.
-- [ ] 2.2 Bump `appVersion` to 1.49.
+- [x] 2.2 Bump `appVersion` to 1.49.
