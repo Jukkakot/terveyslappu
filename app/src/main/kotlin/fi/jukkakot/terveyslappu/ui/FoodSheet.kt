@@ -356,8 +356,8 @@ private fun SheetHeader(day: LocalDate, today: LocalDate, dayItems: List<FoodIte
                 }
             }
         }
-        val summary = sum?.let { daySummaryText(it) }.orEmpty()
-        if (summary.isNotEmpty()) {
+        val summary = sum?.let { daySummaryText(it) }
+        if (summary != null && summary.isNotEmpty()) {
             Text(
                 summary,
                 style = MaterialTheme.typography.bodyMedium,

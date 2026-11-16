@@ -45,7 +45,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -137,19 +142,29 @@ internal fun dayTitle(day: LocalDate, today: LocalDate = LocalDate.now()): Strin
 
 /** "1 760 kcal · herkkuja 230 · 1 ilman kcal" (food-log "Ruoka day screen"). */
 @Composable
-internal fun daySumText(sum: DaySum): String = buildList {
-    add(stringResource(R.string.food_kcal, formatKcal(sum.total)))
-    addAll(daySummaryParts(sum))
-}.joinToString(" · ")
+internal fun daySumText(sum: DaySum): AnnotatedString = summaryLine(
+    stringResource(R.string.food_kcal, formatKcal(sum.total)),
+    daySummaryTreat(sum), daySummaryWithout(sum), MaterialTheme.colorScheme.tertiary,
+)
 
 /** The sum line without the total ("herkkuja 230 · 1 ilman kcal"); empty when both parts are zero. */
 @Composable
-internal fun daySummaryText(sum: DaySum): String = daySummaryParts(sum).joinToString(" · ")
+internal fun daySummaryText(sum: DaySum): AnnotatedString =
+    summaryLine(null, daySummaryTreat(sum), daySummaryWithout(sum), MaterialTheme.colorScheme.tertiary)
 
 @Composable
-private fun daySummaryParts(sum: DaySum): List<String> = buildList {
-    if (sum.treat > 0) add(stringResource(R.string.food_day_treats, formatKcal(sum.treat)))
-    if (sum.withoutKcal > 0) add(stringResource(R.string.food_day_without, sum.withoutKcal))
+private fun daySummaryTreat(sum: DaySum): String? = if (sum.treat > 0) stringResource(R.string.food_day_treats, formatKcal(sum.treat)) else null
+
+@Composable
+private fun daySummaryWithout(sum: DaySum): String? = if (sum.withoutKcal > 0) stringResource(R.string.food_day_without, sum.withoutKcal) else null
+
+/** The parts joined with " · "; the treat part alone (not the separators) takes [treatColor]. */
+internal fun summaryLine(total: String?, treat: String?, without: String?, treatColor: Color): AnnotatedString = buildAnnotatedString {
+    var first = true
+    fun sep() { if (!first) append(" · "); first = false }
+    total?.let { sep(); append(it) }
+    treat?.let { sep(); withStyle(SpanStyle(color = treatColor)) { append(it) } }
+    without?.let { sep(); append(it) }
 }
 
 /** The reason and grant button shown in place of the food log without the nutrition permission. */

@@ -98,13 +98,19 @@ private fun EnergyStatsTiles(series: EnergySeries) {
         R.string.energy_stat_treats to (s.averageTreat?.let { stringResource(R.string.energy_per_day, formatKcal(it)) } ?: "–"),
         R.string.energy_stat_days to stringResource(R.string.energy_days, s.loggedDays, s.periodDays),
     )
+    val treatTone = (s.averageTreat ?: 0) > 0
     Row(Modifier.fillMaxWidth().padding(16.dp).testTag("energyStats"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         tiles.forEach { (label, value) ->
             Column(
                 Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (label == R.string.energy_stat_treats && treatTone) MaterialTheme.colorScheme.tertiary else Color.Unspecified,
+                )
             }
         }
     }
@@ -119,7 +125,7 @@ internal fun EnergyDayRow(day: EnergyDay, today: LocalDate, depth: Int = 0, onOp
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         if (day.treat > 0) {
-            Text(stringResource(R.string.food_day_treats, formatKcal(day.treat)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.food_day_treats, formatKcal(day.treat)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
             Spacer(Modifier.size(12.dp))
         }
         Text(stringResource(R.string.food_kcal, formatKcal(day.total)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)

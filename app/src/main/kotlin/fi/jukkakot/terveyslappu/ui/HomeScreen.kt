@@ -171,7 +171,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                         Text(
                             stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.onSurfaceVariant,
+                            color = colors.tertiary,
                             modifier = Modifier.align(Alignment.CenterVertically),
                         )
                     }

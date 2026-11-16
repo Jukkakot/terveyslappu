@@ -12,6 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -59,7 +61,7 @@ internal fun groupName(level: GroupLevel, from: LocalDate, to: LocalDate, week: 
  * the secondary average on the second, the open sign.
  */
 @Composable
-internal fun DayGroupRowItem(group: DayNode.Group<*>, main: String, extra: String?, days: Int, open: Boolean, today: LocalDate, depth: Int, onToggle: () -> Unit) {
+internal fun DayGroupRowItem(group: DayNode.Group<*>, main: String, extra: String?, days: Int, open: Boolean, today: LocalDate, depth: Int, extraColor: Color = Color.Unspecified, onToggle: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val name = groupName(group.level, group.from, group.to, group.week, today)
     Row(
@@ -79,7 +81,7 @@ internal fun DayGroupRowItem(group: DayNode.Group<*>, main: String, extra: Strin
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.group_days, days), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                if (extra != null) Text(extra, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                if (extra != null) Text(extra, style = MaterialTheme.typography.bodyMedium, color = extraColor.takeOrElse { colors.onSurfaceVariant })
             }
         }
         Icon(

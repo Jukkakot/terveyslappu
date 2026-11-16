@@ -427,7 +427,7 @@ private fun PeriodList(
                             node,
                             stringResource(R.string.group_avg_kcal, formatKcal(s.main.toDouble())),
                             s.extra?.let { stringResource(R.string.group_avg_treats, formatKcal(it.toDouble())) },
-                            s.days, node.key in openEnergy, today, row.depth,
+                            s.days, node.key in openEnergy, today, row.depth, extraColor = MaterialTheme.colorScheme.tertiary,
                         ) { openEnergy = if (node.key in openEnergy) openEnergy - node.key else openEnergy + node.key }
                     }
                 }
