@@ -39,7 +39,8 @@ None.
 - `home-screen`: steps and burn cards show the unit by the big number; small-size averages carry
   the unit.
 - `energy-burn`: Kulutus readout and card texts carry kcal on every part.
-- `weight-chart`: Historia list change labels carry kg; group averages carry kcal/pv.
+- `weight-chart`: group averages carry kcal/pv; Kulutus own-chart readout carries kcal.
+- `weight-entry`: Historia list change labels (weight rows, group rows) carry kg.
 
 ## Impact
 

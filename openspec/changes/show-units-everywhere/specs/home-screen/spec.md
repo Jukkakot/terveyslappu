@@ -59,7 +59,7 @@ app is resumed and when the home screen is shown.
 #### Scenario: Steps today
 - **GIVEN** Health Connect holds 6 420 steps for today
 - **WHEN** the front page is shown
-- **THEN** the steps card shows 6 420 and a bar per day with steps of the last 7 days
+- **THEN** the steps card shows 6 420 with "askelta" beside it and a bar per day with steps of the last 7 days
 
 #### Scenario: Own period
 - **WHEN** the user picks 30 pv in the steps card's menu

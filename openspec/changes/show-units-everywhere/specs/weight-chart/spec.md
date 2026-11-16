@@ -78,13 +78,3 @@ Details:
 - **WHEN** the user picks another period
 - **THEN** every group is closed
 
-## ADDED Requirements
-
-### Requirement: Units in Historia lists
-Every number in Historia's lists SHALL carry its unit. A weight row's and a weight group row's
-change from the previous weight SHALL read with `kg` ("−0,3 kg", "±0,0 kg"), next to its direction
-arrow as now. BMI values stay without a unit; their "BMI" label names them.
-
-#### Scenario: Change on a weight row
-- **GIVEN** a weight of 82,1 kg follows one of 82,4 kg
-- **THEN** its row in the Historia list shows "−0,3 kg" with an arrow down

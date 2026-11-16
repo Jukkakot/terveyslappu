@@ -10,7 +10,7 @@ for periods over 90 days; the shared axes, period range line and legend ("lepo",
 "keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show, on the chart's marker card, its
 day (or week) and the row "kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal" (a kokonais day
 "kulutus 2 300 kcal", an active-only day "kulutus 465 kcal · aktiivinen 465 kcal", no data "kulutus ei
-tietoa"; a weekly bar the same values of its bar). Under the chart: the average total kcal per
+tietoa"; a weekly bar its averages per day, "keskim. 2 300 kcal/pv · aktiivinen 450 kcal/pv · lepo 1 850 kcal/pv", as food's "keskim. 1 900 kcal/pv"). Under the chart: the average total kcal per
 day, the average active kcal per
 day, and "x / y päivää"; then the days newest first and grouped as in weight-chart "Grouped day lists", each with its date ("Tänään", "Eilen",
 weekday and date as on Askeleet), total kcal and "aktiivinen N kcal". The tab SHALL show energy
