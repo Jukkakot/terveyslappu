@@ -2,22 +2,24 @@
 
 ## 1. App menu
 
-- [ ] 1.1 One shared top bar actions composable (help `IconButton` + `MoreVert` `IconButton` with a Material 3 `DropdownMenu`): Punnitse (scale icon, opens the weigh-in dialog as the old card button did), Lisää paino käsin (opens the manual entry dialog as Historia's "+" did), Lisää annos (opens the add sheet for today as "+ Annos" did), `HorizontalDivider`, Asetukset (opens Asetukset). Menu button content description "Lisää toimintoja". Used on the front page and Historia; the gear and Historia's "+" go. Edit mode's edit bar still replaces it.
-- [ ] 1.2 Back from each target returns to the screen the menu was opened on (existing `MainUiState.back()` rule).
-- [ ] 1.3 Tests: each menu item opens its target from the front page and from Historia; no gear or "+" nodes in either top bar.
+- [ ] 1.1 One shared top bar actions composable (help `IconButton` + `MoreVert` `IconButton` with a Material 3 `DropdownMenu`, content description "Lisää toimintoja"). Items with leading icons from existing drawables: Punnitse (`ic_scale`, opens `WeighInActivity` as the old card button did; log source `main` from the front page, `history` from Historia), Lisää paino käsin (`ic_add`, opens the manual entry dialog), Lisää annos (`ic_restaurant`, add sheet for today, also from Historia's Syöty with a past day), `HorizontalDivider`, Asetukset (`ic_settings`). Used on the front page (also when Health Connect access is missing: targets explain as today) and on every Historia tab; not on other screens. The gear and Historia's "+" go.
+- [ ] 1.2 Lift `ManualEntryDialog` from `HistoryScreen` to `MainScreen` so it opens on either screen; the save confirmation shows on the screen it was opened from; no navigation.
+- [ ] 1.3 Back from every target (Asetukset, Ohje, dialogs, sheet) returns to the screen it was opened from (`MainUiState.back()`); Ohje opened from Historia returns to Historia.
+- [ ] 1.4 Edit mode start and any outside intent close an open menu.
+- [ ] 1.5 Tests: each menu item opens its target from the front page and from Historia; back returns to the opener; no gear or "+" nodes; menu closes when edit mode starts.
 
 ## 2. Cards without buttons
 
-- [ ] 2.1 Weight card: remove Punnitse at every size; the empty state reads "Ei painoja vielä" and "Punnitse ⋮-valikosta tai widgetistä"; the card's tap rules otherwise unchanged.
-- [ ] 2.2 Food card: remove "+ Annos" at every size; the bars take the room; title/number still open Ruoka, bars Historia Energia.
-- [ ] 2.3 Minimum plot height (home-screen "Card sizes"): every card chart's plot (inside its inset) ≥ 56 dp at font scale 1.0 and ≥ 40 dp at 1.3, all sizes and cards (weight, food, steps, Kulutus, own charts). If a card's content cannot fit the row height with that plot, shorten its secondary texts (not the plot) and note what was done here.
-- [ ] 2.4 Tests: plot height ≥ 56 dp for each card at small/wide/big at 1.0 and ≥ 40 dp at 1.3 (Robolectric, about 360 dp wide); no Punnitse/+ Annos nodes on the front page; long-press on the food card's title starts edit mode; the default layout still fits without scrolling (existing test).
+- [ ] 2.1 Weight card: remove Punnitse at every size; empty state "Ei vielä painoja" + "Punnitse ⋮-valikosta tai widgetistä" (content description "Punnitse Lisää toimintoja -valikosta tai widgetistä"); small size: title one line (day and time only, ellipsized), change chip under the number.
+- [ ] 2.2 Food card: remove "+ Annos" at every size; the bars take the room; the period/average row unchanged; title/number still open Ruoka, bars Historia Energia.
+- [ ] 2.3 Minimum plot height 56 dp (chart height minus 2 × inset; Allekkain own charts: panels together) on every card and size at font scale 1.0 and 1.3. If one still cannot fit, stop and report the card and the numbers instead of shrinking the plot.
+- [ ] 2.4 Tests (Robolectric, 360 × 640 dp): plot ≥ 56 dp for each card at small/wide/big at 1.0 and 1.3; the "A week's spike shows" scenario (98,0 kg point ≥ 25 % of the plot height above 97,2 kg); small food card with "1 240 kcal" and the herkkuja line not cut at 1.0 and 1.3; no Punnitse/+ Annos nodes; long-press on the food title starts edit mode; the existing fits-without-scrolling test still passes.
 
 ## 3. Copy
 
-- [ ] 3.1 `strings.xml`: `help_weigh_body` (Punnitse from the ⋮ menu instead of the card button), `help_manual_body` (⋮ → Lisää paino käsin instead of the plus button), `help_food_body` (⋮ → Lisää annos instead of the card button); menu item strings.
+- [ ] 3.1 `strings.xml`: `help_weigh_body` (adds the ⋮ menu), `help_manual_body` (⋮ → Lisää paino käsin instead of the plus button), `help_food_body` (⋮ → Lisää annos instead of the card button); menu item and empty-card strings.
 
 ## 4. Finish
 
 - [ ] 4.1 `./gradlew test lint assembleDebug`
-- [ ] 4.2 Update the CLAUDE.md map if the top bar moves to a new file; product.md decision "front page is a dashboard, actions in ⋮" (user 2026-11-16, reverses the 2026-11-09 no-⋮ rule); bump `appVersion` to 1.53.
+- [ ] 4.2 CLAUDE.md map if the top bar moves to a new file; product.md decision "front page is a dashboard, actions in ⋮" (user 2026-11-16, reverses the 2026-11-09 no-⋮ rule); bump `appVersion` to 1.53.

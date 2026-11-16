@@ -4,11 +4,32 @@
 The front page and Historia SHALL have the same top bar actions: the help button (opens Ohje) and,
 at the end, a ⋮ menu button. The menu SHALL hold, in this order: "Punnitse" (opens the weigh-in
 dialog), "Lisää paino käsin" (opens the manual entry dialog), "Lisää annos" (opens the food add
-sheet for today), a divider, and "Asetukset" (opens Asetukset). There SHALL be no settings (gear)
-button and no add (+) button in either top bar, and no action button inside a front page card. The
-menu button SHALL be named "Lisää toimintoja" for TalkBack. While the front page is in edit mode the
-edit bar replaces the help and menu buttons. Back from a screen opened from the menu SHALL return to
-the screen the menu was opened on.
+sheet for today), a divider, and "Asetukset" (opens Asetukset). Each item SHALL have a leading icon (scale, add,
+cutlery, gear). There SHALL be no settings (gear) button and no add (+) button in either top bar, and
+no action button inside a front page card. The menu SHALL be the same on every Historia tab and SHALL
+NOT be on other screens (Ruoka keeps its own adding). The menu button SHALL be named "Lisää
+toimintoja" for TalkBack.
+
+#### Scenario: Back to where it was opened
+- **GIVEN** Historia is shown
+- **WHEN** the user opens Asetukset, Ohje, the weigh-in dialog or the add sheet from its top bar
+- **THEN** back or closing returns to Historia
+
+#### Scenario: Food always for today
+- **GIVEN** Historia on Syöty with a past day chosen
+- **WHEN** the user taps ⋮ and then Lisää annos
+- **THEN** the add sheet opens for today
+
+#### Scenario: Without Health Connect
+- **GIVEN** Health Connect access is missing
+- **WHEN** the user opens ⋮
+- **THEN** the menu is shown and each item opens its target, which explains and asks for access as
+  it does today
+
+#### Scenario: Edit mode closes the menu
+- **GIVEN** the menu is open
+- **WHEN** edit mode starts or another intent arrives
+- **THEN** the menu closes and the edit bar replaces the help and menu buttons
 
 #### Scenario: Weigh from the menu
 - **WHEN** the user taps ⋮ on the front page and then Punnitse
@@ -123,8 +144,8 @@ from anywhere except its period label, unlike the food card's split taps (title 
 
 #### Scenario: No weights yet
 - **WHEN** the app has written no weights
-- **THEN** the weight card reads "Ei painoja vielä" and "Punnitse ⋮-valikosta tai widgetistä"
-  instead of a number, and the food and steps cards are still shown
+- **THEN** the weight card reads "Ei vielä painoja" and "Punnitse ⋮-valikosta tai widgetistä"
+  (TalkBack: "Punnitse Lisää toimintoja -valikosta tai widgetistä") instead of a number, and the food and steps cards are still shown
 
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
@@ -187,9 +208,11 @@ permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
 Every card SHALL have a defined look at each of the three sizes, with nothing cut off and every tap
 target at least 44 dp, at the system's default text size and up to 130 % of it. A card's small
 chart SHALL take the height its size leaves free, so a bigger card has a taller chart, and its plot
-(inside any inset) SHALL be at least 56 dp high at every size at the default text size and at
-least 40 dp at 130 %, so a change in the data reads at a glance (user 2026-11-16). The card's
-own taps, quick actions and period label SHALL work the same at every size.
+(the chart's height inside its inset; for an Allekkain own chart the panels together) SHALL be at
+least 56 dp high at every size and text size, so a change in the data reads at a glance (user
+2026-11-16). To make room the small weight card's title SHALL be one line with the day and time
+only ("eilen 7.05", ellipsized), and the change chip SHALL sit under the number. The card's
+own taps and period label SHALL work the same at every size.
 
 - **Weight card.** Wide: as described in Simple home screen. Small: the title row with the latest
   weight's day and time, the latest weight with `kg` and the change chip (under the number when it
@@ -235,8 +258,8 @@ own taps, quick actions and period label SHALL work the same at every size.
 
 #### Scenario: A week's spike shows
 - **GIVEN** the weight card is wide, 1 vk, weights 97,3, 97,2, 98,0, 97,2, 97,2, 97,1 and 97,0 kg
-- **THEN** the plot is at least 56 dp high and the 98,0 kg day stands clearly above its neighbours
-  (about a third of the plot's height on the 96,5–98,5 kg scale)
+- **THEN** the plot is at least 56 dp high and the 98,0 kg point is at least a quarter of the plot's
+  height above its 97,2 kg neighbours (the 96,5–98,5 kg scale)
 
 ### Requirement: Card edit mode
 A long-press on any part of any card SHALL start edit mode, with a haptic tick, and SHALL NOT also
@@ -245,7 +268,7 @@ etusivua". Edit mode SHALL be unmistakable: the top bar SHALL become an edit bar
 with "Peruuta" (a close icon) at the start, the title "Muokkaa etusivua" and a "Valmis" text button
 at the end, replacing the help and ⋮ menu buttons; every card SHALL be drawn at its size with its
 real, live content dimmed under an outline, and with a strip across its top holding a drag handle,
-the card's name and a menu button. While editing, the cards' own taps, buttons, period labels and
+the card's name and a menu button. While editing, the cards' own taps, period labels and
 menus SHALL do nothing, and the notices SHALL be hidden.
 
 The card's menu SHALL hold the sizes Pieni, Leveä and Iso (the current one marked), "Siirrä
@@ -328,3 +351,31 @@ or Health Connect access is lost, edit mode SHALL end first and its edits SHALL 
 #### Scenario: Screen reader
 - **GIVEN** TalkBack and edit mode with the order weight, food, steps, food small
 - **THEN** the food card reads "Ruoka, 2/3, pieni" and offers its move, size and hide actions
+
+### Requirement: Hidden cards
+"Piilota" in a card's menu SHALL take the card off the edited layout and SHALL be disabled when it is
+the only shown card. "Lisää kortti" under the grid in edit mode SHALL open a scrolling menu of the hidden
+cards (name and icon); choosing one SHALL put it last in the edited layout at the size it had and
+close the list. "Lisää kortti" SHALL always be enabled: after the hidden cards it lists the own charts
+not on the front page (added wide) and last "Uusi kaavio" (see Chart cards). A hidden card SHALL NOT be
+shown on the front page and its features SHALL stay reachable elsewhere as before (weigh-in from the
+widget, tile, shortcut and the ⋮ menu; Ruoka and Askeleet from Historia).
+
+#### Scenario: Hide a card
+- **GIVEN** edit mode
+- **WHEN** the user picks Piilota on the steps card and taps Valmis
+- **THEN** the front page shows only the weight and food cards
+
+#### Scenario: Bring it back
+- **GIVEN** the steps card is hidden and was small
+- **WHEN** the user taps Lisää kortti in edit mode and picks Askeleet
+- **THEN** the steps card appears last, small, and the menu closes
+
+#### Scenario: Last card stays
+- **GIVEN** weight and food are hidden
+- **WHEN** the user opens the steps card's menu in edit mode
+- **THEN** Piilota is disabled
+
+#### Scenario: Nothing hidden
+- **GIVEN** no card is hidden
+- **THEN** Lisää kortti is disabled

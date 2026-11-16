@@ -13,7 +13,7 @@ shows data; the rare actions move to a ⋮ menu.
 - **BREAKING (look):** the front page and Historia top bars hold the help button and a ⋮ menu:
   Punnitse, Lisää paino käsin, Lisää annos, a divider, Asetukset. The gear and Historia's "+" go.
 - Punnitse leaves the weight card and "+ Annos" the food card; cards show data only.
-- Every card chart's plot is at least 56 dp high (40 dp at 130 % text); the freed room goes to the
+- Every card chart's plot is at least 56 dp high at every size and text size; the freed room goes to the
   charts.
 - The empty weight card points to the menu and the widget instead of its button.
 - Ohje's texts on weighing, manual entry and adding food name the menu.
@@ -28,6 +28,7 @@ shows data; the rare actions move to a ⋮ menu.
 - `weight-entry`: the manual entry opens from the menu.
 - `scale-weigh-in`: the in-app start is the menu's Punnitse.
 - `food-log`: "Lisää annos" in the app is the menu item (and the Ruoka screen).
+- `help-page`: the help button on both screens; Ohje names the menu; back to the opener.
 
 ## Impact
 
