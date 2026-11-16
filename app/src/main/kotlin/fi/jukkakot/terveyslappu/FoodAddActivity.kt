@@ -98,6 +98,9 @@ class FoodAddActivity : ComponentActivity() {
                         onDeleteProduct = model::deleteProduct,
                         onUndoDeleteProduct = model::undoDeleteProduct,
                         onSheetKeyboard = model::setSheetKeyboard,
+                        onEnergyChoice = model::chooseEnergy,
+                        onUndoEnergy = model::undoEnergyLine,
+                        onRetryEnergy = model::retryEnergyLine,
                     ),
                     FoodDialogActions(
                         onGrant = {

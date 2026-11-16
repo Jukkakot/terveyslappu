@@ -7,11 +7,11 @@
 
 ## 2. Saving, dialog, undo
 
-- [ ] 2.1 `ui/FoodViewModel`: fresh read before the plan (design 4), the dialog state for Tallenna and the new-item Lisää (design 5), chunked writes and the X/N failure bar with retry (design 6), Kumoa (design 7), log lines (design 8).
-- [ ] 2.2 Dialog composable (Material 3 `AlertDialog`), used by the item editor (Ruoka, sheet, Lisää annos dialog) and Ruokakirjaus's product editor; strings with `plurals`.
-- [ ] 2.3 Bars: the sheet line ("Päivitetty N kirjausta · Kumoa" in place of the edited item) and `AppSnackbar.showTimed` on Ruoka and Ruokakirjaus.
-- [ ] 2.4 Ruokakirjaus product editor: "Kirjattu N kertaa / 1 kerran" under the energy (nothing when 0 or unknown).
-- [ ] 2.5 Tests with the fake `foodRecords`: all / future / cancel, undo (incl. an item changed again stays), failure + retry, read failure → future; UI smoke: dialog shows on a correction with other items and not on an amount-only save; plural for 1.
+- [x] 2.1 `ui/FoodViewModel`: fresh read before the plan (design 4), the dialog state for Tallenna and the new-item Lisää (design 5), chunked writes and the X/N failure bar with retry (design 6), Kumoa (design 7), log lines (design 8).
+- [x] 2.2 Dialog composable (Material 3 `AlertDialog`), used by the item editor (Ruoka, sheet, Lisää annos dialog) and Ruokakirjaus's product editor; strings with `plurals`.
+- [x] 2.3 Bars: the sheet line ("Päivitetty N kirjausta · Kumoa" in place of the edited item) and `AppSnackbar.showTimed` on Ruoka and Ruokakirjaus.
+- [x] 2.4 Ruokakirjaus product editor: "Kirjattu N kertaa / 1 kerran" under the energy (nothing when 0 or unknown).
+- [x] 2.5 Tests with the fake `foodRecords`: all / future / cancel, undo (incl. an item changed again stays), failure + retry, read failure → future; UI smoke: dialog shows on a correction with other items and not on an amount-only save; plural for 1.
 
 ## 3. Finish
 

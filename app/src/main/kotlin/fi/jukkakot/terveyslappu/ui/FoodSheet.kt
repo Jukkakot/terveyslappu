@@ -87,6 +87,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -517,14 +518,23 @@ private fun SheetLineRow(line: SheetLine, actions: FoodActions, beforeEditor: ()
         SheetLine.Failed -> NoticeLine(stringResource(R.string.food_sheet_failed), MaterialTheme.colorScheme.error, "sheetFailed")
         is SheetLine.ClipSkipped -> UndoLine(stringResource(R.string.ai_clip_skipped), actions.onUndoClipSkip, "sheetClipSkipped", "clipSkipUndo")
         SheetLine.ClipChanged -> NoticeLine(stringResource(R.string.ai_clip_changed), MaterialTheme.colorScheme.onSurfaceVariant, "sheetClipChanged")
+        is SheetLine.EnergyUpdated -> UndoLine(pluralStringResource(R.plurals.food_energy_updated, line.undo.count, line.undo.count), actions.onUndoEnergy, "sheetEnergyUpdated", "energyUndo")
+        is SheetLine.EnergyFailed -> ActionLine(
+            pluralStringResource(R.plurals.food_energy_partial, line.of, line.done, line.of), stringResource(R.string.food_energy_retry), actions.onRetryEnergy, "sheetEnergyFailed", "energyRetry",
+        )
+        SheetLine.EnergyReadFailed -> NoticeLine(stringResource(R.string.food_energy_read_failed), MaterialTheme.colorScheme.onSurfaceVariant, "sheetEnergyReadFailed")
     }
 }
 
 @Composable
-private fun UndoLine(text: String, onUndo: () -> Unit, tag: String, undoTag: String) {
+private fun UndoLine(text: String, onUndo: () -> Unit, tag: String, undoTag: String) =
+    ActionLine(text, stringResource(R.string.undo), onUndo, tag, undoTag)
+
+@Composable
+private fun ActionLine(text: String, label: String, onClick: () -> Unit, tag: String, buttonTag: String) {
     Row(Modifier.fillMaxWidth().testTag(tag), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        TextButton(onClick = onUndo, modifier = Modifier.testTag(undoTag)) { Text(stringResource(R.string.undo)) }
+        TextButton(onClick = onClick, modifier = Modifier.testTag(buttonTag)) { Text(label) }
     }
 }
 

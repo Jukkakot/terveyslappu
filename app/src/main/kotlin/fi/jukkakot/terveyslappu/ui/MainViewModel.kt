@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.ui
 
 import android.app.Application
 import android.net.Uri
+import androidx.annotation.AnyRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -198,7 +199,8 @@ enum class AfterHistory(val format: DataFormat? = null) {
 /** A snackbar action, e.g. Kumoa. */
 class UiAction(@param:StringRes val label: Int, val run: () -> Unit)
 
-data class UiMessage(@param:StringRes val text: Int, val args: List<Any> = emptyList(), val action: UiAction? = null)
+/** A bar message; with [count] [text] is a plurals resource chosen by it. */
+data class UiMessage(@param:AnyRes val text: Int, val args: List<Any> = emptyList(), val action: UiAction? = null, val count: Int? = null)
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 

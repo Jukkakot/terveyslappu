@@ -145,6 +145,7 @@ fun MainScreen(
     if (state.entryOpen) ManualEntryDialog(state, actions)
     if (food.sheetDay != null) AddFoodSheet(food, baseProducts, foodActions)
     food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), foodActions, draft = food.draft != null) }
+    food.energyAsk?.let { EnergyDialog(it, foodActions.onEnergyChoice) }
     food.ai?.let { AiImportPreview(it, foodActions) }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }
 }

@@ -117,6 +117,10 @@ class FoodActions(
     val onUndoDeleteProduct: () -> Unit = {},
     /** The sheet gives way to an editor: whether the keyboard was up (it returns with the sheet), and its reset. */
     val onSheetKeyboard: (Boolean) -> Unit = {},
+    /** The correction dialog's answer, and the sheet line's Kumoa and Yritä uudelleen of a correction (product-energy-fix). */
+    val onEnergyChoice: (EnergyChoice) -> Unit = {},
+    val onUndoEnergy: () -> Unit = {},
+    val onRetryEnergy: () -> Unit = {},
 )
 
 private val finnish = Locale.forLanguageTag("fi")

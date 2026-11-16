@@ -19,6 +19,8 @@ import fi.jukkakot.terveyslappu.food.ClipRead
 import fi.jukkakot.terveyslappu.food.ClipStep
 import fi.jukkakot.terveyslappu.food.AiResult
 import fi.jukkakot.terveyslappu.food.EditInput
+import fi.jukkakot.terveyslappu.food.Energy
+import fi.jukkakot.terveyslappu.food.Recalc
 import fi.jukkakot.terveyslappu.food.FoodDay
 import fi.jukkakot.terveyslappu.food.FoodEdits
 import fi.jukkakot.terveyslappu.food.FoodItem
@@ -69,7 +71,41 @@ sealed interface SheetLine {
 
     /** Ohita on the clipboard card inside the sheet: "Ohitettu · Kumoa". */
     data class ClipSkipped(val offer: ClipOffer) : SheetLine
+
+    /** "Päivitetty <N> kirjausta · Kumoa" after a product's energy correction (product-energy-fix). */
+    data class EnergyUpdated(val undo: EnergyUndo) : SheetLine
+
+    /** "Päivitettiin <X>/<N> kirjausta · Yritä uudelleen": writing the recalculated items failed part way. */
+    data class EnergyFailed(val done: Int, val of: Int, val retry: EnergyRetry) : SheetLine
+
+    /** "Aiempia kirjauksia ei voitu lukea": the correction was saved from now on only. */
+    data object EnergyReadFailed : SheetLine
 }
+
+/** The correction dialog (food-log "Confirming a correction"): N items on D days, their kcal sums, M kept. */
+data class EnergyAsk(val name: String, val count: Int, val days: Int, val oldSum: Int, val newSum: Int, val kept: Int)
+
+/** The dialog's answer: Päivitä kaikki, Vain jatkossa, Peruuta. */
+enum class EnergyChoice { ALL, FUTURE, CANCEL }
+
+/**
+ * What Kumoa of a correction restores (design 7): the product's [old] energy if it still holds [new],
+ * the edited item as it was ([editedBefore]) or the added item gone ([addedUuid]), and the
+ * recalculated items whose kcal is still amount × new.
+ */
+class EnergyUndo(
+    val productKey: String,
+    val old: Energy,
+    val new: Energy,
+    val editedBefore: FoodItem?,
+    val addedUuid: String?,
+    val recalc: Recalc,
+) {
+    val count: Int get() = recalc.new.size
+}
+
+/** Yritä uudelleen (design 6): the recalculation from the items as they are now, for these product keys. */
+class EnergyRetry(val keys: Set<String>, val except: String?, val undo: EnergyUndo)
 
 data class FoodUiState(
     val access: FoodAccess = FoodAccess.CHECKING,
@@ -98,6 +134,10 @@ data class FoodUiState(
     val clipOffer: ClipOffer? = null,
     /** The keyboard was up when an editor replaced the sheet: it comes back with the sheet (food-log "Adding an item", Keyboard). */
     val sheetKeyboard: Boolean = false,
+    /** The correction dialog over the editor, null = none. */
+    val energyAsk: EnergyAsk? = null,
+    /** Counts Ruokakirjaus product saves that finished after a correction check: the product editor closes on each. */
+    val productSaves: Int = 0,
 ) {
     /** The latest add (the Muuta · Kumoa line). */
     val lastAdded: FoodItem? get() = (line as? SheetLine.Added)?.item
@@ -537,9 +577,14 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val current = _state.value
         val pick = current.draft ?: return
         val day = current.editReturn ?: current.sheetDay ?: LocalDate.now()
-        _state.update { leaveEditor(it, it.line).copy(query = "") }
         val now = Instant.now()
         val uuid = UUID.randomUUID().toString()
+        val preview = FoodEdits.addEdited(day, current.items.orEmpty(), pick, input, store.all(), base, now, ZoneId.systemDefault(), uuid).others.product
+        correction(preview)?.let { (p, before) ->
+            correct(Correction(SaveKind.DRAFT, p.name, p.key, p.key, before, p.energy!!, uuid, input = input, pick = pick, day = day, now = now, uuid = uuid))
+            return
+        }
+        _state.update { leaveEditor(it, it.line).copy(query = "") }
         val fields = arrayOf<Pair<String, Any?>>("from" to source, "kind" to "edited")
         terveys.appScope.launch {
             writes.withLock {
@@ -573,6 +618,11 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     fun saveEdit(item: FoodItem, input: EditInput) {
         val current = _state.value
         val plan = FoodEdits.edit(item, input, current.items.orEmpty(), store.all(), base)
+        correction(plan.product)?.let { (p, before) ->
+            val known = withRecordIds(listOf(item)).single()
+            correct(Correction(SaveKind.EDIT, p.name, p.key, p.key, before, p.energy!!, item.uuid, item = known, input = input))
+            return
+        }
         val edited = plan.new.firstOrNull { it.uuid == item.uuid } ?: item
         // Only the line's own item moves the line; editing another item leaves it as it was.
         _state.update { s -> leaveEditor(s, if (s.lastAdded?.uuid == item.uuid) SheetLine.Added(edited) else s.line) }
@@ -640,8 +690,252 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             _messages.tryEmit(UiMessage(R.string.food_product_exists, listOf(product.name)))
             return false
         }
+        val before = store.all().firstOrNull { it.key == oldKey }?.energy
+        if (FoodEdits.isCorrection(before, product.energy)) {
+            // The editor stays open until the check (and the dialog) decide; productSaves closes it.
+            correct(Correction(SaveKind.PRODUCT, product.name, oldKey, product.key, before!!, product.energy!!, null, oldKey = oldKey, product = product))
+            return false
+        }
         apply(FoodEdits.product(oldKey, product, _state.value.items.orEmpty()), "food.edit", oldKey)
         return true
+    }
+
+    /** Where a correction is saved from (design 5). */
+    private enum class SaveKind { EDIT, DRAFT, PRODUCT }
+
+    /**
+     * A correction waiting for the read and the dialog: [key] the items' product key before the save,
+     * [productKey] after it; the rest rebuilds the save's own plan from fresh items.
+     */
+    private class Correction(
+        val kind: SaveKind,
+        val name: String,
+        val key: String,
+        val productKey: String,
+        val old: Energy,
+        val new: Energy,
+        val except: String?,
+        val item: FoodItem? = null,
+        val input: EditInput? = null,
+        val pick: Suggestion? = null,
+        val day: LocalDate? = null,
+        val now: Instant? = null,
+        val uuid: String? = null,
+        val oldKey: String? = null,
+        val product: Product? = null,
+    )
+
+    private var checking = false
+    private var pending: Pair<Correction, Recalc>? = null
+
+    /** The planned product and its energy before, when the save corrects an own product's energy (design 1). */
+    private fun correction(product: Product?): Pair<Product, Energy>? {
+        val p = product ?: return null
+        val before = store.find(p.name)?.energy ?: return null
+        return if (FoodEdits.isCorrection(before, p.energy)) p to before else null
+    }
+
+    /**
+     * A correction (design 4–5): reads the items fresh under the write lock; with other items to
+     * change the dialog asks, otherwise (or when the read fails) it saves as today.
+     */
+    private fun correct(c: Correction) {
+        if (checking || pending != null) return
+        checking = true
+        terveys.appScope.launch {
+            writes.withLock {
+                val started = System.nanoTime()
+                val fresh = runCatching { foods.own(Instant.now()) }
+                    .onFailure { AppLog.e("food.read", it, "failed", "ms" to msSince(started)) }
+                    .getOrNull()
+                checking = false
+                if (fresh == null) {
+                    AppLog.i("food.product.energy", "", "choice" to "future", "reason" to "read")
+                    saveCorrection(c, _state.value.items.orEmpty(), null)
+                    energyBar(SheetLine.EnergyReadFailed, UiMessage(R.string.food_energy_read_failed))
+                    return@withLock
+                }
+                _state.update { it.copy(items = fresh, loadFailed = false) }
+                val r = FoodEdits.recalc(c.key, c.old, c.new, fresh, c.except)
+                if (r.new.isEmpty()) {
+                    saveCorrection(c, fresh, null)
+                    return@withLock
+                }
+                pending = c to r
+                _state.update { it.copy(energyAsk = EnergyAsk(c.name, r.new.size, r.days, r.oldSum, r.newSum, r.kept)) }
+            }
+        }
+    }
+
+    /** The dialog's answer: Peruuta leaves the editor open with nothing written. */
+    fun chooseEnergy(choice: EnergyChoice) {
+        val (c, r) = pending ?: return
+        pending = null
+        _state.update { it.copy(energyAsk = null) }
+        AppLog.i("food.product.energy", "", "choice" to choice.name.lowercase(), "items" to r.new.size, "kept" to r.kept, "days" to r.days)
+        if (choice == EnergyChoice.CANCEL) return
+        terveys.appScope.launch {
+            writes.withLock { saveCorrection(c, _state.value.items.orEmpty(), r.takeIf { choice == EnergyChoice.ALL }) }
+        }
+    }
+
+    /**
+     * Saves [c] as today (product, rename, Herkku, fills) from [items], with [recalc]'s items on top
+     * when given (Päivitä kaikki). Runs under the write lock. The editor closes first.
+     */
+    private suspend fun saveCorrection(c: Correction, items: List<FoodItem>, recalc: Recalc?) {
+        val zone = ZoneId.systemDefault()
+        var added: FoodItem? = null
+        val plan = when (c.kind) {
+            SaveKind.EDIT -> FoodEdits.edit(c.item!!, c.input!!, items, store.all(), base)
+            SaveKind.DRAFT -> FoodEdits.addEdited(c.day!!, items, c.pick!!, c.input!!, store.all(), base, c.now!!, zone, c.uuid!!).let {
+                added = it.item
+                it.others
+            }
+            SaveKind.PRODUCT -> FoodEdits.product(c.oldKey!!, c.product!!, items)
+        }
+        plan.product?.let { p -> if (c.kind == SaveKind.PRODUCT) store.replace(c.oldKey!!, p) else store.put(p) }
+        val merged = FoodEdits.merge(plan, recalc, items)
+        val edited = c.item?.let { i -> merged.new.firstOrNull { it.uuid == i.uuid } ?: i }
+        _state.update { s ->
+            val byUuid = merged.new.associateBy { it.uuid }
+            val left = when (c.kind) {
+                SaveKind.EDIT -> leaveEditor(s, if (s.lastAdded?.uuid == c.item!!.uuid) SheetLine.Added(edited!!) else s.line)
+                SaveKind.DRAFT -> leaveEditor(s, s.line).copy(query = "", line = SheetLine.Added(added!!))
+                SaveKind.PRODUCT -> s.copy(productSaves = s.productSaves + 1)
+            }
+            left.copy(items = s.items.orEmpty().map { byUuid[it.uuid] ?: it } + listOfNotNull(added), products = store.all())
+        }
+        val recalced = recalc?.new?.map { it.uuid }?.toSet().orEmpty()
+        val old = withRecordIds(merged.old)
+        val ownOld = old.filter { it.uuid !in recalced }
+        val ownNew = merged.new.filter { it.uuid !in recalced }
+        val event = if (c.kind == SaveKind.DRAFT) "food.add" else "food.edit"
+        val fields = if (c.kind == SaveKind.DRAFT) arrayOf<Pair<String, Any?>>("from" to source, "kind" to "edited") else arrayOf("items" to ownNew.size)
+        val started = System.nanoTime()
+        val wrote = runCatching {
+            added?.let { foods.insert(listOf(it)) }
+            if (ownNew.isNotEmpty()) foods.replace(ownOld, ownNew)
+        }
+            .onSuccess { if (added != null || ownNew.isNotEmpty()) AppLog.i(event, "ok", *fields, "ms" to msSince(started)) }
+            .onFailure { AppLog.e(event, it, "failed", *fields, "ms" to msSince(started)) }
+            .isSuccess
+        if (!wrote) {
+            failed()
+            load()
+            return
+        }
+        if (recalc != null && recalc.new.isNotEmpty()) {
+            val undo = EnergyUndo(c.productKey, c.old, c.new, c.item.takeIf { c.kind == SaveKind.EDIT }, added?.uuid, recalc)
+            val retry = EnergyRetry(setOf(c.key, c.productKey), c.except, undo)
+            writeRecalc(old.filter { it.uuid in recalced }, merged.new.filter { it.uuid in recalced }, retry)
+        }
+        terveys.backup.request("food")
+        changed()
+        load()
+    }
+
+    /** Writes recalculated items in chunks (design 6) and shows the bar: Päivitetty · Kumoa, or X/N · Yritä uudelleen. */
+    private suspend fun writeRecalc(old: List<FoodItem>, new: List<FoodItem>, retry: EnergyRetry) {
+        val started = System.nanoTime()
+        val oldBy = old.associateBy { it.uuid }
+        var done = 0
+        var error: Throwable? = null
+        for (chunk in new.chunked(RECALC_CHUNK)) {
+            error = runCatching { foods.replace(chunk.mapNotNull { oldBy[it.uuid] }, chunk) }.exceptionOrNull()
+            if (error != null) break
+            done += chunk.size
+        }
+        if (error == null) {
+            AppLog.i("food.product.energy", "ok", "done" to done, "of" to new.size, "ms" to msSince(started))
+            val undo = retry.undo
+            energyBar(
+                SheetLine.EnergyUpdated(undo),
+                UiMessage(R.plurals.food_energy_updated, listOf(undo.count), UiAction(R.string.undo) { undoEnergy(undo) }, count = undo.count),
+            )
+        } else {
+            AppLog.e("food.product.energy", error, "failed", "done" to done, "of" to new.size, "cause" to error.javaClass.simpleName)
+            energyBar(
+                SheetLine.EnergyFailed(done, new.size, retry),
+                UiMessage(R.plurals.food_energy_partial, listOf(done, new.size), UiAction(R.string.food_energy_retry) { retryEnergy(retry) }, count = new.size),
+            )
+        }
+    }
+
+    /** The bar where the edit was made: the sheet's line while a sheet is open, else the app bar. */
+    private fun energyBar(line: SheetLine, message: UiMessage) {
+        if (_state.value.sheetDay != null) _state.update { it.copy(line = line) } else _messages.tryEmit(message)
+    }
+
+    /** The sheet line's Kumoa of a correction. */
+    fun undoEnergyLine() {
+        val undo = (_state.value.line as? SheetLine.EnergyUpdated)?.undo ?: return
+        _state.update { it.copy(line = null) }
+        undoEnergy(undo)
+    }
+
+    /** The sheet line's Yritä uudelleen. */
+    fun retryEnergyLine() {
+        val retry = (_state.value.line as? SheetLine.EnergyFailed)?.retry ?: return
+        _state.update { it.copy(line = null) }
+        retryEnergy(retry)
+    }
+
+    /** Yritä uudelleen (design 6): recalculates from the items as they are now; updated items no longer match and are skipped. */
+    private fun retryEnergy(retry: EnergyRetry) {
+        terveys.appScope.launch {
+            writes.withLock {
+                val fresh = runCatching { foods.own(Instant.now()) }.onFailure { AppLog.e("food.read", it, "failed") }.getOrNull()
+                if (fresh == null) {
+                    failed()
+                    return@withLock
+                }
+                val u = retry.undo
+                val plans = retry.keys.map { FoodEdits.recalc(it, u.old, u.new, fresh, retry.except) }
+                val old = plans.flatMap { it.old }.distinctBy { it.uuid }
+                val new = plans.flatMap { it.new }.distinctBy { it.uuid }
+                writeRecalc(old, new, retry)
+                terveys.backup.request("food")
+                changed()
+                load()
+            }
+        }
+    }
+
+    /** Kumoa of a correction (design 7), against the items read now. */
+    private fun undoEnergy(u: EnergyUndo) {
+        terveys.appScope.launch {
+            writes.withLock {
+                val fresh = runCatching { foods.own(Instant.now()) }.onFailure { AppLog.e("food.read", it, "failed") }.getOrNull()
+                if (fresh == null) {
+                    failed()
+                    return@withLock
+                }
+                store.all().firstOrNull { it.key == u.productKey }?.takeIf { it.energy == u.new }?.let { store.put(it.copy(energy = u.old)) }
+                val back = FoodEdits.undoRecalc(u.recalc, fresh)
+                val byUuid = fresh.associateBy { it.uuid }
+                val old = back.old.toMutableList()
+                val new = back.new.toMutableList()
+                u.editedBefore?.let { b -> byUuid[b.uuid]?.takeIf { it.copy(recordId = null) != b.copy(recordId = null) }?.let { cur -> old += cur; new += b } }
+                val drop = u.addedUuid?.let { byUuid[it]?.recordId }
+                runCatching {
+                    if (drop != null) foods.delete(listOf(drop))
+                    val oldBy = old.associateBy { it.uuid }
+                    new.chunked(RECALC_CHUNK).forEach { chunk -> foods.replace(chunk.mapNotNull { oldBy[it.uuid] }, chunk) }
+                }
+                    .onSuccess {
+                        AppLog.i("food.product.energy", "undo", "items" to back.new.size)
+                        terveys.backup.request("food")
+                        changed()
+                    }
+                    .onFailure {
+                        AppLog.e("food.product.energy", it, "undo failed", "items" to back.new.size)
+                        failed()
+                    }
+                _state.update { it.copy(products = store.all()) }
+                load()
+            }
+        }
     }
 
     /** Poista tuote under Asetukset → Ruokakirjaus: at once, "<name> poistettu · Kumoa" brings it back as it was. */
@@ -713,6 +1007,9 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun msSince(startNanos: Long): Long = (System.nanoTime() - startNanos) / 1_000_000
 }
+
+/** Recalculated items are written this many records at a time (design 6). */
+private const val RECALC_CHUNK = 500
 
 private val clipJson = Json
 private val doneSerializer = ListSerializer(String.serializer())

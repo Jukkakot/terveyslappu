@@ -53,6 +53,7 @@ internal fun FoodAddDialog(food: FoodUiState, base: List<BaseProduct>, actions: 
         }
     }
     food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), actions, draft = food.draft != null) }
+    food.energyAsk?.let { EnergyDialog(it, actions.onEnergyChoice) }
 }
 
 @Composable

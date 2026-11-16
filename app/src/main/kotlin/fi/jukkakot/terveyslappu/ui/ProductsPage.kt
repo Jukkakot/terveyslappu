@@ -21,6 +21,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,13 +37,16 @@ import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.Energy
+import fi.jukkakot.terveyslappu.food.FoodItem
 import fi.jukkakot.terveyslappu.food.FoodNames
 import fi.jukkakot.terveyslappu.food.Product
 
 /** Ruokakirjaus in Asetukset (food-log "Ruokakirjaus in Asetukset"): the own products, edit and remove. */
 @Composable
-internal fun ProductList(products: List<Product>, actions: FoodActions) {
+internal fun ProductList(products: List<Product>, actions: FoodActions, items: List<FoodItem>? = null, saves: Int = 0) {
     var editing by remember { mutableStateOf<Product?>(null) }
+    // A save that waited for the correction check (and its dialog) closes the editor when done.
+    LaunchedEffect(saves) { editing = null }
     val sorted = remember(products) { products.sortedBy { it.key } }
     if (sorted.isEmpty()) {
         Text(
@@ -76,6 +81,7 @@ internal fun ProductList(products: List<Product>, actions: FoodActions) {
     editing?.let { p ->
         ProductEditor(
             p,
+            uses = items?.count { it.key == p.key },
             onSave = { new -> if (actions.onSaveProduct(p.key, new)) editing = null },
             onRemove = {
                 actions.onRemoveProduct(p.key)
@@ -93,7 +99,7 @@ private fun show(value: Double?): String = value?.let { if (it % 1.0 == 0.0) it.
 /** Name, energy (per kpl or per 100 g), usual amount, Herkku; Poista tuote. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ProductEditor(product: Product, onSave: (Product) -> Unit, onRemove: () -> Unit, onDismiss: () -> Unit) {
+private fun ProductEditor(product: Product, uses: Int?, onSave: (Product) -> Unit, onRemove: () -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf(product.name) }
     var unit by remember { mutableStateOf(product.energy?.per ?: product.lastAmount?.unit ?: AmountUnit.KPL) }
     var kcal by remember { mutableStateOf(show(product.energy?.kcal)) }
@@ -117,6 +123,9 @@ private fun ProductEditor(product: Product, onSave: (Product) -> Unit, onRemove:
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().testTag("productKcal"),
                 )
+                if (uses != null && uses > 0) {
+                    Text(pluralStringResource(R.plurals.food_product_uses, uses, uses), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("productUses"))
+                }
                 OutlinedTextField(
                     usual, { usual = it },
                     label = { Text(stringResource(R.string.food_product_usual) + " (" + stringResource(if (unit == AmountUnit.KPL) R.string.food_unit_kpl else R.string.food_unit_g) + ")") },

@@ -240,7 +240,8 @@ class MainActivity : ComponentActivity() {
                     merge(viewModel.messages, foodModel.messages).collect { message ->
                         launch {
                             val result = snackbar.showTimed(
-                                getString(message.text, *message.args.toTypedArray()),
+                                message.count?.let { resources.getQuantityString(message.text, it, *message.args.toTypedArray()) }
+                                    ?: getString(message.text, *message.args.toTypedArray()),
                                 message.action?.let { getString(it.label) },
                             )
                             if (result == SnackbarResult.ActionPerformed) message.action?.run?.invoke()
@@ -330,6 +331,9 @@ class MainActivity : ComponentActivity() {
                         onDeleteProduct = foodModel::deleteProduct,
                         onUndoDeleteProduct = foodModel::undoDeleteProduct,
                         onSheetKeyboard = foodModel::setSheetKeyboard,
+                        onEnergyChoice = foodModel::chooseEnergy,
+                        onUndoEnergy = foodModel::undoEnergyLine,
+                        onRetryEnergy = foodModel::retryEnergyLine,
                         onAiEdit = foodModel::setAi,
                         onAiCancel = foodModel::cancelAi,
                         onAiAdd = {

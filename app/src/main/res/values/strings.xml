@@ -346,6 +346,37 @@
     <string name="food_edit_before_add">Muokkaa ennen lisäystä</string>
     <string name="food_energy_unknown">kcal ei tiedossa</string>
     <string name="food_products_empty">Omia tuotteita ei vielä ole. Jokaisesta kirjaamastasi nimestä tulee tuote tänne.</string>
+    <!-- product-energy-fix: correcting a product's energy. -->
+    <string name="food_energy_title">Päivitetäänkö aiemmat kirjaukset?</string>
+    <string name="food_energy_line">%1$s: %2$s %3$s, yhteensä %4$s → %5$s kcal</string>
+    <plurals name="food_energy_items">
+        <item quantity="one">%1$d kirjaus</item>
+        <item quantity="other">%1$d kirjausta</item>
+    </plurals>
+    <plurals name="food_energy_days">
+        <item quantity="one">%1$d päivältä</item>
+        <item quantity="other">%1$d päivältä</item>
+    </plurals>
+    <plurals name="food_energy_kept">
+        <item quantity="one">%1$d itse annettu kirjaus pysyy ennallaan</item>
+        <item quantity="other">%1$d itse annettua kirjausta pysyy ennallaan</item>
+    </plurals>
+    <string name="food_energy_all">Päivitä kaikki</string>
+    <string name="food_energy_future">Vain jatkossa</string>
+    <plurals name="food_energy_updated">
+        <item quantity="one">Päivitetty %1$d kirjaus</item>
+        <item quantity="other">Päivitetty %1$d kirjausta</item>
+    </plurals>
+    <plurals name="food_energy_partial">
+        <item quantity="one">Päivitettiin %1$d/%2$d kirjaus</item>
+        <item quantity="other">Päivitettiin %1$d/%2$d kirjausta</item>
+    </plurals>
+    <string name="food_energy_retry">Yritä uudelleen</string>
+    <string name="food_energy_read_failed">Aiempia kirjauksia ei voitu lukea</string>
+    <plurals name="food_product_uses">
+        <item quantity="one">Kirjattu %1$d kerran</item>
+        <item quantity="other">Kirjattu %1$d kertaa</item>
+    </plurals>
     <string name="food_product_title">Tuote</string>
     <string name="food_product_energy">Energia</string>
     <string name="food_product_usual">Tavallinen määrä</string>
