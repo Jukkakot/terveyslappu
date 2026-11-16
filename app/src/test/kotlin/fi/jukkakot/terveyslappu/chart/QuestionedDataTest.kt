@@ -47,7 +47,7 @@ class QuestionedDataTest {
         assertEquals("b", summary.latest.id)
         assertEquals(0.4, summary.change!!, 1e-9)
         assertEquals(listOf("a", "b"), summary.spark.map { it.id })
-        assertEquals(KgRange(80.0, 85.0), summary.sparkScale)
+        assertEquals(KgRange(81.5, 83.5), summary.sparkScale)
     }
 
     @Test
@@ -59,7 +59,7 @@ class QuestionedDataTest {
         assertEquals(82.0, stats.min)
         val data = ChartData.of(Period.WEEK, state.accepted!!, now, zone)!!
         assertEquals(2, data.entries.size)
-        assertEquals(80.0, data.minY)
+        assertEquals(81.5, data.minY)
         assertNull(MainUiState(weights = list).newestQuestioned)
     }
 

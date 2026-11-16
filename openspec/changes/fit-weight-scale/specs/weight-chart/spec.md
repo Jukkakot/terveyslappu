@@ -11,7 +11,7 @@ chart SHALL use the same rule with the room and the least span as many BMI units
 
 #### Scenario: Steady weight
 - **GIVEN** the weights in view are 97.76 and 97.84 kg
-- **THEN** the y-scale runs from 97.0 to 98.0 kg (axis values 97, 97,5 and 98 kg)
+- **THEN** the y-scale runs from 97.5 to 98.5 kg (axis values 97,5, 98 and 98,5 kg; 98.04 with room rounds up to 98.5)
 
 #### Scenario: A week of small moves
 - **GIVEN** the weights in view run from 97.0 to 98.0 kg

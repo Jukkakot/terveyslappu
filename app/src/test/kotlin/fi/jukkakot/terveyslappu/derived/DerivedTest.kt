@@ -96,9 +96,9 @@ class DerivedTest {
     }
 
     @Test
-    fun `steady bmi scale spans at least 1,2`() {
+    fun `steady bmi scale is fitted on half units`() {
         val range = Quantity.BMI.scale(listOf(25.2, 25.3), man)
-        assertTrue(range.span >= 1.2)
-        assertEquals(KgRange(24.0, 26.0), range)
+        assertTrue(range.span >= 0.5)
+        assertEquals(KgRange(25.0, 26.0), range)
     }
 }
