@@ -569,7 +569,8 @@ source.
 ### Requirement: Custom charts
 The user SHALL be able to make any number of own charts. A chart SHALL have a name (1 to 24
 characters, trimmed, not blank; duplicates allowed), one or more shown data out of Paino, Energia
-and Askeleet (no BMI), for each shown data a style, Pylväät (bars) or Viiva (line), a layout,
+and Askeleet (no BMI), for each shown data a style, Pylväät (bars) or Viiva (line) (Paino always Viiva: bars of a
+weight scale that does not start at zero would mislead), a layout,
 Allekkain (stacked panels) or Päällekkäin (overlaid), and its own time period (see Chart time
 axis). The data SHALL always be drawn and listed in the order Paino, Energia (Syöty), Kulutus, Askeleet. Each chart
 SHALL be one definition that is shown as its own Historia tab and, when the user adds it there, as
@@ -589,13 +590,12 @@ without a value axis SHALL still get its line. The line SHALL be drawn on the Hi
 front page card at every size. The Paino average can differ from the Paino tab's statistic, which
 counts every weight. What each style draws:
 - Paino, Viiva: each day's last weight not marked "?" as a line with the weight scale of the weight
-  chart, dots when they fit. Paino, Pylväät: one bar per day with such a weight, drawn up from the
-  bottom of the same weight scale.
+  chart, dots when they fit. Paino has no Pylväät.
 - Energia, Pylväät: one bar per logged day (kcal), with the treats' share in its tone in the
   Allekkain layout. Energia, Viiva: a line joining each logged day's own kcal.
 - Askeleet, Pylväät: one bar per day with steps. Askeleet, Viiva: a line joining each such day's
   own steps.
-- Bars SHALL start at zero (Paino excepted, as above) and take the same share of every day's slot,
+- Bars SHALL start at zero and take the same share of every day's slot,
   so over long periods they are thin (on a front page card at least 1 dp wide); days without data
   SHALL be gaps in bars, and a line SHALL join the days that have a value.
 - Scales: Paino the weight chart's scale; Energia `ceil(highest day × 1,1 / 500) × 500` kcal
@@ -616,8 +616,14 @@ counts every weight. What each style draws:
 - **THEN** the chart draws a line through those three days' own kcal values, no moving average and no bars
 
 #### Scenario: Weight bars
-- **GIVEN** a chart with Paino as Pylväät and two weights on 12.11. (82,0 in the morning and 82,4 in the evening)
-- **THEN** 12.11. has one bar at 82,4 kg on the weight scale, the day's last weight, not 82,2
+- **GIVEN** a chart with Paino and two weights on 12.11. (82,0 in the morning and 82,4 in the evening)
+- **THEN** Paino is drawn as a line, never bars, with 12.11. at 82,4 kg, the day's last weight, not 82,2
+
+#### Scenario: Old chart with weight bars
+- **GIVEN** a chart saved with Paino as Pylväät
+- **THEN** it draws Paino as a line; its name, data, layout, period, colours and Keskiarvo are
+  unchanged, and in Päällekkäin its other bars share the day's slot as in any chart with that
+  many bar data
 
 #### Scenario: Long period stays daily
 - **GIVEN** a chart with Energia as Pylväät and the period 1 v
@@ -672,7 +678,10 @@ the other tabs.
 
 ### Requirement: Chart editor
 The chart editor SHALL be a dialog with: a name field; one row per data (Paino, Energia (Syöty), Kulutus, Askeleet)
-with a switch and a two-way choice Pylväät / Viiva that is enabled only while the data is on; the
+with a switch and a two-way choice Pylväät / Viiva that is enabled only while the data is on
+(the Paino row instead shows a plain label "Viiva" in that place, start-aligned, as tall as the
+choice so the four colour dots line up, dimmed while Paino is off, read by TalkBack as "Paino:
+viiva", not as a button); the
 layout choice Allekkain / Päällekkäin, each with one line saying what it draws; a switch "Keskiarvo" with one
 line "Vaakaviiva jakson keskiarvon kohdalla"; and the buttons
 Peruuta and Tallenna. The editor SHALL NOT hold the period (it is chosen with the chips on the
@@ -726,6 +735,11 @@ when it is switched on again while the editor is open.
 - **GIVEN** the user changed the layout in the editor
 - **WHEN** the user presses back
 - **THEN** the chart is as before and nothing is asked
+
+#### Scenario: Weight row has no bars
+- **WHEN** the user opens the chart editor
+- **THEN** the Paino row shows "Viiva" as a label with no Pylväät choice, the other rows keep
+  their Pylväät / Viiva choice, and the four colour dots share the same x
 
 ### Requirement: Stacked layout
 In the Allekkain layout each shown data SHALL have its own panel with its own scale (data with the
@@ -1016,7 +1030,7 @@ tones.
 
 ### Requirement: Chart editor colours
 In the chart editor each data row (Paino, Syöty, Kulutus, Askeleet) SHALL hold, after its switch
-and its Pylväät / Viiva choice, one colour dot (44 dp touch target, named for TalkBack with its
+and its Pylväät / Viiva choice (Paino: its "Viiva" label), one colour dot (44 dp touch target, named for TalkBack with its
 colour) that opens a small picker of nine choices (Oletus and the eight colours, a 3 × 3 grid of
 44 dp targets, the chosen one marked with a check and announced "valittu"); picking closes the
 picker. The dot SHALL be shown but disabled while the data is off. Peruuta and back discard a
