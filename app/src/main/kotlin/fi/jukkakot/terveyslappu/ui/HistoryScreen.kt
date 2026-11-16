@@ -558,10 +558,10 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
                     ) {
                         Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyLarge, color = valueColor, fontWeight = FontWeight.SemiBold)
+                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyMedium, color = valueColor, fontWeight = FontWeight.SemiBold, singleLine = true)
                     }
                 }
                 repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
@@ -640,7 +640,7 @@ private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate,
         change?.let {
             val direction = shownDirection(it, 1)
             ChangeLabel(
-                formatChange(it),
+                stringResource(R.string.kg_value, formatChange(it)),
                 direction,
                 Modifier.padding(end = 12.dp).testTag("rowChange-${entry.id}"),
                 style = MaterialTheme.typography.bodyMedium,

@@ -30,6 +30,7 @@ fun ChangeLabel(
     style: TextStyle = MaterialTheme.typography.labelLarge,
     color: Color = Color.Unspecified,
     fontWeight: FontWeight? = null,
+    singleLine: Boolean = false,
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         if (direction != 0) {
@@ -38,7 +39,7 @@ fun ChangeLabel(
             Icon(painterResource(icon), contentDescription = null, tint = if (color == Color.Unspecified) MaterialTheme.colorScheme.onSurface else color, modifier = Modifier.size(14.dp).testTag(tag))
             Spacer(Modifier.width(2.dp))
         }
-        Text(text, style = style, color = color, fontWeight = fontWeight)
+        Text(text, style = style, color = color, fontWeight = fontWeight, maxLines = if (singleLine) 1 else Int.MAX_VALUE, softWrap = !singleLine)
     }
 }
 

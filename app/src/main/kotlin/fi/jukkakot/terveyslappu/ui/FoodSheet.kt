@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -163,7 +165,9 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
         if (items == null) emptyList() else Suggestions.atEmpty(items, food.products, ZonedDateTime.now())
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val panelBase = PANEL_BASE_DP + (if (food.line != null) LINE_DP else 0)
+        val line = food.line?.takeUnless { it is SheetLine.Added }
+        val panelBase = PANEL_BASE_DP + (if (line != null) LINE_DP else 0)
+        val lineColor = MaterialTheme.colorScheme.outlineVariant
         val chipRows = (3 downTo 1).firstOrNull { maxHeight.value >= HEADER_DP + TWO_ROWS_DP + panelBase + it * CHIP_ROW_DP } ?: 1
         Column(Modifier.fillMaxSize()) {
             SheetHeader(day, today, if (items == null) null else dayItems, actions)
@@ -175,10 +179,10 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
                 }
             }
             Column(
-                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).testTag("addPanel"),
+                Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerHigh).drawBehind { drawLine(lineColor, Offset(0f, 0f), Offset(size.width, 0f), 1.dp.toPx()) }.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp).testTag("addPanel"),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                food.line?.let { SheetLineRow(it, actions, beforeEditor) }
+                line?.let { SheetLineRow(it, actions, beforeEditor) }
                 if (!typing && picks.isNotEmpty()) {
                     ListHeading(stringResource(R.string.food_list_usual))
                     val chipMax = this@BoxWithConstraints.maxWidth * 0.6f
@@ -305,8 +309,8 @@ private fun ProductChip(product: Product, maxWidth: Dp, actions: FoodActions, be
                 .testTag("chip-${product.name}"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.food_chip_plain, product.name), style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-            if (kcal != null) Text(" " + formatKcal(kcal), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            Text(stringResource(R.string.food_chip_plain, product.name), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            if (kcal != null) Text(" " + stringResource(R.string.food_kcal, formatKcal(kcal)), style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
     }
 }
@@ -440,20 +444,11 @@ private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions, befo
     }
 }
 
-/** The line under the field: an add with Muuta · Kumoa, a delete's or import's Kumoa, a failed write or a changed clip. */
+/** The line under the field: a delete's or import's Kumoa, a failed write or a changed clip. */
 @Composable
 private fun SheetLineRow(line: SheetLine, actions: FoodActions, beforeEditor: () -> Unit = {}) {
     when (line) {
-        is SheetLine.Added -> Row(Modifier.fillMaxWidth().testTag("lastAdded"), verticalAlignment = Alignment.CenterVertically) {
-            val item = line.item
-            val text = listOfNotNull(
-                listOfNotNull(item.name, item.amount?.let(::formatAmount)).joinToString(" "),
-                item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal),
-            ).joinToString(" · ")
-            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            TextButton(onClick = { beforeEditor(); actions.onEdit(item) }, modifier = Modifier.testTag("lastChange")) { Text(stringResource(R.string.food_change)) }
-            TextButton(onClick = actions.onUndoAdd, modifier = Modifier.testTag("lastUndo")) { Text(stringResource(R.string.undo)) }
-        }
+        is SheetLine.Added -> Unit // the highlighted day-list row is the confirmation (no line)
         is SheetLine.Deleted -> UndoLine(stringResource(R.string.food_deleted, line.item.name), actions.onUndoDelete, "sheetDeleted", "deletedUndo")
         is SheetLine.ProductRemoved -> UndoLine(stringResource(R.string.food_deleted, line.product.name), actions.onUndoDeleteProduct, "sheetProductRemoved", "productUndo")
         is SheetLine.Imported -> {

@@ -88,9 +88,9 @@ class TabReadoutsTest {
             Period.WEEK,
             today,
         )
-        assertEquals("To 12.11. | kulutus 2 946 kcal · aktiivinen 465 · lepo 2 481", text(TabReadouts.burn(series, day, today)))
+        assertEquals("To 12.11. | kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal", text(TabReadouts.burn(series, day, today)))
         assertEquals("Ke 11.11. | kulutus 2 300 kcal", text(TabReadouts.burn(series, day.minusDays(1), today)))
-        assertEquals("Ma 9.11. | kulutus 465 kcal · aktiivinen 465", text(TabReadouts.burn(series, day.minusDays(3), today)))
+        assertEquals("Ma 9.11. | kulutus 465 kcal · aktiivinen 465 kcal", text(TabReadouts.burn(series, day.minusDays(3), today)))
         assertEquals("Ti 10.11. | kulutus ei tietoa", text(TabReadouts.burn(series, day.minusDays(2), today)))
     }
 
@@ -107,7 +107,7 @@ class TabReadoutsTest {
             ),
         )
         assertEquals(
-            "To 12.11. | paino 82,4 kg | ruoka ei kirjauksia | kulutus 2 300 kcal · aktiivinen 450 | askeleet ei tietoa",
+            "To 12.11. | paino 82,4 kg | ruoka ei kirjauksia | kulutus 2 300 kcal · aktiivinen 450 kcal | askeleet ei tietoa",
             text(TabReadouts.custom(readout, today) { ToneRef.PRIMARY }),
         )
     }

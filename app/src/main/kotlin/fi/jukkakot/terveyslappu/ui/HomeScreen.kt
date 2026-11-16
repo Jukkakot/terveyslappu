@@ -220,6 +220,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
             HomePeriodLabel(days, onPeriod, "foodPeriod")
             Text(
                 average,
+                maxLines = 2,
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier
@@ -342,7 +343,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
             CardTitle(R.drawable.ic_walk, stringResource(R.string.home_steps_title), chevron = onTap != null)
             if (shows) {
                 if (summary.today != null) {
-                    Text(formatSteps(summary.today), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("stepsTodayValue"))
+                    UnitValue(formatSteps(summary.today), "askelta", "stepsTodayValue")
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -385,6 +386,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                 summary.averageSteps?.let {
                     stringResource(if (size == CardSize.SMALL) R.string.home_steps_average else R.string.home_steps_average_long, formatSteps(it))
                 } ?: stringResource(R.string.home_food_no_average),
+                maxLines = 2,
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("stepsAverage"),
@@ -449,7 +451,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
             if (shows) {
                 val now = summary.today
                 if (now != null) {
-                    Text(formatKcal(now.total.toDouble()), style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag("burnTodayValue"))
+                    UnitValue(formatKcal(now.total.toDouble()), "kcal", "burnTodayValue")
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -502,6 +504,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                 summary.averageTotal?.let {
                     stringResource(if (size == CardSize.SMALL) R.string.home_burn_average else R.string.home_burn_average_long, formatKcal(it.toDouble()))
                 } ?: stringResource(R.string.home_food_no_average),
+                maxLines = 2,
                 style = MaterialTheme.typography.labelMedium,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("burnAverage"),
@@ -510,6 +513,16 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
         if (burn.stale) {
             Text(stringResource(R.string.steps_stale), style = small, color = colors.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp).testTag("burnStale"))
         }
+    }
+}
+
+/** A card's big number with its unit beside it, baseline-aligned (as the food card); the unit may wrap under the number. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun UnitValue(value: String, unit: String, tag: String) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Text(value, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag(tag))
+        Text(unit, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Bottom).padding(bottom = 6.dp))
     }
 }
 

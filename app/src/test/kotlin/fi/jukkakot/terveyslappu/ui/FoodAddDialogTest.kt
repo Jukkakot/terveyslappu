@@ -70,7 +70,7 @@ class FoodAddDialogTest {
     fun `the dialog adds to today and learns the product`() {
         open().use {
             enter("Tomaattikeitto")
-            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             val item = records.items.single()
             assertEquals("Tomaattikeitto", item.name)
             assertEquals(LocalDate.now(), item.day)
@@ -135,7 +135,7 @@ class FoodAddDialogTest {
         open().use {
             compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
             compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             shadowOf(Looper.getMainLooper()).idle()
             assertEquals(listOf("Kaurapuuro testi"), records.items.map { it.name })
             compose.onNodeWithTag("sheetTitle").assertTextContains("Tänään · 210 kcal")
@@ -157,7 +157,7 @@ class FoodAddDialogTest {
         open().use {
             compose.onNodeWithTag("addField").performTextInput("350")
             compose.onNodeWithTag("enterRow").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             compose.onNodeWithTag("addField").performTextInput("Testimuffinssi")
             compose.onNodeWithTag("enterRow").performClick()
             compose.waitForIdle()
@@ -193,7 +193,7 @@ class FoodAddDialogTest {
         open().use {
             compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
             compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("lastAdded"), 5_000)
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             shadowOf(Looper.getMainLooper()).idle()
             val uuid = records.items.single().uuid
             compose.onNodeWithTag("sheet-$uuid-delete").performClick()

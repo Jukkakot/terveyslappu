@@ -96,18 +96,19 @@ object TabReadouts {
     }
 
     /**
-     * Kulutus (energy-burn "Kulutus tab"): "kulutus 2 946 kcal · aktiivinen 465 · lepo 2 481", a
-     * kokonais day "kulutus 2 300 kcal", an active-only day "kulutus 465 kcal · aktiivinen 465", or
+     * Kulutus (energy-burn "Kulutus tab"): "kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal", a
+     * kokonais day "kulutus 2 300 kcal", an active-only day "kulutus 465 kcal · aktiivinen 465 kcal", or
      * "kulutus ei tietoa"; a weekly bar the same values of its bar.
      */
     fun burn(series: BurnSeries, key: LocalDate, today: LocalDate): ReadoutCard {
         val start = if (series.weekly) monday(key) else key
         val head = if (series.weekly) week(start, today) else day(key, today)
         val bar = series.bars.firstOrNull { it.from == start } ?: return ReadoutCard(head, listOf(ReadoutRow(BURN_TONE, BURN, NO_DATA)))
+        val unit = if (series.weekly) "kcal/pv" else "kcal"
         val parts = buildList {
-            add("${formatKcal(bar.total.toDouble())} kcal")
-            bar.active?.let { add("aktiivinen ${formatKcal(it.toDouble())}") }
-            if (bar.active != null) bar.rest?.let { add("lepo ${formatKcal(it.toDouble())}") }
+            add("${if (series.weekly) "keskim. " else ""}${formatKcal(bar.total.toDouble())} $unit")
+            bar.active?.let { add("aktiivinen ${formatKcal(it.toDouble())} $unit") }
+            if (bar.active != null) bar.rest?.let { add("lepo ${formatKcal(it.toDouble())} $unit") }
         }
         return ReadoutCard(head, listOf(ReadoutRow(BURN_TONE, BURN, parts.joinToString(SEP))))
     }
@@ -115,7 +116,7 @@ object TabReadouts {
     /**
      * An own chart (weight-chart "Chart crosshair"): one row per shown data with access, its own
      * value that day or "ei painoa" / "ei kirjauksia" / "ei tietoa"; Kulutus "2 300 kcal ·
-     * aktiivinen 450" (no lepo). Today unmarked, no week form.
+     * aktiivinen 450 kcal" (no lepo). Today unmarked, no week form.
      */
     fun custom(readout: Readout, today: LocalDate, tone: (SeriesKind) -> ToneRef): ReadoutCard =
         ReadoutCard(day(readout.day, today), readout.values.map { (kind, value) -> ReadoutRow(tone(kind), kindName(kind), customValue(kind, value)) })
@@ -138,7 +139,7 @@ object TabReadouts {
         return when (kind) {
             SeriesKind.WEIGHT -> "${formatKg(value.value)} kg"
             SeriesKind.ENERGY -> "${formatKcal(value.value)} kcal"
-            SeriesKind.BURN -> value.active?.let { "${formatKcal(value.value)} kcal${SEP}aktiivinen ${formatKcal(it)}" } ?: "${formatKcal(value.value)} kcal"
+            SeriesKind.BURN -> value.active?.let { "${formatKcal(value.value)} kcal${SEP}aktiivinen ${formatKcal(it)} kcal" } ?: "${formatKcal(value.value)} kcal"
             SeriesKind.STEPS -> "${formatSteps(value.value.toLong())} askelta"
         }
     }

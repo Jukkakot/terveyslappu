@@ -121,7 +121,7 @@ internal fun GroupRowItem(group: ListNode.Group, open: Boolean, today: LocalDate
         }
         if (group.acceptedCount > 1) {
             val direction = shownDirection(group.change, 1)
-            ChangeLabel(formatChange(group.change), direction, style = MaterialTheme.typography.bodyMedium, color = changeColor(direction))
+            ChangeLabel(stringResource(R.string.kg_value, formatChange(group.change)), direction, style = MaterialTheme.typography.bodyMedium, color = changeColor(direction))
         }
         Icon(
             painterResource(R.drawable.ic_chevron_right),

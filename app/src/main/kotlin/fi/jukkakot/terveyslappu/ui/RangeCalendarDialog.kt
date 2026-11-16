@@ -144,6 +144,14 @@ internal fun RangeCalendarContent(
             state = state,
             dayContent = { day -> DayCell(day, dayWeights[day.date], pick, today) { pick = pick.tap(day.date) } },
         )
+        if (dayWeights.keys.any { YearMonth.from(it) == shown }) {
+            Text(
+                stringResource(R.string.calendar_unit),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp).testTag("calendarUnit"),
+            )
+        }
         if (historyMissing) HistoryNotice(onGrantHistory)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             TextButton(onClick = onDismiss, modifier = Modifier.testTag("calendarCancel")) { Text(stringResource(R.string.cancel)) }
