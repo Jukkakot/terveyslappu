@@ -318,9 +318,9 @@ a weekly bar the week ("Vk 46 · 9.–15.11."), and its rows SHALL be:
 - Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; weekly "askeleet keskim. 8 200
   askelta/pv".
 - Kulutus: as in energy-burn "Kulutus tab".
-The removal rules and TalkBack actions SHALL be those of "Chart crosshair". On Syöty, while a day
-(not a weekly bar) is chosen, an "Avaa päivä ›" button SHALL show under the chart and open Ruoka on
-that day. Front page cards keep their tap (open Historia) and have no marker.
+The removal rules and TalkBack actions SHALL be those of "Chart crosshair". The chart SHALL have no
+"Avaa päivä" link (user 2026-11-16); a day opens on Ruoka from the Syöty day list. Front page cards
+keep their tap (open Historia) and have no marker.
 
 #### Scenario: Tap a steps bar
 - **GIVEN** Askeleet with 1 vk
@@ -339,14 +339,13 @@ that day. Front page cards keep their tap (open Historia) and have no marker.
 - **THEN** the nearest weight, 10.11., is chosen
 
 #### Scenario: Open a day from Syöty
-- **WHEN** the user taps a day on Syöty and then "Avaa päivä ›" under the chart
+- **WHEN** the user taps a day in the Syöty day list (the chart has no "Avaa päivä" link)
 - **THEN** Ruoka opens on that day; back returns to Historia on Syöty
 
 #### Scenario: Weekly bar
 - **GIVEN** Syöty with 1 v
 - **WHEN** the user taps a week's bar
-- **THEN** the card reads "Vk 46 · 9.–15.11." with "ruoka keskim. 1 900 kcal/pv" and no "Avaa päivä"
-  button shows
+- **THEN** the card reads "Vk 46 · 9.–15.11." with "ruoka keskim. 1 900 kcal/pv"
 
 ## ADDED Requirements
 

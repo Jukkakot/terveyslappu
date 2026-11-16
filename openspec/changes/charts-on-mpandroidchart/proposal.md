@@ -38,7 +38,7 @@ basics.
 - Kept: TalkBack actions "Edellinen päivä" / "Seuraava päivä" and a polite announcement of the
   marker's text; the selection shared by the stacked panels; units on the value axes and every
   number; the y-scale rules; light and dark theme; text that follows the system font size; the
-  period range line; legends; "Avaa päivä ›" on Syöty (now a button under the chart).
+  period range line; legends; "Avaa päivä ›" on Syöty is dropped (the day list opens Ruoka).
 - The unused Vico dependency is removed. JitPack is added as a repository restricted to
   MPAndroidChart's group only.
 - Out of scope: the front page cards' small charts (weight, food, steps, Kulutus and own chart

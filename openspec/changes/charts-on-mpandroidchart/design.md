@@ -139,8 +139,7 @@ Alternative: a custom `XAxisRenderer` that draws our exact dates. Rejected for t
 - Bars: library highlight (`highlightColor` = onSurface, `highlightAlpha` ~ 90) on the chosen bar;
   lines: vertical highlight line (1 dp, onSurfaceVariant, no horizontal line) and a ring
   (`highlightCircle`/ scatter ring) on the point.
-- Syöty's "Avaa päivä ›": a `TextButton` under the chart while a non-weekly day is chosen (a canvas
-  marker cannot hold a button).
+- Syöty's "Avaa päivä ›" is dropped (user 2026-11-16); the Syöty day list opens Ruoka.
 - Pager: the chart's touch listener claims the gesture inside the plot (library behaviour), so the
   pager swipes outside the plot (range line, stats, list). `HistoryScreen` drops
   `crosshairGestures`; nothing to do in the pager.
@@ -216,6 +215,10 @@ Rollback = revert the merge commit.
 
 Each has a recommended answer; the specs and tasks are written for the recommendation. A
 different answer changes only the named requirement and one task.
+
+**Answered by the user 2026-11-16:** 1 chart owns the gesture, 2 zoom on, 3 "Avaa päivä" dropped,
+4 library x-label placement (to be revisited after the change if needed); 5 hint dropped (the
+recommendation stands).
 
 1. **Chart gestures vs the Historia tab swipe.** Inside the plot, does a sideways swipe belong to
    the chart (selection scrub, pan when zoomed) or to the pager?
