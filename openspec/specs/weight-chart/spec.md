@@ -112,22 +112,22 @@ statistics SHALL show the same values of the BMI except the change per week; the
 - **THEN** they show latest 25,3 "ylipaino", change −0,3 with an arrow down, and no rate per week
 
 ### Requirement: Point details
-A weight's date, time and value SHALL be shown through the chart's crosshair (see "Crosshair on
-every Historia chart"); the date SHALL include the year when the weight is not from the current
-year.
+A weight's date, time and value SHALL be shown through the chart's marker card (see "Crosshair on
+every Historia chart"): the card's head is the date and the weight's time, the date with the year
+when the weight is not from the current year, and its row is the series name and the value.
 
 #### Scenario: Tap a dot
 - **WHEN** the user taps the dot of 82.6 kg on Sunday 8.11. this year at 7.05
-- **THEN** the readout shows "Su 8.11. · 7.05 · 82,6 kg"
+- **THEN** the marker card reads "Su 8.11. · 7.05" with the row "paino 82,6 kg"
 
 #### Scenario: Tap an old dot
 - **WHEN** the user taps the dot of 97.6 kg on Sunday 15.9.2024 at 8.33
-- **THEN** the readout shows "Su 15.9.2024 · 8.33 · 97,6 kg"
+- **THEN** the marker card reads "Su 15.9.2024 · 8.33" with the row "paino 97,6 kg"
 
 #### Scenario: Tap a BMI dot
 - **GIVEN** the BMI chart is shown and the height is 180 cm
 - **WHEN** the user taps the dot of 82.0 kg on Sunday 8.11. this year at 7.05
-- **THEN** the readout shows "Su 8.11. · 7.05 · BMI 25,3"
+- **THEN** the marker card reads "Su 8.11. · 7.05" with the row "BMI 25,3"
 
 ### Requirement: Weight scale
 Every weight chart (Historia and the home card) SHALL use one y-scale rule: the lowest and highest
@@ -194,24 +194,31 @@ SHALL keep its larger dot on the home line, however dense the chart is.
 ### Requirement: One quantity at a time
 Historia's fixed tabs SHALL show one quantity at a time: Paino, BMI, Energia or Askeleet. Tabs with
 those names SHALL sit above the chart in that order, followed by the user's own charts and the
-"Uusi kaavio" tab (see Custom chart tabs); tapping a tab or swiping the chart and statistics left
-or right SHALL switch the tab, and the chosen period SHALL stay. All four fixed tabs SHALL always
-be shown; a quantity that cannot be computed SHALL show, instead of its chart and statistics, the
-reason naming what is missing and a button to fix it (Omat tiedot for BMI, the nutrition
-permissions for Energia, the steps permission for Askeleet). Historia SHALL open on Paino. On Paino
-and BMI the list under the statistics SHALL be the weight list; on Energia it SHALL be the list of
-logged days (see Energia list); on Askeleet it SHALL be the list of days with steps (see Askeleet
-list); an own chart's tab and the "Uusi kaavio" tab SHALL have no list.
+"Uusi kaavio" tab (see Custom chart tabs); tapping a tab, or swiping left or right anywhere on the
+page outside a chart's plot area (the range line, statistics, list, messages and empty states),
+SHALL switch the tab, and the chosen period SHALL stay. A sideways gesture inside a plot area
+belongs to the chart (selection, zoom and pan, see "Chart crosshair" and "Chart zoom"). All four
+fixed tabs SHALL always be shown; a quantity that cannot be computed SHALL show, instead of its
+chart and statistics, the reason naming what is missing and a button to fix it (Omat tiedot for
+BMI, the nutrition permissions for Energia, the steps permission for Askeleet). Historia SHALL
+open on Paino. On Paino and BMI the list under the statistics SHALL be the weight list; on Energia
+it SHALL be the list of logged days (see Energia list); on Askeleet it SHALL be the list of days
+with steps (see Askeleet list); an own chart's tab and the "Uusi kaavio" tab SHALL have no list.
 
 #### Scenario: Swipe to BMI
 - **GIVEN** a height is set and Historia shows Paino for 1 kk
-- **WHEN** the user swipes the chart to the left
+- **WHEN** the user swipes the statistics to the left
 - **THEN** the BMI tab is chosen and the chart and statistics show the BMI of the same 30 days
 
 #### Scenario: Swipe to Energia
 - **GIVEN** Historia shows BMI for 1 vk
-- **WHEN** the user swipes the chart to the left
+- **WHEN** the user swipes the statistics to the left
 - **THEN** the Energia tab is chosen for the same 7 days
+
+#### Scenario: Swipe on the plot stays in the chart
+- **GIVEN** Historia shows Paino for 1 kk
+- **WHEN** the user drags sideways inside the plot
+- **THEN** the tab stays Paino and the chosen day follows the finger
 
 #### Scenario: No owner details
 - **GIVEN** no height is set
@@ -220,7 +227,7 @@ list); an own chart's tab and the "Uusi kaavio" tab SHALL have no list.
 
 #### Scenario: Swipe to Askeleet
 - **GIVEN** Historia shows Energia for 1 kk
-- **WHEN** the user swipes the chart to the left
+- **WHEN** the user swipes the statistics to the left
 - **THEN** the Askeleet tab is chosen for the same 30 days
 
 #### Scenario: No steps permission
@@ -239,7 +246,7 @@ list); an own chart's tab and the "Uusi kaavio" tab SHALL have no list.
 
 #### Scenario: Swipe past Askeleet
 - **GIVEN** an own chart "Liike" and Historia on Askeleet
-- **WHEN** the user swipes the chart to the left
+- **WHEN** the user swipes the statistics to the left
 - **THEN** the Liike tab is chosen for the same period
 
 ### Requirement: BMI bands
@@ -458,16 +465,17 @@ show exactly three labelled values with a faint guideline each: the bottom, the 
 For bars the bottom SHALL be 0 and the top a round value above the highest bar or line point (steps
 in steps of 2 000, kcal in steps of 500), so the middle is a round value too. For a weight or BMI
 line the bottom and top SHALL be the ends of the weight scale (which may start above zero) and the
-middle their midpoint, shown with at most one decimal. The labels SHALL sit in a column left of the
-plot. The x-axis SHALL show 3 to 5 dates evenly spread over the period, the first at the period's
-start and the last at its end (Kaikki: the first day with data and today), formatted as day and
-month, or month and year when the period spans 365 days or more (1 v included); a period of 7 days or
-fewer (1 vk, or a short Oma range) SHALL instead label every day with its two-letter weekday
-(Ma, Ti, Ke, To, Pe, La, Su) under that day's bar or point, with no dates and no special mark for
-today. Front page cards keep their own date text. The number of dates (5, 4 or 3) SHALL be the largest that fits
-without overlap at the measured label widths, and labels SHALL NOT overlap on a 360 dp wide phone
-at font scale 1.3. Dates SHALL be spread evenly by days, also when the bars are weekly. Paino's
-line chart SHALL use the same dates as the bar charts.
+middle their midpoint, shown with at most one decimal. The labels SHALL sit left of the plot (an
+overlaid chart's second data on the right). The x-axis SHALL show 3 to 5 date labels at whole-day
+positions chosen by the chart's own label spacing (evenly stepped, not necessarily at the period's
+first and last day), formatted as day and month, or month and year when the period spans 365 days
+or more (1 v included); a period of 7 days or fewer (1 vk, or a short Oma range) SHALL instead
+label every day with its two-letter weekday (Ma, Ti, Ke, To, Pe, La, Su) under that day's bar or
+point, with no dates and no special mark for today. Front page cards keep their own date text. The
+number of labels (5, 4 or 3) SHALL be the largest that fits without overlap at the measured label
+widths, and labels SHALL NOT overlap or be cut at the chart's edges on a 360 dp wide phone at font
+scale 1.3. Axis, legend and marker text SHALL follow the system font size. While zoomed in (see
+"Chart zoom") the labels SHALL follow the visible days by the same rule.
 
 #### Scenario: Steps axis
 - **GIVEN** the highest steps bar is 9 400
@@ -489,16 +497,17 @@ line chart SHALL use the same dates as the bar charts.
 
 #### Scenario: Narrow and large text
 - **GIVEN** a 360 dp wide phone and font scale 1.3
-- **THEN** fewer dates are shown rather than overlapping labels, and no two label areas intersect
+- **THEN** fewer dates are shown rather than overlapping labels, no two label areas intersect and
+  no label is cut at an edge
 
 #### Scenario: Month
-- **WHEN** the period is 1 kk ending 15.11. and five dates fit
-- **THEN** five dates are shown, from 17.10. to 15.11., about a week apart
+- **WHEN** the period is 1 kk and five dates fit
+- **THEN** five day-and-month labels are shown, evenly stepped by whole days across the 30 days
 
 #### Scenario: Several years
 - **GIVEN** weights from 24.9.2022 to today
 - **WHEN** Paino is shown with Kaikki
-- **THEN** the x-axis shows 3 to 5 labels like "9/2022", "11/2026", the last at today
+- **THEN** the x-axis shows 3 to 5 labels like "9/2022", "11/2024"
 
 #### Scenario: One year
 - **WHEN** the period is 1 v
@@ -506,7 +515,12 @@ line chart SHALL use the same dates as the bar charts.
 
 #### Scenario: Same dates on both chart kinds
 - **WHEN** the period is 3 kk on Paino and on Energia
-- **THEN** both show the same label dates
+- **THEN** both label whole days in the same day-and-month format, stepped evenly by the same rule
+
+#### Scenario: Large system font
+- **GIVEN** font scale 1.3
+- **WHEN** a Historia chart is shown
+- **THEN** its axis labels, legend and marker text are larger than at font scale 1.0
 
 ### Requirement: Chart legends
 Every bar and line in a Historia chart SHALL have a legend entry under its chart saying what it is,
@@ -558,8 +572,9 @@ SHALL be remembered between app starts and SHALL NOT be part of the data file or
 
 A custom chart SHALL draw real values only: for each day its own value, at every period. It SHALL
 NOT draw moving average lines and SHALL NOT draw weekly bars. When the chart's Keskiarvo is on,
-each drawn data SHALL also get one flat dashed line (1 dp, the front page cards' dash) drawn over the bars and
-under the value lines and the crosshair, in the neutral line tone (onSurfaceVariant) in Allekkain
+each drawn data SHALL also get one flat dashed line (1 dp, the front page cards' dash); on a
+Historia tab it is drawn over the bars and lines, on a front page card over the bars and under the
+value lines; in the neutral line tone (onSurfaceVariant) in Allekkain
 and in the data's tone in Päällekkäin, across the period at its average on its own scale: Energia the average kcal per
 logged day and Askeleet the average steps per day with steps, both with today left out when it is in the period; Paino the
 average of each day's last weight not marked "?", today included (a weight is final). A line SHALL be drawn only for a data that is drawn
@@ -574,9 +589,9 @@ counts every weight. What each style draws:
   Allekkain layout. Energia, Viiva: a line joining each logged day's own kcal.
 - Askeleet, Pylväät: one bar per day with steps. Askeleet, Viiva: a line joining each such day's
   own steps.
-- Bars SHALL start at zero (Paino excepted, as above) and SHALL be at least 1 dp wide, so over long
-  periods they are thin; days without data SHALL be gaps in bars, and a line SHALL join the days
-  that have a value.
+- Bars SHALL start at zero (Paino excepted, as above) and take the same share of every day's slot,
+  so over long periods they are thin (on a front page card at least 1 dp wide); days without data
+  SHALL be gaps in bars, and a line SHALL join the days that have a value.
 - Scales: Paino the weight chart's scale; Energia `ceil(highest day × 1,1 / 500) × 500` kcal
   (at least 500); Askeleet `ceil(highest day × 1,1 / 2 000) × 2 000` steps (at least 2 000), as on
   the Energia and Askeleet tabs.
@@ -709,10 +724,12 @@ when it is switched on again while the editor is open.
 ### Requirement: Stacked layout
 In the Allekkain layout each shown data SHALL have its own panel with its own scale, stacked top to
 bottom in the order Paino, Energia, Kulutus, Askeleet on one shared time axis. Axes and legend SHALL follow
-the same axis and legend rules as Historia's other charts: each panel a left column of value labels at its bottom, middle and top with the unit, one
-row of 4 to 5 dates under the whole stack, and one legend under the dates naming every drawn line
-and bar. No panel SHALL have a second value axis and there SHALL be no "viikoittain" note. On a Historia tab each panel SHALL be 112 dp high for three panels, 136 dp for two
-and 160 dp for one.
+the same axis and legend rules as Historia's other charts: each panel value labels at its bottom,
+middle and top with the unit on the left, the panels' plots starting and ending at the same x so
+the same day lines up in every panel, one row of dates (see "Chart axes") under the whole stack,
+and one legend under the dates naming every drawn line and bar. No panel SHALL have a second value
+axis and there SHALL be no "viikoittain" note. On a Historia tab each panel SHALL be 112 dp high for
+three panels, 136 dp for two and 160 dp for one.
 
 #### Scenario: Three panels
 - **GIVEN** weights, food and steps in the last 30 days and a chart with all three data, Allekkain
@@ -722,6 +739,10 @@ and 160 dp for one.
 #### Scenario: Two panels
 - **GIVEN** a chart with Paino and Askeleet, Allekkain
 - **THEN** two panels of 136 dp are shown on the same axis
+
+#### Scenario: Days line up
+- **GIVEN** a chart with Paino and Askeleet, Allekkain, whose value labels differ in width
+- **THEN** the same day sits at the same x in both panels
 
 ### Requirement: Overlaid layout
 In the Päällekkäin layout all shown data SHALL be drawn in one plot on one time axis, each with its
@@ -763,73 +784,78 @@ Allekkain layout's single panel. On a Historia tab the plot SHALL be 200 dp high
 
 ### Requirement: Chart crosshair
 On the plot areas of an own chart's tab (and, by "Crosshair on every Historia chart", of every
-Historia chart), tapping, or pressing and holding (released in place or
-followed by a sideways drag), SHALL place one vertical line at that day through the chart and SHALL
-show above it one readout: the date and, for each shown data with access, that day's own value
-(weight in kg, the day's last weight not marked "?", or "ei painoa"; kcal or "ei kirjauksia"; steps
-or "ei tietoa"). There SHALL be no week form and no averages. A press-and-hold released without
-moving SHALL place the line with a haptic tick; a hold followed by a drag SHALL scrub and own both
-directions until release. Buttons inside a panel (such as a permission button) SHALL stay buttons
-and a tap outside the drawn plot areas SHALL place nothing. The line SHALL be drawn only over
-panels that draw data. Today SHALL show its running values without a mark. Tapping the readout
-SHALL remove the crosshair; leaving the tab, a period change, saving the chart in the editor and
-leaving Historia SHALL remove it; a data reload SHALL keep it, and it SHALL be removed only when its
-day is no longer on the axis. While no day is chosen the readout's place SHALL keep its height and
-read "Napauta päivää nähdäksesi arvot". A plain sideways swipe or fling SHALL switch the tab as on
-the other tabs and SHALL NOT place a crosshair. For TalkBack the chart SHALL offer "Edellinen päivä"
-and "Seuraava päivä", the first use starting from today, and the readout SHALL be a polite live
-region updated only on a tap, a drop or one of those actions.
+Historia chart), a tap or a press-and-hold SHALL choose the day of the nearest drawn value and a sideways drag inside
+the plot SHALL move the choice with the finger (scrub) while the chart is not zoomed in; the chosen
+day SHALL be marked on every panel that draws data, and one marker card SHALL show over the plot at
+that day. The card SHALL hold a head line with the date and one row per shown data with access: a
+dot in the data's colour, its name and that day's own value with its unit (weight in kg, the day's
+last weight not marked "?", or "ei painoa"; kcal or "ei kirjauksia"; steps or "ei tietoa"). There
+SHALL be no week form and no averages. The card SHALL be placed beside the chosen day and SHALL
+stay fully inside the chart's area, also at the first and last day. Buttons inside a panel (such as
+a permission button) SHALL stay buttons and a tap outside the drawn plot areas SHALL choose nothing.
+Today SHALL show its running values without a mark. Tapping the chosen value again, or a tap on the
+plot far from any value, SHALL remove the choice; leaving the tab, a period change, saving the
+chart in the editor and leaving Historia SHALL remove it; a data reload SHALL keep it, and it SHALL
+be removed only when its day is no longer on the axis. For TalkBack the chart SHALL offer
+"Edellinen päivä" and "Seuraava päivä", the first use starting from today, and the card's text SHALL
+be announced as a polite live region only on a tap, the end of a drag or one of those actions.
 
 #### Scenario: Tap a day
 - **GIVEN** 1 kk with all three data shown
 - **WHEN** the user taps a day with all three
-- **THEN** a line crosses the chart and the readout shows that date, the weight, the kcal and the steps
+- **THEN** the day is marked and the card shows that date and the rows "paino 82,4 kg", "ruoka
+  1 900 kcal" and "askeleet 6 420 askelta", each with its colour dot
 
 #### Scenario: Day without data
 - **WHEN** the user taps a day with weight but no food and no steps
-- **THEN** the readout shows the weight, "ei kirjauksia" for kcal and "ei tietoa" for the steps
+- **THEN** the card shows the weight row, "ei kirjauksia" in the food row and "ei tietoa" in the
+  steps row
 
 #### Scenario: Last weight of the day
 - **GIVEN** two weights on a day, 82,0 and later 82,4, and a third marked "?"
 - **WHEN** the user taps that day
-- **THEN** the readout shows 82,4 kg
+- **THEN** the card shows 82,4 kg
 
 #### Scenario: Hold in place
 - **WHEN** the user presses and holds on a day and releases without moving
-- **THEN** the line is at that day and the readout shows its values
+- **THEN** the nearest value's day is chosen and the card shows its values
+
+#### Scenario: Swipe still switches tabs
+- **WHEN** the user flings the statistics under the chart sideways
+- **THEN** Historia switches tab and no day is chosen
 
 #### Scenario: Scrub
-- **WHEN** the user presses and holds on the chart and drags sideways and up or down
-- **THEN** the line and the readout follow the finger day by day and the page does not scroll until release
+- **WHEN** the user drags sideways inside the plot
+- **THEN** the chosen day and the card follow the finger and Historia does not switch tab
+
+#### Scenario: Card at the edge
+- **WHEN** the user taps the last day of the period
+- **THEN** the card is drawn left of the day, fully inside the chart
 
 #### Scenario: Long period is still daily
 - **GIVEN** the period 1 v
 - **WHEN** the user taps a day
-- **THEN** the readout shows that day's own values, not a week's
+- **THEN** the card shows that day's own values, not a week's
 
 #### Scenario: Gated panel
 - **GIVEN** the steps permission is missing, Allekkain
 - **WHEN** the user taps a day
-- **THEN** the line crosses the weight and energy panels only, and the grant button still asks for the permission when tapped
-
-#### Scenario: Swipe still switches tabs
-- **WHEN** the user flings the chart sideways without holding
-- **THEN** Historia switches tab and no crosshair appears
+- **THEN** the day is marked in the weight and energy panels only, and the grant button still asks for the permission when tapped
 
 #### Scenario: Clearing
-- **GIVEN** a crosshair
-- **WHEN** the user taps the readout, or changes the period or the tab
-- **THEN** the crosshair is removed
+- **GIVEN** a chosen day
+- **WHEN** the user taps the chosen value again, or changes the period or the tab
+- **THEN** the choice and the card are removed
 
 #### Scenario: Kept on reload
-- **GIVEN** a crosshair on a day inside the axis
+- **GIVEN** a chosen day inside the axis
 - **WHEN** the data reloads
-- **THEN** the crosshair stays
+- **THEN** the choice and the card stay
 
 #### Scenario: Step through days
 - **GIVEN** TalkBack on the chart
-- **WHEN** the user runs "Edellinen päivä" with no crosshair
-- **THEN** today is chosen and the readout is announced
+- **WHEN** the user runs "Edellinen päivä" with no day chosen
+- **THEN** today is chosen and the card's text is announced
 
 ### Requirement: Chart time axis
 An own chart SHALL have its own period, chosen with the same choices as Historia's period chips (1
@@ -965,43 +991,46 @@ colour change like any other change.
 
 ### Requirement: Crosshair on every Historia chart
 Every chart in Historia (Paino, BMI, Syöty, Askeleet, Kulutus and the own charts) SHALL answer a
-tap, a press-and-hold and a hold-and-drag on its plot the way "Chart crosshair" describes for own
-charts: one vertical line at the chosen day (or week, when the bars are weekly) through the plot,
-a marker on the chosen value (a filled circle on a line or dot, the chosen bar in full tone while
-the other bars dim to 60 %), and one readout above the plot that always starts with the date: the
-weekday and the date, with the year when it is not the current year ("Ma 9.11.", "La 15.9.2024"),
-or for a weekly bar the week ("Vk 46 · 9.–15.11."). The readout SHALL then show:
-- Paino: the time and value of that day's last weight not marked "?" ("7.05 · 82,6 kg"), or "ei
-  painoa"; BMI the same with "BMI 25,3".
-- Syöty: total kcal and "herkut N kcal", or "ei kirjauksia"; a weekly bar its average per logged
-  day ("keskim. 1 900 kcal/pv").
-- Askeleet: steps or "ei tietoa"; weekly: "keskim. 8 200 askelta/pv".
+tap and a drag on its plot the way "Chart crosshair" describes for own charts, choosing a day (or a
+week, when the bars are weekly). The chosen value SHALL be marked: a line's point with a ring and a
+vertical line through the plot, a bar in the highlight tint. The marker card's head SHALL be the
+weekday and the date, with the year when not the current year ("Ma 9.11.", "La 15.9.2024"), or for
+a weekly bar the week ("Vk 46 · 9.–15.11."), and its rows SHALL be:
+- Paino: the head adds the time of that day's last weight not marked "?" ("Su 8.11. · 7.05"), row
+  "paino 82,6 kg", or "paino ei painoa"; BMI the same with "BMI 25,3".
+- Syöty: "ruoka 1 760 kcal" and "herkut 230 kcal", or "ruoka ei kirjauksia"; a weekly bar "ruoka
+  keskim. 1 900 kcal/pv".
+- Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; weekly "askeleet keskim. 8 200
+  askelta/pv".
 - Kulutus: as in energy-burn "Kulutus tab".
-The removal rules, the "Napauta päivää nähdäksesi arvot" placeholder, swipe-to-switch-tab, haptic
-tick and TalkBack actions SHALL be those of "Chart crosshair". On Syöty the readout SHALL end with
-"Avaa päivä ›", which opens Ruoka on that day (not for a weekly bar); tapping elsewhere on the
-readout removes the crosshair. Front page cards keep their tap (open Historia) and have no
-crosshair.
+The removal rules and TalkBack actions SHALL be those of "Chart crosshair". The chart SHALL have no
+"Avaa päivä" link (user 2026-11-16); a day opens on Ruoka from the Syöty day list. Front page cards
+keep their tap (open Historia) and have no marker.
 
 #### Scenario: Tap a steps bar
 - **GIVEN** Askeleet with 1 vk
 - **WHEN** the user taps Thursday's bar
-- **THEN** a line crosses Thursday, its bar stays full while the others dim, and the readout reads
-  "To 12.11. · 9 202 askelta"
+- **THEN** Thursday's bar takes the highlight tint and the card reads "To 12.11." with the row
+  "askeleet 9 202 askelta"
 
 #### Scenario: Old weight
 - **GIVEN** Paino with Kaikki
 - **WHEN** the user taps 15.9.2024, whose last weight was 97,6 kg at 8.33
-- **THEN** the readout reads "Su 15.9.2024 · 8.33 · 97,6 kg" and a ring marks the dot
+- **THEN** the card reads "Su 15.9.2024 · 8.33" with "paino 97,6 kg" and a ring marks the dot
+
+#### Scenario: Tap between weights
+- **GIVEN** Paino with weights on 10.11. and 13.11. only
+- **WHEN** the user taps 11.11.
+- **THEN** the nearest weight, 10.11., is chosen
 
 #### Scenario: Open a day from Syöty
-- **WHEN** the user taps a day on Syöty and then "Avaa päivä ›"
+- **WHEN** the user taps a day in the Syöty day list (the chart has no "Avaa päivä" link)
 - **THEN** Ruoka opens on that day; back returns to Historia on Syöty
 
 #### Scenario: Weekly bar
 - **GIVEN** Syöty with 1 v
 - **WHEN** the user taps a week's bar
-- **THEN** the readout reads "Vk 46 · 9.–15.11. · keskim. 1 900 kcal/pv" and no "Avaa päivä"
+- **THEN** the card reads "Vk 46 · 9.–15.11." with "ruoka keskim. 1 900 kcal/pv"
 
 ### Requirement: Grouped day lists
 The day lists of Energia, Askeleet and Kulutus SHALL be grouped by the same rule as the weight list
@@ -1064,3 +1093,25 @@ Details:
 - **GIVEN** a month row is open on Kulutus
 - **WHEN** the user picks another period
 - **THEN** every group is closed
+
+### Requirement: Chart zoom
+Every Historia chart SHALL zoom on its time axis with a two-finger pinch or a double tap and SHALL
+pan sideways with one finger while zoomed in; the value axes SHALL keep their scale. The stacked
+panels of an own chart SHALL zoom and pan together. A period change or leaving the tab SHALL reset
+the zoom; zooming SHALL NOT change the period, the statistics or the list.
+
+#### Scenario: Pinch a month
+- **GIVEN** Paino for 1 kk
+- **WHEN** the user pinches the plot open
+- **THEN** fewer days fill the plot, the kg labels stay as they were and the date labels follow the
+  visible days
+
+#### Scenario: Panels together
+- **GIVEN** an own chart with Paino and Askeleet, Allekkain
+- **WHEN** the user zooms the steps panel
+- **THEN** the weight panel shows the same days
+
+#### Scenario: Period resets zoom
+- **GIVEN** a zoomed Paino chart
+- **WHEN** the user picks 3 kk
+- **THEN** the chart shows the whole 90 days
