@@ -14,6 +14,11 @@ Rule for every task: the formatters (`formatKcal`, `formatKg`, `formatSteps`, `f
 
 - [ ] 1.10 Historia's statistics tiles (`ui/HistoryScreen.kt`, e.g. Viikossa "−0,47 kg"): the value with its unit stays on one line with the arrow (shrink to fit or a smaller style), never three lines as now.
 - [ ] 1.11 weight-entry "Questioned weight in the list": the change after a questioned weight also reads with kg ("+0,4 kg").
+
+## 3. Add panel (user 2026-11-16)
+
+- [ ] 3.1 Add panel (`ui/FoodSheet.kt`, sheet on Ruoka, home and the Lisää annos dialog): background `surfaceContainerHigh` with a 1 dp `outlineVariant` line along its top edge, so it reads apart from the day list in light and dark theme.
+- [ ] 3.2 Drop the success line "<name> <amount> · <kcal> · Muuta · Kumoa" after a chip tap, a product row tap, Enter and the new-item editor's Lisää; the highlighted, scrolled-to row is the confirmation. Keep the message line for "Tallennus epäonnistui" and "<name> poistettu · Kumoa"; with no message the line takes no space. Remove the now unused strings and state; update tests that expected the line.
 ## 2. Finish
 
 - [ ] 2.1 Update tests asserting the changed texts: `HomeCardsTest` (short `home_burn_average` text at line 168; add a small-size check at font scale 1.3 that the steps and burn averages stay inside their slots), `TabReadoutsTest` (lines 91, 93, 110), `MainScreenTest` (`rowChange`), `FormatTest` stays as is. Run `./gradlew test lint assembleDebug`.

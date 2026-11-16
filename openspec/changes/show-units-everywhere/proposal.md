@@ -26,6 +26,9 @@ number shown has its unit next to it, everywhere in the app.
   - Weight change labels in Historia's list (day rows and group rows): "−0,3" → "−0,3 kg".
   - Kulutus readouts (Historia marker card, own charts): "aktiivinen 465 · lepo 2 481" →
     "aktiivinen 465 kcal · lepo 2 481 kcal".
+- Add sheet (user 2026-11-16): the add panel at the bottom gets its own tone and a top line, so it
+  reads apart from the day list; the "<name> · Muuta · Kumoa" line after an add is dropped (the
+  highlighted row with its edit and delete buttons confirms it); failure and delete lines stay.
 - A unit test sweep is not attempted; the rule is checked by review.
 
 ## Capabilities
