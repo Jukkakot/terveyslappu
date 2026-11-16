@@ -373,7 +373,7 @@ private fun PeriodList(
                     when {
                         food.access != FoodAccess.GRANTED -> EnergyReason(foodActions.onGrant)
                         food.items == null -> Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                        else -> EnergyPage(series, here, onDay) { foodActions.onOpenDay(it) }
+                        else -> EnergyPage(series, here, onDay)
                     }
                 } else {
                     QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile, here, onDay)
@@ -506,13 +506,10 @@ private fun QuantityPage(
             } else if (quantity == Quantity.WEIGHT || data == null) {
                 ChartArea(data, crosshair, onDay)
             } else {
-                                WeightChart(
+                WeightChart(
                     data,
                     stringResource(R.string.chart_description_bmi, data.entries.size),
-                    axisLabel = quantity::axis,
-                    pointLabel = quantity::point,
-                    bands = bmiBands(),
-                    legend = stringResource(R.string.legend_bmi),
+                    bmi = true,
                     crosshair = crosshair,
                     onDay = onDay,
                     zone = zone,

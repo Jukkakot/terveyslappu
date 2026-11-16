@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
-import fi.jukkakot.terveyslappu.chart.TabReadouts
+import fi.jukkakot.terveyslappu.chart.TabCharts
 import fi.jukkakot.terveyslappu.food.EnergyDay
 import fi.jukkakot.terveyslappu.food.EnergySeries
 import java.time.LocalDate
@@ -45,7 +45,7 @@ import kotlin.math.max
  * share stacked, the 7-day average line, and under them the period's weights on the same days.
  */
 @Composable
-internal fun EnergyPage(series: EnergySeries, crosshair: LocalDate? = null, onDay: (LocalDate?) -> Unit = {}, onOpenDay: (LocalDate) -> Unit) {
+internal fun EnergyPage(series: EnergySeries, crosshair: LocalDate? = null, onDay: (LocalDate?) -> Unit = {}) {
     Column(Modifier.fillMaxWidth().testTag("page-ENERGY")) {
         Box(
             Modifier
@@ -61,7 +61,7 @@ internal fun EnergyPage(series: EnergySeries, crosshair: LocalDate? = null, onDa
                     modifier = Modifier.fillMaxWidth().height(180.dp).padding(16.dp).testTag("energyEmpty"),
                 )
             } else {
-                EnergyChart(series, crosshair, onDay, onOpenDay)
+                EnergyChart(series, crosshair, onDay)
             }
         }
         if (series.bars.isNotEmpty()) EnergyStatsTiles(series)
@@ -69,50 +69,13 @@ internal fun EnergyPage(series: EnergySeries, crosshair: LocalDate? = null, onDa
 }
 
 @Composable
-private fun EnergyChart(series: EnergySeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit, onOpenDay: (LocalDate) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val food = colors.primary
-    val treat = colors.tertiary
-    val line = colors.onSurfaceVariant
-    val grid = colors.outlineVariant
-    val marker = colors.onSurface
-    val top = max(series.bars.maxOf { it.total }, series.stats.averageKcal ?: 0)
-    val ticks = AxisTicks.bars(top.toDouble(), KCAL_STEP)
-    val maxKcal = ticks.last()
-    val description = stringResource(R.string.energy_chart_description, series.bars.size)
-    val labels = ticks.map { stringResource(R.string.food_kcal, formatKcal(it)) }
-    val labelWidth = axisLabelWidth(labels)
-    val axis = remember(series) { ChartAxis(series.from, series.to, series.weekly) }
-    ClearOffAxis(axis, crosshair) { onDay(null) }
-    // The crosshair (weight-chart "Crosshair on every Historia chart"); a day's readout ends with Avaa päivä (food-log).
-    val openDay = stringResource(R.string.chart_open_day)
-    val action = crosshair?.takeIf { !series.weekly }?.let { day -> openDay to { onOpenDay(day) } }
-    Column(Modifier.fillMaxWidth().testTag("energyChart").semantics { contentDescription = description }.crosshairActions(axis, crosshair) { onDay(it) }) {
-        TabReadout(crosshair?.let { TabReadouts.energy(series, it, LocalDate.now()) }, onClear = { onDay(null) }, action = action)
+private fun EnergyChart(series: EnergySeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
+    val today = LocalDate.now()
+    val spec = remember(series, today) { TabCharts.energy(series, today) }
+    // The marker card on a tap or drag (weight-chart "Crosshair on every Historia chart"); a day opens on Ruoka from the day list.
+    Column(Modifier.fillMaxWidth()) {
         RangeLine(series.from, series.to, "energyRange")
-        Row(Modifier.fillMaxWidth()) {
-            YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "energyAxis")
-            Canvas(Modifier.weight(1f).height(BAR_PLOT).clipToBounds().crosshairGestures(axis) { onDay(it) }.testTag("energyBars")) {
-                fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
-                drawGuidelines(grid, ticks.map { y(it) })
-                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.total.toDouble(), it.treat.toDouble()) }, ::y, food, treat, chosen = crosshair)
-                series.stats.averageKcal?.let { drawAverageLine(y(it.toDouble()), line) }
-                crosshair?.let { drawCrosshair(axis, it, marker) }
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            Spacer(Modifier.width(labelWidth))
-            DateAxis(series.from, series.to, "energyDates", Modifier.weight(1f))
-        }
-        ChartLegend(
-            buildList {
-                add(LegendEntry(stringResource(R.string.energy_legend_food), food))
-                add(LegendEntry(stringResource(R.string.energy_legend_treat), treat))
-                if (series.stats.averageKcal != null) add(LegendEntry(stringResource(R.string.energy_legend_average), line, dashed = true))
-                if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
-            },
-            "energyLegend",
-        )
+        HistoryChart(spec, crosshair, onDay, stringResource(R.string.energy_chart_description, series.bars.size), tag = "energyChart", plotTag = { _, _ -> "energyBars" })
     }
 }
 
@@ -126,7 +89,6 @@ internal fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGuidelines(col
 
 /** Height of a bar plot. */
 internal val BAR_PLOT = 160.dp
-private const val KCAL_STEP = 250.0
 
 @Composable
 private fun EnergyStatsTiles(series: EnergySeries) {

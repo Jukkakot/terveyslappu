@@ -1,0 +1,153 @@
+package fi.jukkakot.terveyslappu.chart
+
+import java.time.LocalDate
+
+/**
+ * An own chart's Historia tab as a chart definition (design 2; weight-chart "Stacked layout",
+ * "Overlaid layout", "Custom charts"). Allekkain: one panel per shown data with its own scale, a
+ * message panel for data without values. Päällekkäin: one plot in fraction units (0 = bottom of a
+ * data's scale, 1 = top), the first two drawn data labelled left and right, bars side by side.
+ * One drawn data in Päällekkäin is exactly the stacked single panel.
+ */
+object CustomChartSpec {
+    const val OVERLAID_DP = 200
+
+    /** Panel height per 1, 2, 3+ stacked panels. */
+    fun panelHeight(count: Int): Int = when (count) {
+        1 -> 160
+        2 -> 136
+        else -> 112
+    }
+
+    /** The bars' share of a day's slot. */
+    const val BAR_SHARE = 0.7
+
+    fun unit(kind: SeriesKind): ValueUnit = when (kind) {
+        SeriesKind.WEIGHT -> ValueUnit.KG
+        SeriesKind.ENERGY, SeriesKind.BURN -> ValueUnit.KCAL
+        SeriesKind.STEPS -> ValueUnit.STEPS
+    }
+
+    /**
+     * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else weight
+     * secondary, Syöty primary, Kulutus oranssi, steps tertiary when overlaid (primary when stacked).
+     */
+    fun tone(chart: CustomChart, kind: SeriesKind, overlaid: Boolean): ToneRef {
+        chart.colourOf(kind)?.let { return ToneRef.Palette(it) }
+        return when (kind) {
+            SeriesKind.WEIGHT -> ToneRef.SECONDARY
+            SeriesKind.ENERGY -> ToneRef.PRIMARY
+            SeriesKind.BURN -> TabReadouts.BURN_TONE
+            SeriesKind.STEPS -> if (overlaid) ToneRef.TERTIARY else ToneRef.PRIMARY
+        }
+    }
+
+    /** Syöty's treat share: the lighter tone of a chosen colour, else tertiary. */
+    fun treatTone(chart: CustomChart, tone: ToneRef): ToneRef =
+        if (chart.colourOf(SeriesKind.ENERGY) != null) tone.alpha(ToneRef.LIGHT_ALPHA) else ToneRef.TERTIARY
+
+    /** [access]: whether a kind can be read (kinds without access have no marker row). */
+    fun of(data: CustomChartData, today: LocalDate, access: (SeriesKind) -> Boolean): ChartSpec {
+        val chart = data.chart
+        val axis = data.axis
+        val overlaid = chart.layout == ChartLayout.OVERLAID && data.drawn.size > 1
+        val readout: (LocalDate) -> ReadoutCard = { day -> TabReadouts.custom(ChartReadout.of(day, data, access), today) { tone(chart, it, overlaid) } }
+        if (data.empty) return ChartSpec(axis, emptyList(), emptyList(), readout, empty = true)
+        return if (overlaid) overlaid(data, readout) else stacked(data, readout)
+    }
+
+    private fun stacked(data: CustomChartData, readout: (LocalDate) -> ReadoutCard): ChartSpec {
+        val chart = data.chart
+        val single = chart.layout == ChartLayout.OVERLAID
+        val kinds = if (single) data.drawn.ifEmpty { data.kinds.take(1) } else data.kinds
+        val height = panelHeight(kinds.size)
+        val x = ChartX(data.axis)
+        val panels = kinds.map { kind ->
+            if (!kind.drawn) return@map PanelSpec(height, null, message = PanelMessage(kind.kind), kind = kind.kind)
+            val tone = tone(chart, kind.kind, overlaid = false)
+            val values = kind.values.orEmpty()
+            val average = kind.average.takeIf { chart.showAverage }
+            val series: List<SeriesSpec> = when {
+                kind.style == SeriesStyle.LINE -> listOf(SeriesSpec(kind.kind.name, tone, line(kind, values, x), average = average))
+                kind.kind == SeriesKind.ENERGY -> {
+                    val points = values.map { ChartPoint(x.of(it.day), it.value, it.day, listOf((it.value - it.treat).coerceAtLeast(0.0), it.treat)) }
+                    listOf(SeriesSpec(kind.kind.name, tone, SeriesShape.StackedBars(points, listOf(tone, treatTone(chart, tone))), average = average))
+                }
+                kind.kind == SeriesKind.BURN -> {
+                    val split = values.filter { it.active != null }.map { ChartPoint(x.of(it.day), it.value, it.day, listOf((it.value - it.active!!).coerceAtLeast(0.0), it.active)) }
+                    val whole = values.filter { it.active == null }.map { ChartPoint(x.of(it.day), it.value, it.day) }
+                    listOfNotNull(
+                        SeriesSpec("${kind.kind.name}-split", tone, SeriesShape.StackedBars(split, listOf(tone.alpha(ToneRef.LIGHT_ALPHA), tone))).takeIf { split.isNotEmpty() },
+                        SeriesSpec("${kind.kind.name}-total", tone.alpha(ToneRef.TOTAL_ALPHA), SeriesShape.Bars(whole)).takeIf { whole.isNotEmpty() },
+                    ).mapIndexed { i, s -> if (i == 0) s.copy(average = average) else s }
+                }
+                else -> listOf(SeriesSpec(kind.kind.name, tone, SeriesShape.Bars(values.map { ChartPoint(x.of(it.day), it.value, it.day) }), average = average))
+            }
+            PanelSpec(height, AxisSpec(kind.min, kind.max, unit(kind.kind)), series = series, kind = kind.kind)
+        }
+        val legend = data.drawn.filter { it in kinds }.flatMap { stackedLegend(chart, it) } + averageLegend(data)
+        val notDrawn = if (single) data.kinds.filter { !it.drawn && it !in kinds }.map { it.kind } else emptyList()
+        return ChartSpec(data.axis, panels, legend, readout, notDrawn = notDrawn)
+    }
+
+    private fun line(kind: KindData, values: List<DayValue>, x: ChartX, y: (Double) -> Double = { it }): SeriesShape.Line =
+        SeriesShape.Line(values.map { ChartPoint(x.of(it.day), y(it.value), it.day) }, if (kind.kind == SeriesKind.WEIGHT) Dots.FitOrLast else Dots.None)
+
+    private fun label(kind: SeriesKind): LegendLabel = when (kind) {
+        SeriesKind.WEIGHT -> LegendLabel.WEIGHT
+        SeriesKind.ENERGY -> LegendLabel.FOOD
+        SeriesKind.BURN -> LegendLabel.BURN
+        SeriesKind.STEPS -> LegendLabel.STEPS
+    }
+
+    private fun stackedLegend(chart: CustomChart, kind: KindData): List<LegendItem> {
+        val tone = tone(chart, kind.kind, overlaid = false)
+        if (kind.style == SeriesStyle.LINE) return listOf(LegendItem(label(kind.kind), tone, LegendForm.LINE))
+        return when (kind.kind) {
+            SeriesKind.ENERGY -> listOf(LegendItem(LegendLabel.FOOD, tone, LegendForm.SQUARE), LegendItem(LegendLabel.TREAT, treatTone(chart, tone), LegendForm.SQUARE))
+            SeriesKind.BURN -> listOfNotNull(
+                LegendItem(LegendLabel.REST, tone.alpha(ToneRef.LIGHT_ALPHA), LegendForm.SQUARE),
+                LegendItem(LegendLabel.ACTIVE, tone, LegendForm.SQUARE),
+                LegendItem(LegendLabel.TOTAL, tone.alpha(ToneRef.TOTAL_ALPHA), LegendForm.SQUARE).takeIf { kind.values.orEmpty().any { it.active == null } },
+            )
+            else -> listOf(LegendItem(label(kind.kind), tone, LegendForm.SQUARE))
+        }
+    }
+
+    private fun averageLegend(data: CustomChartData): List<LegendItem> =
+        if (data.chart.showAverage && data.drawn.any { it.average != null }) listOf(LegendItem(LegendLabel.AVERAGE, ToneRef.MUTED, LegendForm.DASHED)) else emptyList()
+
+    private fun overlaid(data: CustomChartData, readout: (LocalDate) -> ReadoutCard): ChartSpec {
+        val chart = data.chart
+        val drawn = data.drawn
+        val x = ChartX(data.axis)
+        val bars = drawn.filter { it.style == SeriesStyle.BARS }
+        val slots = bars.size.coerceAtLeast(1)
+        val slotWidth = BAR_SHARE / slots
+        val series = drawn.map { kind ->
+            val tone = tone(chart, kind.kind, overlaid = true)
+            val values = kind.values.orEmpty()
+            val average = kind.average.takeIf { chart.showAverage }?.let { kind.fraction(it).toDouble() }
+            val shape = if (kind.style == SeriesStyle.BARS) {
+                val slot = bars.indexOf(kind)
+                // Side by side in the day's slot (review decision 4); dayAt rounds back to the day.
+                val offset = -BAR_SHARE / 2 + (slot + 0.5) * slotWidth
+                SeriesShape.Bars(values.map { ChartPoint(x.of(it.day) + offset, kind.fraction(it.value).toDouble(), it.day) }, slots = slots)
+            } else {
+                line(kind, values, x) { kind.fraction(it).toDouble() }
+            }
+            val side = when (drawn.indexOf(kind)) {
+                0 -> Side.LEFT
+                1 -> Side.RIGHT
+                else -> Side.HIDDEN
+            }
+            SeriesSpec(kind.kind.name, tone, shape, side, average, averageTone = tone)
+        }
+        fun axisOf(kind: KindData) = AxisSpec(0.0, 1.0, unit(kind.kind), tone(chart, kind.kind, overlaid = true), kind.min, kind.max)
+        val panel = PanelSpec(OVERLAID_DP, axisOf(drawn[0]), axisOf(drawn[1]), series, kind = null)
+        val legend = drawn.map { kind ->
+            LegendItem(label(kind.kind), tone(chart, kind.kind, overlaid = true), if (kind.style == SeriesStyle.LINE) LegendForm.LINE else LegendForm.SQUARE)
+        } + averageLegend(data)
+        return ChartSpec(data.axis, listOf(panel), legend, readout, notDrawn = data.kinds.filter { !it.drawn }.map { it.kind })
+    }
+}

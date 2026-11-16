@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
-import fi.jukkakot.terveyslappu.chart.TabReadouts
+import fi.jukkakot.terveyslappu.chart.TabCharts
 import androidx.compose.ui.draw.clipToBounds
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsChoice
@@ -186,49 +186,14 @@ private fun StepsPage(series: StepsSeries, steps: StepsUiState, actions: StepsAc
 
 @Composable
 private fun StepsChart(series: StepsSeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val barColor = colors.primary
-    val line = colors.onSurfaceVariant
-    val grid = colors.outlineVariant
-    val marker = colors.onSurface
-    val top = max(series.bars.maxOf { it.steps }, series.stats.averageSteps ?: 0L)
-    val ticks = AxisTicks.bars(top.toDouble(), STEPS_STEP)
-    val maxSteps = ticks.last()
-    val description = stringResource(R.string.steps_chart_description, series.bars.size)
-    val labels = ticks.map { stringResource(R.string.steps_value, formatSteps(it.toLong())) }
-    val labelWidth = axisLabelWidth(labels)
-    val axis = remember(series) { ChartAxis(series.from, series.to, series.weekly) }
-    ClearOffAxis(axis, crosshair) { onDay(null) }
-    // The crosshair (weight-chart "Crosshair on every Historia chart"): a day, or a week's Monday on weekly bars.
-    Column(Modifier.fillMaxWidth().testTag("stepsChart").semantics { contentDescription = description }.crosshairActions(axis, crosshair) { onDay(it) }) {
-        TabReadout(crosshair?.let { TabReadouts.steps(series, it, LocalDate.now()) }, onClear = { onDay(null) })
+    val today = LocalDate.now()
+    val spec = remember(series, today) { TabCharts.steps(series, today) }
+    // The marker card (weight-chart "Crosshair on every Historia chart"): a day, or a week on weekly bars.
+    Column(Modifier.fillMaxWidth()) {
         RangeLine(series.from, series.to, "stepsRange")
-        Row(Modifier.fillMaxWidth()) {
-            YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "stepsAxis")
-            Canvas(Modifier.weight(1f).height(BAR_PLOT).clipToBounds().crosshairGestures(axis) { onDay(it) }.testTag("stepsBars")) {
-                fun y(steps: Double) = size.height * (1 - (steps / maxSteps)).toFloat()
-                drawGuidelines(grid, ticks.map { y(it) })
-                drawBars(axis, series.bars.map { BarSpec(it.from, it.days, it.steps.toDouble()) }, ::y, barColor, chosen = crosshair)
-                series.stats.averageSteps?.let { drawAverageLine(y(it.toDouble()), line) }
-                crosshair?.let { drawCrosshair(axis, it, marker) }
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            Spacer(Modifier.width(labelWidth))
-            DateAxis(series.from, series.to, "stepsDates", Modifier.weight(1f))
-        }
-        ChartLegend(
-            buildList {
-                add(LegendEntry(stringResource(R.string.steps_legend), barColor))
-                if (series.stats.averageSteps != null) add(LegendEntry(stringResource(R.string.energy_legend_average), line, dashed = true))
-                if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
-            },
-            "stepsLegend",
-        )
+        HistoryChart(spec, crosshair, onDay, stringResource(R.string.steps_chart_description, series.bars.size), tag = "stepsChart", plotTag = { _, _ -> "stepsBars" })
     }
 }
-
-private const val STEPS_STEP = 1000.0
 
 @Composable
 private fun StepsStatsTiles(series: StepsSeries) {

@@ -7,15 +7,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,7 +31,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartAxis
@@ -45,7 +41,6 @@ import fi.jukkakot.terveyslappu.chart.SeriesColour
 import fi.jukkakot.terveyslappu.chart.SeriesKind
 import fi.jukkakot.terveyslappu.chart.SeriesStyle
 import fi.jukkakot.terveyslappu.home.CardSize
-import java.time.LocalDate
 
 /** Why a shown data has no values to draw (spec "Chart data without values"); Ready = it has loaded. */
 internal sealed interface PanelState {
@@ -56,57 +51,35 @@ internal sealed interface PanelState {
     data class Gated(val text: String, val buttons: List<Pair<String, () -> Unit>>) : PanelState
 }
 
-/** Where a chart is drawn: its Historia tab, or a front page card at a size (custom-charts design 8, 9, 13). */
-internal sealed interface ChartMode {
-    data object Tab : ChartMode
-    data class Card(val size: CardSize) : ChartMode
-}
-
-private val ChartMode.card: CardSize? get() = (this as? ChartMode.Card)?.size
-
-/** Tab panel height per 1, 2, 3 stacked panels (design 8), the overlaid plot's height (design 9). */
-private fun panelHeight(count: Int): Dp = when (count) {
-    1 -> 160.dp
-    2 -> 136.dp
-    else -> 112.dp
-}
-private val OVERLAID_PLOT = 200.dp
 private val MIN_CARD_PANEL = 24.dp
 
 /**
- * An own chart (custom-charts design 8, 9): stacked panels or one overlaid plot over the chart's own
- * days, with the shared axis rule and legend. On a tab, taps and holds on the drawn plot areas call
- * [onDay] (the crosshair, design 10); a card has no gestures.
+ * An own chart on a front page card (custom-charts design 8, 9, 13): stacked panels or one overlaid
+ * plot over the chart's own days, drawn on Canvas with [ChartPanels]; no gestures (a tap opens
+ * Historia). Its Historia tab is drawn by `HistoryChart` from `CustomChartSpec`.
  */
 @Composable
 internal fun CustomChartView(
     data: CustomChartData,
-    mode: ChartMode,
+    size: CardSize,
     states: Map<SeriesKind, PanelState> = emptyMap(),
-    crosshair: LocalDate? = null,
-    onDay: (LocalDate) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val description = stringResource(R.string.custom_chart_description, data.chart.name)
-    val actions = if (mode == ChartMode.Tab) Modifier.crosshairActions(data.axis, crosshair, onDay) else Modifier
-    val a11y = Modifier.semantics { contentDescription = description }.then(actions)
-    val fill = mode.card != null
-    Column(modifier.fillMaxWidth().then(a11y).testTag("customChart-${data.chart.id}")) {
+    Column(modifier.fillMaxWidth().semantics { contentDescription = description }.testTag("customChart-${data.chart.id}")) {
         if (data.empty) {
-            Message(stringResource(R.string.chart_empty), "chartEmpty", Modifier.fillMaxWidth().then(if (fill) Modifier.weight(1f) else Modifier.height(panelHeight(1))))
+            Message(stringResource(R.string.chart_empty), "chartEmpty", Modifier.fillMaxWidth().weight(1f))
             return@Column
         }
-        if (mode == ChartMode.Tab) RangeLine(data.axis.from, data.axis.to, "chartRange")
         val overlaidLayout = data.chart.layout == ChartLayout.OVERLAID
         if (overlaidLayout && data.drawn.size > 1) {
-            Overlaid(data, mode, states, crosshair, onDay)
+            Overlaid(data, size)
         } else {
-            // One data drawn in Päällekkäin = exactly the stacked single panel; the rest named under it.
-            Stacked(data, mode, states, crosshair, onDay, single = overlaidLayout)
+            // One data drawn in Päällekkäin = exactly the stacked single panel.
+            Stacked(data, size, states, single = overlaidLayout)
         }
     }
 }
-
 
 /**
  * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else Oletus = weight
@@ -157,18 +130,18 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
  * Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16);
  * Kulutus bars split into lepo and aktiivinen when [burnSplit] (Allekkain), else one tone.
  */
-private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false, chosen: LocalDate? = null) {
+private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false) {
     val values = kind.values.orEmpty()
     fun y(v: Double) = size.height * (1 - kind.fraction(v))
     if (kind.style == SeriesStyle.BARS) {
         if (!barsToo) return
         if (kind.kind == SeriesKind.BURN && burnSplit) {
-            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots, chosen = chosen)
+            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots)
         } else {
-            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots, chosen = chosen)
+            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
         }
     } else if (linesToo) {
-        drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT, chosen = chosen)
+        drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT)
     }
 }
 
@@ -179,107 +152,67 @@ private fun DrawScope.drawKindAverage(kind: KindData, color: Color) {
 }
 
 @Composable
-private fun ColumnScope.Stacked(data: CustomChartData, mode: ChartMode, states: Map<SeriesKind, PanelState>, crosshair: LocalDate?, onDay: (LocalDate) -> Unit, single: Boolean = false) {
+private fun ColumnScope.Stacked(data: CustomChartData, card: CardSize, states: Map<SeriesKind, PanelState>, single: Boolean = false) {
     val colors = MaterialTheme.colorScheme
-    val card = mode.card
-    val labels = card == null
-    val labelWidth = if (labels) axisLabelWidth(data.drawn.flatMap { axisLabels(it) }) else 0.dp
     val panels = if (single) data.drawn.ifEmpty { data.kinds.take(1) } else data.kinds
-    val height = panelHeight(panels.size)
     panels.forEach { kind ->
-        val panel = Modifier.fillMaxWidth().then(if (card != null) Modifier.weight(1f).heightIn(min = MIN_CARD_PANEL) else Modifier.height(height))
-        Row(panel.testTag("panel-${kind.kind.name}").padding(top = if (labels) 4.dp else 2.dp)) {
-            if (labels) {
-                if (kind.drawn) {
-                    YAxisLabels(axisLabels(kind), listOf(0f, 0.5f, 1f), labelWidth, if (card == null) height - 4.dp else 0.dp, "axis-${kind.kind.name}")
-                } else {
-                    Spacer(Modifier.width(labelWidth))
-                }
-            }
+        val panel = Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CARD_PANEL)
+        Row(panel.testTag("panel-${kind.kind.name}").padding(top = 2.dp)) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 if (kind.drawn) {
                     val tone = data.toneOf(kind.kind, overlaid = false)
                     val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) data.treatTone(tone) else null
-                    val chosen = crosshair.takeIf { mode == ChartMode.Tab }
-                    Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
+                    Plot(Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
                         drawGuidelines(colors.outlineVariant, kind.ticks.map { size.height * (1 - kind.fraction(it)) })
-                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true, chosen = chosen)
+                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true)
                         if (data.chart.showAverage) drawKindAverage(kind, colors.onSurfaceVariant)
-                        drawKind(kind, data.axis, tone, treat, barsToo = false, chosen = chosen)
+                        drawKind(kind, data.axis, tone, treat, barsToo = false)
                     }
                     if (card == CardSize.BIG) ScaleTopLabel(axisLabels(kind).last(), "scaleTop-${kind.kind.name}")
                 } else {
-                    PanelMessage(kind, states[kind.kind] ?: PanelState.Ready, compact = card != null)
+                    PanelMessage(kind.kind, states[kind.kind] ?: PanelState.Ready, compact = true)
                 }
             }
         }
     }
-    DatesAndLegend(data, mode, labelWidth, overlaid = false)
-    if (single && card == null) NotDrawnLines(data, states, except = panels)
-}
-
-/** The overlaid layout's lines under the plot for data that is not drawn (with the grant button). */
-@Composable
-private fun NotDrawnLines(data: CustomChartData, states: Map<SeriesKind, PanelState>, except: List<KindData> = emptyList()) {
-    data.kinds.filter { !it.drawn && it !in except }.forEach { kind ->
-        PanelMessage(kind, states[kind.kind] ?: PanelState.Ready, compact = false, line = true)
-    }
+    DatesAndLegend(data, card, overlaid = false)
 }
 
 @Composable
-private fun ColumnScope.Overlaid(data: CustomChartData, mode: ChartMode, states: Map<SeriesKind, PanelState>, crosshair: LocalDate?, onDay: (LocalDate) -> Unit) {
+private fun ColumnScope.Overlaid(data: CustomChartData, card: CardSize) {
     val colors = MaterialTheme.colorScheme
-    val card = mode.card
     val drawn = data.drawn
     val left = drawn[0]
     val right = drawn[1]
-    val labels = card == null
-    val leftLabels = axisLabels(left)
-    val rightLabels = axisLabels(right)
-    val leftWidth = if (labels) axisLabelWidth(leftLabels) else 0.dp
-    val rightWidth = if (labels) axisLabelWidth(rightLabels) else 0.dp
     val tones = drawn.associate { it.kind to data.toneOf(it.kind, overlaid = true) }
-    val plot = Modifier.fillMaxWidth().then(if (card != null) Modifier.weight(1f).heightIn(min = MIN_CARD_PANEL) else Modifier.height(OVERLAID_PLOT))
+    val plot = Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CARD_PANEL)
     Row(plot.padding(top = 4.dp).testTag("plot-overlaid")) {
-        if (labels) YAxisLabels(leftLabels, listOf(0f, 0.5f, 1f), leftWidth, OVERLAID_PLOT - 4.dp, "axisLeft-${left.kind.name}", tones.getValue(left.kind))
         Box(Modifier.weight(1f).fillMaxHeight()) {
             val bars = drawn.filter { it.style == SeriesStyle.BARS }
-            val chosen = crosshair.takeIf { mode == ChartMode.Tab }
-            Plot(data.axis, mode, crosshair, onDay, Modifier.fillMaxSize().testTag("plot-OVERLAID")) {
+            Plot(Modifier.fillMaxSize().testTag("plot-OVERLAID")) {
                 drawGuidelines(colors.outlineVariant, listOf(0f, 0.5f, 1f).map { size.height * (1 - it) })
-                bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size, chosen = chosen) }
+                bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size) }
                 if (data.chart.showAverage) drawn.forEach { drawKindAverage(it, tones.getValue(it.kind)) }
-                drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null, chosen = chosen) }
+                drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null) }
             }
             if (card == CardSize.BIG) {
-                ScaleTopLabel(leftLabels.last(), "scaleTop-${left.kind.name}", Modifier.align(Alignment.TopStart), tones.getValue(left.kind))
-                ScaleTopLabel(rightLabels.last(), "scaleTop-${right.kind.name}", Modifier.align(Alignment.TopEnd), tones.getValue(right.kind))
+                ScaleTopLabel(axisLabels(left).last(), "scaleTop-${left.kind.name}", Modifier.align(Alignment.TopStart), tones.getValue(left.kind))
+                ScaleTopLabel(axisLabels(right).last(), "scaleTop-${right.kind.name}", Modifier.align(Alignment.TopEnd), tones.getValue(right.kind))
             }
         }
-        if (labels) YAxisLabels(rightLabels, listOf(0f, 0.5f, 1f), rightWidth, OVERLAID_PLOT - 4.dp, "axisRight-${right.kind.name}", tones.getValue(right.kind), end = true)
     }
-    DatesAndLegend(data, mode, leftWidth, overlaid = true, endPad = rightWidth)
-    // Data that is not drawn is named under the plot (on a card left out silently).
-    if (card == null) NotDrawnLines(data, states)
+    DatesAndLegend(data, card, overlaid = true)
 }
 
-/** The 3 dates (tab: 4-5 by fit) under the plot and the legend; a small card has neither, wide and big only first and last day. */
+/** A small card has neither dates nor legend; wide and big the first and last day and the legend. */
 @Composable
-private fun DatesAndLegend(data: CustomChartData, mode: ChartMode, start: Dp, overlaid: Boolean, endPad: Dp = 0.dp) {
-    val card = mode.card
+private fun DatesAndLegend(data: CustomChartData, card: CardSize, overlaid: Boolean) {
     if (card == CardSize.SMALL) return
     val colors = MaterialTheme.colorScheme
-    if (card == null) {
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = endPad)) {
-            Spacer(Modifier.width(start))
-            DateAxis(data.axis.from, data.axis.to, "chartDates", Modifier.weight(1f))
-        }
-    } else {
-        val small = MaterialTheme.typography.labelSmall
-        Row(Modifier.fillMaxWidth().padding(top = 2.dp).testTag("chartDates")) {
-            Text(formatShortDay(data.axis.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-            Text(formatShortDay(data.axis.to), style = small, color = colors.onSurfaceVariant)
-        }
+    val small = MaterialTheme.typography.labelSmall
+    Row(Modifier.fillMaxWidth().padding(top = 2.dp).testTag("chartDates")) {
+        Text(formatShortDay(data.axis.from), style = small, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(formatShortDay(data.axis.to), style = small, color = colors.onSurfaceVariant)
     }
     val weight = stringResource(R.string.legend_weight)
     val food = stringResource(R.string.energy_legend_food)
@@ -316,15 +249,10 @@ private fun DatesAndLegend(data: CustomChartData, mode: ChartMode, start: Dp, ov
     ChartLegend(withAverage, "chartLegend")
 }
 
-/** A plot area; on a tab its gestures place the crosshair, and the line is drawn over it. */
+/** A card's plot area. */
 @Composable
-private fun Plot(axis: ChartAxis, mode: ChartMode, crosshair: LocalDate?, onDay: (LocalDate) -> Unit, modifier: Modifier, draw: DrawScope.() -> Unit) {
-    val line = MaterialTheme.colorScheme.onSurface
-    val gestures = if (mode == ChartMode.Tab) Modifier.crosshairGestures(axis, onDay) else Modifier
-    Canvas(modifier.clipToBounds().then(gestures)) {
-        draw()
-        if (crosshair != null && mode == ChartMode.Tab) drawCrosshair(axis, crosshair, line)
-    }
+private fun Plot(modifier: Modifier, draw: DrawScope.() -> Unit) {
+    Canvas(modifier.clipToBounds()) { draw() }
 }
 
 /** The top of a card's scale with its unit (big cards). */
@@ -348,10 +276,10 @@ private fun ScaleTopLabel(text: String, tag: String, modifier: Modifier = Modifi
  * the overlaid plot ([line]); a missing permission with its grant button, loading a spinner.
  */
 @Composable
-private fun PanelMessage(kind: KindData, state: PanelState, compact: Boolean, line: Boolean = false) {
+internal fun PanelMessage(kind: SeriesKind, state: PanelState, compact: Boolean, line: Boolean = false) {
     val colors = MaterialTheme.colorScheme
     val style = if (compact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium
-    val tag = "panelMessage-${kind.kind.name}"
+    val tag = "panelMessage-${kind.name}"
     val box = if (line) Modifier.fillMaxWidth().padding(top = 4.dp) else Modifier.fillMaxSize()
     Box(box.testTag(tag), contentAlignment = if (line) Alignment.CenterStart else Alignment.Center) {
         when (state) {
@@ -362,18 +290,18 @@ private fun PanelMessage(kind: KindData, state: PanelState, compact: Boolean, li
             } else if (line) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(state.text, style = style, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
-                    state.buttons.forEach { (label, onClick) -> TextButton(onClick = onClick, modifier = Modifier.testTag("grant-${kind.kind.name}")) { Text(label) } }
+                    state.buttons.forEach { (label, onClick) -> TextButton(onClick = onClick, modifier = Modifier.testTag("grant-${kind.name}")) { Text(label) } }
                 }
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(state.text, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     Row {
-                        state.buttons.forEach { (label, onClick) -> TextButton(onClick = onClick, modifier = Modifier.testTag("grant-${kind.kind.name}")) { Text(label) } }
+                        state.buttons.forEach { (label, onClick) -> TextButton(onClick = onClick, modifier = Modifier.testTag("grant-${kind.name}")) { Text(label) } }
                     }
                 }
             }
             PanelState.Ready -> Text(
-                if (compact) stringResource(R.string.chart_card_none) else emptyText(kind.kind),
+                if (compact) stringResource(R.string.chart_card_none) else emptyText(kind),
                 style = style,
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,

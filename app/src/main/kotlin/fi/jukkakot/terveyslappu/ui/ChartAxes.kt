@@ -33,101 +33,10 @@ import fi.jukkakot.terveyslappu.chart.AxisTicks
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
-/** Gap kept between date labels and the label column's right padding. */
-private val LABEL_GAP = 8.dp
-private val COLUMN_PAD = 6.dp
-
-/** Height of the weight line under the bars (steps-source-and-axes design 8). */
-
 /** "12 000 askelta", "97,5 kg": a y value with at most one decimal. */
 internal fun formatAxisKg(kg: Double): String {
     val tenths = Math.round(kg * 10)
     return if (tenths % 10 == 0L) "${tenths / 10}" else formatKg(tenths / 10.0)
-}
-
-/** The date label of [day]: "9.11." or, for a year or more, "9/2022". */
-internal fun dateLabel(day: LocalDate, monthYear: Boolean): String = if (monthYear) formatMonthYear(day) else formatShortDay(day)
-
-/** An axis label: the weekday on a week-or-shorter chart, else [dateLabel]. */
-internal fun axisDayLabel(day: LocalDate, week: Boolean, monthYear: Boolean): String = if (week) AxisTicks.weekday(day) else dateLabel(day, monthYear)
-
-/** The shared label column's width: the widest of [labels] plus padding, measured once per tab. */
-@Composable
-internal fun axisLabelWidth(labels: List<String>): Dp {
-    val measurer = rememberTextMeasurer()
-    val style = MaterialTheme.typography.labelSmall
-    val density = LocalDensity.current
-    return remember(labels, style, density) {
-        val px = labels.maxOfOrNull { measurer.measure(it, style).size.width } ?: 0
-        with(density) { px.toDp() } + COLUMN_PAD
-    }
-}
-
-/**
- * Y labels right-aligned in a column of [width] × [height], each vertically centred on its value's
- * guideline ([fractions] 0 = bottom, 1 = top) and clamped inside the plot.
- */
-@Composable
-internal fun YAxisLabels(
-    labels: List<String>,
-    fractions: List<Float>,
-    width: Dp,
-    height: Dp,
-    tag: String,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    /** A right-hand axis: labels start-aligned against the plot (custom-charts design 9). */
-    end: Boolean = false,
-) {
-    val style = MaterialTheme.typography.labelSmall
-    Layout(
-        content = { labels.forEachIndexed { i, text -> Text(text, style = style, color = color, maxLines = 1, softWrap = false, modifier = Modifier.testTag("$tag-$i")) } },
-        modifier = Modifier.width(width).height(height),
-    ) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(Constraints()) }
-        val w = constraints.maxWidth
-        val h = constraints.maxHeight
-        val pad = COLUMN_PAD.roundToPx()
-        layout(w, h) {
-            placeables.forEachIndexed { i, p ->
-                val centre = (1f - fractions[i]) * h
-                val y = (centre - p.height / 2f).roundToInt().coerceIn(0, (h - p.height).coerceAtLeast(0))
-                p.place(if (end) pad else (w - pad - p.width).coerceAtLeast(0), y)
-            }
-        }
-    }
-}
-
-/**
- * The date row under a plot (design 8): 3 to 5 dates evenly spread, as many as fit at the measured
- * label widths; the first start-aligned, the last end-aligned, the others centred on their day.
- */
-@Composable
-internal fun DateAxis(from: LocalDate, to: LocalDate, tag: String, modifier: Modifier = Modifier) {
-    val style: TextStyle = MaterialTheme.typography.labelSmall
-    val color = MaterialTheme.colorScheme.onSurfaceVariant
-    val measurer = rememberTextMeasurer()
-    val monthYear = AxisTicks.monthYear(from, to)
-    val week = AxisTicks.isWeek(from, to)
-    BoxWithConstraints(modifier.fillMaxWidth().testTag(tag)) {
-        val widthPx = constraints.maxWidth.toFloat()
-        val gap = with(LocalDensity.current) { LABEL_GAP.toPx() }
-        val dates = remember(from, to, widthPx, style) {
-            val measure = { day: LocalDate -> measurer.measure(dateLabel(day, monthYear), style).size.width.toFloat() }
-            AxisTicks.labelDays(from, to, if (week) 0 else AxisTicks.fitCount(from, to, widthPx, gap, measure))
-        }
-        Layout(
-            content = { dates.forEach { Text(axisDayLabel(it, week, monthYear), style = style, color = color, maxLines = 1, softWrap = false, modifier = Modifier.testTag("$tag-label")) } },
-            modifier = Modifier.fillMaxWidth(),
-        ) { measurables, constraints ->
-            val placeables = measurables.map { it.measure(Constraints()) }
-            val w = constraints.maxWidth
-            val h = placeables.maxOfOrNull { it.height } ?: 0
-            val bounds = AxisTicks.labelBounds(from, to, dates, w.toFloat(), centred = week) { day -> placeables[dates.indexOf(day)].width.toFloat() }
-            layout(w, h) {
-                placeables.forEachIndexed { i, p -> p.place(bounds[i].start.roundToInt(), 0) }
-            }
-        }
-    }
 }
 
 /** The period's first and last day with years, at the top of a chart card (period-range-line). */

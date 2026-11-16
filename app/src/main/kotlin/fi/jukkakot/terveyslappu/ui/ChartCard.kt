@@ -50,7 +50,7 @@ internal fun ChartCard(chart: CustomChart, data: HomeCardsData, size: CardSize, 
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Column(Modifier.testTag("chartCardTitle")) { CardTitle(R.drawable.ic_chart, chart.name, chevron = true) }
-        CustomChartView(chartData, ChartMode.Card(size), states, modifier = Modifier.weight(1f).testTag("chartCardChart"))
+        CustomChartView(chartData, size, states, modifier = Modifier.weight(1f).testTag("chartCardChart"))
         Text(
             periodText(chart.period),
             style = MaterialTheme.typography.labelMedium,

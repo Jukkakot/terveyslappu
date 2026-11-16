@@ -26,12 +26,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
-import fi.jukkakot.terveyslappu.chart.ChartReadout
 import fi.jukkakot.terveyslappu.chart.CustomChart
 import fi.jukkakot.terveyslappu.chart.CustomChartData
-import fi.jukkakot.terveyslappu.chart.Readout
 import fi.jukkakot.terveyslappu.chart.SeriesKind
-import fi.jukkakot.terveyslappu.chart.TabReadouts
+import fi.jukkakot.terveyslappu.chart.CustomChartSpec
 import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
@@ -107,8 +105,8 @@ internal fun chartStates(
 }
 
 /**
- * An own chart's Historia page (custom-charts design 11): Muokkaa, the readout slot and the chart; no
- * statistics and no list.
+ * An own chart's Historia page (custom-charts design 11): the range line, Muokkaa and the chart on
+ * MPAndroidChart (`CustomChartSpec`); no statistics and no list.
  */
 @Composable
 internal fun ChartPage(
@@ -119,6 +117,8 @@ internal fun ChartPage(
     onDay: (LocalDate?) -> Unit,
     onEdit: () -> Unit,
 ) {
+    val today = LocalDate.now()
+    val spec = remember(data, today) { CustomChartSpec.of(data, today, access) }
     Column(Modifier.fillMaxWidth().testTag("page-chart-${data.chart.id}")) {
         Box(
             Modifier
@@ -129,47 +129,25 @@ internal fun ChartPage(
         ) {
             Column {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    ReadoutSlot(crosshair?.let { readoutText(ChartReadout.of(it, data, access)) }, onClear = { onDay(null) }, Modifier.weight(1f))
+                    if (spec.empty) Spacer(Modifier.weight(1f)) else RangeLine(data.axis.from, data.axis.to, "chartRange", Modifier.weight(1f))
                     TextButton(onClick = onEdit, modifier = Modifier.testTag("chartEdit")) {
                         Icon(painterResource(R.drawable.ic_edit), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.chart_edit))
                     }
                 }
-                CustomChartView(data, ChartMode.Tab, states, crosshair, onDay = { onDay(it) })
+                HistoryChart(
+                    spec,
+                    crosshair,
+                    onDay,
+                    stringResource(R.string.custom_chart_description, data.chart.name),
+                    tag = "customChart-${data.chart.id}",
+                    states = states,
+                )
             }
         }
     }
 }
-
-/** "Ma 12.11. · 82,4 kg · 1 900 kcal · 6 420 askelta"; missing parts "ei painoa", "ei kirjauksia", "ei tietoa". */
-@Composable
-internal fun readoutText(readout: Readout): String {
-    val parts = readout.values.map { (kind, value) ->
-        if (value != null) {
-            when (kind) {
-                SeriesKind.WEIGHT -> stringResource(R.string.kg_value, formatKg(value.value))
-                SeriesKind.BURN -> burnValueText(value)
-                else -> valueText(kind, value.value)
-            }
-        } else {
-            stringResource(
-                when (kind) {
-                    SeriesKind.WEIGHT -> R.string.chart_no_weight
-                    SeriesKind.ENERGY -> R.string.chart_no_food
-                    SeriesKind.BURN, SeriesKind.STEPS -> R.string.chart_no_steps
-                },
-            )
-        }
-    }
-    return (listOf(TabReadouts.day(readout.day, LocalDate.now())) + parts).joinToString(" · ")
-}
-
-/** "2 300 kcal · aktiivinen 450"; a day without a split "2 300 kcal" (weight-chart "Kulutus in own charts"). */
-@Composable
-internal fun burnValueText(value: fi.jukkakot.terveyslappu.chart.DayValue): String = value.active?.let {
-    stringResource(R.string.burn_value_split, formatKcal(value.value), formatKcal(it))
-} ?: stringResource(R.string.food_kcal, formatKcal(value.value))
 
 /** The last tab: what own charts are and the Uusi kaavio button. */
 @Composable

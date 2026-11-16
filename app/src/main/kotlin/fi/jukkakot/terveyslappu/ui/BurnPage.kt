@@ -38,7 +38,7 @@ import fi.jukkakot.terveyslappu.burn.BurnSeries
 import fi.jukkakot.terveyslappu.burn.BurnUiState
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
-import fi.jukkakot.terveyslappu.chart.TabReadouts
+import fi.jukkakot.terveyslappu.chart.TabCharts
 import androidx.compose.ui.draw.clipToBounds
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsSourceLabel
@@ -171,51 +171,14 @@ internal fun BurnBar.spec() = BurnBarSpec(from, days, total.toDouble(), active?.
 
 @Composable
 private fun BurnChart(series: BurnSeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val tone = burnColour()
-    val line = colors.onSurfaceVariant
-    val grid = colors.outlineVariant
-    val marker = colors.onSurface
-    val top = max(series.bars.maxOf { it.total }, series.stats.averageTotal ?: 0L)
-    val ticks = AxisTicks.bars(top.toDouble(), KCAL_STEP)
-    val maxKcal = ticks.last()
-    val description = stringResource(R.string.burn_chart_description, series.bars.size)
-    val labels = ticks.map { stringResource(R.string.food_kcal, formatKcal(it)) }
-    val labelWidth = axisLabelWidth(labels)
-    val axis = remember(series) { ChartAxis(series.from, series.to, series.weekly) }
-    ClearOffAxis(axis, crosshair) { onDay(null) }
-    // The crosshair (weight-chart "Crosshair on every Historia chart"): a day, or a week's Monday on weekly bars.
-    Column(Modifier.fillMaxWidth().testTag("burnChart").semantics { contentDescription = description }.crosshairActions(axis, crosshair) { onDay(it) }) {
-        TabReadout(crosshair?.let { TabReadouts.burn(series, it, LocalDate.now()) }, onClear = { onDay(null) })
+    val today = LocalDate.now()
+    val spec = remember(series, today) { TabCharts.burn(series, today) }
+    // The marker card (energy-burn "Kulutus tab"): a day, or a week on weekly bars.
+    Column(Modifier.fillMaxWidth()) {
         RangeLine(series.from, series.to, "burnRange")
-        Row(Modifier.fillMaxWidth()) {
-            YAxisLabels(labels, listOf(0f, 0.5f, 1f), labelWidth, BAR_PLOT, "burnAxis")
-            Canvas(Modifier.weight(1f).height(BAR_PLOT).clipToBounds().crosshairGestures(axis) { onDay(it) }.testTag("burnBars")) {
-                fun y(kcal: Double) = size.height * (1 - (kcal / maxKcal)).toFloat()
-                drawGuidelines(grid, ticks.map { y(it) })
-                drawBurnBars(axis, series.bars.map { it.spec() }, ::y, tone, chosen = crosshair)
-                series.stats.averageTotal?.let { drawAverageLine(y(it.toDouble()), line) }
-                crosshair?.let { drawCrosshair(axis, it, marker) }
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            Spacer(Modifier.width(labelWidth))
-            DateAxis(series.from, series.to, "burnDates", Modifier.weight(1f))
-        }
-        ChartLegend(
-            buildList {
-                add(LegendEntry(stringResource(R.string.burn_legend_rest), tone.copy(alpha = ChartPalette.LIGHT_ALPHA)))
-                add(LegendEntry(stringResource(R.string.burn_legend_active), tone))
-                if (series.bars.any { it.kind == BurnKind.TOTAL }) add(LegendEntry(stringResource(R.string.burn_legend_total), tone.copy(alpha = ChartPalette.TOTAL_ALPHA)))
-                if (series.stats.averageTotal != null) add(LegendEntry(stringResource(R.string.energy_legend_average), line, dashed = true))
-                if (series.weekly) add(LegendEntry(stringResource(R.string.legend_weekly)))
-            },
-            "burnLegend",
-        )
+        HistoryChart(spec, crosshair, onDay, stringResource(R.string.burn_chart_description, series.bars.size), tag = "burnChart", plotTag = { _, _ -> "burnBars" })
     }
 }
-
-private const val KCAL_STEP = 250.0
 
 @Composable
 private fun BurnStatsTiles(series: BurnSeries) {

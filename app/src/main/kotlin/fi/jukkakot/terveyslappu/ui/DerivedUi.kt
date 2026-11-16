@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.derived.Availability
 import fi.jukkakot.terveyslappu.derived.BmiClass
-import fi.jukkakot.terveyslappu.derived.Derived
 import fi.jukkakot.terveyslappu.derived.Field
 import fi.jukkakot.terveyslappu.derived.LatestDerived
 import fi.jukkakot.terveyslappu.derived.Quantity
@@ -47,9 +46,6 @@ fun toneColor(tone: Tone): Color {
     }
 }
 
-/** The BMI chart's class bands: the tone faded so the line stays readable. */
-@Composable
-fun bmiBands(): List<ChartBand> = Derived.BANDS.map { ChartBand(it.from, it.to, toneColor(it.tone).copy(alpha = 0.14f)) }
 
 fun BmiClass.word(): Int = when (this) {
     BmiClass.UNDERWEIGHT -> R.string.bmi_underweight
@@ -76,15 +72,6 @@ fun Quantity.changeText(delta: Double): String = when (this) {
     Quantity.WEIGHT -> "${formatChange(delta)} kg"
     Quantity.BMI -> formatChange(delta)
 }
-
-/** A y-axis label: "98 kg", "25". */
-fun Quantity.axis(value: Double): String = when (this) {
-    Quantity.WEIGHT -> "${formatAxisKg(value)} kg"
-    Quantity.BMI -> formatAxisKg(value)
-}
-
-/** A dot's value: "82,6 kg", "BMI 25,3". */
-fun Quantity.point(value: Double): String = if (this == Quantity.BMI) "BMI ${formatKg(value)}" else format(value)
 
 /** Why [what] cannot be shown: "BMI vaatii pituuden", or the under-18 text. */
 @Composable
