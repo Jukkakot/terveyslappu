@@ -19,7 +19,7 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **Bug: Lisää annos widget opens the running app** (user 2026-11-16): with Terveyslappu already running, a tap on the food widget brings the app to front instead of the add sheet. Expected: always the add sheet for today. Cause not known yet (FoodAddActivity is singleTask in its own task); needs the app log of a failing tap (`food.sheet.open from=widget` present or not).
+- ~~**Bug: Lisää annos widget opens the running app**~~ not reproducing 2026-11-16 (user): removing the widget from the home screen and adding it again fixed it (likely a stale widget PendingIntent from an older build). Reopen with the app log if it returns.
 - **Treats in their own colour** (user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
 - **Shared y-axis for the same unit** (user 2026-11-16): in own charts, series with the same unit (e.g. ruoka and kulutus, both kcal) share one y-axis and scale, so eaten vs burned compares truly; different units keep their own axes. Later: let the user choose the axis per series in the chart editor. After charts-on-mpandroidchart.
 - ~~**food-log**~~ done 2026-11-14 (v1.24): Lisää annos with learnt products and base products, Ruoka day screen, nutrition records in Health Connect, Energia tab next to Paino/BMI, Ruokakirjaus in Asetukset, foods and products in the data file.
