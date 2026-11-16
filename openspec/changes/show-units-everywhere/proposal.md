@@ -22,6 +22,7 @@ number shown has its unit next to it, everywhere in the app.
     short word "ka" ("ka 1 900 kcal/pv", "ka 7 800 askelta/pv"), wrapping to two lines when needed.
   - Historia group rows: "herkkuja ka 230" → "herkkuja ka 230 kcal/pv", "aktiivinen ka 450" →
     "aktiivinen ka 450 kcal/pv".
+  - Historia calendar: cells keep the bare weight, one line "Painot kg" under the grid (user 2026-11-16).
   - Weight change labels in Historia's list (day rows and group rows): "−0,3" → "−0,3 kg".
   - Kulutus readouts (Historia marker card, own charts): "aktiivinen 465 · lepo 2 481" →
     "aktiivinen 465 kcal · lepo 2 481 kcal".

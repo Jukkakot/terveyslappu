@@ -10,7 +10,7 @@ Rule for every task: the formatters (`formatKcal`, `formatKg`, `formatSteps`, `f
 - [ ] 1.6 Historia list change labels with kg: weight rows (`ui/HistoryScreen.kt:643`) and group rows (`ui/ListGroupRows.kt:124`) via `kg_value`. The change keeps `maxLines = 1`; a weight row's time may wrap to two lines in deep groups.
 - [ ] 1.7 Kulutus readouts (`chart/TabReadouts.kt`): Historia marker card day: "aktiivinen N kcal · lepo N kcal"; a weekly bar: "keskim. N kcal/pv · aktiivinen N kcal/pv · lepo N kcal/pv"; own charts (no lepo part): "aktiivinen N kcal".
 - [ ] 1.8 Delete the unused string `burn_value_split`.
-- [ ] 1.9 Historia calendar day cells (`ui/RangeCalendarDialog.kt:223`): per the user's answer (see proposal).
+- [ ] 1.9 Historia calendar (`ui/RangeCalendarDialog.kt`): the day cells stay bare ("82,4"); one line "Painot kg" (bodySmall, onSurfaceVariant) under the month grid, shown only when the month has weights.
 
 ## 2. Finish
 
