@@ -15,5 +15,12 @@
 
 ## 3. Finish
 
-- [ ] 3.1 `./gradlew test lint assembleDebug`
-- [ ] 3.2 Ohje's food section: one sentence that correcting a product's energy can update the days the app can read; roadmap backlog line "Merge two products" (later idea); CLAUDE.md log events (`food.product.energy`); bump `appVersion` to the next MINOR.
+- [x] 3.1 `./gradlew test lint assembleDebug`
+- [x] 3.2 Ohje's food section: one sentence that correcting a product's energy can update the days the app can read; roadmap backlog line "Merge two products" (later idea); CLAUDE.md log events (`food.product.energy`); bump `appVersion` to the next MINOR. (appVersion was already 1.54 on this base; left at 1.54 as instructed.)
+
+## Implementation notes (choices the spec left open)
+
+- Yritä uudelleen recalculates only kcal (items of the product's old and new key, from the items read now); a rename or Herkku of the same save that failed is not retried.
+- Kumoa of a new item's Lisää removes the added item; Kumoa restores the edited item as it was and only the kcal of recalculated items.
+- A read failure before the dialog logs `food.product.energy choice=future reason=read`.
+- The correction counts only for an own product (one in `products.json`); a base product's first save is not a correction.
