@@ -2,8 +2,8 @@
 
 ## 1. Plan
 
-- [ ] 1.1 `food/FoodEdits.recalc` (design 1–3) and the "is a correction" check (before/after product energy).
-- [ ] 1.2 Unit tests: Heavier liquorice, Own values stay (130 follows; 150 and 131 stay), Decimal energy (12,5 × 3), Unit change, Amount only, Herkku only, rename only, Nothing else logged, items without kcal not in the plan, another product untouched, sums rounded after summing.
+- [x] 1.1 `food/FoodEdits.recalc` (design 1–3) and the "is a correction" check (before/after product energy).
+- [x] 1.2 Unit tests: Heavier liquorice, Own values stay (130 follows; 150 and 131 stay), Decimal energy (12,5 × 3), Unit change, Amount only, Herkku only, rename only, Nothing else logged, items without kcal not in the plan, another product untouched, sums rounded after summing.
 
 ## 2. Saving, dialog, undo
 

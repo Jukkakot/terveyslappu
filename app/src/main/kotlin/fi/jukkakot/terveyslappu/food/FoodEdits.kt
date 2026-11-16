@@ -3,12 +3,21 @@ package fi.jukkakot.terveyslappu.food
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /** A change to write: the old versions of the items, their new versions, and the product to keep. */
 data class FoodPlan(val old: List<FoodItem>, val new: List<FoodItem>, val product: Product? = null)
 
 /** An edited new item to insert, and the other changes its edit makes (product, other items). */
 data class DraftPlan(val item: FoodItem, val others: FoodPlan)
+
+/**
+ * A correction's earlier items (food-log "Correcting a product's energy"): [old] and [new] versions of
+ * the items that follow, [kept] the product's other items with kcal, [days] the days of [old], and
+ * the kcal sums of [old] and [new] (rounded after summing).
+ */
+data class Recalc(val old: List<FoodItem>, val new: List<FoodItem>, val kept: Int, val days: Int, val oldSum: Int, val newSum: Int)
 
 /** The editor's unit choice (design "Editor"): pieces, grams, or a total for the item. */
 enum class EditMode { KPL, G, TOTAL }
@@ -142,6 +151,70 @@ object FoodEdits {
         }
         return plan(all, changed.values, new)
     }
+
+    /**
+     * Whether saving a product's energy from [before] to [after] is a correction (food-log
+     * "Correcting a product's energy"): same unit, different kcal. A unit change or a cleared or new
+     * energy is not.
+     */
+    fun isCorrection(before: Energy?, after: Energy?): Boolean =
+        before != null && after != null && before.per == after.per && before.kcal != after.kcal
+
+    /**
+     * The earlier items a correction recalculates (food-log "Which items follow"): items of [key]
+     * whose kcal came from [old] (amount in its unit, kcal within 0,5 of amount × old) get amount ×
+     * [new], unrounded. Other items of the product with kcal are [Recalc.kept]; items without kcal are
+     * left to the fill. [except] is the item being edited (it takes the editor's values).
+     */
+    fun recalc(key: String, old: Energy, new: Energy, items: Collection<FoodItem>, except: String?): Recalc {
+        val own = items.filter { it.key == key && it.uuid != except && it.kcal != null }
+        val follow = own.filter { i ->
+            val from = i.amount?.let { old.kcalOf(it) }
+            from != null && abs(i.kcal!! - from) < FOLLOW_KCAL
+        }
+        val changed = follow.map { it.copy(kcal = new.kcalOf(it.amount!!)) }
+        return Recalc(
+            old = follow,
+            new = changed,
+            kept = own.size - follow.size,
+            days = follow.map { it.day }.distinct().size,
+            oldSum = follow.sumOf { it.kcal!! }.roundToInt(),
+            newSum = changed.sumOf { it.kcal!! }.roundToInt(),
+        )
+    }
+
+    /** [plan] with [recalc]'s kcal on top (a recalculated item may also be renamed or change Herkku in [plan]). */
+    fun merge(plan: FoodPlan, recalc: Recalc?, all: Collection<FoodItem>): FoodPlan {
+        if (recalc == null || recalc.new.isEmpty()) return plan
+        val byUuid = all.associateBy { it.uuid }
+        val changed = linkedMapOf<String, FoodItem>()
+        plan.new.forEach { changed[it.uuid] = it }
+        recalc.new.forEach { r -> changed[r.uuid] = (changed[r.uuid] ?: r).copy(kcal = r.kcal) }
+        val news = changed.values.filter { it != byUuid[it.uuid] }
+        return FoodPlan(news.mapNotNull { byUuid[it.uuid] }, news, plan.product)
+    }
+
+    /**
+     * Kumoa of a correction (design 7) against the items as they are now: each recalculated item whose
+     * kcal is still amount × new energy gets its old kcal back; an item changed again stays.
+     */
+    fun undoRecalc(recalc: Recalc, now: Collection<FoodItem>): FoodPlan {
+        val current = now.associateBy { it.uuid }
+        val before = recalc.old.associateBy { it.uuid }
+        val old = mutableListOf<FoodItem>()
+        val new = mutableListOf<FoodItem>()
+        for (n in recalc.new) {
+            val cur = current[n.uuid] ?: continue
+            val k = cur.kcal ?: continue
+            if (cur.amount != n.amount || abs(k - n.kcal!!) >= FOLLOW_KCAL) continue
+            old += cur
+            new += cur.copy(kcal = before.getValue(n.uuid).kcal)
+        }
+        return FoodPlan(old, new)
+    }
+
+    /** How far an item's kcal may be from amount × energy and still follow the product. */
+    private const val FOLLOW_KCAL = 0.5
 
     /**
      * Import (data-file "Food parts"): the file's items whose uuid is not yet logged, oldest first;
