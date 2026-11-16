@@ -9,7 +9,7 @@ coroutines = "1.11.0"
 healthConnect = "1.1.0"
 junit = "4.13.2"
 robolectric = "4.17"
-vico = "3.3.1"
+mpandroidchart = "v4.0.1"
 calendar = "2.10.1"
 serialization = "1.9.0"
 poi = "5.5.1"
@@ -30,7 +30,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
-vico-compose-m3 = { module = "com.patrykandpatrick.vico:compose-m3", version.ref = "vico" }
+mpchart-lib = { module = "com.github.PhilJay.MPAndroidChart:MPChartLib", version.ref = "mpandroidchart" }
 calendar-compose = { module = "com.kizitonwose.calendar:compose", version.ref = "calendar" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }

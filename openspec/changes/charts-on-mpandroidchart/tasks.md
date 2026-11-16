@@ -8,8 +8,8 @@ tests use Robolectric `@GraphicsMode(GraphicsMode.Mode.NATIVE)`, `@Config(sdk = 
 
 ## 1. Dependency and build
 
-- [ ] 1.1 Add JitPack with `exclusiveContent` for group `com.github.PhilJay.MPAndroidChart` to `settings.gradle.kts`; add `mpandroidchart = "v4.0.1"`, `mpchart-lib` and `mpchart-compose` to `gradle/libs.versions.toml` and `app/build.gradle.kts`; remove `vico` from the catalog and the build file. Verify `./gradlew :app:dependencies --configuration debugRuntimeClasspath` resolves both from JitPack and no Vico remains.
-- [ ] 1.2 Check the `MPChartCompose` API: if it exposes the chart instance for configuration and `update`, use it as the host; else keep `AndroidView` and remove `mpchart-compose` again (note in the commit). Verify with a throwaway composable that compiles.
+- [x] 1.1 Add JitPack with `exclusiveContent` for group `com.github.PhilJay.MPAndroidChart` to `settings.gradle.kts`; add `mpandroidchart = "v4.0.1"`, `mpchart-lib` and `mpchart-compose` to `gradle/libs.versions.toml` and `app/build.gradle.kts`; remove `vico` from the catalog and the build file. Verify `./gradlew :app:dependencies --configuration debugRuntimeClasspath` resolves both from JitPack and no Vico remains.
+- [x] 1.2 Check the `MPChartCompose` API: if it exposes the chart instance for configuration and `update`, use it as the host; else keep `AndroidView` and remove `mpchart-compose` again (note in the commit). Verify with a throwaway composable that compiles.
 - [ ] 1.3 Add the render-test output property (`chart.renders.out` → `app/build/chart-renders`) to `testOptions.unitTests.all`; run `./gradlew assembleRelease` once locally and add `proguard-rules.pro` keep rules only if R8 breaks the library. Verify the release APK builds.
 
 ## 2. Pure chart definitions (design 2)

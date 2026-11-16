@@ -116,7 +116,12 @@ android {
             // Where Robolectric downloads its Android jars; a cloud container whose Maven Central is
             // rate-limited sets robolectricRepoUrl in ~/.gradle/gradle.properties.
             val repoUrl = providers.gradleProperty("robolectricRepoUrl").orNull
-            all { if (repoUrl != null) it.systemProperty("robolectric.dependency.repo.url", repoUrl) }
+            // Chart render tests save PNGs here for review (ChartRenderTest).
+            val rendersDir = layout.buildDirectory.dir("chart-renders").get().asFile.absolutePath
+            all {
+                if (repoUrl != null) it.systemProperty("robolectric.dependency.repo.url", repoUrl)
+                it.systemProperty("chart.renders.out", rendersDir)
+            }
         }
     }
 
@@ -141,7 +146,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
-    implementation(libs.vico.compose.m3)
+    implementation(libs.mpchart.lib)
     implementation(libs.calendar.compose)
     implementation(libs.reorderable)
     debugImplementation(libs.compose.ui.tooling)
