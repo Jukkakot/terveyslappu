@@ -16,6 +16,9 @@ The treat share is shown apart in the bars (treat tone) but in text it reads lik
 - The herkku sign on items stays as is (tertiaryContainer chip). Own charts are untouched (their
   treat tone follows the chart's colour and has no treat text).
 
+- Weight gain text (`changeColor`) also uses tertiary, so on the front page a gain and the treat
+  share share a colour; the user accepted this (2026-11-16) to keep the link to the bars.
+
 ## Capabilities
 
 ### New Capabilities
