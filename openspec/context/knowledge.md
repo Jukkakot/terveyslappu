@@ -15,7 +15,7 @@ the source. No configuration, versions or other things that go stale.
 |---|---|
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
-| Android | background work on Samsung, Health Connect from the background, widget updates |
+| Android | background work on Samsung, Health Connect from the background, widget updates, chart libraries |
 | Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference |
 | Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps, total calories estimate fill, Garmin kcal split |
 
@@ -79,6 +79,14 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   Android 17): a filtered PendingIntent scan delivered packets only when the screen came on while
   the app was "Optimoitu"; after "Rajoittamaton" packets arrived with the screen off and locked.
   Android's "Restricted" is not the only blocker: warn unless the app ignores battery optimisation.
+
+- **Chart libraries for Compose (2026-11):** Vico (Apache 2.0, Compose-first, maintained; line,
+  column, combo layers, markers, zoom/scroll), MPAndroidChart 4 (rewritten in Kotlin 2026 with a
+  Compose module, JitPack only, markers, zoom, 30k points), KoalaPlot (Compose Multiplatform, 0.x
+  API, zoom/pan, stacked bars), ComposeCharts by ehsannarmani (0.2.x, animated, simple).
+  ([Vico](https://github.com/patrykandpatrick/vico), [MPAndroidChart](https://github.com/PhilJay/MPAndroidChart),
+  [KoalaPlot](https://github.com/KoalaPlot/koalaplot-core), [ComposeCharts](https://github.com/ehsannarmani/ComposeCharts))
+
 
 ## Motivation and feedback
 
