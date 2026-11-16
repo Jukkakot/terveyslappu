@@ -31,6 +31,11 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
 
 ## Decisions and reasons
 
+- **Data reads one way only** (user 2026-11-16): every chart, number and list is built so a
+  person cannot misread it: units always shown, scales fitted so differences show, the same unit
+  on one shared scale (two kcal scales made a smaller value look taller). The guiding rule for
+  chart and number decisions; pick the option that cannot mislead.
+
 - **Moving to a new phone** (user 2026-11-09, Q3): the backup file in the user's own cloud
   carries the weights (Tuo tiedot restores it); Android's own backup (encrypted Google cloud
   backup and Smart Switch transfer) carries the app's own data: owner details, theme, periods,
