@@ -7,8 +7,8 @@ TBD - created by archiving change food-log. Update Purpose after archive.
 
 ### Requirement: Ruoka day screen
 The app SHALL have a Ruoka screen for one day, opening on today, with arrows to earlier days (none
-after today). It SHALL list the day's items in eating order, each with its name, amount and kcal,
-and, for an item logged on the day itself, its logging time in small muted text. On top it SHALL
+after today). It SHALL list the day's items in eating order, each with its name (on one line, shortened
+with "…" when it does not fit), amount and kcal, without a logging time. On top it SHALL
 show the day's total kcal with the treats' share apart, and the number of items without kcal
 ("1 760 kcal · herkkuja 230 kcal · 1 ilman kcal"). A day with nothing logged SHALL show only a short
 line on how to add, without any warning, count or judgement. The screen SHALL show no budget,
@@ -18,7 +18,7 @@ Historia on Energia for 1 vk; back from there SHALL return to the Ruoka screen.
 #### Scenario: A day in order
 - **GIVEN** today the user logged Rahka 200 g at 7.10, Pullo 1 kpl at 10.05 and Pizza (no kcal) at 12.30
 - **WHEN** the Ruoka screen opens
-- **THEN** the three items are listed in that order with their times, and the top reads the total
+- **THEN** the three items are listed in that order without times, and the top reads the total
   of Rahka and Pullo and "1 ilman kcal"
 
 #### Scenario: Missed day
@@ -39,13 +39,14 @@ From the top the sheet SHALL show: a header "<day> · <total> kcal" (Tänään, 
 "<day>" alone while the day is unread or empty) with a ⋮ menu holding Kopioi tuontiohje and Tuo
 ruoka-annokset; under it the Ruoka screen's summary line without the total ("herkkuja 230 kcal · 1 ilman
 kcal", parts with zero left out, the line left out when both are zero); the clipboard card when it
-is offered ("Clipboard offer"); then the day's items in eating order as rows of the Ruoka screen
-(logging time, name, amount, treat sign, kcal), scrolling, with "Ei vielä annoksia" when the day
+is offered ("Clipboard offer"); then the day's items in eating order as compact rows (name on one line, shortened with "…" when it does not fit, treat sign, amount, kcal; no logging time), scrolling, with "Ei vielä annoksia" when the day
 has none. Tapping an item SHALL open its editor ("Editing, order and delete"). The item added last
 in this sheet SHALL be highlighted with a tonal background, and the list SHALL scroll to show it.
 
 At the bottom the sheet SHALL show the add panel on a surface of its own tone (surfaceContainerHigh,
-with a 1 dp outlineVariant line along its top edge), so it reads apart from the day list: a message
+with a 1 dp outlineVariant line along its top edge), so it reads apart from the day list. A small
+handle centred on the panel's top edge SHALL fold and unfold the panel ("Folding the add panel"
+below). Unfolded, the panel shows: a message
 line only when "Sheet messages and loading" has one, then with
 the field empty the heading "Lisää – usein tähän aikaan" and up to eight chips, one per product:
 the products most often logged within two hours of the current clock time in the last 30 days,
@@ -85,8 +86,8 @@ Details:
   shows "· <total> kcal" whenever the day has at least one item, also "· 0 kcal".
 - Layout: the header and summary line stay pinned; the add panel never scrolls and sits directly
   above the keyboard when it is up; only the day list shrinks. When the day list would be shorter
-  than two rows, the chips drop to fewer rows (down to one). A drag down on the handle, or on the
-  day list at its top, closes the sheet; the panel is not a drag area for closing.
+  than two rows, the chips drop to fewer rows (down to one). A drag down on the sheet's handle, or on the
+  day list at its top, closes the sheet; the panel and its handle never close the sheet.
 - Clipboard card: the first entry of the scrolling day list (it scrolls away), hidden while typing.
 - While typing, the Tuotteet rows replace the day list (header and summary stay), bottom-aligned
   just above the line and the field, best match nearest the field and "Lisää … uutena" closest to
@@ -105,11 +106,24 @@ Details:
 - From the Ruoka screen the sheet is the same; Ruoka's own clipboard card is not shown while the
   sheet is open, and the sheet cannot be opened from Järjestä.
 
+Folding the add panel:
+- A drag down on the panel's handle, or on the panel's heading and chip area, folds the panel: the
+  heading, chips and field go, the keyboard goes down, and only the handle (with the message line
+  above it when there is one, so Kumoa stays reachable) is left, so the day list grows. A drag up
+  on the handle, or a tap on it, unfolds the panel without opening the keyboard; a tap on the
+  handle of an unfolded panel folds it. The change animates briefly.
+- Folded or not lasts until the sheet closes; every open starts unfolded. Adding, deleting and
+  editing do not change it. A drag down on a folded panel does nothing.
+- The handle shows whenever the field is empty (with or without chips) and is hidden while typing;
+  with the keyboard up it works the same.
+- The handle is at least 48 dp tall as a touch target; TalkBack names it "Piilota lisäys" or
+  "Näytä lisäys" and its click toggles.
+
 #### Scenario: The day first
 - **GIVEN** today the user logged Rahka 250 g at 7.10 and Jäätelö 130 g (Herkku, 260 kcal) at 19.05
 - **WHEN** they open the sheet from the widget
 - **THEN** the header reads "Tänään · 405 kcal", the line under it "herkkuja 260 kcal", both items are
-  listed with their times, the keyboard is down, and the chips sit above the field at the bottom
+  listed without their times, the keyboard is down, and the chips sit above the field at the bottom
 
 #### Scenario: Usual breakfast in one tap
 - **GIVEN** on most mornings around 7 the user logged Rahka 200 g
@@ -168,6 +182,26 @@ Details:
 #### Scenario: Back to the field after cancelling or deleting
 - **WHEN** the user taps Muuta and then Peruuta, or Poista
 - **THEN** the sheet is shown again; after Poista no item line is shown
+
+#### Scenario: Fold to look at the day
+- **GIVEN** the sheet is open with chips showing and the day has eight items
+- **WHEN** the user drags the panel's handle down
+- **THEN** the heading, chips and field go, only the handle stays at the bottom, more day rows
+  show, and the sheet stays open
+
+#### Scenario: Unfold again
+- **WHEN** the user taps the handle of a folded panel
+- **THEN** the heading, chips and field come back, with the keyboard down
+
+#### Scenario: Next open starts unfolded
+- **GIVEN** the user folded the panel and closed the sheet
+- **WHEN** they open the sheet again
+- **THEN** the chips and the field show
+
+#### Scenario: Long name on one line
+- **WHEN** the day holds "Keitetty täysjyvämakaroni" 200 g, 300 kcal on a narrow phone
+- **THEN** the row shows the name on one line shortened with "…", "200 g" under it, and the kcal,
+  pencil and trash in full
 
 ### Requirement: Products
 Every distinct name the user logs SHALL become one product (names compared ignoring case and extra
