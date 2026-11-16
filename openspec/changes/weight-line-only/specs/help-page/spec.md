@@ -1,0 +1,11 @@
+## MODIFIED Requirements
+
+### Requirement: Custom charts in Ohje
+Ohje SHALL have a section on own charts, one to three sentences: how a chart is made (Historia's
+"Uusi kaavio" tab or the front page's Lisää kortti), that Syöty, Kulutus and Askeleet can be bars
+or a line and Paino is always a line, the chart stacked or overlaid, with its own period, and that
+a tap or a press-and-hold on the chart shows the day's values.
+
+#### Scenario: Charts explained
+- **WHEN** the user reads Ohje
+- **THEN** a section tells where own charts are made and how to read a day's values
