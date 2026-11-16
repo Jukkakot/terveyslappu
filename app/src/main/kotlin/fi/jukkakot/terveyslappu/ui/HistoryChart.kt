@@ -124,13 +124,31 @@ internal fun chartTextDp(): Float {
     return with(density) { 11.sp.toPx() } / density.density
 }
 
+/** Changes when Historia's shown tab changes: every chart resets its zoom (spec "Chart zoom"). */
+internal val LocalChartReset = androidx.compose.runtime.staticCompositionLocalOf<Any?> { null }
+
 /** The views of one chart and what the overlay reads from them. */
 internal class HistoryChartState {
     val charts = mutableStateListOf<HistoryCombinedChart?>()
     val tops = mutableStateListOf<Float>()
     /** Bumped when a view moved, zoomed or resized: the marker card is placed again. */
     var version by mutableIntStateOf(0)
+        private set
     private var syncing = false
+
+    /** Marks the views as moved; never read here, so writing it from an update block loops nothing. */
+    fun bump() {
+        androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { version = version + 1 }
+    }
+
+    /** A panel's top in the stack; only a change bumps. */
+    fun setTop(i: Int, y: Float) {
+        val changed = androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { tops[i] != y }
+        if (changed) {
+            tops[i] = y
+            bump()
+        }
+    }
 
     fun ensure(count: Int) {
         while (charts.size < count) charts.add(null)
@@ -164,12 +182,12 @@ internal class HistoryChartState {
         } finally {
             syncing = false
         }
-        version++
+        bump()
     }
 
     fun fitAll() {
         drawn().forEach { it.fitScreen() }
-        version++
+        bump()
     }
 }
 
@@ -212,7 +230,8 @@ internal fun HistoryChart(
         if (announce) announced = day?.let { currentSpec.readout(it).text }
     }
     ClearOffAxis(spec.axis, chosen) { onChoose(null) }
-    LaunchedEffect(resetKey, spec.axis) { state.fitAll() }
+    val tab = LocalChartReset.current
+    LaunchedEffect(resetKey, tab, spec.axis) { state.fitAll() }
 
     val a11y = Modifier.semantics {
         contentDescription = description
@@ -233,10 +252,10 @@ internal fun HistoryChart(
         Box(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
                 spec.panels.forEachIndexed { i, panel ->
-                    val place = Modifier.fillMaxWidth().onGloballyPositioned { state.tops[i] = it.positionInParent().y; state.version++ }
+                    val place = Modifier.fillMaxWidth().onGloballyPositioned { state.setTop(i, it.positionInParent().y) }
                     if (panel.message != null) {
-                        state.charts[i] = null
-                        Box(place.height(panel.heightDp.dp).testTag(plotTag(i, panel))) {
+                        if (androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.charts[i] } != null) state.charts[i] = null
+                        Box(place.height(panel.heightDp.dp).testTag("panel-${panel.message.kind.name}")) {
                             PanelMessage(panel.message.kind, states[panel.message.kind] ?: PanelState.Ready, compact = false)
                         }
                         return@forEachIndexed
@@ -251,7 +270,7 @@ internal fun HistoryChart(
                                 chart.picker = { x, y -> chart.pickAt(x, y)?.let { chart.highlightsFor(it).firstOrNull() } }
                                 chart.onResized = {
                                     state.alignPanels()
-                                    state.version++
+                                    state.bump()
                                 }
                                 chart.valueSelectedListeners += object : OnChartValueSelectedListener {
                                     // Only a drag selects through the library (taps are ours).
@@ -286,11 +305,11 @@ internal fun HistoryChart(
                             }
                         },
                         update = { chart ->
-                            state.charts[i] = chart
+                            if (androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.charts[i] } !== chart) state.charts[i] = chart
                             chart.bind(spec, panel, style)
                             state.alignPanels()
                             chart.highlightValues(chart.highlightsFor(chosen))
-                            state.version++
+                            state.bump()
                         },
                         modifier = place
                             .height((panel.heightDp + extra).dp)
@@ -385,7 +404,8 @@ private fun ReadoutMarker(spec: ChartSpec, chosen: LocalDate, state: HistoryChar
     val gap = with(density) { 8.dp.toPx() }
     val cardTop = state.tops[top] + vp.contentTop + with(density) { 2.dp.toPx() }
     Layout(content = { MarkerCard(card, colors) }, modifier = modifier) { measurables, constraints ->
-        val p = measurables.first().measure(Constraints(maxWidth = constraints.maxWidth))
+        val plotWidth = (vp.contentRight.coerceAtMost(constraints.maxWidth.toFloat()) - vp.contentLeft).toInt().coerceAtLeast(0)
+        val p = measurables.first().measure(Constraints(maxWidth = plotWidth.takeIf { it > 0 } ?: constraints.maxWidth))
         val left = markerLeft(anchor, p.width.toFloat(), gap, vp.contentLeft, vp.contentRight.coerceAtMost(constraints.maxWidth.toFloat()))
         layout(constraints.maxWidth, constraints.maxHeight) { p.place(left.roundToInt(), cardTop.roundToInt()) }
     }
@@ -397,6 +417,7 @@ private fun MarkerCard(card: ReadoutCard, colors: ChartColors) {
     val c = MaterialTheme.colorScheme
     Column(
         Modifier
+            .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
             .clip(RoundedCornerShape(10.dp))
             .background(c.surfaceContainerHighest)
             .border(1.dp, c.outlineVariant, RoundedCornerShape(10.dp))
@@ -405,19 +426,14 @@ private fun MarkerCard(card: ReadoutCard, colors: ChartColors) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(card.head, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = c.onSurface, modifier = Modifier.testTag("chartMarkerHead"))
-        Row {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                card.rows.forEach { row ->
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(Color(colors.of(row.tone))))
-                        Spacer(Modifier.width(6.dp))
-                        Text(row.name, style = MaterialTheme.typography.labelMedium, color = c.onSurfaceVariant)
-                    }
-                }
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                card.rows.forEach { row -> Text(row.value, style = MaterialTheme.typography.labelMedium, color = c.onSurface) }
+        card.rows.forEach { row ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.Top) {
+                Box(Modifier.padding(top = 5.dp).size(8.dp).clip(CircleShape).background(Color(colors.of(row.tone))))
+                Spacer(Modifier.width(6.dp))
+                Text(row.name, style = MaterialTheme.typography.labelMedium, color = c.onSurfaceVariant)
+                Spacer(Modifier.width(12.dp))
+                // A long value (Kulutus) wraps inside the plot's width instead of running off it.
+                Text(row.value, style = MaterialTheme.typography.labelMedium, color = c.onSurface, textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(1f))
             }
         }
     }

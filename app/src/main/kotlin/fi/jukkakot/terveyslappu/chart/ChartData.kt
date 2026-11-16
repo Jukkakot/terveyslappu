@@ -32,12 +32,6 @@ class ChartData(
     /** Date labels read month and year ("9/2022"): the period holds 365 days or more. */
     val overYear: Boolean get() = AxisTicks.monthYear(from, to)
 
-    /** The x-axis label dates for [count] labels. */
-    fun labelDays(count: Int): List<LocalDate> = AxisTicks.labelDays(from, to, count)
-
-    /** Their x values: the centre of each day, as the bars' x. */
-    fun labelXs(count: Int): List<Double> = labelDays(count).map { AxisTicks.days(origin, it) + 0.5 }
-
     /** The day an x value stands for. */
     fun dayAt(x: Double): LocalDate = origin.plusDays(x.roundToLong())
 

@@ -34,6 +34,8 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**period-average-line**~~ done 2026-11-15 (user 2026-11-15): a flat line at the period average replaces the rolling 7-day line on Energia and Askeleet; own charts get a Keskiarvo switch. Later idea: make the weight chart's ups and downs more visible (scale span or height) while keeping real daily values.
 - ~~**garmin-steps-history**~~ done 2026-11-15 (v1.41, user 2026-11-15): Garmin's export ZIP in Tuo tiedot fills Askeleet's history before Health Connect (Garmin Connect or Kaikki as the source); Asetukset -> Askeleet shows and deletes it.
 - **combined chart** (user 2026-11-14, later, not in food-log or steps): weight, kcal and steps in one chart, the user picks which are shown; avoid a two-axis plot (hard to read), e.g. stacked panels on one time axis. Grew into user-made charts, bars or line per data, stacked or overlaid, in Historia and as front page cards (user 2026-11-15). **Done (`custom-charts`, v1.32).** Fixed Historia tabs show one data kind only; combinations live in own charts (user 2026-11-15, `fixed-tabs-single-data`, v1.35).
+- ~~**charts on a chart library**~~ done 2026-11-16 (charts-on-mpandroidchart, v1.46, user 2026-11-16): every Historia chart on MPAndroidChart 4 with library defaults (marker card, tap/drag, highlight, zoom and pan, x label placement).
+- **front page cards on the chart library** (follow-up of charts-on-mpandroidchart): the weight, food, steps, Kulutus and own chart cards still draw on Canvas (`ui/ChartPanels`); feed the same chart definitions to a card-size renderer.
 
 - ~~**Priority 1: plain weigh-in button widget + result with redo**~~: done 2026-11-09
   (weigh-in-button-redo, autopilot). Original note (user 2026-11-09): The current

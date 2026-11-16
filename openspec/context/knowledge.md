@@ -86,6 +86,18 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   API, zoom/pan, stacked bars), ComposeCharts by ehsannarmani (0.2.x, animated, simple).
   ([Vico](https://github.com/patrykandpatrick/vico), [MPAndroidChart](https://github.com/PhilJay/MPAndroidChart),
   [KoalaPlot](https://github.com/KoalaPlot/koalaplot-core), [ComposeCharts](https://github.com/ehsannarmani/ComposeCharts))
+- **MPAndroidChart 4 in practice** (spike and charts-on-mpandroidchart, 2026-11; source: the
+  library's sources `MPChartLib-v4.0.1-sources.jar`): published on JitPack only (an outage blocks a
+  cold CI cache; restrict JitPack with `exclusiveContent` to its group). A line has no null gaps
+  (split data sets). x label positions come from `AxisRenderer.computeAxisValues` (labelCount is a
+  hint, granularity a floor); exact positions need a custom `XAxisRenderer`. Its touch listener
+  starts a highlight drag past touch slop without `requestDisallowInterceptTouchEvent`, so a
+  scrolling parent (pager) steals it unless the host consumes the moves. The view has no
+  accessibility semantics. Text sizes are dp, clamped to 6..24, and ignore font scale. A
+  `CombinedChart` replaces its highlighter on every `data` set (override
+  `getHighlightByTouchPoint` instead). `highlightValues` highlights without calling listeners.
+  The `MPChartCompose` wrapper animates every data change. Robolectric
+  `@GraphicsMode(NATIVE)` draws it (and Compose `captureToImage`) to real PNGs.
 
 
 ## Motivation and feedback

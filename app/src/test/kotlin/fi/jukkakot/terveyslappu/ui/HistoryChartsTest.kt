@@ -187,61 +187,71 @@ class HistoryChartsTest {
         compose.onNodeWithTag("weights").assertDoesNotExist()
     }
 
-    private fun tapPlot(tag: String = "plot-WEIGHT") = node(tag).performTouchInput { click(center) }
+    private fun views() = compose.activity.chartViews()
 
-    @Test
-    fun `a tap shows the readout and a tap on it clears`() {
-        add("Liike")
-        show()
-        openTab("tab-chart-1")
-        node("chartHint").assertIsDisplayed()
-        tapPlot()
-        node("chartReadoutText").assertIsDisplayed()
-        node("chartReadout").performClick()
-        node("chartHint").assertIsDisplayed()
-    }
-
-    @Test
-    fun `a hold without moving places the crosshair`() {
-        add("Liike")
-        show()
-        openTab("tab-chart-1")
-        node("plot-STEPS").performTouchInput {
-            down(center)
-            advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
-            up()
-        }
+    /** Taps [day] in the middle of the plot of the panel [tag] (the view at [index] on screen). */
+    private fun tapDay(day: LocalDate, tag: String, index: Int) {
+        val view = views()[index]
+        node(tag).performTouchInput { click(androidx.compose.ui.geometry.Offset(view.pixelX(day), view.plotMiddle)) }
         compose.waitForIdle()
-        node("chartReadoutText").assertIsDisplayed()
     }
 
     @Test
-    fun `a fling still pages`() {
+    fun `a tap shows the marker card and tapping the same day again clears it`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        assertEquals(false, exists("chartMarker"))
+        val day = HomeFixtures.today.minusDays(5)
+        tapDay(day, "plot-WEIGHT", 0)
+        node("chartMarkerHead").assertTextContains(formatShortDay(day), substring = true)
+        tapDay(day, "plot-WEIGHT", 0)
+        assertEquals(false, exists("chartMarker"))
+    }
+
+    @Test
+    fun `a tap between weights picks the nearest weight`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        // Weights 5 and 9 days back: a tap 6 days back chooses 5 days back.
+        tapDay(HomeFixtures.today.minusDays(6), "plot-WEIGHT", 0)
+        node("chartMarkerHead").assertTextContains(formatShortDay(HomeFixtures.today.minusDays(5)), substring = true)
+    }
+
+    @Test
+    fun `a sideways drag on the plot scrubs and keeps the tab`() {
         add("Liike")
         add("Ilta")
         show()
         openTab("tab-chart-1")
-        node("plot-WEIGHT").performTouchInput { swipeLeft() }
+        val view = views()[0]
+        node("plot-WEIGHT").performTouchInput {
+            val y = view.plotMiddle
+            down(androidx.compose.ui.geometry.Offset(view.pixelX(HomeFixtures.today.minusDays(20)), y))
+            for (i in 1..10) moveTo(androidx.compose.ui.geometry.Offset(view.pixelX(HomeFixtures.today.minusDays(20L - i)), y))
+            up()
+        }
         compose.waitForIdle()
-        node("page-chart-2").assertIsDisplayed()
-        assertEquals(false, exists("chartReadoutText"))
+        node("page-chart-1").assertIsDisplayed()
+        node("chartMarker").assertIsDisplayed()
     }
 
     @Test
-    fun `the grant button in a panel still asks and sets no crosshair`() {
+    fun `the grant button in a panel still asks and a tap outside the plots chooses nothing`() {
         steps = StepsUiState(access = StepsAccess.NEEDS)
         add("Liike")
         show()
         openTab("tab-chart-1")
         node("grant-STEPS").performClick()
         assertEquals(1, stepsGrants)
-        assertEquals(false, exists("chartReadoutText"))
+        assertEquals(false, exists("chartMarker"))
         node("panelMessage-STEPS").performTouchInput { click(center) }
-        assertEquals(false, exists("chartReadoutText"), "a tap outside the drawn plots places nothing")
+        assertEquals(false, exists("chartMarker"), "a tap outside the drawn plots places nothing")
     }
 
     @Test
-    fun `Edellinen paiva with no crosshair picks today`() {
+    fun `Edellinen paiva with no choice picks today and announces the card`() {
         add("Liike")
         show()
         openTab("tab-chart-1")
@@ -249,27 +259,109 @@ class HistoryChartsTest {
         val action = chart.config[SemanticsActions.CustomActions].first { it.label == compose.activity.getString(fi.jukkakot.terveyslappu.R.string.chart_previous_day) }
         compose.runOnIdle { action.action() }
         compose.waitForIdle()
-        node("chartReadoutText").assertTextContains(formatShortDay(HomeFixtures.today), substring = true)
-        assertTrue(node("chartReadout").fetchSemanticsNode().config.contains(SemanticsProperties.LiveRegion))
+        node("chartMarkerHead").assertTextContains(formatShortDay(HomeFixtures.today), substring = true)
+        assertTrue(node("customChart-1").announced()!!.contains(formatShortDay(HomeFixtures.today)))
+        assertTrue(node("customChart-1").fetchSemanticsNode().config.contains(SemanticsProperties.LiveRegion))
     }
 
     @Test
-    fun `the crosshair stays on reload and clears when Kaikki starts later than its day`() {
+    fun `the choice stays on reload and clears when Kaikki starts later than its day`() {
         list = ChartList()
         val id = add("Liike", SeriesKind.STEPS)
         list = CustomCharts.update(list, list.charts.single().copy(period = Period.All))
         state = state.copy(charts = list.charts)
         show()
         openTab("tab-chart-$id")
-        // Kaikki starts at the first step day (5 days back): tap the first slot.
-        node("plot-STEPS").performTouchInput { click(centerLeft.copy(x = 2f)) }
-        node("chartReadoutText").assertTextContains(formatShortDay(HomeFixtures.today.minusDays(5)), substring = true)
+        // Kaikki starts at the first step day (5 days back).
+        val first = HomeFixtures.today.minusDays(5)
+        tapDay(first, "plot-STEPS", 0)
+        node("chartMarkerHead").assertTextContains(formatShortDay(first), substring = true)
         steps = steps.copy(days = steps.days)
         compose.waitForIdle()
-        node("chartReadoutText").assertIsDisplayed()
+        node("chartMarker").assertIsDisplayed()
         steps = steps.copy(days = steps.days!!.filter { it.day >= HomeFixtures.today.minusDays(1) })
         compose.waitForIdle()
-        node("chartHint").assertIsDisplayed()
+        assertEquals(false, exists("chartMarker"))
+    }
+
+    @Test
+    fun `a period change clears the choice`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        tapDay(HomeFixtures.today.minusDays(5), "plot-WEIGHT", 0)
+        node("chartMarker").assertIsDisplayed()
+        list = CustomCharts.update(list, list.charts.single().copy(period = Period.WEEK))
+        state = state.copy(charts = list.charts)
+        compose.waitForIdle()
+        assertEquals(false, exists("chartMarker"))
+    }
+
+    @Test
+    fun `zooming one panel shows the same days in the others, a period change shows all again`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        val (weight, energy) = views().take(2)
+        compose.runOnIdle {
+            energy.zoom(3f, 1f, energy.viewPortHandler.contentRect.centerX(), 0f)
+            energy.gestureListeners.forEach { it.onChartScale(android.view.MotionEvent.obtain(0, 0, android.view.MotionEvent.ACTION_MOVE, 0f, 0f, 0), 3f, 1f) }
+        }
+        compose.waitForIdle()
+        assertEquals(energy.lowestVisibleX, weight.lowestVisibleX, 0.01f)
+        assertEquals(energy.highestVisibleX, weight.highestVisibleX, 0.01f)
+        assertTrue(weight.visibleXRange < 15f)
+        list = CustomCharts.update(list, list.charts.single().copy(period = Period.WEEK))
+        state = state.copy(charts = list.charts)
+        compose.waitForIdle()
+        assertEquals(7f, views()[0].visibleXRange, 0.01f)
+    }
+
+    @Test
+    fun `stacked panels start and end at the same x`() {
+        add("Liike")
+        show()
+        openTab("tab-chart-1")
+        val drawn = views()
+        assertTrue(drawn.size >= 3)
+        val lefts = drawn.map { it.viewPortHandler.contentLeft }.distinct()
+        val rights = drawn.map { it.viewPortHandler.contentRight }.distinct()
+        assertEquals(1, lefts.size, "$lefts")
+        assertEquals(1, rights.size, "$rights")
+    }
+
+    @Test
+    fun `Paino and BMI show the library chart and a tap chooses a weight`() {
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(
+                    state,
+                    "0.1.1-test",
+                    MainActions(onPeriod = { state = state.copy(period = it) }),
+                    profile = fi.jukkakot.terveyslappu.profile.OwnerProfile(birthYear = 1990, heightCm = 180),
+                )
+            }
+        }
+        compose.waitForIdle()
+        node("chart").assertIsDisplayed()
+        val day = HomeFixtures.today.minusDays(9)
+        tapDay(day, "plot-weight", 0)
+        node("chartMarkerHead").assertTextContains(formatShortDay(day), substring = true)
+        assertTrue(node("chart").announced()!!.contains("paino"))
+        openTab("tab-BMI")
+        assertEquals(false, exists("chartMarker"), "a tab change clears the choice")
+        val bmi = views().first { it.panel?.bands?.isNotEmpty() == true }
+        assertTrue(bmi.leftLabels().none { "kg" in it })
+    }
+
+    @Test
+    fun `a swipe on the statistics switches the tab`() {
+        show()
+        compose.waitForIdle()
+        node("tab-WEIGHT").assertIsDisplayed()
+        node("stats").performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+        assertTrue(node("tab-BMI").fetchSemanticsNode().config[SemanticsProperties.Selected])
     }
 
     @Test

@@ -179,44 +179,49 @@ class StepsScreenTest {
     @Test
     fun `Askeleet's axes show units, three y labels and 3 to 5 dates`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.MONTH), granted)
-        compose.onNodeWithTag("stepsAxis-0", useUnmergedTree = true).assertTextEquals("0 askelta")
-        compose.onNodeWithTag("stepsAxis-2", useUnmergedTree = true).assertExists()
-        val dates = compose.onAllNodesWithTag("stepsDates-label", useUnmergedTree = true).fetchSemanticsNodes().size
-        assertTrue(dates in 3..5, "$dates dates")
-        compose.onNodeWithTag("stepsLegend").assertExists()
+        compose.waitForIdle()
+        val chart = compose.activity.chartViews().single()
+        val labels = chart.leftLabels()
+        assertEquals(3, labels.size, labels.toString())
+        assertEquals("0 askelta", labels.first().replace('\u00A0', ' ').replace('\u202F', ' '))
+        val dates = chart.dateLabels()
+        assertTrue(dates.size in 3..5, "$dates")
+        assertTrue(chart.legend.entries.any { it.label == "askeleet" })
         compose.onNodeWithTag("stepsWeights", useUnmergedTree = true).assertDoesNotExist()
-        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(0)
+        assertTrue(chart.legend.entries.none { it.label == "paino" })
     }
 
     @Test
     fun `a year's dates read month and year`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.YEAR), granted)
-        val labels = compose.onAllNodesWithTag("stepsDates-label", useUnmergedTree = true).fetchSemanticsNodes()
-            .map { it.config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString() }
+        compose.waitForIdle()
+        val chart = compose.activity.chartViews().single()
+        val labels = chart.dateLabels()
         assertTrue(labels.isNotEmpty() && labels.all { "/" in it }, labels.toString())
-        compose.onNodeWithText("viikoittain", useUnmergedTree = true).assertExists()
+        assertTrue(chart.legend.entries.any { it.label == "viikoittain" })
     }
 
     @Test
     fun `Energia has no weight strip or paino entry even with weights in the period`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
-        compose.onNodeWithTag("energyLegend").assertExists()
+        compose.waitForIdle()
         compose.onNodeWithTag("energyWeights", useUnmergedTree = true).assertDoesNotExist()
-        compose.onAllNodesWithText("paino", useUnmergedTree = true).assertCountEquals(0)
+        val legend = compose.activity.chartViews().single().legend.entries.map { it.label }
+        assertTrue("ruoka" in legend && "paino" !in legend, legend.toString())
     }
 
     @Test
     fun `Paino shows its legend`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, period = Period.WEEK), granted)
-        compose.onNodeWithTag("chartLegend").assertExists()
-        compose.onNodeWithText("paino", useUnmergedTree = true).assertExists()
+        compose.waitForIdle()
+        assertEquals(listOf("paino"), compose.activity.chartViews().single().legend.entries.map { it.label })
     }
 
     @Test
     fun `a swipe from Energia reaches Askeleet`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnEnergy = true, period = Period.WEEK), granted)
         compose.onNodeWithTag("tab-ENERGY").assertIsSelected()
-        compose.onNodeWithTag("page-ENERGY").performTouchInput { swipeLeft() }
+        compose.onNodeWithTag("energyStats").performTouchInput { swipeLeft() }
         compose.onNodeWithTag("tab-STEPS").assertIsSelected()
         compose.onNodeWithTag("stepsChart").assertExists()
     }
@@ -245,15 +250,16 @@ class StepsScreenTest {
     }
 
     @Test
-    fun `a tap on an Askeleet bar shows the crosshair readout`() {
+    fun `a tap on an Askeleet bar shows the marker card and the bar takes the highlight`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true), granted)
-        compose.onNodeWithTag("chartHint", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("stepsBars").performTouchInput { click(centerRight.copy(x = width - 2f)) }
-        compose.onNodeWithTag("chartReadoutText", useUnmergedTree = true)
-            .assertTextContains(fi.jukkakot.terveyslappu.chart.TabReadouts.day(today, today), substring = true)
-            .assertTextContains(formatSteps(6420), substring = true)
-        compose.onNodeWithTag("chartReadout").performClick()
-        compose.onNodeWithTag("chartHint", useUnmergedTree = true).assertExists()
+        compose.waitForIdle()
+        compose.onNodeWithTag("chartMarker", useUnmergedTree = true).assertDoesNotExist()
+        val chart = compose.activity.chartViews().single()
+        compose.onNodeWithTag("stepsBars").performTouchInput { click(androidx.compose.ui.geometry.Offset(chart.pixelX(today), chart.plotMiddle)) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("chartMarkerHead", useUnmergedTree = true).assertTextContains(fi.jukkakot.terveyslappu.chart.TabReadouts.day(today, today), substring = true)
+        compose.onNodeWithText("${formatSteps(6420)} askelta", substring = true, useUnmergedTree = true).assertExists()
+        assertEquals(1, chart.highlighted.size)
     }
 
     private val groupRow = androidx.compose.ui.test.SemanticsMatcher("a group row") {

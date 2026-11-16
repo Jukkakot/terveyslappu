@@ -145,6 +145,14 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   Android's own picker). Without the history permission the calendar says why old days are empty.
 - **Libraries first** (user 2026-11-09): use a maintained library (chart, Excel) instead of
   writing the feature by hand; size is not a reason against one.
+- **Historia's charts on MPAndroidChart** (user 2026-11-16, charts-on-mpandroidchart): every
+  Historia chart (Paino, BMI, Syöty, Askeleet, Kulutus, own charts) is drawn by MPAndroidChart 4
+  from one pure chart definition; where the old requirements differed, the library default won: a
+  marker card at the chosen day (date head, one row per series) instead of the readout line, tap
+  and drag scrub at once, the library's bar highlight, x labels placed by the library (3–5, our
+  measured count), pinch / double-tap zoom and pan on the time axis (stacked panels together). The
+  chart owns sideways drags inside its plot; the tab swipe works outside it. "Avaa päivä" and the
+  "Napauta päivää" hint are gone. The front page cards keep their own Canvas drawing for now.
 - **Weigh-in without any tap: reopened** (user 2026-11-14, after dropping it 2026-11-09 for
   battery): planned in phases in `roadmap.md`. The redo that deletes the previous result was done
   in weigh-in-discard.

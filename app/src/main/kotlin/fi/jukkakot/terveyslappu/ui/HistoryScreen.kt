@@ -344,6 +344,7 @@ private fun PeriodList(
             }
         }
         item(key = "pager") {
+            androidx.compose.runtime.CompositionLocalProvider(LocalChartReset provides pager.currentPage) {
             HorizontalPager(pager, verticalAlignment = Alignment.Top) { index ->
                 val shownPage = pages[index]
                 val here = crosshair.takeIf { index == pager.currentPage }
@@ -378,6 +379,7 @@ private fun PeriodList(
                 } else {
                     QuantityPage(Quantity.entries[index], state.period, shown, now, zone, profile, actions.onOpenProfile, here, onDay)
                 }
+            }
             }
         }
         if (onBurn) {

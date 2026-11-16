@@ -209,11 +209,16 @@ class FoodScreenTest {
     }
 
     @Test
-    fun `a tap on a Syoty bar shows the readout and Avaa paiva opens Ruoka, back returns`() {
+    fun `a tap on a Syoty bar shows the marker card, a list day opens Ruoka and back returns`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.HISTORY, historyOnEnergy = true), granted)
-        compose.onNodeWithTag("energyBars").performTouchInput { click(centerRight.copy(x = width - 2f)) }
-        compose.onNodeWithTag("chartReadoutText", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("chartReadoutAction").performClick()
+        compose.waitForIdle()
+        val chart = compose.activity.chartViews().single()
+        val day = chart.spec!!.panels.single().series.single().shape.all.last().day
+        compose.onNodeWithTag("energyBars").performTouchInput { click(androidx.compose.ui.geometry.Offset(chart.pixelX(day), chart.plotMiddle)) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("chartMarker", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("chartReadoutAction").assertDoesNotExist()
+        compose.onNodeWithTag("energyDay-$day").performScrollTo().performClick()
         compose.onNodeWithTag("food-a").assertExists()
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("energyChart").assertExists()

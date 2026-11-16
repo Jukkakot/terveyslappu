@@ -2,7 +2,8 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -22,7 +23,7 @@ import java.time.Instant
 @Config(sdk = [35], qualifiers = "w360dp-h780dp", fontScale = 2.0f)
 class LargeTextTest {
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val weights = (0..14).map {
         weightEntry("$it", Instant.now().minusSeconds(it * 43_200L + 60), null, 80.0 + it / 10.0, "me", "me")
@@ -36,15 +37,15 @@ class LargeTextTest {
         }
     }
 
-    /** steps-source-and-axes design 8: at 360 dp and font scale 1.3 no two chart labels overlap. */
+    /** weight-chart "Chart axes": at 360 dp and font scale 1.3 the date labels neither overlap nor get cut. */
     @Test
     @Config(fontScale = 1.3f)
     @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
-    fun `Askeleet's chart labels do not overlap at 360 dp and font scale 1_3`() {
+    fun `Askeleet's date labels do not overlap at 360 dp and font scale 1_3`() {
         val today = java.time.LocalDate.now()
         val steps = fi.jukkakot.terveyslappu.steps.StepsUiState(
             access = fi.jukkakot.terveyslappu.steps.StepsAccess.GRANTED,
-            days = (0L..29L).map { fi.jukkakot.terveyslappu.steps.StepsDay(today.minusDays(it), 6_000L + it * 137) },
+            days = (0L..400L).map { fi.jukkakot.terveyslappu.steps.StepsDay(today.minusDays(it), 6_000L + it * 137) },
         )
         var shown by androidx.compose.runtime.mutableStateOf(fi.jukkakot.terveyslappu.chart.Period.WEEK)
         compose.setContent {
@@ -52,19 +53,20 @@ class LargeTextTest {
                 MainScreen(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = shown), "0.1.1-test", MainActions(), steps = steps)
             }
         }
-        fun all(tag: String) = compose.onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
-        for (period in listOf(fi.jukkakot.terveyslappu.chart.Period.WEEK, fi.jukkakot.terveyslappu.chart.Period.MONTH, fi.jukkakot.terveyslappu.chart.Period.YEAR)) {
+        for (period in listOf(fi.jukkakot.terveyslappu.chart.Period.WEEK, fi.jukkakot.terveyslappu.chart.Period.MONTH, fi.jukkakot.terveyslappu.chart.Period.QUARTER, fi.jukkakot.terveyslappu.chart.Period.YEAR)) {
             shown = period
             compose.waitForIdle()
-            val boxes = listOf("stepsAxis-").flatMap { prefix -> (0..2).flatMap { all("$prefix$it") } } +
-                all("stepsDates-label") + all("stepsLegend-entry")
-            kotlin.test.assertTrue(boxes.size >= 3 + 3 + 2, "$period: ${boxes.size} labels")
+            val chart = compose.activity.chartViews().single()
+            val rects = dateLabelRects(chart)
             if (period == fi.jukkakot.terveyslappu.chart.Period.WEEK) {
-                kotlin.test.assertEquals(7, all("stepsDates-label").size, "one weekday label per day")
+                kotlin.test.assertEquals(7, rects.size, "one weekday label per day")
+            } else {
+                kotlin.test.assertTrue(rects.size in 3..5, "$period: ${rects.size} labels")
             }
-            for (i in boxes.indices) for (j in i + 1 until boxes.size) {
-                kotlin.test.assertFalse(boxes[i].overlaps(boxes[j]), "$period: label $i ${boxes[i]} overlaps label $j ${boxes[j]}")
-            }
+            for (r in rects) kotlin.test.assertTrue(r.left >= 0f && r.right <= chart.width, "$period: $r cut at an edge of ${chart.width}")
+            rects.zipWithNext().forEach { (a, b) -> kotlin.test.assertTrue(b.left > a.right, "$period: $a overlaps $b") }
+            // Text follows the font size: 11 sp at 1.3.
+            kotlin.test.assertEquals(11f * 1.3f, chart.xAxis.textSize, 0.1f)
         }
     }
 
