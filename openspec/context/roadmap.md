@@ -20,7 +20,7 @@ Phases in order; one OpenSpec change each unless noted.
 ## Backlog
 
 - ~~**Bug: Lisää annos widget opens the running app**~~ not reproducing 2026-11-16 (user): removing the widget from the home screen and adding it again fixed it (likely a stale widget PendingIntent from an older build). Reopen with the app log if it returns.
-- **Treats in their own colour** (user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
+- ~~**Treats in their own colour**~~ done 2026-11-16 (treat-text-colour, v1.49, user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
 - **Shared y-axis for the same unit** (user 2026-11-16): in own charts, series with the same unit (e.g. ruoka and kulutus, both kcal) share one y-axis and scale, so eaten vs burned compares truly; different units keep their own axes. Later: let the user choose the axis per series in the chart editor. After charts-on-mpandroidchart.
 - ~~**show-units-everywhere**~~ done 2026-11-16 (v1.47, user 2026-11-16): every number carries its unit (kcal, kg, askelta, kcal/pv), treats read "herkkuja N kcal", the add panel gets its own tone and the add confirmation line goes.
 - ~~**fit-weight-scale**~~ done 2026-11-16 (v1.48, user 2026-11-16): weight and BMI charts fit the data (0.2 kg room, at least 1 kg span, half-kilo rounding), the same rule on the home card, Historia and own charts.
