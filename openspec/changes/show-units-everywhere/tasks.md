@@ -12,6 +12,8 @@ Rule for every task: the formatters (`formatKcal`, `formatKg`, `formatSteps`, `f
 - [ ] 1.8 Delete the unused string `burn_value_split`.
 - [ ] 1.9 Historia calendar (`ui/RangeCalendarDialog.kt`): the day cells stay bare ("82,4"); one line "Painot kg" (bodySmall, onSurfaceVariant) under the month grid, shown only when the month has weights.
 
+- [ ] 1.10 Historia's statistics tiles (`ui/HistoryScreen.kt`, e.g. Viikossa "−0,47 kg"): the value with its unit stays on one line with the arrow (shrink to fit or a smaller style), never three lines as now.
+- [ ] 1.11 weight-entry "Questioned weight in the list": the change after a questioned weight also reads with kg ("+0,4 kg").
 ## 2. Finish
 
 - [ ] 2.1 Update tests asserting the changed texts: `HomeCardsTest` (short `home_burn_average` text at line 168; add a small-size check at font scale 1.3 that the steps and burn averages stay inside their slots), `TabReadoutsTest` (lines 91, 93, 110), `MainScreenTest` (`rowChange`), `FormatTest` stays as is. Run `./gradlew test lint assembleDebug`.
