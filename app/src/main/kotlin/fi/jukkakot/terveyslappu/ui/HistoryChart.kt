@@ -5,13 +5,12 @@ import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,8 +35,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
@@ -70,7 +67,6 @@ import fi.jukkakot.terveyslappu.chart.SeriesKind
 import fi.jukkakot.terveyslappu.chart.SeriesShape
 import fi.jukkakot.terveyslappu.chart.ValueUnit
 import java.time.LocalDate
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** The colours of the current theme for the chart views. */
@@ -264,6 +260,7 @@ internal fun HistoryChart(
                     val legend = single
                     val style = PanelStyle(colors, texts, textDp, dates = dates, legend = legend)
                     val extra = (if (dates) datesRoomDp(textDp) else 0f) + (if (legend && spec.legend.isNotEmpty()) legendRoomDp(textDp) else 0f)
+                    Box(place.height((panel.heightDp + extra).dp)) {
                     AndroidView(
                         factory = { context ->
                             HistoryCombinedChart(context).also { chart ->
@@ -311,11 +308,9 @@ internal fun HistoryChart(
                             chart.highlightValues(chart.highlightsFor(chosen))
                             state.bump()
                         },
-                        modifier = place
-                            .height((panel.heightDp + extra).dp)
-                            .plotOwnsSideways(state, i)
-                            .testTag(plotTag(i, panel)),
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight().testTag(plotTag(i, panel)),
                     )
+                    }
                 }
             }
             if (chosen != null && drawnIndices.isNotEmpty()) {
@@ -336,29 +331,6 @@ private fun fi.jukkakot.terveyslappu.chart.LegendItem.toCompose(colors: ChartCol
         LegendForm.LINE -> LegendEntry(texts.legend(label), colour, line = true)
         LegendForm.DASHED -> LegendEntry(texts.legend(label), colour, dashed = true)
         LegendForm.NONE -> LegendEntry(texts.legend(label))
-    }
-}
-
-/**
- * A sideways drag that starts inside the plot belongs to the chart (review decision 6): its moves
- * are consumed after the view has seen them, so the Historia pager never starts a swipe there.
- * Vertical moves stay free for the list.
- */
-private fun Modifier.plotOwnsSideways(state: HistoryChartState, index: Int): Modifier = pointerInput(index) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val chart = state.charts.getOrNull(index) ?: return@awaitEachGesture
-        val vp = chart.viewPortHandler
-        if (!vp.contentRect.contains(down.position.x, down.position.y)) return@awaitEachGesture
-        var sideways: Boolean? = null
-        while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Main)
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-            if (!change.pressed) break
-            val moved = change.position - down.position
-            if (sideways == null && moved.getDistance() > viewConfiguration.touchSlop / 2) sideways = abs(moved.x) >= abs(moved.y)
-            if (sideways == true || event.changes.size > 1) event.changes.forEach { it.consume() }
-        }
     }
 }
 

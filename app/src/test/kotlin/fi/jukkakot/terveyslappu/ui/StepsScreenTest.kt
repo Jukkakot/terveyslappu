@@ -258,7 +258,10 @@ class StepsScreenTest {
         compose.onNodeWithTag("stepsBars").performTouchInput { click(androidx.compose.ui.geometry.Offset(chart.pixelX(today), chart.plotMiddle)) }
         compose.waitForIdle()
         compose.onNodeWithTag("chartMarkerHead", useUnmergedTree = true).assertTextContains(fi.jukkakot.terveyslappu.chart.TabReadouts.day(today, today), substring = true)
-        compose.onNodeWithText("${formatSteps(6420)} askelta", substring = true, useUnmergedTree = true).assertExists()
+        compose.onNode(
+            androidx.compose.ui.test.hasText("${formatSteps(6420)} askelta", substring = true) and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chartMarker")),
+            useUnmergedTree = true,
+        ).assertExists()
         assertEquals(1, chart.highlighted.size)
     }
 

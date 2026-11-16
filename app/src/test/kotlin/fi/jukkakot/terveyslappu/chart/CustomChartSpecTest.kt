@@ -71,8 +71,8 @@ class CustomChartSpecTest {
         assertTrue(panel.series.flatMap { it.shape.all }.all { it.y in 0.0..1.0 })
         assertTrue(panel.series[2].average != null)
         // Bars side by side: energy in slot 0, steps in slot 1 of the same day.
-        val energy = (panel.series[1].shape as SeriesShape.Bars).points.first()
-        val steps = (panel.series[2].shape as SeriesShape.Bars).points.first { it.day == energy.day }
+        val steps = (panel.series[2].shape as SeriesShape.Bars).points.first()
+        val energy = (panel.series[1].shape as SeriesShape.Bars).points.first { it.day == steps.day }
         assertTrue(energy.x < steps.x)
         assertEquals(energy.day, s.dayAt(energy.x))
         assertEquals(steps.day, s.dayAt(steps.x))

@@ -129,7 +129,7 @@ internal data class PanelStyle(
     val legend: Boolean,
 )
 
-/** Gap kept between neighbouring date labels (and the old DateAxis rule). */
+/** Gap kept between neighbouring date labels (the same gap as before). */
 private const val LABEL_GAP_DP = 8f
 
 /** Room reserved for one row of date labels and one legend row, in multiples of the text size. */
@@ -195,6 +195,32 @@ internal class HistoryCombinedChart(context: Context) : CombinedChart(context) {
             formToTextSpace = 6f
             yOffset = 6f
         }
+    }
+
+    private var downX = 0f
+    private var downY = 0f
+    private var downInPlot = false
+
+    /**
+     * A sideways drag that starts inside the plot belongs to the chart (review decision 6): the
+     * view asks its parents not to intercept, so the Historia pager never takes it (the library
+     * asks only when it pans or zooms). Vertical drags stay free for the list.
+     */
+    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        when (event.actionMasked) {
+            android.view.MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+                downInPlot = viewPortHandler.contentRect.contains(event.x, event.y)
+            }
+            android.view.MotionEvent.ACTION_MOVE -> {
+                val dx = kotlin.math.abs(event.x - downX)
+                val dy = kotlin.math.abs(event.y - downY)
+                val slop = android.view.ViewConfiguration.get(context).scaledTouchSlop / 2f
+                if ((downInPlot && dx > slop && dx >= dy) || event.pointerCount > 1) parent?.requestDisallowInterceptTouchEvent(true)
+            }
+        }
+        return super.dispatchTouchEvent(event)
     }
 
     override fun getHighlightByTouchPoint(x: Float, y: Float): Highlight? {
@@ -291,10 +317,11 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
         axisMaximum = spec.x.max.toFloat()
         granularity = if (axis.weekly) 7f else 1f
         isGranularityEnabled = true
-        isAvoidFirstLastClippingEnabled = axis.days > AxisTicks.WEEK_DAYS
+        isAvoidFirstLastClippingEnabled = false
         textSize = style.textDp
         textColor = c.muted
-        valueFormatter = IAxisValueFormatter { v, _ -> dateLabelAt(axis, v, visibleXRange) }
+        // A label that would be cut at the view's edge is left out (the library would shift it onto its neighbour).
+        valueFormatter = IAxisValueFormatter { v, _ -> dateLabelAt(axis, v, visibleXRange).takeUnless { labelCut(v, it) } ?: "" }
     }
     setExtraOffsets(0f, 8f, 0f, if (style.dates) 2f else 8f)
 
@@ -405,11 +432,21 @@ internal fun dateLabelAt(axis: ChartAxis, v: Float, visibleRange: Float): String
     }
 }
 
-/** The date labels' drawn bounds in px (as the library places them, first/last clipping included). */
+private fun HistoryCombinedChart.labelPaint() = Paint(rendererXAxis.paintAxisLabels).apply { textSize = Utils.convertDpToPixel(xAxis.textSize) }
+
+/** Whether [label] centred at x value [v] would run past the view's edges. */
+private fun HistoryCombinedChart.labelCut(v: Float, label: String): Boolean {
+    if (width <= 0) return false
+    val px = getPixelForValues(v, 0f, YAxis.AxisDependency.LEFT).x.toFloat()
+    val half = Utils.calcTextWidth(labelPaint(), label) / 2f
+    return px - half < 0f || px + half > width
+}
+
+/** The drawn date labels' bounds in px, centred on their entries (empty labels left out). */
 internal fun dateLabelRects(chart: HistoryCombinedChart): List<RectF> {
     val xAxis = chart.xAxis
     val vp = chart.viewPortHandler
-    val paint = Paint(chart.rendererXAxis.paintAxisLabels).apply { textSize = Utils.convertDpToPixel(xAxis.textSize) }
+    val paint = chart.labelPaint()
     val trans = chart.getTransformer(YAxis.AxisDependency.LEFT)
     val count = xAxis.entryCount
     val positions = FloatArray(count * 2)
@@ -417,17 +454,11 @@ internal fun dateLabelRects(chart: HistoryCombinedChart): List<RectF> {
     trans.pointValuesToPixel(positions)
     val rects = mutableListOf<RectF>()
     for (i in 0 until count) {
-        var x = positions[i * 2]
+        val x = positions[i * 2]
         if (!vp.isInBoundsX(x)) continue
         val label = xAxis.valueFormatter.getFormattedValue(xAxis.entries[i], xAxis)
+        if (label.isEmpty()) continue
         val w = Utils.calcTextWidth(paint, label).toFloat()
-        if (xAxis.isAvoidFirstLastClippingEnabled) {
-            if (i == count - 1 && count > 1) {
-                if (w > vp.offsetRight * 2 && x + w > vp.chartWidth) x -= w / 2
-            } else if (i == 0) {
-                x += w / 2
-            }
-        }
         rects += RectF(x - w / 2, 0f, x + w / 2, 1f)
     }
     return rects
