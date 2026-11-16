@@ -19,6 +19,7 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- **Shared y-axis for the same unit** (user 2026-11-16): in own charts, series with the same unit (e.g. ruoka and kulutus, both kcal) share one y-axis and scale, so eaten vs burned compares truly; different units keep their own axes. Later: let the user choose the axis per series in the chart editor. After charts-on-mpandroidchart.
 - ~~**food-log**~~ done 2026-11-14 (v1.24): Lisää annos with learnt products and base products, Ruoka day screen, nutrition records in Health Connect, Energia tab next to Paino/BMI, Ruokakirjaus in Asetukset, foods and products in the data file.
 - ~~**home-compact**~~ done 2026-11-14 (v1.27, user 2026-11-14): the front page fits one screen: weight card with Punnitse inside, food card full width (number → Ruoka, bars → Energia), no BMI or automatic weigh-in card; Ruoka gets Viikko; the clipboard food offer also on the front page; import wording without the AI.
 - ~~**home-overview**~~ done 2026-11-14 (v1.26, user 2026-11-14): the front page as one card per feature (Paino; Ruoka with its own bars and period; Automaattinen punnitus while on), the latest-weights rows go. Parity rule: every feature gets the same parts on the front page and in its details unless a part means nothing for it.
