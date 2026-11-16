@@ -216,9 +216,9 @@ data class PanelMessage(val kind: SeriesKind)
  * last panel. [kind] names an own chart's panel (null on the fixed tabs).
  *
  * The card look (home-cards-on-chart-library design 3), read only in card mode: [grid] =
- * guidelines at the left axis's three values; [baseline] = the 1 dp line along the plot's bottom
- * (null: in the grid colour when [grid], else none); [insetDp] = room on every side (the weight
- * card's end dot).
+ * guidelines at the left axis's three values and a bottom line in the grid colour;
+ * [baseline] = a 1 dp line along the plot's bottom in this tone instead (feature cards);
+ * [insetDp] = room on every side (the weight card's end dot).
  */
 data class PanelSpec(
     val heightDp: Int,

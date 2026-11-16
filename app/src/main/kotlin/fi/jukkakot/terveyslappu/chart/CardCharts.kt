@@ -116,3 +116,6 @@ object CardCharts {
         return ChartSpec(axis, listOf(panel), emptyList(), noReadout)
     }
 }
+
+/** The top of a card chart's scale (the big cards' scale-top label). */
+val ChartSpec.scaleTop: Double get() = drawn.first().left?.max ?: 0.0

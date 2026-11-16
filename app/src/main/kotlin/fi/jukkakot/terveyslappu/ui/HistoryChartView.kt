@@ -127,7 +127,20 @@ internal data class PanelStyle(
     val dates: Boolean,
     /** The library legend under this panel (single-panel charts). */
     val legend: Boolean,
+    /**
+     * A front page card (home-cards-on-chart-library design 3): no labels, legend, marker or
+     * gestures; averages as dashed lines between the bars and the value lines; the card look of
+     * [PanelSpec] (grid, baseline, insets); bars at least 1 dp wide.
+     */
+    val card: Boolean = false,
 )
+
+/** A card's dashed average: 1 dp, 4 dp dashes and gaps (as the cards drew it). */
+private const val CARD_AVERAGE_DP = 1f
+private const val CARD_DASH_DP = 4f
+/** A card's thinnest bar and its baseline. */
+private const val CARD_MIN_BAR_DP = 1f
+private const val CARD_BASELINE_DP = 1f
 
 /** Gap kept between neighbouring date labels (the same gap as before). */
 private const val LABEL_GAP_DP = 8f
@@ -197,6 +210,25 @@ internal class HistoryCombinedChart(context: Context) : CombinedChart(context) {
         }
     }
 
+    /**
+     * A front page card's chart (home-cards-on-chart-library design 3): touch fully off, so the
+     * card's own tap, long-press into edit mode and drag get every event.
+     */
+    var card: Boolean = false
+        set(value) {
+            field = value
+            if (value) {
+                isTouchEnabled = false
+                isHighlightPerDragEnabled = false
+                isDoubleTapToZoomEnabled = false
+                isDragEnabled = false
+                isScaleXEnabled = false
+                isClickable = false
+                isLongClickable = false
+                isFocusable = false
+            }
+        }
+
     private var downX = 0f
     private var downY = 0f
     private var downInPlot = false
@@ -204,9 +236,11 @@ internal class HistoryCombinedChart(context: Context) : CombinedChart(context) {
     /**
      * A sideways drag that starts inside the plot belongs to the chart (review decision 6): the
      * view asks its parents not to intercept, so the Historia pager never takes it (the library
-     * asks only when it pans or zooms). Vertical drags stay free for the list.
+     * asks only when it pans or zooms). Vertical drags stay free for the list. A card's chart
+     * takes no event at all: false at once, no disallow-intercept, so Compose keeps the gesture.
      */
     override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (card) return false
         when (event.actionMasked) {
             android.view.MotionEvent.ACTION_DOWN -> {
                 downX = event.x
@@ -221,6 +255,12 @@ internal class HistoryCombinedChart(context: Context) : CombinedChart(context) {
             }
         }
         return super.dispatchTouchEvent(event)
+    }
+
+    /** A card squeezed to no plot height (a small card with a long title) draws nothing (tasks 3.4). */
+    override fun onDraw(canvas: Canvas) {
+        if (card && viewPortHandler.contentHeight < 1f) return
+        super.onDraw(canvas)
     }
 
     override fun getHighlightByTouchPoint(x: Float, y: Float): Highlight? {
@@ -291,13 +331,17 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
         textColor = axis.tone?.let(c::of) ?: c.muted
         gridColor = c.grid
         valueFormatter = IAxisValueFormatter { v, _ -> style.texts.unit(axis.unit, axis.value(v.toDouble())) }
+        // A card keeps the scale (no auto-scale) but draws no labels (home-cards-on-chart-library design 3).
+        isDrawLabelsEnabled = !style.card
     }
     axisLeft.set(panel.left)
     axisRight.set(panel.right)
+    axisLeft.isDrawGridLinesEnabled = !style.card || panel.grid
     bands.bands = panel.bands.map { Triple(it.from.toFloat(), it.to.toFloat(), c.of(it.tone)) }
 
-    // The averages: dashed limit lines over the data (library default), on the left axis.
-    panel.series.forEach { s ->
+    // The averages: dashed limit lines over the data (library default), on the left axis; a card
+    // draws them as data sets between the bars and the value lines (below).
+    if (!style.card) panel.series.forEach { s ->
         val average = s.average ?: return@forEach
         axisLeft.addLimitLine(
             LimitLine(average.toFloat()).apply {
@@ -312,9 +356,9 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
     val axis = spec.axis
     xAxis.apply {
         isEnabled = true
-        isDrawLabelsEnabled = style.dates
-        axisMinimum = spec.x.min.toFloat()
-        axisMaximum = spec.x.max.toFloat()
+        isDrawLabelsEnabled = style.dates && !style.card
+        axisMinimum = spec.xMin.toFloat()
+        axisMaximum = spec.xMax.toFloat()
         granularity = if (axis.weekly) 7f else 1f
         isGranularityEnabled = true
         isAvoidFirstLastClippingEnabled = false
@@ -323,44 +367,76 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
         // A label that would be cut at the view's edge is left out (the library would shift it onto its neighbour).
         valueFormatter = IAxisValueFormatter { v, _ -> dateLabelAt(axis, v, visibleXRange).takeUnless { labelCut(v, it) } ?: "" }
     }
-    setExtraOffsets(0f, 8f, 0f, if (style.dates) 2f else 8f)
+    // A feature card's 1 dp baseline in the bar tone. An own chart card's bottom guideline in the
+    // grid colour is 0.5 dp: today's clipped 1 dp line showed only its upper half (tasks 3.4).
+    val baseline = if (!style.card) null else panel.baseline?.let(c::of) ?: c.grid.takeIf { panel.grid }
+    xAxis.isDrawAxisLineEnabled = baseline != null
+    if (baseline != null) {
+        xAxis.axisLineColor = baseline
+        xAxis.axisLineWidth = if (panel.baseline != null) CARD_BASELINE_DP else CARD_BASELINE_DP / 2
+    }
+    if (style.card) {
+        val inset = panel.insetDp
+        setExtraOffsets(inset, inset, inset, inset)
+    } else {
+        setExtraOffsets(0f, 8f, 0f, if (style.dates) 2f else 8f)
+    }
 
-    legend.isEnabled = style.legend && spec.legend.isNotEmpty()
+    legend.isEnabled = !style.card && style.legend && spec.legend.isNotEmpty()
     if (legend.isEnabled) {
         legend.textSize = style.textDp
         legend.textColor = c.muted
         legend.entries = spec.legend.map { it.toLibrary(c, style.texts) }
     }
 
-    // Data sets: lines, then their dot sets; bars (design 3).
+    // Data sets: lines, then their dot sets; bars (design 3). A card puts its averages first, so
+    // they draw over the bars and under the value lines (home-cards-on-chart-library design 3).
+    val averages = mutableListOf<ILineDataSet<*>>()
     val lines = mutableListOf<ILineDataSet<*>>()
     val dots = mutableListOf<ILineDataSet<*>>()
     val bars = mutableListOf<IBarDataSet<*>>()
     val where = mutableListOf<Pair<Boolean, Int>>()
     var barWidth = 0.7f
+    val viewWidth = if (width > 0) width else resources.displayMetrics.widthPixels
+    // The plot's width: a card has no axis labels, only its insets.
+    val plotWidthDp = viewWidth / resources.displayMetrics.density - (if (style.card) 2 * panel.insetDp else 0f)
+    if (style.card) panel.series.forEach { s ->
+        val average = s.average ?: return@forEach
+        val y = average.toFloat()
+        val points = listOf(Entry<LocalDate>(spec.xMin.toFloat(), y, null, null), Entry<LocalDate>(spec.xMax.toFloat(), y, null, null))
+        averages += LineDataSet(points, "${s.id}-average").apply {
+            axisDependency = YAxis.AxisDependency.LEFT
+            color = c.of(s.averageTone)
+            lineWidth = CARD_AVERAGE_DP
+            enableDashedLine(px(CARD_DASH_DP), px(CARD_DASH_DP), 0f)
+            isDrawCirclesEnabled = false
+            isDrawValuesEnabled = false
+            isHighlightEnabled = false
+        }
+    }
     panel.series.forEach { s ->
         val tone = c.of(s.tone)
         when (val shape = s.shape) {
             is SeriesShape.Line -> {
-                where += true to lines.size
+                where += true to averages.size + lines.size
                 lines += LineDataSet(shape.points.map(::entry), s.id).apply {
                     axisDependency = YAxis.AxisDependency.LEFT
                     color = tone
-                    lineWidth = 2f
+                    lineWidth = shape.widthDp
                     isDrawCirclesEnabled = false
                     isDrawValuesEnabled = false
                     highlightColor = c.muted
                     highlightLineWidth = 1f
                     isHorizontalHighlightIndicatorEnabled = false
+                    isHighlightEnabled = !style.card
                 }
-                val widthDp = (if (width > 0) width else resources.displayMetrics.widthPixels) / resources.displayMetrics.density
-                val shown = shape.dots.shown(shape.points.size, widthDp)
+                val shown = shape.dots.shown(shape.points.size, plotWidthDp)
                 dots += LineDataSet(shape.points.filterIndexed { k, _ -> k in shown }.map(::entry), "${s.id}-dots").apply {
                     axisDependency = YAxis.AxisDependency.LEFT
                     color = AndroidColor.TRANSPARENT
                     isDrawCirclesEnabled = true
                     isDrawCircleHoleEnabled = false
-                    circleRadius = 3.5f
+                    circleRadius = shape.dotDp
                     setCircleColors(tone)
                     isDrawValuesEnabled = false
                     isHighlightEnabled = false
@@ -379,7 +455,14 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
             }
         }
     }
-    val lineData = (lines + dots).takeIf { it.isNotEmpty() }?.let { LineData(it) }
+    if (style.card) {
+        // Bars at least 1 dp wide (design 4); recomputed on the size change's rebind.
+        val plotPx = px(plotWidthDp)
+        val span = (spec.xMax - spec.xMin).toFloat().coerceAtLeast(1e-3f)
+        if (width > 0 && plotPx > 0f) barWidth = maxOf(barWidth, px(CARD_MIN_BAR_DP) / (plotPx / span))
+        bars.forEach { it.isHighlightEnabled = false }
+    }
+    val lineData = (averages + lines + dots).takeIf { it.isNotEmpty() }?.let { LineData(it) }
     val barData = bars.takeIf { it.isNotEmpty() }?.let { BarData(it).apply { this.barWidth = barWidth } }
     val combined = CombinedData().apply {
         this.lineData = lineData

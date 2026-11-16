@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
@@ -78,17 +77,6 @@ private fun EnergyChart(series: EnergySeries, crosshair: LocalDate?, onDay: (Loc
         HistoryChart(spec, crosshair, onDay, stringResource(R.string.energy_chart_description, series.bars.size), tag = "energyChart", plotTag = { _, _ -> "energyBars" })
     }
 }
-
-/** Three faint guidelines at [ys] (bottom, middle, top). */
-internal fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGuidelines(color: Color, ys: List<Float>) {
-    ys.forEachIndexed { i, y ->
-        val yy = y.coerceIn(0f, size.height)
-        drawLine(color, Offset(0f, yy), Offset(size.width, yy), strokeWidth = (if (i == 0) 1.dp else 0.5.dp).toPx())
-    }
-}
-
-/** Height of a bar plot. */
-internal val BAR_PLOT = 160.dp
 
 @Composable
 private fun EnergyStatsTiles(series: EnergySeries) {

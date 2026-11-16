@@ -1,6 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,9 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -33,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
-import fi.jukkakot.terveyslappu.chart.ChartAxis
+import fi.jukkakot.terveyslappu.chart.ChartSpec
 import fi.jukkakot.terveyslappu.chart.ChartLayout
 import fi.jukkakot.terveyslappu.chart.CustomChartData
 import fi.jukkakot.terveyslappu.chart.CustomChartSpec
@@ -56,7 +54,7 @@ private val MIN_CARD_PANEL = 24.dp
 
 /**
  * An own chart on a front page card (custom-charts design 8, 9, 13): stacked panels or one overlaid
- * plot over the chart's own days, drawn on Canvas with [ChartPanels]; no gestures (a tap opens
+ * plot over the chart's own days, drawn by the library in card mode ([CardChart]); no gestures (a tap opens
  * Historia). Its Historia tab is drawn by `HistoryChart` from `CustomChartSpec`.
  */
 @Composable
@@ -73,11 +71,13 @@ internal fun CustomChartView(
             return@Column
         }
         val overlaidLayout = data.chart.layout == ChartLayout.OVERLAID
+        // The card's chart definition on the shared library path (home-cards-on-chart-library design 1).
+        val spec = remember(data) { CustomChartSpec.of(data, data.axis.to, card = true) }
         if (overlaidLayout && data.drawn.size > 1) {
-            Overlaid(data, size)
+            Overlaid(data, spec, size)
         } else {
             // One data drawn in Päällekkäin = exactly the stacked single panel.
-            Stacked(data, size, states, single = overlaidLayout)
+            Stacked(data, spec, size, states, single = overlaidLayout)
         }
     }
 }
@@ -127,48 +127,16 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
     },
 )
 
-/**
- * Draws one kind's bars or line into the scope; bars always rise from zero;
- * Kulutus bars split into lepo and aktiivinen when [burnSplit] (Allekkain), else one tone.
- */
-private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false) {
-    val values = kind.values.orEmpty()
-    fun y(v: Double) = size.height * (1 - kind.fraction(v))
-    if (kind.style == SeriesStyle.BARS) {
-        if (!barsToo) return
-        if (kind.kind == SeriesKind.BURN && burnSplit) {
-            drawBurnBars(axis, values.map { BurnBarSpec(it.day, 1, it.value, it.active) }, ::y, color, slot, slots)
-        } else {
-            drawBars(axis, values.map { BarSpec(it.day, 1, it.value, it.treat) }, ::y, color, treat, slot, slots)
-        }
-    } else if (linesToo) {
-        drawValueLine(axis, values.map { it.day to it.value }, ::y, color, dots = kind.kind == SeriesKind.WEIGHT)
-    }
-}
-
-/** The flat dashed average line of [kind] on its own scale (Keskiarvo on; nothing without an average). */
-private fun DrawScope.drawKindAverage(kind: KindData, color: Color) {
-    val average = kind.average ?: return
-    drawAverageLine(size.height * (1 - kind.fraction(average)), color)
-}
-
 @Composable
-private fun ColumnScope.Stacked(data: CustomChartData, card: CardSize, states: Map<SeriesKind, PanelState>, single: Boolean = false) {
-    val colors = MaterialTheme.colorScheme
+private fun ColumnScope.Stacked(data: CustomChartData, spec: ChartSpec, card: CardSize, states: Map<SeriesKind, PanelState>, single: Boolean = false) {
     val panels = if (single) data.drawn.ifEmpty { data.kinds.take(1) } else data.kinds
     panels.forEach { kind ->
         val panel = Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CARD_PANEL)
         Row(panel.testTag("panel-${kind.kind.name}").padding(top = 2.dp)) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
-                if (kind.drawn) {
-                    val tone = data.toneOf(kind.kind, overlaid = false)
-                    val treat = if (kind.kind == SeriesKind.ENERGY && kind.style == SeriesStyle.BARS) data.treatTone(tone) else null
-                    Plot(Modifier.fillMaxSize().testTag("plot-${kind.kind.name}")) {
-                        drawGuidelines(colors.outlineVariant, kind.ticks.map { size.height * (1 - kind.fraction(it)) })
-                        drawKind(kind, data.axis, tone, treat, linesToo = false, burnSplit = true)
-                        if (data.chart.showAverage) drawKindAverage(kind, colors.onSurfaceVariant)
-                        drawKind(kind, data.axis, tone, treat, barsToo = false)
-                    }
+                val panel = spec.panels.firstOrNull { it.kind == kind.kind && it.message == null }
+                if (kind.drawn && panel != null) {
+                    CardChart(spec, Modifier.fillMaxSize().testTag("plot-${kind.kind.name}"), panel)
                     if (card == CardSize.BIG) ScaleTopLabel(axisLabels(kind).last(), "scaleTop-${kind.kind.name}")
                 } else {
                     PanelMessage(kind.kind, states[kind.kind] ?: PanelState.Ready, compact = true)
@@ -180,7 +148,7 @@ private fun ColumnScope.Stacked(data: CustomChartData, card: CardSize, states: M
 }
 
 @Composable
-private fun ColumnScope.Overlaid(data: CustomChartData, card: CardSize) {
+private fun ColumnScope.Overlaid(data: CustomChartData, spec: ChartSpec, card: CardSize) {
     val colors = MaterialTheme.colorScheme
     val drawn = data.drawn
     val groups = CustomChartSpec.unitGroups(drawn)
@@ -188,13 +156,7 @@ private fun ColumnScope.Overlaid(data: CustomChartData, card: CardSize) {
     val plot = Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CARD_PANEL)
     Row(plot.padding(top = 4.dp).testTag("plot-overlaid")) {
         Box(Modifier.weight(1f).fillMaxHeight()) {
-            val bars = drawn.filter { it.style == SeriesStyle.BARS }
-            Plot(Modifier.fillMaxSize().testTag("plot-OVERLAID")) {
-                drawGuidelines(colors.outlineVariant, listOf(0f, 0.5f, 1f).map { size.height * (1 - it) })
-                bars.forEachIndexed { i, kind -> drawKind(kind, data.axis, tones.getValue(kind.kind), null, i, bars.size) }
-                if (data.chart.showAverage) drawn.forEach { drawKindAverage(it, tones.getValue(it.kind)) }
-                drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null) }
-            }
+            CardChart(spec, Modifier.fillMaxSize().testTag("plot-OVERLAID"), spec.panels.single())
             if (card == CardSize.BIG) {
                 groups.take(2).forEachIndexed { i, group ->
                     val kind = group[0]
@@ -250,12 +212,6 @@ private fun DatesAndLegend(data: CustomChartData, card: CardSize, overlaid: Bool
         entries
     }
     ChartLegend(withAverage, "chartLegend")
-}
-
-/** A card's plot area. */
-@Composable
-private fun Plot(modifier: Modifier, draw: DrawScope.() -> Unit) {
-    Canvas(modifier.clipToBounds()) { draw() }
 }
 
 /** The top of a card's scale with its unit (big cards). */

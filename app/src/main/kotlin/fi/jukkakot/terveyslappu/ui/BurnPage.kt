@@ -167,8 +167,6 @@ private fun BurnPage(series: BurnSeries, burn: BurnUiState, actions: BurnActions
     }
 }
 
-internal fun BurnBar.spec() = BurnBarSpec(from, days, total.toDouble(), active?.toDouble())
-
 @Composable
 private fun BurnChart(series: BurnSeries, crosshair: LocalDate?, onDay: (LocalDate?) -> Unit) {
     val today = LocalDate.now()

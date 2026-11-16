@@ -12,16 +12,19 @@
 
 ## 2. Card mode and host
 
-- [ ] 2.1 Card branch of `bind` (design 3, 4), card-mode `dispatchTouchEvent`.
-- [ ] 2.2 `ui/CardChart` host (design 5, 6).
-- [ ] 2.3 Compose tests: a tap on each card's chart opens its target (weight → Historia, food bars → Historia Energia while food's title still opens Ruoka, steps → Askeleet, Kulutus → its tab, own chart → its tab); a long-press on a chart enters edit mode; a long-press-then-drag on a chart moves the card; a recomposition does not rebind; content descriptions and test tags present.
+- [x] 2.1 Card branch of `bind` (design 3, 4), card-mode `dispatchTouchEvent`.
+- [x] 2.2 `ui/CardChart` host (design 5, 6).
+- [x] 2.3 Compose tests: a tap on each card's chart opens its target (weight → Historia, food bars → Historia Energia while food's title still opens Ruoka, steps → Askeleet, Kulutus → its tab, own chart → its tab); a long-press on a chart enters edit mode; a long-press-then-drag on a chart moves the card; a recomposition does not rebind; content descriptions and test tags present.
 
 ## 3. Switch the cards
 
-- [ ] 3.1 Weight, food, steps and Kulutus cards in `ui/HomeScreen` draw through `CardChart` at every size; big-card scale tops and dashed average as today.
-- [ ] 3.2 Own chart cards (`ui/CustomChartView` card mode, `ui/ChartCard`) draw through `CardChart`, one per Allekkain panel; layout, messages, labels and legend unchanged.
-- [ ] 3.3 Remove the Canvas path (design 7); fix tests that referenced it.
-- [ ] 3.4 After screenshots of the same cases as 0.1; compare by eye; fix any difference against design 1–4; note accepted pixel-level differences here.
+- [x] 3.1 Weight, food, steps and Kulutus cards in `ui/HomeScreen` draw through `CardChart` at every size; big-card scale tops and dashed average as today.
+- [x] 3.2 Own chart cards (`ui/CustomChartView` card mode, `ui/ChartCard`) draw through `CardChart`, one per Allekkain panel; layout, messages, labels and legend unchanged.
+- [x] 3.3 Remove the Canvas path (design 7); fix tests that referenced it.
+- [x] 3.4 After screenshots of the same cases as 0.1; compare by eye; fix any difference against design 1–4; note accepted pixel-level differences here.
+  - Weight, food, steps and Kulutus cards: identical to the pixel at every size, light and dark (food, steps, Kulutus) or within line anti-aliasing (weight; the title's clock differs between runs).
+  - Own chart cards: grid lines straddle the plot's edge by half a pixel (the library centres a 0.5 dp line on the edge, the Canvas drew it inside), and line joins and dot edges anti-alias differently; accepted. The bottom guideline is a 0.5 dp x-axis line in the grid colour, not 1 dp (design 3): the Canvas clipped its 1 dp line to the upper half, so 0.5 dp keeps today's look.
+  - A card squeezed to no chart height (a small weight card whose title and change chip wrap) draws nothing; the Canvas drew a flattened, upside-down line over the dates there. The library view of no height skips drawing.
 
 ## 4. Finish
 

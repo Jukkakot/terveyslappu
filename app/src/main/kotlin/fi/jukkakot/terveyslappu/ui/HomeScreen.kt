@@ -1,6 +1,5 @@
 package fi.jukkakot.terveyslappu.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,14 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -61,8 +52,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
-import fi.jukkakot.terveyslappu.chart.AxisTicks
-import fi.jukkakot.terveyslappu.chart.ChartDots
+import fi.jukkakot.terveyslappu.chart.CardCharts
+import fi.jukkakot.terveyslappu.chart.scaleTop
 import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
 import fi.jukkakot.terveyslappu.chart.Period
@@ -74,11 +65,9 @@ import fi.jukkakot.terveyslappu.burn.HomeBurn
 import fi.jukkakot.terveyslappu.steps.HomeSteps
 import fi.jukkakot.terveyslappu.steps.StepsAccess
 import fi.jukkakot.terveyslappu.steps.StepsUiState
-import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 /**
  * One row unit of the front page grid (home-card-layout design 2): small and wide cards are one unit
@@ -198,14 +187,11 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                 .testTag("foodBars"),
         ) {
             Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
-                if (summary.bars.isNotEmpty()) {
+                val spec = remember(summary, size) { CardCharts.food(summary, size) }
+                if (spec != null) {
                     val description = stringResource(R.string.home_food_bars, summary.bars.size)
-                    val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.total }.toDouble(), KCAL_STEP).last() else null
-                    FoodBars(
-                        summary, colors.primary, colors.tertiary, top, summary.averageKcal?.toDouble()?.takeIf { big }, colors.onSurfaceVariant,
-                        Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description },
-                    )
-                    if (top != null) ScaleTop(stringResource(R.string.food_kcal, formatKcal(top)), "foodScaleTop")
+                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                    if (big) ScaleTop(stringResource(R.string.food_kcal, formatKcal(spec.scaleTop)), "foodScaleTop")
                 }
             }
             Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
@@ -287,33 +273,6 @@ private fun ScaleTop(text: String, tag: String) {
     )
 }
 
-/** Daily kcal bars of the period without axes, in Energia's tones (food, treats stacked); big: on the scale [top] with a dashed [average]. */
-@Composable
-private fun FoodBars(summary: HomeFood, food: Color, treat: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
-    Canvas(modifier) {
-        val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
-        val max = (top ?: summary.bars.maxOf { it.total }.toDouble()).coerceAtLeast(1.0).toFloat()
-        val dayW = size.width / days
-        for (bar in summary.bars) {
-            val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
-            val width = maxOf(dayW * 0.7f, 1.dp.toPx())
-            val baseTop = size.height * (1 - (bar.total - bar.treat) / max)
-            drawRect(food, Offset(left, baseTop), Size(width, size.height - baseTop))
-            if (bar.treat > 0) {
-                val treatTop = size.height * (1 - bar.total / max)
-                drawRect(treat, Offset(left, treatTop), Size(width, baseTop - treatTop))
-            }
-        }
-        drawLine(food.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
-        if (average != null) averageLine(average.toFloat() / max, line)
-    }
-}
-
-/** The dashed average line of a big card (design 9): 1 dp, onSurfaceVariant. */
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.averageLine(fraction: Float, color: Color) {
-    drawAverageLine(size.height * (1 - fraction.coerceIn(0f, 1f)), color)
-}
-
 /**
  * The steps card (home-screen "Steps card on the home screen", "Card sizes"), the food card's twin
  * without a quick action: today's steps, daily bars of its own period, the period's dates and
@@ -365,14 +324,11 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
         val big = size == CardSize.BIG
         Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsBars")) {
             Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
-                if (summary.bars.isNotEmpty()) {
+                val spec = remember(summary, size) { CardCharts.steps(summary, size) }
+                if (spec != null) {
                     val description = stringResource(R.string.home_steps_bars, summary.bars.size)
-                    val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.steps }.toDouble(), STEPS_STEP).last() else null
-                    StepsBars(
-                        summary, colors.primary, top, summary.averageSteps?.toDouble()?.takeIf { big }, colors.onSurfaceVariant,
-                        Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description },
-                    )
-                    if (top != null) ScaleTop(stringResource(R.string.steps_value, formatSteps(top.toLong())), "stepsScaleTop")
+                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                    if (big) ScaleTop(stringResource(R.string.steps_value, formatSteps(spec.scaleTop.toLong())), "stepsScaleTop")
                 }
             }
             Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
@@ -403,24 +359,6 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
     }
 }
 
-/** Daily step bars of the period without axes, in one tone; big: on the scale [top] with a dashed [average]. */
-@Composable
-private fun StepsBars(summary: HomeSteps, color: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
-    Canvas(modifier) {
-        val days = (ChronoUnit.DAYS.between(summary.from, summary.to) + 1).toInt().coerceAtLeast(1)
-        val max = (top ?: summary.bars.maxOf { it.steps }.toDouble()).coerceAtLeast(1.0).toFloat()
-        val dayW = size.width / days
-        for (bar in summary.bars) {
-            val left = ChronoUnit.DAYS.between(summary.from, bar.from) * dayW + dayW * 0.15f
-            val width = maxOf(dayW * 0.7f, 1.dp.toPx())
-            val barTop = size.height * (1 - bar.steps / max)
-            drawRect(color, Offset(left, barTop), Size(width, size.height - barTop))
-        }
-        drawLine(color.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
-        if (average != null) averageLine(average.toFloat() / max, line)
-    }
-}
-
 /**
  * The Kulutus card (energy-burn "Kulutus card"), built like the steps card: today's total kcal with
  * "aktiivinen N kcal" under it (dropped first when the chart has no room), two-tone daily bars of its
@@ -429,7 +367,6 @@ private fun StepsBars(summary: HomeSteps, color: Color, top: Double?, average: D
 @Composable
 private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: CardSize, actions: BurnActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
-    val tone = burnColour()
     val summary = remember(burn.days, days, today) { HomeBurn.of(burn.days.orEmpty(), days, today) }
     val onTap: (() -> Unit)? = when (burn.access) {
         StepsAccess.NEEDS -> actions.onGrant
@@ -485,11 +422,11 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                     )
                 }
                 Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
-                    if (summary.bars.isNotEmpty()) {
+                    val spec = remember(summary, size) { CardCharts.burn(summary, size) }
+                    if (spec != null) {
                         val description = stringResource(R.string.home_burn_bars, summary.bars.size)
-                        val top = if (big) AxisTicks.bars(summary.bars.maxOf { it.total }.toDouble(), KCAL_STEP).last() else null
-                        BurnBars(summary, tone, top, summary.averageTotal?.toDouble()?.takeIf { big }, colors.onSurfaceVariant, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
-                        if (top != null) ScaleTop(stringResource(R.string.food_kcal, formatKcal(top)), "burnScaleTop")
+                        CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                        if (big) ScaleTop(stringResource(R.string.food_kcal, formatKcal(spec.scaleTop)), "burnScaleTop")
                     }
                 }
                 Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
@@ -526,18 +463,6 @@ private fun UnitValue(value: String, unit: String, tag: String) {
     }
 }
 
-/** The card's two-tone daily bars without axes; big: on the scale [top] with a dashed [average]. */
-@Composable
-private fun BurnBars(summary: HomeBurn, color: Color, top: Double?, average: Double?, line: Color, modifier: Modifier) {
-    Canvas(modifier) {
-        val max = (top ?: summary.bars.maxOf { it.total }.toDouble()).coerceAtLeast(1.0)
-        val axis = fi.jukkakot.terveyslappu.chart.ChartAxis(summary.from, summary.to)
-        drawBurnBars(axis, summary.bars.map { it.spec() }, { v -> size.height * (1 - (v / max)).toFloat() }, color)
-        drawLine(color.copy(alpha = 0.4f), Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
-        if (average != null) averageLine((average / max).toFloat(), line)
-    }
-}
-
 /** Room the card's "aktiivinen N kcal" line needs above the chart's least height. */
 private val ACTIVE_LINE = 20.dp
 
@@ -547,9 +472,6 @@ internal val homeCardShape get() = cardShape
 private val innerShape = RoundedCornerShape(16.dp)
 /** The least height of a card's chart; the chart takes the height its size leaves free (design 2). */
 private val MIN_CHART = 32.dp
-/** The bar scale steps of Energia and Askeleet (steps-source-and-axes `AxisTicks.bars`). */
-private const val KCAL_STEP = 250.0
-private const val STEPS_STEP = 1000.0
 internal val groupShape = RoundedCornerShape(20.dp)
 
 /** The weight card: latest weight, change, small chart, and Punnitse, the home screen's only filled action. */
@@ -624,6 +546,8 @@ private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: Car
         summary.change?.let { ChangeChip(it, Modifier.align(Alignment.CenterVertically)) }
     }
     val first = summary.spark.firstOrNull()
+    val zone = ZoneId.systemDefault()
+    val spec = remember(summary, zone) { CardCharts.weight(summary, zone) }
     if (first != null) {
         val description = stringResource(R.string.home_spark, formatKg(first.kg), formatKg(summary.latest.kg))
         val chart = Modifier.padding(top = 4.dp).fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)
@@ -635,12 +559,11 @@ private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: Car
                     Text(stringResource(R.string.kg_value, formatKg(scale.max)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleTop"))
                     Text(stringResource(R.string.kg_value, formatKg(scale.min)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleBottom"))
                 }
-                Sparkline(summary, colors.primary, Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description })
+                spec?.let { CardChart(it, Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description }) }
             }
         } else {
-            Sparkline(summary, colors.primary, chart.semantics { contentDescription = description })
+            if (spec != null) CardChart(spec, chart.semantics { contentDescription = description }) else Spacer(chart)
         }
-        val zone = ZoneId.systemDefault()
         val label = MaterialTheme.typography.labelSmall
         Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
             Text(formatShortDay(summary.sparkFrom.atZone(zone).toLocalDate()), style = label, color = colors.onSurfaceVariant, modifier = Modifier.weight(1f))
@@ -718,42 +641,6 @@ private fun ChangeChip(change: Double, modifier: Modifier = Modifier) {
             Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
-    }
-}
-
-/** The period's weights as a line by time, no axes; the latest weight is a dot at the right end. */
-@Composable
-private fun Sparkline(summary: HomeSummary, color: Color, modifier: Modifier) {
-    val points = summary.spark
-    val scale = summary.sparkScale ?: return
-    Canvas(modifier) {
-        val dot = 4.dp.toPx()
-        val left = dot
-        val width = size.width - 2 * dot
-        val top = dot
-        val height = size.height - 2 * dot
-        // The whole period and the shared weight scale (home-screen, weight-chart "Weight scale").
-        val t0 = summary.sparkFrom.epochSecond
-        val span = (summary.sparkTo.epochSecond - t0).coerceAtLeast(1)
-        fun at(entry: WeightEntry): Offset {
-            val x = left + width * ((entry.time.epochSecond - t0).toFloat() / span).coerceIn(0f, 1f)
-            val y = top + height * ((scale.max - entry.kg) / scale.span).toFloat()
-            return Offset(x, y)
-        }
-        if (points.size > 1) {
-            val path = Path()
-            points.forEachIndexed { i, entry ->
-                val p = at(entry)
-                if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
-            }
-            drawPath(path, color, style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-        }
-        // Every weight as a small dot when they fit (weight-chart "Dots when they fit"); the latest always.
-        if (ChartDots.fit(points.size, width.toDp().value)) {
-            val small = 2.5.dp.toPx()
-            points.dropLast(1).forEach { drawCircle(color, radius = small, center = at(it)) }
-        }
-        drawCircle(color, radius = dot, center = at(points.last()))
     }
 }
 
