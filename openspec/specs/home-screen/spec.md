@@ -523,8 +523,9 @@ filling the card's free space, and the period as a plain label ("1 kk", "Kaikki"
 The period SHALL be the one stored in the chart and shown on its Historia tab; it SHALL be changed
 only there, and the card's label SHALL NOT be tappable. By size: small: the title, the chart
 without scale labels or dates, the period label; wide: also the first and last day under the chart
-and the legend; big: also the top of each scale with its unit (Allekkain: per panel; Päällekkäin:
-the two axes). On a card data without permission or without values SHALL be left out silently
+and the legend; big: also the top of each scale with its unit (Allekkain: per panel, so two panels on a shared kcal scale show the same top; Päällekkäin:
+one top per value axis, on that axis's side and in its tone, so a shared kcal scale shows one
+neutral top and a chart whose drawn data share one scale shows only a left top). On a card data without permission or without values SHALL be left out silently
 (Allekkain: its panel shows a short "anna lupa" or "ei tietoa" line); a chart whose shown data all
 lack values SHALL read "Ei tietoja tällä jaksolla". The card SHALL have no crosshair: a tap anywhere
 on it SHALL open Historia on the chart's tab, and back SHALL return to the front page.
@@ -580,3 +581,7 @@ on it SHALL open Historia on the chart's tab, and back SHALL return to the front
 - **GIVEN** weight, food and steps are hidden and the Liike card is the only shown card
 - **WHEN** the user deletes Liike
 - **THEN** the front page shows the default layout with the weight, food and steps cards
+
+#### Scenario: Eaten and burned on a big card
+- **GIVEN** a big card of a chart with Syöty and Kulutus, Päällekkäin, highest day 2 800 kcal
+- **THEN** one scale top "3 500 kcal" is shown, top left, in the neutral tone, and none on the right
