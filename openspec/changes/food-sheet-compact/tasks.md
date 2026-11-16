@@ -1,9 +1,9 @@
 ## 1. Compact rows
 
 - [ ] 1.1 `ui/FoodRow` (FoodScreen.kt): the name `maxLines = 1`, `TextOverflow.Ellipsis`, in a
-  `weight(1f, fill = false)` slot so the treat sign stays visible; add a `showTime` parameter
-  (default true for Ruoka) and pass false from the sheet's `DayList` (FoodSheet.kt).
-- [ ] 1.2 Smoke test (Robolectric, made-up items): in the sheet a timed item's row shows the amount
+  `weight(1f, fill = false)` slot so the treat sign stays visible; drop the clock text
+  from the details line everywhere (amount only; `clock` stays only if used elsewhere).
+- [ ] 1.2 Smoke test (Robolectric, made-up items): a timed item's row (sheet and Ruoka) shows the amount
   and no clock text; a long name renders on one line (`maxLines` via semantics or text layout).
 
 ## 2. Folding add panel
@@ -13,12 +13,14 @@
   test tag `addPanelHandle`. Drag with Compose foundation's `draggable` (vertical) on the handle
   and the heading/chip area: a downward drag past ~24 dp folds, an upward one unfolds; a tap
   toggles. The handle consumes its drags so the sheet frame's drag-to-close never sees them.
-- [ ] 2.2 Folded: the heading and `FlowRow` are left out with `AnimatedVisibility` (expand/shrink
-  vertically, ~200 ms); the message line and field stay. `chipRows` is computed as today.
-- [ ] 2.3 TalkBack: the handle's `contentDescription` "Piilota ehdotukset" / "Näytä ehdotukset"
+- [ ] 2.2 Folded: the heading, `FlowRow` and field are left out with `AnimatedVisibility`
+  (expand/shrink vertically, ~200 ms); folding clears focus and hides the keyboard; unfolding does
+  not open it. The message line stays above the handle. The handle is hidden while the query is
+  non-empty. `chipRows` is computed as today.
+- [ ] 2.3 TalkBack: the handle's `contentDescription` "Piilota lisäys" / "Näytä lisäys"
   (strings in `values/strings.xml`), `Role.Button`, click toggles.
-- [ ] 2.4 Smoke tests: tapping the handle hides `addSuggestions` and keeps `addField`; tapping
-  again shows it; a new `AddFoodContent` starts unfolded.
+- [ ] 2.4 Smoke tests: tapping the handle hides `addSuggestions` and `addField`; tapping
+  again shows both; a new `AddFoodContent` starts unfolded.
 
 ## 3. Wrap-up
 

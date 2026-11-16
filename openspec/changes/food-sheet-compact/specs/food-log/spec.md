@@ -1,5 +1,30 @@
 ## MODIFIED Requirements
 
+### Requirement: Ruoka day screen
+The app SHALL have a Ruoka screen for one day, opening on today, with arrows to earlier days (none
+after today). It SHALL list the day's items in eating order, each with its name (on one line, shortened
+with "…" when it does not fit), amount and kcal, without a logging time. On top it SHALL
+show the day's total kcal with the treats' share apart, and the number of items without kcal
+("1 760 kcal · herkkuja 230 kcal · 1 ilman kcal"). A day with nothing logged SHALL show only a short
+line on how to add, without any warning, count or judgement. The screen SHALL show no budget,
+target, remaining calories, streak or meal names. The top bar SHALL have a "Viikko" link that opens
+Historia on Energia for 1 vk; back from there SHALL return to the Ruoka screen.
+
+#### Scenario: A day in order
+- **GIVEN** today the user logged Rahka 200 g at 7.10, Pullo 1 kpl at 10.05 and Pizza (no kcal) at 12.30
+- **WHEN** the Ruoka screen opens
+- **THEN** the three items are listed in that order without times, and the top reads the total
+  of Rahka and Pullo and "1 ilman kcal"
+
+#### Scenario: Missed day
+- **WHEN** the user moves to a day with nothing logged
+- **THEN** only the how-to-add line is shown
+
+#### Scenario: From the day to the week
+- **WHEN** the user taps Viikko on the Ruoka screen
+- **THEN** Historia opens on Energia with 1 vk, and tapping a day in the Energia day list opens that
+  day on Ruoka
+
 ### Requirement: Adding an item
 "Lisää annos" (on the front page and on the Ruoka screen) SHALL open the add sheet, adding to the
 day shown (today from the front page). The sheet SHALL take the full height and show the day it
@@ -78,15 +103,16 @@ Details:
 
 Folding the add panel:
 - A drag down on the panel's handle, or on the panel's heading and chip area, folds the panel: the
-  heading and chips go and only the message line (when there is one) and the field stay, so the
-  day list grows. A drag up on the handle or the field's top edge, or a tap on the handle, unfolds
-  it; a tap on the handle of an unfolded panel folds it. The change animates briefly.
-- Folded or not lasts until the sheet closes; every open starts unfolded. Typing, adding and
+  heading, chips and field go, the keyboard goes down, and only the handle (with the message line
+  above it when there is one, so Kumoa stays reachable) is left, so the day list grows. A drag up
+  on the handle, or a tap on it, unfolds the panel without opening the keyboard; a tap on the
+  handle of an unfolded panel folds it. The change animates briefly.
+- Folded or not lasts until the sheet closes; every open starts unfolded. Adding, deleting and
   editing do not change it. A drag down on a folded panel does nothing.
-- The handle shows only when the panel has chips to fold (field empty and at least one chip);
+- The handle shows whenever the field is empty (with or without chips) and is hidden while typing;
   with the keyboard up it works the same.
-- The handle is at least 48 dp tall as a touch target; TalkBack names it "Piilota ehdotukset" or
-  "Näytä ehdotukset" and its click toggles.
+- The handle is at least 48 dp tall as a touch target; TalkBack names it "Piilota lisäys" or
+  "Näytä lisäys" and its click toggles.
 
 #### Scenario: The day first
 - **GIVEN** today the user logged Rahka 250 g at 7.10 and Jäätelö 130 g (Herkku, 260 kcal) at 19.05
@@ -155,17 +181,18 @@ Folding the add panel:
 #### Scenario: Fold to look at the day
 - **GIVEN** the sheet is open with chips showing and the day has eight items
 - **WHEN** the user drags the panel's handle down
-- **THEN** the heading and chips go, the field stays at the bottom, more day rows show, and the
-  sheet stays open
+- **THEN** the heading, chips and field go, only the handle stays at the bottom, more day rows
+  show, and the sheet stays open
 
 #### Scenario: Unfold again
 - **WHEN** the user taps the handle of a folded panel
-- **THEN** the heading and chips come back
+- **THEN** the heading, chips and field come back, with the keyboard down
 
 #### Scenario: Next open starts unfolded
 - **GIVEN** the user folded the panel and closed the sheet
 - **WHEN** they open the sheet again
-- **THEN** the chips show
+- **THEN** the chips and the field show
+
 
 #### Scenario: Long name on one line
 - **WHEN** the day holds "Keitetty täysjyvämakaroni" 200 g, 300 kcal on a narrow phone
