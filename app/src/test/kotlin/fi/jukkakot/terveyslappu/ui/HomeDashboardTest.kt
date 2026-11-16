@@ -95,7 +95,7 @@ class HomeDashboardTest {
             compose.waitForIdle()
             val dp = plot(id)
             println("PLOT scale=$scale $id/$size = ${dp.value} dp")
-            if (dp < 56.dp && "$id/$size@$scale" !in OPEN) shorts += "$id/$size at $scale: plot $dp"
+            if (dp < 56.dp) shorts += "$id/$size at $scale: plot $dp"
         }
         assertTrue(shorts.isEmpty(), "under 56 dp: $shorts")
     }
@@ -119,7 +119,7 @@ class HomeDashboardTest {
         assertEquals(96.5, scale.min, 0.01)
         assertEquals(98.5, scale.max, 0.01)
         val plot = plot(HomeLayout.WEIGHT)
-        // The 56 dp floor itself is the matrix test above (task 2.3 open at 1.0).
+        // The 56 dp floor itself is the matrix test above.
         val rise = (98.0 - 97.2) / (scale.max - scale.min)
         assertTrue(rise * plot.value >= 0.25f * plot.value, "the spike is a quarter of the plot")
     }
@@ -157,16 +157,4 @@ class HomeDashboardTest {
     @Test
     @Config(fontScale = 1.3f)
     fun `small food card keeps its number and bars at 130 percent text`() = foodFits()
-
-    private companion object {
-        /**
-         * home-dashboard-menu task 2.3 is open: at the default text size these plots measure under
-         * 56 dp (weight 36, food and steps 48, Kulutus 12, the first wide own chart 54), because a row is
-         * 248 dp (ROW_UNIT). Listed so the rest of the matrix stays guarded; empty once solved.
-         */
-        val OPEN = setOf(
-            "weight/SMALL@1.0", "weight/WIDE@1.0", "food/SMALL@1.0", "food/WIDE@1.0", "steps/SMALL@1.0", "steps/WIDE@1.0",
-            "burn/SMALL@1.0", "burn/WIDE@1.0", "chart:1/WIDE@1.0",
-        )
-    }
 }

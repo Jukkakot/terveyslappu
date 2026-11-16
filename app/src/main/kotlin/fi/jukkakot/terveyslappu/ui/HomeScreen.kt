@@ -71,10 +71,10 @@ import java.time.ZoneId
 
 /**
  * One row unit of the front page grid (home-card-layout design 2): small and wide cards are one unit
- * high, big cards two units and the gap. Grows with the text up to 130 %. 248 dp was the starting
- * estimate; the size matrix test (`HomeCardSizesTest`) sets the final value.
+ * high, big cards two units and the gap. Grows with the text up to 130 %. 268 dp (user decision 2026-11-16; was a 248 dp
+ * estimate); the plot-height matrix in `HomeDashboardTest` guards it.
  */
-internal val ROW_UNIT = 248.dp
+internal val ROW_UNIT = 268.dp
 
 /** The grid's gap between cards and rows. */
 internal val GRID_GAP = 8.dp
@@ -344,7 +344,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
 
 /**
  * The Kulutus card (energy-burn "Kulutus card"), built like the steps card: today's total kcal with
- * "aktiivinen N kcal" under it (dropped first when the chart has no room), two-tone daily bars of its
+ * "aktiivinen N kcal" beside it (wraps under it when narrow, never dropped), two-tone daily bars of its
  * own period, the dates and the average; big adds the scale top and the dashed average.
  */
 @Composable
@@ -371,7 +371,22 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
             if (shows) {
                 val now = summary.today
                 if (now != null) {
-                    UnitValue(formatKcal(now.total.toDouble()), "kcal", "burnTodayValue")
+                    // One line: number, "kcal" and (when there is room beside them) the active part; the unit never wraps.
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
+                            Text(formatKcal(now.total.toDouble()), style = MaterialTheme.typography.headlineMedium, maxLines = 1, modifier = Modifier.testTag("burnTodayValue"))
+                            Text("kcal", style = MaterialTheme.typography.titleSmall, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
+                        }
+                        now.active?.let { active ->
+                            Text(
+                                stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.onSurfaceVariant,
+                                maxLines = 1,
+                                modifier = Modifier.align(Alignment.Bottom).padding(bottom = 4.dp).testTag("burnTodayActive"),
+                            )
+                        }
+                    }
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -391,19 +406,8 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
         }
         val small = MaterialTheme.typography.labelSmall
         val big = size == CardSize.BIG
-        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp)) {
-            val activeFits = maxHeight >= MIN_CHART + ACTIVE_LINE
+        Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp)) {
             Column(Modifier.fillMaxSize().testTag("burnBars")) {
-                val active = summary.today?.active
-                if (active != null && activeFits) {
-                    Text(
-                        stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        modifier = Modifier.testTag("burnTodayActive"),
-                    )
-                }
                 Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
                     val spec = remember(summary, size) { CardCharts.burn(summary, size) }
                     if (spec != null) {
@@ -446,8 +450,6 @@ private fun UnitValue(value: String, unit: String, tag: String) {
     }
 }
 
-/** Room the card's "aktiivinen N kcal" line needs above the chart's least height. */
-private val ACTIVE_LINE = 20.dp
 
 private val cardShape = RoundedCornerShape(24.dp)
 internal val homeCardShape get() = cardShape
