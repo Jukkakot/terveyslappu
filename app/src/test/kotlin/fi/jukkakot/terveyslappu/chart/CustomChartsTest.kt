@@ -59,6 +59,16 @@ class CustomChartsTest {
     }
 
     @Test
+    fun `Paino stays a line whatever is set, other data can be bars`() {
+        var draft = CustomCharts.setStyle(CustomCharts.newDraft(emptyList()), WEIGHT, BARS)
+        assertEquals(LINE, draft.styleOf(WEIGHT))
+        assertEquals(LINE, draft.copy(styles = draft.styles + (WEIGHT to BARS)).toChart(1).series.first { it.kind == WEIGHT }.style)
+        draft = CustomCharts.setStyle(draft, ENERGY, LINE)
+        assertEquals(BARS, CustomCharts.setStyle(draft, ENERGY, BARS).styleOf(ENERGY))
+        assertEquals(BARS, draft.styleOf(STEPS))
+    }
+
+    @Test
     fun `the last data stays on and a switched-off kind keeps its style`() {
         var draft = CustomCharts.newDraft(emptyList())
         draft = CustomCharts.setStyle(draft, STEPS, LINE)

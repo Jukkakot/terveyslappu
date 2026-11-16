@@ -128,7 +128,7 @@ private fun emptyText(kind: SeriesKind): String = stringResource(
 )
 
 /**
- * Draws one kind's bars or line into the scope; weight bars rise from the scale's bottom (Q16);
+ * Draws one kind's bars or line into the scope; bars always rise from zero;
  * Kulutus bars split into lepo and aktiivinen when [burnSplit] (Allekkain), else one tone.
  */
 private fun DrawScope.drawKind(kind: KindData, axis: ChartAxis, color: Color, treat: Color?, slot: Int = 0, slots: Int = 1, linesToo: Boolean = true, barsToo: Boolean = true, burnSplit: Boolean = false) {

@@ -484,7 +484,8 @@
     <string name="help_home_body">Pidä korttia painettuna, niin etusivun muokkaus alkaa. Raahaa kortti uuteen paikkaan; kortin valikosta voit vaihtaa koon (pieni, leveä, iso), siirtää korttia tai piilottaa sen, ja Lisää kortti tuo piilotetun takaisin. Valmis tallentaa, Peruuta tai takaisin-ele hylkää muutokset.</string>
     <!-- custom-charts -->
     <string name="chart_new">Uusi kaavio</string>
-    <string name="chart_new_intro">Omassa kaaviossa näet painon, syödyn ja kulutetun energian sekä askeleet yhdessä, omalla jaksollaan, pylväinä tai viivana.</string>
+    <string name="chart_weight_line_desc">%1$s: viiva</string>
+    <string name="chart_new_intro">Omassa kaaviossa näet painon, syödyn ja kulutetun energian sekä askeleet yhdessä, omalla jaksollaan.</string>
     <string name="chart_edit">Muokkaa</string>
     <string name="chart_edit_title">Muokkaa kaaviota</string>
     <string name="chart_name">Nimi</string>
@@ -516,7 +517,7 @@
     <string name="custom_chart_description">Oma kaavio %1$s</string>
     <string name="home_open_chart">Avaa kaavio</string>
     <string name="help_charts_title">Omat kaaviot</string>
-    <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Paino, Syöty, Kulutus ja Askeleet voivat olla pylväinä tai viivana, allekkain tai päällekkäin, kullekin voi valita värin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
+    <string name="help_charts_body">Tee oma kaavio Historian Uusi kaavio -välilehdeltä tai etusivun muokkauksen Lisää kortti -valikosta. Syöty, Kulutus ja Askeleet voivat olla pylväinä tai viivana ja paino aina viivana, allekkain tai päällekkäin, kullekin voi valita värin, ja kaaviolla on oma jaksonsa. Napauta tai paina pitkään kaaviota, niin näet päivän arvot.</string>
     <!-- garmin-steps-history -->
     <string name="garmin_title">Garminin historia</string>
     <string name="garmin_preview">%1$s – %2$s</string>

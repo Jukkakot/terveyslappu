@@ -42,7 +42,7 @@ object ChartCodec {
             require(stored.v == VERSION)
             val charts = stored.charts.map { c ->
                 // A missing or unknown colour reads as Oletus (charts saved before colours existed).
-                val series = c.series.map { s -> ChartSeries(enumOf(s.kind), enumOf(s.style), s.colour?.let { n -> SeriesColour.entries.firstOrNull { it.name.equals(n, ignoreCase = true) } }) }.distinctBy { it.kind }.sortedBy { it.kind }
+                val series = c.series.map { s -> ChartSeries(enumOf(s.kind), if (s.kind.equals("weight", true)) SeriesStyle.LINE else enumOf(s.style), s.colour?.let { n -> SeriesColour.entries.firstOrNull { it.name.equals(n, ignoreCase = true) } }) }.distinctBy { it.kind }.sortedBy { it.kind }
                 require(series.isNotEmpty() && c.name.isNotBlank())
                 CustomChart(c.id, c.name, series, enumOf(c.layout), period(c.period), c.average)
             }.distinctBy { it.id }

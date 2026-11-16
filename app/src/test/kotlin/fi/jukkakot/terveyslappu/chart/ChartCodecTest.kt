@@ -9,6 +9,17 @@ class ChartCodecTest {
     private fun chart(id: Int, period: Period) = CustomCharts.newDraft(emptyList()).copy(name = "Kaavio $id", period = period).toChart(id)
 
     @Test
+    fun `an old chart with Paino bars decodes as a line, the rest unchanged`() {
+        val old = """{"v":1,"next":2,"charts":[{"id":1,"name":"A","layout":"overlaid","period":{"k":"all"},"average":true,"series":[{"kind":"weight","style":"bars","colour":"sininen"},{"kind":"steps","style":"bars"}]}]}"""
+        val c = ChartCodec.decode(old)!!.charts.single()
+        assertEquals(SeriesStyle.LINE, c.styleOf(SeriesKind.WEIGHT))
+        assertEquals(SeriesStyle.BARS, c.styleOf(SeriesKind.STEPS))
+        assertEquals("A", c.name)
+        assertEquals(true, c.showAverage)
+        assertEquals(SeriesColour.entries.first { it.name.equals("sininen", true) }, c.colourOf(SeriesKind.WEIGHT))
+    }
+
+    @Test
     fun `round trip with all three period kinds`() {
         val list = ChartList(
             listOf(

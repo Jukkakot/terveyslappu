@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -213,6 +214,7 @@ internal fun ChartEditor(
                     supportingText = if (!valid) ({ Text(stringResource(R.string.chart_name_missing)) }) else null,
                     modifier = Modifier.fillMaxWidth().testTag("chartName"),
                 )
+                val weightLineDescription = stringResource(R.string.chart_weight_line_desc, kindName(SeriesKind.WEIGHT))
                 SeriesKind.entries.forEach { kind ->
                     val on = kind in draft.on
                     Column(Modifier.fillMaxWidth()) {
@@ -221,7 +223,15 @@ internal fun ChartEditor(
                             Switch(checked = on, onCheckedChange = { draft = CustomCharts.toggle(draft, kind) }, modifier = Modifier.testTag("chartOn-${kind.name}"))
                         }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
+                        if (kind == SeriesKind.WEIGHT) {
+                            Box(Modifier.weight(1f).heightIn(min = 40.dp).clearAndSetSemantics { contentDescription = weightLineDescription }, contentAlignment = Alignment.CenterStart) {
+                                Text(
+                                    stringResource(R.string.chart_style_line), style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (on) 1f else 0.38f),
+                                    modifier = Modifier.testTag("chartStyle-WEIGHT-label"),
+                                )
+                            }
+                        } else SingleChoiceSegmentedButtonRow(Modifier.weight(1f)) {
                             SeriesStyle.entries.forEachIndexed { i, style ->
                                 SegmentedButton(
                                     selected = draft.styleOf(kind) == style,

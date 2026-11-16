@@ -21,7 +21,7 @@ Phases in order; one OpenSpec change each unless noted.
 
 - ~~**Bug: Lisää annos widget opens the running app**~~ not reproducing 2026-11-16 (user): removing the widget from the home screen and adding it again fixed it (likely a stale widget PendingIntent from an older build). Reopen with the app log if it returns.
 - ~~**Treats in their own colour**~~ done 2026-11-16 (treat-text-colour, v1.49, user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
-- **Weight bars mislead in own charts** (user 2026-11-16, unambiguous-data): Paino as Pylväät starts from the weight scale's bottom, not zero, so 82 kg can look twice 81 kg. Proposal: own charts show Paino as a line only (drop the Pylväät choice for Paino; old charts read as Viiva).
+- ~~**Weight bars mislead in own charts**~~ done 2026-11-16 (weight-line-only, v1.51, user 2026-11-16, unambiguous-data): own charts show Paino as a line only; the Pylväät choice is gone for Paino and old charts read as Viiva.
 - ~~**Shared y-axis for the same unit**~~ done 2026-11-16 (shared-unit-axis, v1.50, user 2026-11-16): in own charts, series with the same unit (ruoka and kulutus, kcal) share one scale and one value axis (neutral tone) in both layouts, also on the front page card; different units keep their own.
 - **Choose the axis per series** (later idea): let the user pick the value axis per series in the chart editor.
 - ~~**show-units-everywhere**~~ done 2026-11-16 (v1.47, user 2026-11-16): every number carries its unit (kcal, kg, askelta, kcal/pv), treats read "herkkuja N kcal", the add panel gets its own tone and the add confirmation line goes.

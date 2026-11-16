@@ -68,7 +68,9 @@ data class ChartDraft(
 ) {
     val isNew: Boolean get() = id == 0
 
-    fun styleOf(kind: SeriesKind): SeriesStyle = styles[kind] ?: CustomCharts.defaultStyle(kind)
+    // Paino is always a line: bars of a scale that does not start at zero mislead (weight-line-only).
+    fun styleOf(kind: SeriesKind): SeriesStyle =
+        if (kind == SeriesKind.WEIGHT) SeriesStyle.LINE else styles[kind] ?: CustomCharts.defaultStyle(kind)
 
     fun colourOf(kind: SeriesKind): SeriesColour? = colours[kind]
 
@@ -157,7 +159,7 @@ object CustomCharts {
         else -> draft.copy(on = draft.on - kind)
     }
 
-    fun setStyle(draft: ChartDraft, kind: SeriesKind, style: SeriesStyle): ChartDraft = draft.copy(styles = draft.styles + (kind to style))
+    fun setStyle(draft: ChartDraft, kind: SeriesKind, style: SeriesStyle): ChartDraft = if (kind == SeriesKind.WEIGHT) draft else draft.copy(styles = draft.styles + (kind to style))
 
     fun setColour(draft: ChartDraft, kind: SeriesKind, colour: SeriesColour?): ChartDraft = draft.copy(colours = draft.colours + (kind to colour))
 

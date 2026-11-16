@@ -7,7 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -371,6 +373,10 @@ class HistoryChartsTest {
         openTab("tab-NEW")
         node("chartNew").performClick()
         node("chartName").assertTextContains("Kaavio 2")
+        node("chartStyle-WEIGHT-label").assertExists()
+        node("chartStyle-ENERGY-BARS").assertExists()
+        compose.onAllNodesWithTag("chartStyle-WEIGHT-BARS").assertCountEquals(0)
+        compose.onAllNodesWithTag("chartStyle-WEIGHT-LINE").assertCountEquals(0)
         node("chartOn-WEIGHT").performClick()
         node("chartOn-ENERGY").performClick()
         node("chartOn-STEPS").performClick()
