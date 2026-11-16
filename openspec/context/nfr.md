@@ -29,3 +29,6 @@ Every change follows these. IDs are stable; never reuse a removed one.
 - **NFR-9 Every failure leaves a trace.** No silently swallowed errors: a failing share, intent,
   permission or Health Connect call logs its cause, and the user sees a short message. (Rubikki's
   log share failed silently in one browser and the log could not be sent.)
+- **NFR-10 Every number shows its unit (user 2026-11-16).** Every number on screen and in TalkBack
+  text carries its unit next to it ("145 kcal", "−0,3 kg", "7 800 askelta/pv"); counts read as
+  words ("8 painoa", "3 pv"). BMI is the one unitless value: its "BMI" label names it.

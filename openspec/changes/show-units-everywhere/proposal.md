@@ -12,13 +12,14 @@ number shown has its unit next to it, everywhere in the app.
   TalkBack text) carries its unit; counts read as words ("8 painoa", "3 pv"). BMI is the one
   unitless quantity (its label "BMI" is the unit, as is conventional).
 - Fix every place found in the audit (2026-11-16) that shows a bare number:
-  - Food sheet and Ruoka chips: "+ Rahka 145" → "+ Rahka 145 kcal".
+  - Food sheet and Ruoka chips: "+ Rahka 145" → "+ Rahka 145 kcal", chip text one step smaller
+    (labelMedium) so about as many chips fit (user 2026-11-16).
   - Treat share everywhere ("herkkuja 230" → "herkkuja 230 kcal"): Ruoka summary line, the sheet,
     the home food card, Energia day list.
   - Steps and Kulutus home cards: the big number gets its unit beside it ("askelta", "kcal"), as the
     weight and food cards already have.
-  - Home card averages at small size: "keskim. 1 900/pv" and "2 300/pv" get the unit (form decided
-    with the user).
+  - Home card averages at small size: "keskim. 1 900/pv" and "2 300/pv" use the long form
+    ("keskim. 1 900 kcal/pv"), wrapping to two lines when needed.
   - Historia group rows: "herkkuja ka 230" → "herkkuja ka 230 kcal/pv", "aktiivinen ka 450" →
     "aktiivinen ka 450 kcal/pv".
   - Weight change labels in Historia's list (day rows and group rows): "−0,3" → "−0,3 kg".
