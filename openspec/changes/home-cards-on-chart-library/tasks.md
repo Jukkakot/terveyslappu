@@ -2,7 +2,7 @@
 
 ## 0. Baseline
 
-- [ ] 0.1 First check that a Robolectric NATIVE capture includes `AndroidView` content (Compose `captureToImage`; else draw the root view to a bitmap). Then, before any change, screenshot with made-up data into the session scratchpad (never the repo): weight, food, steps, Kulutus and own chart cards (Allekkain and Päällekkäin) at small, wide and big, light and dark; plus 90 days on a small card, a single weight, the latest weight at the right edge, Kulutus with a kokonais day, Päällekkäin with three bar data, Keskiarvo on over lines, edit mode dimmed.
+- [x] 0.1 First check that a Robolectric NATIVE capture includes `AndroidView` content (Compose `captureToImage`; else draw the root view to a bitmap). Then, before any change, screenshot with made-up data into the session scratchpad (never the repo): weight, food, steps, Kulutus and own chart cards (Allekkain and Päällekkäin) at small, wide and big, light and dark; plus 90 days on a small card, a single weight, the latest weight at the right edge, Kulutus with a kokonais day, Päällekkäin with three bar data, Keskiarvo on over lines, edit mode dimmed.
 
 ## 1. Card chart definitions
 
