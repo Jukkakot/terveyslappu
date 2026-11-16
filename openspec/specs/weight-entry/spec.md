@@ -54,7 +54,7 @@ The app SHALL show on Historia the weights this app wrote in the period chosen f
 from Health Connect, newest first, each with its date, time and value; the date SHALL include the
 year when the weight is not from the current year. Weights written by other apps SHALL NOT be listed
 (user 2026-11-09: they are inaccurate hand entries). Each weight row SHALL also show the change from
-the listed weight just before it in time, signed with one decimal (`+0,3`, `−0,5`, `±0,0`); the
+the listed weight just before it in time, signed with one decimal and `kg` (`+0,3 kg`, `−0,5 kg`, `±0,0 kg`); the
 oldest row of the period and a weight more than 30 days after the one before it SHALL show no
 change. The change SHALL have a small arrow up for a gain and down for a loss, none when it is
 zero. Gains and losses SHALL have different colours taken from the phone's palette that are not
@@ -76,7 +76,7 @@ red and green, and a zero change SHALL use the neutral text colour.
 #### Scenario: Change from the previous weight
 - **GIVEN** the period holds 82,0 kg, then 82,4 kg, then 81,9 kg
 - **WHEN** Historia is shown
-- **THEN** the rows read 81,9 kg with −0,5, 82,4 kg with +0,4 and 82,0 kg with no change
+- **THEN** the rows read 81,9 kg with −0,5 kg, 82,4 kg with +0,4 kg and 82,0 kg with no change
 
 #### Scenario: No change across a gap
 - **GIVEN** 92,0 kg on 20.5.2024 and 97,5 kg on 18.3.2025
@@ -198,7 +198,7 @@ that weight and no difference. Tapping it SHALL open or close it.
 
 #### Scenario: Month row
 - **GIVEN** November 2025 holds 20 weights, the first 92,3 kg and the last 91,0 kg
-- **THEN** its row reads "Marraskuu 2025", "92,3 → 91,0 kg", −1,3 with an arrow down and 20
+- **THEN** its row reads "Marraskuu 2025", "92,3 → 91,0 kg", −1,3 kg with an arrow down and 20
 
 #### Scenario: Open and close
 - **WHEN** the user taps a closed month row

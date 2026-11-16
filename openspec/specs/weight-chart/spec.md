@@ -950,7 +950,7 @@ Päällekkäin one tone. Kulutus, Viiva: a line through each day's total. Its sc
 Syöty rule (`ceil(highest × 1,1 / 500) × 500` kcal, at least 500). With Keskiarvo on, its line is
 the average total per day with data, today left out. An own chart SHALL hold one to four data; in
 Päällekkäin up to four bar data stand side by side in a day's slot and only the first two drawn
-data have a scale. The crosshair readout SHALL show Kulutus as "2 300 kcal · aktiivinen 450" (a
+data have a scale. The crosshair readout SHALL show Kulutus as "2 300 kcal · aktiivinen 450 kcal" (a
 day without a split: "2 300 kcal"), "ei tietoa" without a value. Its Allekkain panel without values
 SHALL read "Ei kulutustietoja tällä jaksolla". A new chart SHALL start with Kulutus off.
 
@@ -1045,9 +1045,9 @@ opens Ruoka; an Askeleet or Kulutus day opens nothing).
 A group row SHALL show the group's name as a weight group does ("2024", "Marraskuu 2025", "Vk 45 ·
 3.–9.11."), the per-day average of the tab's main value over the group's listed days, the number of
 those days ("12 pv"), and the open sign; tapping it SHALL open or close it:
-- Energia: "ka 1 850 kcal/pv" and "herkkuja ka 230" (left out when zero).
+- Energia: "ka 1 850 kcal/pv" and "herkkuja ka 230 kcal/pv" (left out when zero).
 - Askeleet: "ka 8 400 askelta/pv".
-- Kulutus: "ka 2 300 kcal/pv" and "aktiivinen ka 450" (left out when no day of the group has an
+- Kulutus: "ka 2 300 kcal/pv" and "aktiivinen ka 450 kcal/pv" (left out when no day of the group has an
   active value).
 Details:
 - Listed days are the days each list already shows (Energia: days with kcal; Askeleet: days with
