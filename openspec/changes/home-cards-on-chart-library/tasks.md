@@ -28,5 +28,5 @@
 
 ## 4. Finish
 
-- [ ] 4.1 `./gradlew test lint assembleDebug`
-- [ ] 4.2 Update the CLAUDE.md map (`ui/ChartPanels` gone, `chart/CardCharts`, `ui/CardChart`, card mode of `HistoryChartView`); mark the roadmap item "front page cards on the chart library" done; bump `appVersion` to 1.52.
+- [x] 4.1 `./gradlew test lint assembleDebug`
+- [x] 4.2 Update the CLAUDE.md map (`ui/ChartPanels` gone, `chart/CardCharts`, `ui/CardChart`, card mode of `HistoryChartView`); mark the roadmap item "front page cards on the chart library" done; bump `appVersion` to 1.52.
