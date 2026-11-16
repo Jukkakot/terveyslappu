@@ -22,8 +22,7 @@ Phases in order; one OpenSpec change each unless noted.
 - ~~**Bug: Lisää annos widget opens the running app**~~ not reproducing 2026-11-16 (user): removing the widget from the home screen and adding it again fixed it (likely a stale widget PendingIntent from an older build). Reopen with the app log if it returns.
 - ~~**Treats in their own colour**~~ done 2026-11-16 (treat-text-colour, v1.49, user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
 - ~~**Weight bars mislead in own charts**~~ done 2026-11-16 (weight-line-only, v1.51, user 2026-11-16, unambiguous-data): own charts show Paino as a line only; the Pylväät choice is gone for Paino and old charts read as Viiva.
-- ~~**Shared y-axis for the same unit**~~ done 2026-11-16 (shared-unit-axis, v1.50, user 2026-11-16): in own charts, series with the same unit (ruoka and kulutus, kcal) share one scale and one value axis (neutral tone) in both layouts, also on the front page card; different units keep their own.
-- **Choose the axis per series** (later idea): let the user pick the value axis per series in the chart editor.
+- ~~**Shared y-axis for the same unit**~~ done 2026-11-16 (shared-unit-axis, v1.50, user 2026-11-16): in own charts, series with the same unit (ruoka and kulutus, kcal) share one scale and one value axis (neutral tone) in both layouts, also on the front page card; different units keep their own. Per-series axis choice dropped (user 2026-11-16): the shared-unit rule covers it.
 - ~~**show-units-everywhere**~~ done 2026-11-16 (v1.47, user 2026-11-16): every number carries its unit (kcal, kg, askelta, kcal/pv), treats read "herkkuja N kcal", the add panel gets its own tone and the add confirmation line goes.
 - ~~**fit-weight-scale**~~ done 2026-11-16 (v1.48, user 2026-11-16): weight and BMI charts fit the data (0.2 kg room, at least 1 kg span, half-kilo rounding), the same rule on the home card, Historia and own charts.
 - ~~**food-log**~~ done 2026-11-14 (v1.24): Lisää annos with learnt products and base products, Ruoka day screen, nutrition records in Health Connect, Energia tab next to Paino/BMI, Ruokakirjaus in Asetukset, foods and products in the data file.
@@ -51,7 +50,7 @@ Phases in order; one OpenSpec change each unless noted.
   or for a while in the widget itself) and from there the user can delete it, i.e. start the
   weigh-in again. Same change family as the redo in the next item; do this first.
 
-- **Weigh-in without any tap** (reopened by the user 2026-11-14; dropped 2026-11-09 on an
+- ~~**Weigh-in without any tap**~~ done 2026-11-14 (phases 1-2 and plausibility, v1.19-v1.20). (reopened by the user 2026-11-14; dropped 2026-11-09 on an
   unmeasured battery guess). A hardware-filtered background scan (PendingIntent, name/address
   filter, low power) in a time window. Each phase only if the previous one looked good:
   - Phase 0 done 2026-11-14 (phone in the bedroom, one wall, 5-10 m): only 2 packets in 18 s,
