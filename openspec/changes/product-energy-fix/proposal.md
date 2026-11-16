@@ -25,7 +25,8 @@ days keep the wrong kcal, so the history misleads ("Data reads one way only", us
 ### New Capabilities
 
 ### Modified Capabilities
-- `food-log`: new "Correcting a product's energy"; "Ruokakirjaus in Asetukset" shows the use count.
+- `food-log`: new "Correcting a product's energy", "Which items follow", "Confirming a correction",
+  "Undoing a correction" and "Product use count".
 
 ## Impact
 

@@ -2,38 +2,48 @@
 
 ## Context
 
-- Items live only in Health Connect as own `NutritionRecord`s; the client record id
-  (`food/FoodRecordId`) carries position, amount, Herkku and timing, the record carries kcal.
-  `HealthConnectFoods.own(now)` reads all own items; `insert` writes new versions of changed items
-  (same uuid, new client id/version), as "Kcal filled in later" already does through
-  `FoodEdits.edit` → `FoodPlan` (`changed` map, `FoodDay.fill`).
+- Items live only in Health Connect as own `NutritionRecord`s; the client id (`food/FoodRecordId`)
+  carries position, amount, Herkku and timing, the record carries kcal (stored unrounded,
+  `Energy.kcalOf`; rounded only for display). A rewrite with the same client id upserts in place
+  (`FoodRecords.replace`).
+- `HealthConnectFoods.own(now)` reads the own items as far as the read permissions reach.
 - Products live in `products.json` (`ProductStore`); an item belongs to a product by its name key.
-- Product energy is edited in the item editor (`FoodEdits.edit`, "changes reach the product") and
-  in Ruokakirjaus's product editor (`ui/ProductsPage`).
+- Energy is edited in the item editor (`FoodEdits.editStart`/`edit`, which always passes the
+  energy field, so "kcal given" is true on every save) and in Ruokakirjaus (`ui/ProductsPage`, kpl/g
+  chips, empty field = no energy). Rename and Herkku already rewrite all items of a product; "Kcal
+  filled in later" fills items without kcal (`FoodDay.fill`).
 
 ## Decisions
 
-1. **"From the product's energy" is derived, not stored:** an item qualifies when its product key
-   matches, it has an amount in the old energy's unit and `|kcal − round(amount × old energy)| ≤ 1`.
-   No new field or record id change, so old items work at once. Rejected: a stored "derived" flag
-   (record id format change, migration, and old items would have none).
-2. **One pure plan:** `FoodEdits.recalc(product, old, new, all, except)` returns the changed items
-   (new kcal), the kept-own count M, the day count D and the old/new totals for the dialog. Both
-   editors call it before saving; the item being edited is excluded (its own edit rules apply).
-3. **Dialog before writing:** only when the plan has ≥ 1 item. Päivitä kaikki → save the product
-   and write all changed items in one `insert` batch under `foodWrites` in `TerveysApp.appScope`
-   (survives leaving the screen). Vain jatkossa → save the product only. Peruuta → nothing.
-4. **Kumoa:** keeps the old product and the old items in memory; Kumoa writes the old product and
-   old kcal back the same way (a new version each). The bar uses `AppSnackbar.showTimed`.
-5. **Failure:** a failed batch leaves the product at its new energy and shows "Aiempien kirjausten
-   päivitys epäonnistui" with Yritä uudelleen (re-runs the same plan on fresh data); logged.
-6. **Use count:** from the loaded items (`own` reads them all), counted per product key.
-7. **Log:** `food.product.energy ok items= days= kept= ms=` / `failed cause=` / `undo`, and
-   `food.product.energy choice=all|future|cancel` (counts only, never names or kcal).
+1. **Correction = same unit, different kcal** (exact Double compare of the product's energy before
+   and after the save). Unit change, cleared energy, amount/Herkku/name-only saves: no
+   recalculation, no dialog.
+2. **"From the product's energy" is derived, not stored:** same product key, amount in the energy's
+   unit, `|kcal − amount × old| < 0.5`. New kcal = amount × new, unrounded. Rejected: a stored
+   flag (record id change, migration, old items would have none).
+3. **One pure plan:** `FoodEdits.recalc(key, old, new, items, exceptUuid)` → changed items, kept
+   count M, day count D, old/new sums (rounded after summing). Items without kcal are not in it
+   (the existing fill handles them).
+4. **Fresh data:** before building the plan, read `own()` under `foodWrites`; if the read fails,
+   save as "Vain jatkossa" and show "Aiempia kirjauksia ei voitu lukea". Use count reads the
+   loaded items (nothing shown when unknown).
+5. **Dialog before writing**, from both editors including the new-item editor's Lisää (the dialog
+   shows before the editor closes; Peruuta returns to it). Choice only gates the recalculation;
+   product save, rename, Herkku and fills happen as today.
+6. **Writing:** chunks of 500 records under `foodWrites` in `TerveysApp.appScope`; on a failure
+   the bar reads "Päivitettiin X/N kirjausta · Yritä uudelleen"; retry rebuilds the plan from fresh
+   items with the kept old energy (already updated items no longer match and are skipped).
+7. **Kumoa:** re-reads under `foodWrites`; restores the product's old energy if it still holds the
+   new one, the edited item as before the save, and only recalculated items whose kcal is still
+   amount × new. Available while the bar shows (sheet line in the sheet and Lisää annos dialog,
+   `AppSnackbar.showTimed` on Ruoka and Ruokakirjaus).
+8. **Log:** `food.product.energy choice=all|future|cancel items= kept= days=`,
+   `food.product.energy ok done= of= ms=` / `failed done= of= cause=` / `undo items=` (counts only).
+9. **Plurals** via `plurals` resources for every count text.
 
 ## Risks / Trade-offs
 
-- A hand-typed kcal that happens to equal amount × old energy is treated as derived; harmless
-  (it equalled the product's value anyway).
-- Rounding: the product energy may have decimals; the ±1 kcal tolerance covers rounding at
-  logging time.
+- A hand-typed kcal that equals amount × old energy within 0,5 kcal is treated as derived;
+  harmless (it equalled the product's value).
+- History beyond the read permission's reach is not recalculated; Ohje says the correction reaches
+  the days the app can read.
