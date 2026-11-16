@@ -94,10 +94,11 @@ class FoodScreenTest {
     private val granted = FoodUiState(access = FoodAccess.GRANTED, items = items, products = listOf(Product("Rahka"), Product("Pullo", treat = true)), day = today)
 
     @Test
-    fun `front page shows today's total and its button opens the add sheet, where a suggestion adds`() {
+    fun `front page shows today's total and the menu's Lisää annos opens the add sheet, where a suggestion adds`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
         compose.onNodeWithTag("foodToday").assertExists()
-        compose.onNodeWithTag("homeFoodAdd").performScrollTo().performClick()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuFood").performClick()
         compose.onNodeWithTag("addField").assertExists()
         // The sheet shows the day's items, the header total and the chips apart from them.
         compose.onNodeWithTag("food-a").assertExists()

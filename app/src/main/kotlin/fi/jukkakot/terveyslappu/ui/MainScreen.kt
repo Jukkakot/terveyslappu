@@ -57,7 +57,8 @@ class MainActions(
     val onShareLog: () -> Unit = {},
     /** Copies the compact log to the clipboard; returns the number of log lines copied (0 when there is none). */
     val onCopyLog: () -> Int = { 0 },
-    val onWeighIn: () -> Unit = {},
+    /** The weigh-in dialog; the argument is the log source (`main` front page, `history` Historia). */
+    val onWeighIn: (String) -> Unit = {},
     val onImportHistory: () -> Unit = {},
     val onExport: (DataFormat) -> Unit = {},
     val onBackupEnable: () -> Unit = {},
@@ -141,6 +142,7 @@ fun MainScreen(
         Screen.HELP -> HelpScreen(actions)
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)
     }
+    if (state.entryOpen) ManualEntryDialog(state, actions)
     if (food.sheetDay != null) AddFoodSheet(food, baseProducts, foodActions)
     food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), foodActions, draft = food.draft != null) }
     food.ai?.let { AiImportPreview(it, foodActions) }

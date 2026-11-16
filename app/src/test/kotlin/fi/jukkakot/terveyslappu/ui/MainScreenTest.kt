@@ -59,7 +59,7 @@ class MainScreenTest {
         onDelete: (WeightEntry) -> Unit = {},
         onGrantHistory: () -> Unit = {},
         profile: OwnerProfile = OwnerProfile(),
-        onWeighIn: () -> Unit = {},
+        onWeighIn: (String) -> Unit = {},
     ) {
         compose.setContent {
             var state by remember { mutableStateOf(start) }
@@ -68,7 +68,8 @@ class MainScreenTest {
                     state,
                     "0.1.1-test",
                     MainActions(
-                        onScreen = { state = if (it == Screen.SETTINGS) state.withSettings(SettingsPage.LIST, Screen.HOME) else state.copy(screen = it) },
+                        onScreen = { state = state.openScreen(it) },
+                        onOpenEntry = { state = state.copy(entryOpen = true) },
                         onPeriod = { state = state.copy(period = it) },
                         onHomePeriod = { state = state.copy(homeDays = it) },
                         onWeightText = { state = state.copy(weightText = it) },
@@ -122,7 +123,7 @@ class MainScreenTest {
                 MainScreen(MainUiState(access = Access.NEEDS_PERMISSION), "0.1.1-test", MainActions(onRequestPermission = { asked = true }))
             }
         }
-        compose.onNodeWithTag("settings").assertExists()
+        compose.onNodeWithTag("appMenu").assertExists()
         compose.onNodeWithTag("latestCard").assertDoesNotExist()
         compose.onNodeWithTag("weighIn").assertDoesNotExist()
         compose.onNode(hasText("Anna lupa") and hasClickAction()).performClick()
@@ -130,7 +131,7 @@ class MainScreenTest {
     }
 
     @Test
-    fun `card opens Historia, gear opens Asetukset, back returns home`() {
+    fun `card opens Historia, the menu opens Asetukset, back returns home`() {
         show(MainUiState(access = Access.GRANTED, weights = weights))
         compose.onNodeWithTag("recent").assertDoesNotExist()
         compose.onNodeWithTag("change", useUnmergedTree = true).assertExists()
@@ -138,7 +139,9 @@ class MainScreenTest {
         compose.onNodeWithTag("chart").assertExists()
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("latestCard").assertExists()
-        compose.onNodeWithTag("settings").performClick()
+        compose.onNodeWithTag("settings").assertDoesNotExist()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuSettings").performClick()
         compose.onNodeWithTag("settingsList").assertExists()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("latestCard").assertExists()
@@ -186,19 +189,46 @@ class MainScreenTest {
     }
 
     @Test
-    fun `Punnitse in the weight card opens the weigh-in, not Historia`() {
-        var weighed = 0
-        show(MainUiState(access = Access.GRANTED, weights = weights), onWeighIn = { weighed++ })
-        compose.onNodeWithTag("weighIn").performClick()
-        assertEquals(1, weighed)
-        compose.onNodeWithTag("chart").assertDoesNotExist()
-        compose.onNodeWithTag("latestCard").assertExists()
+    fun `Punnitse in the menu opens the weigh-in with its source, from the front page and Historia`() {
+        val sources = mutableListOf<String>()
+        show(MainUiState(access = Access.GRANTED, weights = weights), onWeighIn = { sources += it })
+        compose.onNodeWithTag("weighIn").assertDoesNotExist()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuWeigh").performClick()
+        compose.onNodeWithTag("latestCard").performClick()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuWeigh").performClick()
+        assertEquals(listOf("main", "history"), sources)
     }
 
     @Test
-    fun `no weights still offers Punnitse`() {
+    fun `Ohje and Asetukset opened from Historia return to Historia`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY))
+        compose.onNodeWithTag("help").performClick()
+        compose.onNodeWithTag("helpList").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("chart").assertExists()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuSettings").performClick()
+        compose.onNodeWithTag("settingsList").assertExists()
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("chart").assertExists()
+    }
+
+    @Test
+    fun `the menu holds the four items on the front page and has no gear or plus`() {
+        show(MainUiState(access = Access.GRANTED, weights = weights))
+        compose.onNodeWithTag("settings").assertDoesNotExist()
+        compose.onNodeWithTag("addWeight").assertDoesNotExist()
+        compose.onNodeWithTag("appMenu").performClick()
+        for (tag in listOf("menuWeigh", "menuEntry", "menuFood", "menuSettings")) compose.onNodeWithTag(tag).assertExists()
+    }
+
+    @Test
+    fun `no weights points to the menu and the widget`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()))
-        compose.onNodeWithTag("weighIn").assertExists()
+        compose.onNodeWithTag("weighIn").assertDoesNotExist()
+        compose.onNodeWithText("Punnitse ⋮-valikosta tai widgetistä", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -280,7 +310,7 @@ class MainScreenTest {
     }
 
     @Test
-    fun `plus opens manual entry and the form is on no other screen`() {
+    fun `the menu opens manual entry from Historia and the form is on no other screen`() {
         var opened = false
         compose.setContent {
             TerveysTheme {
@@ -292,7 +322,8 @@ class MainScreenTest {
             }
         }
         compose.onNodeWithTag("weightField").assertDoesNotExist()
-        compose.onNodeWithTag("addWeight").performClick()
+        compose.onNodeWithTag("appMenu").performClick()
+        compose.onNodeWithTag("menuEntry").performClick()
         assertTrue(opened)
     }
 

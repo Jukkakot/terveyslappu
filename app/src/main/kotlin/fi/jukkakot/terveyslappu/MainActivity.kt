@@ -376,7 +376,7 @@ class MainActivity : ComponentActivity() {
                         onOpenStore = { open(Intent(Intent.ACTION_VIEW, STORE_URL.toUri())) },
                         onShareLog = ::shareLog,
                         onCopyLog = ::copyLog,
-                        onWeighIn = { open(WeighInActivity.intent(this, "main")) },
+                        onWeighIn = { source -> open(WeighInActivity.intent(this, source)) },
                         onImportHistory = {
                             try {
                                 importLauncher.launch(IMPORT_TYPES)

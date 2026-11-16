@@ -102,7 +102,7 @@ class StepsScreenTest {
     fun `steps card shows today's steps and opens Askeleet with bars and the day list`() {
         show(MainUiState(access = Access.GRANTED, weights = weights), granted)
         compose.onNodeWithTag("stepsTodayValue", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("homeFoodAdd").assertExists()
+        compose.onNodeWithTag("foodCard").assertExists()
         compose.onNodeWithTag("stepsCard").performClick()
         compose.onNodeWithTag("tab-STEPS").assertIsSelected()
         compose.onNodeWithTag("stepsChart").assertExists()
@@ -119,7 +119,7 @@ class StepsScreenTest {
         compose.onNodeWithTag("stepsTodayValue", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag("stepsCard").performClick()
         assertEquals(1, grants)
-        compose.onNodeWithTag("homeFoodAdd").assertExists()
+        compose.onNodeWithTag("foodCard").assertExists()
         compose.onNodeWithTag("stepsBars").assertDoesNotExist()
     }
 
@@ -132,12 +132,12 @@ class StepsScreenTest {
     }
 
     @Test
-    fun `the front page fits at 360 dp with both cards and + Annos`() {
+    fun `the front page fits at 360 dp with both cards`() {
         val questioned = weights.first().id
         show(MainUiState(access = Access.GRANTED, weights = weights, questioned = setOf(questioned)), granted)
         compose.onNodeWithTag("checkNotice").assertExists()
         val bottom = compose.onRoot().getBoundsInRoot().bottom
-        for (tag in listOf("checkNotice", "latestCard", "weighIn", "foodCard", "stepsCard", "homeFoodAdd", "stepsPeriod", "foodPeriod")) {
+        for (tag in listOf("checkNotice", "latestCard", "foodCard", "stepsCard", "stepsPeriod", "foodPeriod")) {
             val bounds = compose.onNodeWithTag(tag).getBoundsInRoot()
             assertTrue(bounds.bottom <= bottom, "$tag ends at ${bounds.bottom}, screen at $bottom")
             assertTrue(bounds.right - bounds.left > 0.dp, tag)

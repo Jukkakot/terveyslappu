@@ -89,7 +89,7 @@ import fi.jukkakot.terveyslappu.log.AppLog
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Historia: period chips, chart, stats tiles and the period's weights; + opens manual entry. */
+/** Historia: period chips, chart, stats tiles and the period's weights; the top bar holds the App menu. */
 @Composable
 internal fun HistoryScreen(
     state: MainUiState,
@@ -106,9 +106,7 @@ internal fun HistoryScreen(
     Scaffold(
         topBar = {
             SubScreenBar(stringResource(R.string.history_title), onBack = actions.onBack) {
-                IconButton(onClick = actions.onOpenEntry, modifier = Modifier.testTag("addWeight")) {
-                    Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.entry_title))
-                }
+                AppMenuActions(actions, foodActions, "history")
             }
         },
         snackbarHost = { AppSnackbarHost(snackbar) },
@@ -122,7 +120,6 @@ internal fun HistoryScreen(
             }
         }
     }
-    if (state.entryOpen) ManualEntryDialog(state, actions)
 }
 
 /** Chips, chart and stats scroll away above the period's weights, so the list keeps room on a small phone. */

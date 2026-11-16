@@ -96,7 +96,7 @@ class HomeCardsTest {
     fun `fits without scrolling with the check notice`() {
         home(questioned = true)
         val screen = compose.onRoot().getUnclippedBoundsInRoot()
-        for (tag in listOf("checkNotice", "latestCard", "weighIn", "foodCard", "homeFoodAdd", "foodPeriod", "stepsCard", "stepsPeriod", "stepsAverage")) {
+        for (tag in listOf("checkNotice", "latestCard", "foodCard", "foodPeriod", "stepsCard", "stepsPeriod", "stepsAverage")) {
             node(tag).assertIsDisplayed()
             assertTrue(bounds(tag).bottom <= screen.bottom, "$tag ends at ${bounds(tag).bottom}, screen at ${screen.bottom}")
         }
@@ -104,11 +104,10 @@ class HomeCardsTest {
 
     @Test
     @Config(fontScale = 1.3f)
-    fun `default layout at 130 percent text keeps Punnitse, + Annos and the steps average`() {
+    fun `default layout at 130 percent text keeps the food and steps averages`() {
         home()
-        for (tag in listOf("weighIn", "homeFoodAdd", "stepsAverage")) node(tag).assertIsDisplayed()
-        assertInside(node("weighIn"), node("homeSlot-weight"), "weighIn")
-        assertInside(node("homeFoodAdd"), node("homeSlot-food"), "homeFoodAdd")
+        for (tag in listOf("foodAverage", "stepsAverage")) node(tag).assertIsDisplayed()
+        assertInside(node("foodAverage"), node("homeSlot-food"), "foodAverage")
         assertInside(node("stepsAverage"), node("homeSlot-steps"), "stepsAverage")
     }
 
@@ -129,24 +128,21 @@ class HomeCardsTest {
     }
 
     @Test
-    fun `small weight card shows the number, the chip and Punnitse in its half`() {
+    fun `small weight card shows the number and the chip in its half`() {
         cell = HomeCard(HomeLayout.WEIGHT, CardSize.SMALL)
         cells()
-        for (tag in listOf("latestKg", "change", "weighIn", "homePeriod")) assertInside(node(tag), node("cell"), tag)
+        for (tag in listOf("latestKg", "change", "homePeriod")) assertInside(node(tag), node("cell"), tag)
         node("sparkRange").assertDoesNotExist()
     }
 
     @Test
-    fun `wide food card has the long average and + Annos on one row`() {
+    fun `wide food card has the long average and no button`() {
         cell = HomeCard(HomeLayout.FOOD, CardSize.WIDE)
         cells()
         val average = node("foodAverage")
         val text = compose.activity.getString(R.string.home_food_average_long, formatKcal(1900))
         average.assertTextEquals(text)
-        val a = average.getUnclippedBoundsInRoot()
-        val add = bounds("homeFoodAdd")
-        assertTrue(add.top < a.bottom && a.top < add.bottom, "+ Annos on the average's row")
-        assertTrue(add.left >= a.right, "+ Annos at the row's end")
+        node("homeFoodAdd").assertDoesNotExist()
     }
 
     @Test
@@ -189,8 +185,8 @@ class HomeCardsTest {
     @Config(fontScale = 1.3f)
     fun `size matrix at 360 dp and font scale 1_3`() {
         val keys = mapOf(
-            HomeLayout.WEIGHT to listOf("latestKg", "change", "weighIn", "homePeriod"),
-            HomeLayout.FOOD to listOf("foodTodayValue", "foodPeriod", "homeFoodAdd", "foodAverage"),
+            HomeLayout.WEIGHT to listOf("latestKg", "change", "homePeriod"),
+            HomeLayout.FOOD to listOf("foodTodayValue", "foodPeriod", "foodAverage"),
             HomeLayout.STEPS to listOf("stepsTodayValue", "stepsPeriod", "stepsAverage"),
             HomeLayout.BURN to listOf("burnTodayValue", "burnPeriod", "burnAverage"),
         )

@@ -107,7 +107,7 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
             val summary = remember(state.weights, state.homeDays, state.questioned) {
                 state.weights?.let { HomeSummary.of(it, now, state.homeDays, state.questioned) }
             }
-            LatestCard(state, summary, today, card.size, data.actions.onHomePeriod, data.actions.onWeighIn, { data.actions.onScreen(Screen.HISTORY) }, modifier)
+            LatestCard(state, summary, today, card.size, data.actions.onHomePeriod, { data.actions.onScreen(Screen.HISTORY) }, modifier)
         }
         HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.actions.onOpenEnergy, data.foodActions, modifier)
         HomeLayout.STEPS -> StepsCard(data.steps, state.stepsDays, today, card.size, data.stepsActions, modifier)
@@ -118,8 +118,8 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
 
 /**
  * The food card (home-screen "Food row on the home screen", "Card sizes"), built like the weight
- * card: today's kcal, daily bars of its own period, the period's dates and average, outlined
- * + Annos inside. The title and today's number open Ruoka on today; the bars and what is under them
+ * card: today's kcal, daily bars of its own period, the period's dates and average; no button
+ * (adding is in the App menu). The title and today's number open Ruoka on today; the bars and what is under them
  * open Historia on Energia; the period label keeps its menu. Nothing on it is filled. Today is read
  * at every composition, so a resume after midnight shows the new day.
  */
@@ -190,7 +190,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                 val spec = remember(summary, size) { CardCharts.food(summary, size) }
                 if (spec != null) {
                     val description = stringResource(R.string.home_food_bars, summary.bars.size)
-                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description }.testTag("chart-food"))
                     if (big) ScaleTop(stringResource(R.string.food_kcal, formatKcal(spec.scaleTop)), "foodScaleTop")
                 }
             }
@@ -219,24 +219,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                     .padding(horizontal = 4.dp)
                     .testTag("foodAverage"),
             )
-            // Wide and big: + Annos at the end of the period row (spec Card sizes).
-            if (size != CardSize.SMALL) AddButton(today, actions, Modifier)
         }
-        if (size == CardSize.SMALL) AddButton(today, actions, Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
-private fun AddButton(today: LocalDate, actions: FoodActions, modifier: Modifier) {
-    OutlinedButton(
-        onClick = { actions.onAdd(today) },
-        shape = RoundedCornerShape(20.dp),
-        contentPadding = PaddingValues(start = 12.dp, end = 16.dp),
-        modifier = modifier.heightIn(min = 44.dp).testTag("homeFoodAdd"),
-    ) {
-        Icon(painterResource(R.drawable.ic_add), contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(4.dp))
-        Text(stringResource(R.string.home_food_add))
     }
 }
 
@@ -327,7 +310,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                 val spec = remember(summary, size) { CardCharts.steps(summary, size) }
                 if (spec != null) {
                     val description = stringResource(R.string.home_steps_bars, summary.bars.size)
-                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                    CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description }.testTag("chart-steps"))
                     if (big) ScaleTop(stringResource(R.string.steps_value, formatSteps(spec.scaleTop.toLong())), "stepsScaleTop")
                 }
             }
@@ -425,7 +408,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                     val spec = remember(summary, size) { CardCharts.burn(summary, size) }
                     if (spec != null) {
                         val description = stringResource(R.string.home_burn_bars, summary.bars.size)
-                        CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description })
+                        CardChart(spec, Modifier.fillMaxWidth().fillMaxHeight().semantics { contentDescription = description }.testTag("chart-burn"))
                         if (big) ScaleTop(stringResource(R.string.food_kcal, formatKcal(spec.scaleTop)), "burnScaleTop")
                     }
                 }
@@ -474,7 +457,7 @@ private val innerShape = RoundedCornerShape(16.dp)
 private val MIN_CHART = 32.dp
 internal val groupShape = RoundedCornerShape(20.dp)
 
-/** The weight card: latest weight, change, small chart, and Punnitse, the home screen's only filled action. */
+/** The weight card: latest weight, change and small chart; no button (weighing is in the App menu). */
 @Composable
 private fun LatestCard(
     state: MainUiState,
@@ -482,7 +465,6 @@ private fun LatestCard(
     today: LocalDate,
     size: CardSize,
     onHomePeriod: (Long) -> Unit,
-    onWeighIn: () -> Unit,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -498,9 +480,9 @@ private fun LatestCard(
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val title = summary?.let { stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
+            val title = summary?.let { if (small) formatDayTime(it.latest.time, today) else stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
                 ?: stringResource(R.string.history_title)
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
         when {
@@ -508,20 +490,13 @@ private fun LatestCard(
             state.loadFailed -> GatedBox { Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge) }
             state.weights == null -> GatedBox { CircularProgressIndicator() }
             else -> GatedBox {
+                val hint = stringResource(R.string.home_empty_hint)
+                val hintDescription = stringResource(R.string.home_empty_hint_cd)
                 Column(Modifier.testTag("homeEmpty"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(stringResource(R.string.home_empty), style = MaterialTheme.typography.titleLarge)
-                    Text(stringResource(R.string.home_empty_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                    Text(hint, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.semantics { contentDescription = hintDescription })
                 }
             }
-        }
-        Button(
-            onClick = onWeighIn,
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.padding(top = 8.dp).fillMaxWidth().heightIn(min = 52.dp).testTag("weighIn"),
-        ) {
-            Icon(painterResource(R.drawable.ic_scale), contentDescription = null, modifier = Modifier.size(22.dp))
-            Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.home_weigh), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -559,10 +534,10 @@ private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: Car
                     Text(stringResource(R.string.kg_value, formatKg(scale.max)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleTop"))
                     Text(stringResource(R.string.kg_value, formatKg(scale.min)), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, modifier = Modifier.testTag("sparkScaleBottom"))
                 }
-                spec?.let { CardChart(it, Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description }) }
+                spec?.let { CardChart(it, Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = description }.testTag("chart-weight")) }
             }
         } else {
-            if (spec != null) CardChart(spec, chart.semantics { contentDescription = description }) else Spacer(chart)
+            if (spec != null) CardChart(spec, chart.semantics { contentDescription = description }.testTag("chart-weight")) else Spacer(chart)
         }
         val label = MaterialTheme.typography.labelSmall
         Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {

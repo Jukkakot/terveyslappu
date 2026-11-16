@@ -90,6 +90,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   weights and Punnitse vaa'alla; the card opens Historia (chart, stats, list, + for manual entry,
   which is nowhere else), the gear opens Asetukset (theme, import/export, backup, log). No ⋮ menu;
   the backup shows on home only as a notice when it failed or is stale. No bottom navigation.
+- **Front page is a dashboard, actions in ⋮** (user 2026-11-16, home-dashboard-menu; reverses the
+  2026-11-09 no-⋮ rule): the front page and Historia top bars hold the help button and a ⋮ menu
+  (Punnitse, Lisää paino käsin, Lisää annos, Asetukset); the cards show data only, with no buttons,
+  so the charts get the room. Weighing is automatic and food goes in from the widget.
 - **Owner details** (user 2026-11-09, owner-profile): one user per phone, no profiles. Birth year
   (not a full date) gives the age; height in whole cm; gender Mies/Nainen/Ei valittu; all optional.
   Kept in app preferences; the height also goes to Health Connect (its only record of the three, own

@@ -71,19 +71,19 @@ class LargeTextTest {
     }
 
     @Test
-    fun `home keeps the card, the weigh-in button and settings visible`() {
+    fun `home keeps the card, the help and the menu visible`() {
         show(Screen.HOME)
-        compose.onNodeWithTag("weighIn").assertIsDisplayed()
+        compose.onNodeWithTag("help").assertIsDisplayed()
         compose.onNodeWithTag("latestCard").assertIsDisplayed()
         compose.onNodeWithTag("change", useUnmergedTree = true).assertIsDisplayed()
-        compose.onNodeWithTag("settings").assertIsDisplayed()
+        compose.onNodeWithTag("appMenu").assertIsDisplayed()
     }
 
     @Test
-    fun `Historia keeps back, add and the list visible`() {
+    fun `Historia keeps back, the menu and the list visible`() {
         show(Screen.HISTORY)
         compose.onNodeWithTag("back").assertIsDisplayed()
-        compose.onNodeWithTag("addWeight").assertIsDisplayed()
+        compose.onNodeWithTag("appMenu").assertIsDisplayed()
         compose.onNodeWithTag("weights").assertIsDisplayed()
     }
 

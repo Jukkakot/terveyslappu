@@ -122,6 +122,10 @@ data class MainUiState(
     val charts: List<CustomChart> = emptyList(),
     /** Historia opens on this own chart's tab (its front page card); like [historyOnSteps]. */
     val historyChart: Int? = null,
+    /** Where Ohje was opened from (HOME or HISTORY); back returns there. */
+    val helpOrigin: Screen = Screen.HOME,
+    /** Where the Asetukset list was opened from (HOME or HISTORY); back from the list returns there. */
+    val settingsListOrigin: Screen = Screen.HOME,
 ) {
     /** The weights not marked "?": everything that charts, counts or compares uses these. */
     val accepted: List<WeightEntry>? get() = weights?.filter { it.id !in questioned }
@@ -132,10 +136,11 @@ data class MainUiState(
     /** The one back rule, for the top-bar arrow and system back (settings-list design 2). */
     fun back(): MainUiState = when {
         screen == Screen.HOME -> this
+        screen == Screen.HELP -> copy(screen = helpOrigin, helpOrigin = Screen.HOME)
         screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME, historyChart = null)
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME, historyChart = null)
         screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null)
-        settingsPage == SettingsPage.LIST -> copy(screen = Screen.HOME)
+        settingsPage == SettingsPage.LIST -> copy(screen = settingsListOrigin, settingsListOrigin = Screen.HOME)
         settingsOrigin == Screen.SETTINGS -> copy(settingsPage = SettingsPage.LIST)
         else -> copy(screen = settingsOrigin, settingsPage = SettingsPage.LIST, settingsOrigin = Screen.SETTINGS)
     }
@@ -148,6 +153,16 @@ data class MainUiState(
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyOrigin = Screen.HOME, historyChart = null)
         screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY, historyChart = null)
         else -> copy(screen = Screen.FOOD, foodOrigin = Screen.HOME, historyChart = null)
+    }
+
+    /** A top-level screen; Ohje and Asetukset opened from Historia return to Historia (home-screen "App menu"). */
+    fun openScreen(target: Screen): MainUiState {
+        val fromHistory = if (screen == Screen.HISTORY) Screen.HISTORY else Screen.HOME
+        return when (target) {
+            Screen.SETTINGS -> withSettings(SettingsPage.LIST, Screen.HOME).copy(settingsListOrigin = fromHistory)
+            Screen.HELP -> copy(screen = Screen.HELP, helpOrigin = fromHistory)
+            else -> copy(screen = target, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null, historyOrigin = Screen.HOME)
+        }
     }
 
     /** A sub-screen (or the list) of Asetukset, opened from [from]. */
@@ -384,9 +399,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         refreshAccess()
     }
 
-    fun onScreen(screen: Screen) = _state.update {
-        if (screen == Screen.SETTINGS) it.withSettings(SettingsPage.LIST, Screen.HOME) else it.copy(screen = screen, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null, historyOrigin = Screen.HOME)
-    }
+    fun onScreen(screen: Screen) = _state.update { it.openScreen(screen) }
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
     fun openFood() = _state.update { it.openFood() }

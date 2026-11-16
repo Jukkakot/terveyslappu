@@ -154,12 +154,7 @@ internal fun HomeScreen(
                 TopAppBar(
                     title = { Text(stringResource(R.string.app_name)) },
                     actions = {
-                        IconButton(onClick = { actions.onScreen(Screen.HELP) }, modifier = Modifier.testTag("help")) {
-                            Icon(painterResource(R.drawable.ic_help), contentDescription = stringResource(R.string.menu_help))
-                        }
-                        IconButton(onClick = { actions.onScreen(Screen.SETTINGS) }, modifier = Modifier.testTag("settings")) {
-                            Icon(painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.settings_title))
-                        }
+                        AppMenuActions(actions, foodActions, "main")
                     },
                 )
             }

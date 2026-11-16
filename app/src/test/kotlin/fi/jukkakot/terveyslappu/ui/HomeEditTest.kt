@@ -58,6 +58,7 @@ class HomeEditTest {
                 MainActions(
                     onHomeLayout = { saved = it; state = state.copy(homeLayout = it) },
                     onWeighIn = { weighIns++ },
+                    onOpenEntry = { screens++ },
                     onScreen = { screens++ },
                 ),
                 food = food,
@@ -115,30 +116,16 @@ class HomeEditTest {
     }
 
     @Test
-    fun `long-press on + Annos starts edit mode and the add sheet does not open`() {
+    fun `long-press on the food title starts edit mode, replaces the menu and Ruoka does not open`() {
         show()
-        node("homeFoodAdd").performTouchInput { longClick() }
+        node("appMenu").assertExists()
+        node("foodToday").performTouchInput { longClick() }
         assertTrue(editing())
         assertEquals(0, adds)
         node("editCancel").assertIsEnabled()
         node("editDone").assertIsEnabled()
-        node("settings").assertDoesNotExist()
-    }
-
-    @Test
-    fun `a tap on + Annos still opens the sheet`() {
-        show()
-        node("homeFoodAdd").performClick()
-        assertEquals(1, adds)
-        assertTrue(!editing())
-    }
-
-    @Test
-    fun `a long-press on Punnitse does not open the weigh-in`() {
-        show()
-        node("weighIn").performTouchInput { longClick() }
-        assertEquals(0, weighIns)
-        assertTrue(editing())
+        node("appMenu").assertDoesNotExist()
+        node("help").assertDoesNotExist()
     }
 
     @Test
@@ -256,7 +243,7 @@ class HomeEditTest {
     }
 
     @Test
-    fun `in edit mode a tap on the steps card or Punnitse opens nothing`() {
+    fun `in edit mode a tap on the steps card or the weight card opens nothing`() {
         show()
         enter()
         node("homeSlot-steps").performClick()
