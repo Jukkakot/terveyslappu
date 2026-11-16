@@ -19,6 +19,8 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- ~~**food-sheet-compact**~~ done 2026-11-16 (v1.54, user 2026-11-16): the add panel folds to a handle, food rows drop the logging time and keep the name on one line.
+- **Later idea: rows with name and kcal only** (user 2026-11-16): a food row shows only name and kcal with a details button; not planned yet.
 - ~~**Bug: Lisää annos widget opens the running app**~~ not reproducing 2026-11-16 (user): removing the widget from the home screen and adding it again fixed it (likely a stale widget PendingIntent from an older build). Reopen with the app log if it returns.
 - ~~**Treats in their own colour**~~ done 2026-11-16 (treat-text-colour, v1.49, user 2026-11-16): the treat share ("herkkuja 230 kcal") in a colour of its own in text, matching the treat tone of the Energia bars.
 - ~~**Weight bars mislead in own charts**~~ done 2026-11-16 (weight-line-only, v1.51, user 2026-11-16, unambiguous-data): own charts show Paino as a line only; the Pylväät choice is gone for Paino and old charts read as Viiva.

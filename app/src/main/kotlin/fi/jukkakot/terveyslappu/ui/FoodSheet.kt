@@ -1,5 +1,18 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -158,6 +171,7 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
             keyboard?.show()
         }
     }
+    var folded by rememberSaveable { mutableStateOf(false) }
     var highlight by remember { mutableStateOf<String?>(null) }
     val added = (food.line as? SheetLine.Added)?.item?.uuid
     LaunchedEffect(added) { if (added != null) highlight = added }
@@ -183,17 +197,28 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 line?.let { SheetLineRow(it, actions, beforeEditor) }
+                val fold = { to: Boolean ->
+                    if (to) { focusManager.clearFocus(); keyboard?.hide() }
+                    folded = to
+                }
+                if (!typing) PanelHandle(folded, fold)
+                val shown = !folded || typing
                 if (!typing && picks.isNotEmpty()) {
-                    ListHeading(stringResource(R.string.food_list_usual))
-                    val chipMax = this@BoxWithConstraints.maxWidth * 0.6f
-                    FlowRow(
-                        Modifier.fillMaxWidth().testTag("addSuggestions"),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        maxLines = chipRows,
-                    ) {
-                        picks.forEach { p -> ProductChip(p, chipMax, actions, beforeEditor) }
+                    AnimatedVisibility(shown, enter = expandVertically(tween(200)), exit = shrinkVertically(tween(200))) {
+                        Column(Modifier.foldDrag(fold).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            ListHeading(stringResource(R.string.food_list_usual))
+                            val chipMax = this@BoxWithConstraints.maxWidth * 0.6f
+                            FlowRow(
+                                Modifier.fillMaxWidth().testTag("addSuggestions"),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                maxLines = chipRows,
+                            ) {
+                                picks.forEach { p -> ProductChip(p, chipMax, actions, beforeEditor) }
+                            }
+                        }
                     }
                 }
+                AnimatedVisibility(shown, enter = expandVertically(tween(200)), exit = shrinkVertically(tween(200))) {
                 OutlinedTextField(
                     value = food.query,
                     onValueChange = actions.onQuery,
@@ -204,8 +229,41 @@ internal fun AddFoodContent(food: FoodUiState, day: LocalDate, base: List<BasePr
                     keyboardActions = KeyboardActions(onDone = { actions.onEnter() }),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("addField"),
                 )
+                }
             }
         }
+    }
+}
+
+private val FOLD_THRESHOLD = 24.dp
+
+/** A vertical drag that calls [fold] (true = down) once it passes the threshold; it consumes the drag, so the sheet's close drag never sees it. */
+@Composable
+private fun Modifier.foldDrag(fold: (Boolean) -> Unit): Modifier {
+    val threshold = with(LocalDensity.current) { FOLD_THRESHOLD.toPx() }
+    var sum by remember { mutableFloatStateOf(0f) }
+    val state = rememberDraggableState { d ->
+        sum += d
+        if (sum > threshold) { sum = 0f; fold(true) } else if (sum < -threshold) { sum = 0f; fold(false) }
+    }
+    return draggable(state, Orientation.Vertical, onDragStarted = { sum = 0f })
+}
+
+/** The panel's top handle: 48 dp touch target; a tap or a drag folds or unfolds the panel. */
+@Composable
+private fun PanelHandle(folded: Boolean, fold: (Boolean) -> Unit) {
+    val label = stringResource(if (folded) R.string.food_panel_show else R.string.food_panel_hide)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .foldDrag(fold)
+            .clickable(role = Role.Button, onClickLabel = label) { fold(!folded) }
+            .semantics { contentDescription = label }
+            .testTag("addPanelHandle"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(width = 32.dp, height = 4.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.onSurfaceVariant))
     }
 }
 

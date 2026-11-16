@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
@@ -115,6 +118,26 @@ class FoodScreenTest {
         compose.onNodeWithTag("addMatches").assertExists()
         compose.onNodeWithTag("addSuggestions").assertDoesNotExist()
         compose.onNodeWithTag("sheetDayList").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the handle folds and unfolds the add panel`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today))
+        compose.onNodeWithTag("addSuggestions").assertExists()
+        compose.onNodeWithTag("addField").assertExists()
+        compose.onNodeWithTag("addPanelHandle").performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithTag("addField").fetchSemanticsNodes().isEmpty() }
+        compose.onNodeWithTag("addSuggestions").assertDoesNotExist()
+        compose.onNodeWithTag("addPanelHandle").performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithTag("addField").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("addSuggestions").assertExists()
+    }
+
+    @Test
+    fun `a food row shows no logging time`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today))
+        compose.onNodeWithTag("food-a").assertExists()
+        compose.onAllNodesWithText("8.00", substring = true).assertCountEquals(0)
     }
 
     @Test

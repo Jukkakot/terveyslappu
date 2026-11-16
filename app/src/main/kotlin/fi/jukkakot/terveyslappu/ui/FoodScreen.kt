@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.Amount
@@ -120,7 +121,6 @@ class FoodActions(
 
 private val finnish = Locale.forLanguageTag("fi")
 private val dayFormat = DateTimeFormatter.ofPattern("EEEE d.M.", finnish)
-private val clock = DateTimeFormatter.ofPattern("H.mm", finnish)
 
 /** 1760 → "1 760". */
 fun formatKcal(kcal: Double): String = NumberFormat.getIntegerInstance(finnish).format(kcal.roundToInt())
@@ -308,13 +308,10 @@ internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier
     ) {
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge)
+                Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (item.treat) TreatSign()
             }
-            val details = listOfNotNull(
-                item.amount?.let(::formatAmount),
-                if (item.timed) clock.format(item.time.atZone(zone)) else null,
-            ).joinToString(" · ")
+            val details = item.amount?.let(::formatAmount).orEmpty()
             if (details.isNotEmpty()) Text(details, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
         }
         Text(
