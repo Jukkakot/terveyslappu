@@ -119,4 +119,45 @@ class CustomChartSpecTest {
         val data = CustomChartData.of(chart(ChartLayout.STACKED, *three).copy(period = Period.All), today, zone, emptyList(), emptyList(), emptyList())
         assertTrue(CustomChartSpec.of(data, today) { true }.empty)
     }
+
+    private fun overlaid(vararg k: SeriesKind, burn: Boolean = true, weights: Boolean = true) =
+        spec(chart(ChartLayout.OVERLAID, *k.map { it to if (it == SeriesKind.BURN) SeriesStyle.LINE else SeriesStyle.BARS }.toTypedArray()), burn = burn, weights = weights).panels.single()
+
+    @Test
+    fun `eaten and burned share the right axis in the neutral tone`() {
+        val p = overlaid(SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.BURN)
+        assertEquals(ValueUnit.KG, p.left!!.unit)
+        assertEquals(ValueUnit.KCAL, p.right!!.unit)
+        assertNull(p.right!!.tone)
+        assertEquals(listOf(Side.LEFT, Side.RIGHT, Side.RIGHT), p.series.map { it.side })
+    }
+
+    @Test
+    fun `only eaten and burned has one axis on the left`() {
+        val p = overlaid(SeriesKind.ENERGY, SeriesKind.BURN)
+        assertEquals(ValueUnit.KCAL, p.left!!.unit)
+        assertNull(p.left!!.tone)
+        assertNull(p.right)
+    }
+
+    @Test
+    fun `eaten, burned and steps`() {
+        val p = overlaid(SeriesKind.ENERGY, SeriesKind.BURN, SeriesKind.STEPS)
+        assertEquals(ValueUnit.KCAL, p.left!!.unit)
+        assertEquals(ValueUnit.STEPS, p.right!!.unit)
+        assertEquals(listOf(Side.LEFT, Side.LEFT, Side.RIGHT), p.series.map { it.side })
+    }
+
+    @Test
+    fun `shared scale frees the second axis`() {
+        val p = overlaid(SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.BURN, SeriesKind.STEPS)
+        assertEquals(listOf(Side.LEFT, Side.RIGHT, Side.RIGHT, Side.HIDDEN), p.series.map { it.side })
+    }
+
+    @Test
+    fun `burned without permission leaves eaten's own right axis`() {
+        val p = overlaid(SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.BURN, burn = false)
+        assertEquals(ValueUnit.KCAL, p.right!!.unit)
+        assertEquals(ToneRef.PRIMARY, p.right!!.tone)
+    }
 }

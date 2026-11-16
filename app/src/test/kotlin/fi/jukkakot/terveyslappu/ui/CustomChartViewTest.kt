@@ -1,6 +1,9 @@
 package fi.jukkakot.terveyslappu.ui
 
 import androidx.activity.ComponentActivity
+import fi.jukkakot.terveyslappu.home.CardSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -88,5 +91,13 @@ class CustomChartViewTest {
         val data = CustomChartData.of(f.chart(ChartLayout.OVERLAID, *f.three).copy(period = Period.All), f.today, f.zone, emptyList(), emptyList(), emptyList())
         show(data)
         node("chartEmpty").assertIsDisplayed()
+    }
+
+    @Test
+    fun `big Syoty and Kulutus overlaid card has one shared scale top`() {
+        val data = f.data(f.chart(ChartLayout.OVERLAID, SeriesKind.ENERGY to SeriesStyle.BARS, SeriesKind.BURN to SeriesStyle.LINE))
+        compose.setContent { TerveysTheme { CustomChartView(data, CardSize.BIG, modifier = androidx.compose.ui.Modifier.height(300.dp)) } }
+        node("scaleTop-ENERGY").assertIsDisplayed()
+        assertEquals(false, exists("scaleTop-BURN"))
     }
 }

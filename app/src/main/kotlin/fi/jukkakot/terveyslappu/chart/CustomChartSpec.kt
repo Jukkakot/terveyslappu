@@ -117,6 +117,9 @@ object CustomChartSpec {
     private fun averageLegend(data: CustomChartData): List<LegendItem> =
         if (data.chart.showAverage && data.drawn.any { it.average != null }) listOf(LegendItem(LegendLabel.AVERAGE, ToneRef.MUTED, LegendForm.DASHED)) else emptyList()
 
+    /** The drawn data grouped by unit in data order: the first two groups get the value axes. */
+    fun unitGroups(drawn: List<KindData>): List<List<KindData>> = drawn.groupBy { unit(it.kind) }.values.toList()
+
     private fun overlaid(data: CustomChartData, readout: (LocalDate) -> ReadoutCard): ChartSpec {
         val chart = data.chart
         val drawn = data.drawn
@@ -136,15 +139,20 @@ object CustomChartSpec {
             } else {
                 line(kind, values, x) { kind.fraction(it).toDouble() }
             }
-            val side = when (drawn.indexOf(kind)) {
+            val side = when (unitGroups(drawn).indexOfFirst { kind in it }) {
                 0 -> Side.LEFT
                 1 -> Side.RIGHT
                 else -> Side.HIDDEN
             }
             SeriesSpec(kind.kind.name, tone, shape, side, average, averageTone = tone)
         }
-        fun axisOf(kind: KindData) = AxisSpec(0.0, 1.0, unit(kind.kind), tone(chart, kind.kind, overlaid = true), kind.min, kind.max)
-        val panel = PanelSpec(OVERLAID_DP, axisOf(drawn[0]), axisOf(drawn[1]), series, kind = null)
+        fun axisOf(group: List<KindData>): AxisSpec {
+            val kind = group[0]
+            val tone = if (group.size > 1) null else tone(chart, kind.kind, overlaid = true)
+            return AxisSpec(0.0, 1.0, unit(kind.kind), tone, kind.min, kind.max)
+        }
+        val groups = unitGroups(drawn)
+        val panel = PanelSpec(OVERLAID_DP, axisOf(groups[0]), groups.getOrNull(1)?.let { axisOf(it) }, series, kind = null)
         val legend = drawn.map { kind ->
             LegendItem(label(kind.kind), tone(chart, kind.kind, overlaid = true), if (kind.style == SeriesStyle.LINE) LegendForm.LINE else LegendForm.SQUARE)
         } + averageLegend(data)

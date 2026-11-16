@@ -121,9 +121,15 @@ class CustomChartData(val chart: CustomChart, val axis: ChartAxis, val kinds: Li
             val first = all.values.mapNotNull { it?.firstOrNull()?.day }.minOrNull()
             val (from, to) = AxisTicks.periodDates(chart.period, today, first)
             val axis = ChartAxis(from, to)
-            val kinds = chart.series.map { s ->
+            val perKind = chart.series.map { s ->
                 val values = all[s.kind]?.filter { it.day in from..to }
                 KindData(s.kind, s.style, values, ticks(s.kind, values), average(s.kind, values, today))
+            }
+            // Drawn data of one unit share one scale, fitted to the union of their values.
+            val kinds = perKind.map { k ->
+                val mates = perKind.filter { it.drawn && CustomChartSpec.unit(it.kind) == CustomChartSpec.unit(k.kind) }
+                if (!k.drawn || mates.size < 2) k
+                else KindData(k.kind, k.style, k.values, ticks(k.kind, mates.flatMap { it.values.orEmpty() }), k.average)
             }
             return CustomChartData(chart, axis, kinds)
         }

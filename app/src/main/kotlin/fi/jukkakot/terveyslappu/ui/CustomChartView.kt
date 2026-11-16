@@ -36,6 +36,7 @@ import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.ChartLayout
 import fi.jukkakot.terveyslappu.chart.CustomChartData
+import fi.jukkakot.terveyslappu.chart.CustomChartSpec
 import fi.jukkakot.terveyslappu.chart.KindData
 import fi.jukkakot.terveyslappu.chart.SeriesColour
 import fi.jukkakot.terveyslappu.chart.SeriesKind
@@ -182,8 +183,7 @@ private fun ColumnScope.Stacked(data: CustomChartData, card: CardSize, states: M
 private fun ColumnScope.Overlaid(data: CustomChartData, card: CardSize) {
     val colors = MaterialTheme.colorScheme
     val drawn = data.drawn
-    val left = drawn[0]
-    val right = drawn[1]
+    val groups = CustomChartSpec.unitGroups(drawn)
     val tones = drawn.associate { it.kind to data.toneOf(it.kind, overlaid = true) }
     val plot = Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CARD_PANEL)
     Row(plot.padding(top = 4.dp).testTag("plot-overlaid")) {
@@ -196,8 +196,11 @@ private fun ColumnScope.Overlaid(data: CustomChartData, card: CardSize) {
                 drawn.filter { it.style == SeriesStyle.LINE }.forEach { drawKind(it, data.axis, tones.getValue(it.kind), null) }
             }
             if (card == CardSize.BIG) {
-                ScaleTopLabel(axisLabels(left).last(), "scaleTop-${left.kind.name}", Modifier.align(Alignment.TopStart), tones.getValue(left.kind))
-                ScaleTopLabel(axisLabels(right).last(), "scaleTop-${right.kind.name}", Modifier.align(Alignment.TopEnd), tones.getValue(right.kind))
+                groups.take(2).forEachIndexed { i, group ->
+                    val kind = group[0]
+                    val tone = if (group.size > 1) colors.onSurfaceVariant else tones.getValue(kind.kind)
+                    ScaleTopLabel(axisLabels(kind).last(), "scaleTop-${kind.kind.name}", Modifier.align(if (i == 0) Alignment.TopStart else Alignment.TopEnd), tone)
+                }
             }
         }
     }

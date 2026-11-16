@@ -152,4 +152,35 @@ class CustomChartDataTest {
         val data = CustomChartData.of(chart(Period.MONTH, WEIGHT), today, zone, listOf(weight("a", today.minusDays(2), 8, 82.0)), null, null)
         assertEquals(82.0, data.of(WEIGHT)!!.average)
     }
+
+    private fun eatenBurned(withBurn: Boolean = true): CustomChartData {
+        val burn = listOf(fi.jukkakot.terveyslappu.burn.BurnDay.of(today.minusDays(1), 2_800, null)!!)
+        return CustomChartData.of(
+            chart(Period.MONTH, ENERGY, BURN), today, zone, null, listOf(food(today.minusDays(1), 2_100.0)), null,
+            burnDays = if (withBurn) burn else emptyList(),
+        )
+    }
+
+    @Test
+    fun `eaten and burned compare on one scale`() {
+        val data = eatenBurned()
+        assertEquals(listOf(0.0, 1_750.0, 3_500.0), data.of(ENERGY)!!.ticks)
+        assertEquals(listOf(0.0, 1_750.0, 3_500.0), data.of(BURN)!!.ticks)
+        assertEquals(0.5f, data.of(BURN)!!.fraction(1_750.0))
+    }
+
+    @Test
+    fun `burned without values leaves eaten alone`() {
+        assertEquals(listOf(0.0, 1_250.0, 2_500.0), eatenBurned(withBurn = false).of(ENERGY)!!.ticks)
+    }
+
+    @Test
+    fun `different units stay apart`() {
+        val data = CustomChartData.of(
+            chart(Period.MONTH, ENERGY, STEPS), today, zone, null, listOf(food(today.minusDays(1), 2_100.0)),
+            listOf(StepsDay(today.minusDays(1), 9_400)),
+        )
+        assertEquals(2_500.0, data.of(ENERGY)!!.max)
+        assertEquals(12_000.0, data.of(STEPS)!!.max)
+    }
 }
