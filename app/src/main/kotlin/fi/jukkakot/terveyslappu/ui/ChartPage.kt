@@ -118,7 +118,7 @@ internal fun ChartPage(
     onEdit: () -> Unit,
 ) {
     val today = LocalDate.now()
-    val spec = remember(data, today) { CustomChartSpec.of(data, today, access) }
+    val spec = remember(data, today) { CustomChartSpec.of(data, today, access = access) }
     Column(Modifier.fillMaxWidth().testTag("page-chart-${data.chart.id}")) {
         Box(
             Modifier

@@ -46,17 +46,25 @@ object CustomChartSpec {
     fun treatTone(chart: CustomChart, tone: ToneRef): ToneRef =
         if (chart.colourOf(SeriesKind.ENERGY) != null) tone.alpha(ToneRef.LIGHT_ALPHA) else ToneRef.TERTIARY
 
-    /** [access]: whether a kind can be read (kinds without access have no marker row). */
-    fun of(data: CustomChartData, today: LocalDate, access: (SeriesKind) -> Boolean): ChartSpec {
+    /** A card's line width and dot radius (today's card look, home-cards-on-chart-library design 3). */
+    const val CARD_LINE_DP = 2f
+    const val CARD_DOT_DP = 3f
+
+    /**
+     * [access]: whether a kind can be read (kinds without access have no marker row). [card]: the
+     * front page card (home-cards-on-chart-library design 1): no marker, the card's line and dots,
+     * Päällekkäin bars spread over the whole day (each 70 % of its sub-slot, centred in it).
+     */
+    fun of(data: CustomChartData, today: LocalDate, card: Boolean = false, access: (SeriesKind) -> Boolean = { true }): ChartSpec {
         val chart = data.chart
         val axis = data.axis
         val overlaid = chart.layout == ChartLayout.OVERLAID && data.drawn.size > 1
-        val readout: (LocalDate) -> ReadoutCard = { day -> TabReadouts.custom(ChartReadout.of(day, data, access), today) { tone(chart, it, overlaid) } }
+        val readout: (LocalDate) -> ReadoutCard = if (card) CardCharts.noReadout else { day -> TabReadouts.custom(ChartReadout.of(day, data, access), today) { tone(chart, it, overlaid) } }
         if (data.empty) return ChartSpec(axis, emptyList(), emptyList(), readout, empty = true)
-        return if (overlaid) overlaid(data, readout) else stacked(data, readout)
+        return if (overlaid) overlaid(data, readout, card) else stacked(data, readout, card)
     }
 
-    private fun stacked(data: CustomChartData, readout: (LocalDate) -> ReadoutCard): ChartSpec {
+    private fun stacked(data: CustomChartData, readout: (LocalDate) -> ReadoutCard, card: Boolean): ChartSpec {
         val chart = data.chart
         val single = chart.layout == ChartLayout.OVERLAID
         val kinds = if (single) data.drawn.ifEmpty { data.kinds.take(1) } else data.kinds
@@ -68,7 +76,7 @@ object CustomChartSpec {
             val values = kind.values.orEmpty()
             val average = kind.average.takeIf { chart.showAverage }
             val series: List<SeriesSpec> = when {
-                kind.style == SeriesStyle.LINE -> listOf(SeriesSpec(kind.kind.name, tone, line(kind, values, x), average = average))
+                kind.style == SeriesStyle.LINE -> listOf(SeriesSpec(kind.kind.name, tone, line(kind, values, x, card), average = average))
                 kind.kind == SeriesKind.ENERGY -> {
                     val points = values.map { ChartPoint(x.of(it.day), it.value, it.day, listOf((it.value - it.treat).coerceAtLeast(0.0), it.treat)) }
                     listOf(SeriesSpec(kind.kind.name, tone, SeriesShape.StackedBars(points, listOf(tone, treatTone(chart, tone))), average = average))
@@ -90,8 +98,11 @@ object CustomChartSpec {
         return ChartSpec(data.axis, panels, legend, readout, notDrawn = notDrawn)
     }
 
-    private fun line(kind: KindData, values: List<DayValue>, x: ChartX, y: (Double) -> Double = { it }): SeriesShape.Line =
-        SeriesShape.Line(values.map { ChartPoint(x.of(it.day), y(it.value), it.day) }, if (kind.kind == SeriesKind.WEIGHT) Dots.FitOrLast else Dots.None)
+    private fun line(kind: KindData, values: List<DayValue>, x: ChartX, card: Boolean, y: (Double) -> Double = { it }): SeriesShape.Line {
+        val points = values.map { ChartPoint(x.of(it.day), y(it.value), it.day) }
+        val dots = if (kind.kind == SeriesKind.WEIGHT) Dots.FitOrLast else Dots.None
+        return if (card) SeriesShape.Line(points, dots, CARD_LINE_DP, CARD_DOT_DP) else SeriesShape.Line(points, dots)
+    }
 
     private fun label(kind: SeriesKind): LegendLabel = when (kind) {
         SeriesKind.WEIGHT -> LegendLabel.WEIGHT
@@ -117,10 +128,13 @@ object CustomChartSpec {
     private fun averageLegend(data: CustomChartData): List<LegendItem> =
         if (data.chart.showAverage && data.drawn.any { it.average != null }) listOf(LegendItem(LegendLabel.AVERAGE, ToneRef.MUTED, LegendForm.DASHED)) else emptyList()
 
+    /** A card's Päällekkäin bar [slot] of [slots]: the centre of its sub-slot (1/[slots] of the day) from the day's centre. */
+    fun subSlotOffset(slot: Int, slots: Int): Double = -0.5 + (slot + 0.5) / slots
+
     /** The drawn data grouped by unit in data order: the first two groups get the value axes. */
     fun unitGroups(drawn: List<KindData>): List<List<KindData>> = drawn.groupBy { unit(it.kind) }.values.toList()
 
-    private fun overlaid(data: CustomChartData, readout: (LocalDate) -> ReadoutCard): ChartSpec {
+    private fun overlaid(data: CustomChartData, readout: (LocalDate) -> ReadoutCard, card: Boolean): ChartSpec {
         val chart = data.chart
         val drawn = data.drawn
         val x = ChartX(data.axis)
@@ -134,10 +148,10 @@ object CustomChartSpec {
             val shape = if (kind.style == SeriesStyle.BARS) {
                 val slot = bars.indexOf(kind)
                 // Side by side in the day's slot (review decision 4); dayAt rounds back to the day.
-                val offset = -BAR_SHARE / 2 + (slot + 0.5) * slotWidth
+                val offset = if (card) subSlotOffset(slot, slots) else -BAR_SHARE / 2 + (slot + 0.5) * slotWidth
                 SeriesShape.Bars(values.map { ChartPoint(x.of(it.day) + offset, kind.fraction(it.value).toDouble(), it.day) }, slots = slots)
             } else {
-                line(kind, values, x) { kind.fraction(it).toDouble() }
+                line(kind, values, x, card) { kind.fraction(it).toDouble() }
             }
             val side = when (unitGroups(drawn).indexOfFirst { kind in it }) {
                 0 -> Side.LEFT

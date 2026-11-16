@@ -27,8 +27,17 @@ class ChartSpec(
     val empty: Boolean = false,
     /** Päällekkäin data without values, named under the plot (with their grant buttons). */
     val notDrawn: List<SeriesKind> = emptyList(),
+    /**
+     * An x range in place of [ChartX]'s (home-cards-on-chart-library design 2): the weight card's
+     * line by time, x in days from its period's start. Null = the axis's day slots.
+     */
+    val xRange: ClosedFloatingPointRange<Double>? = null,
 ) {
     val x: ChartX get() = ChartX(axis)
+
+    /** The drawn x range: [xRange], else the axis's day slots. */
+    val xMin: Double get() = xRange?.start ?: x.min
+    val xMax: Double get() = xRange?.endInclusive ?: x.max
 
     /** The key of the day under [x] (a weekly bar's key on weekly axes). */
     fun dayAt(x: Double): LocalDate = this.x.dayAt(x)
@@ -144,9 +153,12 @@ sealed interface Dots {
     data class FitOrLone(val lone: Set<Int>) : Dots
     /** Every dot when they fit, else the last one (own charts' weight line). */
     data object FitOrLast : Dots
+    /** Every dot but the last when they fit, else none (the weight card: its last dot is a series of its own). */
+    data object FitButLast : Dots
 
     /** Indices of the [count] points that get a dot on a plot [widthDp] wide. */
     fun shown(count: Int, widthDp: Float): Set<Int> {
+        if (this == FitButLast) return if (ChartDots.fit(count, widthDp)) (0 until count - 1).toSet() else emptySet()
         if (count <= 1) return (0 until count).toSet()
         val fit = ChartDots.fit(count, widthDp)
         return when (this) {
@@ -154,6 +166,7 @@ sealed interface Dots {
             All -> (0 until count).toSet()
             is FitOrLone -> if (fit) (0 until count).toSet() else lone
             FitOrLast -> if (fit) (0 until count).toSet() else setOf(count - 1)
+            FitButLast -> emptySet()
         }
     }
 }
@@ -163,7 +176,13 @@ sealed interface SeriesShape {
     data class Bars(val points: List<ChartPoint>, val widthDays: Double = 1.0, val slots: Int = 1) : SeriesShape
     /** Stacked bars: each point's [ChartPoint.parts] in [partTones] from the bottom. */
     data class StackedBars(val points: List<ChartPoint>, val partTones: List<ToneRef>, val widthDays: Double = 1.0) : SeriesShape
-    data class Line(val points: List<ChartPoint>, val dots: Dots) : SeriesShape
+    /** A line [widthDp] wide with dots of radius [dotDp] (Historia's defaults; the cards set their own). */
+    data class Line(val points: List<ChartPoint>, val dots: Dots, val widthDp: Float = LINE_DP, val dotDp: Float = DOT_DP) : SeriesShape
+
+    companion object {
+        const val LINE_DP = 2f
+        const val DOT_DP = 3.5f
+    }
 
     val all: List<ChartPoint>
         get() = when (this) {
@@ -195,6 +214,11 @@ data class PanelMessage(val kind: SeriesKind)
 /**
  * One plot. [heightDp] is the plot's height; the renderer adds room for the date labels on the
  * last panel. [kind] names an own chart's panel (null on the fixed tabs).
+ *
+ * The card look (home-cards-on-chart-library design 3), read only in card mode: [grid] =
+ * guidelines at the left axis's three values; [baseline] = the 1 dp line along the plot's bottom
+ * (null: in the grid colour when [grid], else none); [insetDp] = room on every side (the weight
+ * card's end dot).
  */
 data class PanelSpec(
     val heightDp: Int,
@@ -204,6 +228,9 @@ data class PanelSpec(
     val bands: List<BandSpec> = emptyList(),
     val message: PanelMessage? = null,
     val kind: SeriesKind? = null,
+    val grid: Boolean = true,
+    val baseline: ToneRef? = null,
+    val insetDp: Float = 0f,
 ) {
     /**
      * The day a tap or drag at [x] chooses (review decision 5): bars only inside a bar's slot, lines

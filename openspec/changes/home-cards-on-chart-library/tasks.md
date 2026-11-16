@@ -6,9 +6,9 @@
 
 ## 1. Card chart definitions
 
-- [ ] 1.1 `chart/CardCharts` (design 1, 2) and the `ChartSpec` x-range override; card line widths, dot radii and the last-dot style in the spec model.
-- [ ] 1.2 `CustomChartSpec.of(..., card = true)`: daily bars, today's sub-slot geometry, average between bars and lines, no-op readout/access.
-- [ ] 1.3 `CardChartsTest`: weight x by time with two weighings a day and a single weight; dots fit and the last dot; daily bars at 90 days; small/wide scale = highest bar, big = the tab's top with the average; weight tone primary; Päällekkäin sub-slot offsets.
+- [x] 1.1 `chart/CardCharts` (design 1, 2) and the `ChartSpec` x-range override; card line widths, dot radii and the last-dot style in the spec model.
+- [x] 1.2 `CustomChartSpec.of(..., card = true)`: daily bars, today's sub-slot geometry, average between bars and lines, no-op readout/access.
+- [x] 1.3 `CardChartsTest`: weight x by time with two weighings a day and a single weight; dots fit and the last dot; daily bars at 90 days; small/wide scale = highest bar, big = the tab's top with the average; weight tone primary; Päällekkäin sub-slot offsets.
 
 ## 2. Card mode and host
 
