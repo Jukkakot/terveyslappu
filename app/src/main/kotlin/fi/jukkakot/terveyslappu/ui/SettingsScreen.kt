@@ -83,7 +83,7 @@ internal fun SettingsScreen(
     when (shown) {
         SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen, food.products.size, steps, stepsSources)
         SettingsPage.FOOD -> SubPage(R.string.settings_food, actions, snackbar, "foodPage") {
-            Section(null) { ProductList(food.products, foodActions, food.items, food.productSaves) }
+            Section(null) { ProductList(food.products, foodActions, food.items, food.productSaves, food.baseOn) }
         }
         SettingsPage.STEPS -> SubPage(R.string.settings_steps, actions, snackbar, "stepsSourcePage") {
             Section(R.string.steps_source_title) { StepsSourceContent(steps, stepsSources, stepsActions) }

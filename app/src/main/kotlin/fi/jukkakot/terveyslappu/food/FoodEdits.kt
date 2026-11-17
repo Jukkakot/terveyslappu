@@ -102,7 +102,7 @@ object FoodEdits {
     fun edit(item: FoodItem, input: EditInput, all: Collection<FoodItem>, own: List<Product>, base: List<BaseProduct>): FoodPlan {
         val name = FoodNames.clean(input.name).ifEmpty { item.name }
         val quick = name == QUICK_ADD
-        val start = if (quick) null else resolveName(name, own, base).product
+        val start = if (quick) null else resolveTyped(name, own, base).product
         var product = start
         var updated: FoodItem
         val unit = when (input.mode) {

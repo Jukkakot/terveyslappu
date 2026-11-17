@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.ClipLine
 import fi.jukkakot.terveyslappu.food.ClipOffer
+import fi.jukkakot.terveyslappu.food.ClipOffers
 import java.time.LocalDate
 
 /**
@@ -52,6 +53,12 @@ internal fun ClipOfferCard(offer: ClipOffer, day: LocalDate, actions: FoodAction
             offer.lines.forEach { ClipLineRow(it) }
             if (offer.more > 0) Text(stringResource(R.string.ai_clip_more, offer.more), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             if (offer.products > 0) Text(stringResource(R.string.ai_clip_more_products, offer.products), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            offer.changes.take(ClipOffers.MAX_CHANGES).forEach {
+                Text(it.text(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.testTag("clipChange"))
+            }
+            if (offer.changes.size > ClipOffers.MAX_CHANGES) {
+                Text(stringResource(R.string.ai_clip_more_changes, offer.changes.size - ClipOffers.MAX_CHANGES), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            }
         }
         Row(Modifier.padding(top = 12.dp, end = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val label = when {

@@ -85,6 +85,8 @@ class FoodActions(
     /** Lisää of that draft editor. */
     val onAddDraft: (EditInput) -> Unit = {},
     val onEnter: () -> Unit = {},
+    /** The Valmiit ruuat switch in Ruokakirjaus. */
+    val onBaseProducts: (Boolean) -> Unit = {},
     val onUndoAdd: () -> Unit = {},
     /** The sheet line's Kumoa of a delete made in the editor opened from the sheet. */
     val onUndoDelete: () -> Unit = {},

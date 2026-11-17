@@ -399,6 +399,7 @@
     <string name="ai_clip_edit">Muokkaa</string>
     <string name="ai_clip_more">+%1$d muuta</string>
     <string name="ai_clip_more_products">+ %1$d tuotetta</string>
+    <string name="ai_clip_more_changes">+%1$d muuta muutosta</string>
     <string name="food_sheet_header">%1$s · %2$s</string>
     <string name="food_sheet_day_empty">Ei vielä annoksia</string>
     <string name="food_chip_plain">+ %1$s</string>
@@ -424,6 +425,8 @@
     <string name="ai_products_saved">%1$d tuotetta tallennettu</string>
     <string name="ai_product_edit">Muokkaa tuotetta</string>
     <string name="settings_food">Ruokakirjaus</string>
+    <string name="settings_food_base">Valmiit ruuat</string>
+    <string name="settings_food_base_line">Sovelluksen mukana tulevat yleiset ruuat ehdotuksissa</string>
     <string name="settings_food_line">%1$d omaa tuotetta</string>
     <string name="quantity_steps">Askeleet</string>
     <string name="home_steps_title">Askeleet tänään</string>

@@ -43,11 +43,23 @@ import fi.jukkakot.terveyslappu.food.Product
 
 /** Ruokakirjaus in Asetukset (food-log "Ruokakirjaus in Asetukset"): the own products, edit and remove. */
 @Composable
-internal fun ProductList(products: List<Product>, actions: FoodActions, items: List<FoodItem>? = null, saves: Int = 0) {
+internal fun ProductList(products: List<Product>, actions: FoodActions, items: List<FoodItem>? = null, saves: Int = 0, baseOn: Boolean = true) {
     var editing by remember { mutableStateOf<Product?>(null) }
     // A save that waited for the correction check (and its dialog) closes the editor when done.
     LaunchedEffect(saves) { editing = null }
     val sorted = remember(products) { products.sortedBy { it.key } }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_food_base), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.settings_food_base_line), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = baseOn, onCheckedChange = actions.onBaseProducts, modifier = Modifier.testTag("baseSwitch"))
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     if (sorted.isEmpty()) {
         Text(
             stringResource(R.string.food_products_empty),

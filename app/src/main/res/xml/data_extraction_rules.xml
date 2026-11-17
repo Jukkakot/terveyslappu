@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Android backup (encrypted cloud) and phone-to-phone transfer carry an allow-list of app data:
-    owner details, appearance, chart periods, the raw-data archive, the own food products and the imported Garmin history (steps and kcal). Left out on purpose:
+    owner details, appearance, chart periods, the food settings, the raw-data archive, the own food products and the imported Garmin history (steps and kcal). Left out on purpose:
     "backup" (the backup file's URI; its permission does not move, so it would only show a
     failing backup), "weighin" (the previous weigh-in's lingering-broadcast state and the
     remembered scale), "listen" (the background listen trial: its choices stay on this phone),
@@ -14,6 +14,7 @@
         <include domain="sharedpref" path="profile.xml" />
         <include domain="sharedpref" path="appearance.xml" />
         <include domain="sharedpref" path="chart.xml" />
+        <include domain="sharedpref" path="food.xml" />
         <include domain="file" path="raw-archive.jsonl" />
         <include domain="file" path="products.json" />
         <include domain="file" path="garmin-history.json" />
@@ -24,6 +25,7 @@
         <include domain="sharedpref" path="profile.xml" />
         <include domain="sharedpref" path="appearance.xml" />
         <include domain="sharedpref" path="chart.xml" />
+        <include domain="sharedpref" path="food.xml" />
         <include domain="file" path="raw-archive.jsonl" />
         <include domain="file" path="products.json" />
         <include domain="file" path="garmin-history.json" />

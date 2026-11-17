@@ -26,6 +26,8 @@ data class ClipOffer(
     val lines: List<ClipLine> = emptyList(),
     val more: Int = 0,
     val products: Int = 0,
+    /** The existing own products the import would change (design 2), all of them; the card shows the first [ClipOffers.MAX_CHANGES]. */
+    val changes: List<ProductChange> = emptyList(),
 )
 
 /** The last clip the app read: its timestamp and what it held (null = no food JSON). */
@@ -47,6 +49,9 @@ object ClipOffers {
 
     /** The card's lines, the "+ <N> tuotetta" line of mixed JSON included. */
     const val MAX_LINES = 5
+
+    /** Product change lines shown on the card; the rest is "+<N> muuta muutosta". */
+    const val MAX_CHANGES = 3
 
     /**
      * Content key: SHA-256 (hex, 16 chars) of a canonical text of the parsed items and products, so
@@ -73,18 +78,18 @@ object ClipOffers {
      */
     fun offer(parsed: AiParsed, own: List<Product>, base: List<BaseProduct>, day: LocalDate = LocalDate.now()): ClipOffer {
         val key = key(parsed)
-        if (parsed.items.isEmpty()) {
-            val lines = parsed.products.take(MAX_LINES).map { ClipLine(it.name, it.usual, null, it.treat, it.energy) }
-            return ClipOffer(key, parsed.products.size, null, true, lines, parsed.products.size - lines.size)
-        }
         val zone = ZoneId.systemDefault()
         val plan = AiImport.plan(parsed.items, parsed.products, day, emptyList(), own, base, Instant.now(), zone) { "" }
+        if (parsed.items.isEmpty()) {
+            val lines = parsed.products.take(MAX_LINES).map { ClipLine(it.name, it.usual, null, it.treat, it.energy) }
+            return ClipOffer(key, parsed.products.size, null, true, lines, parsed.products.size - lines.size, changes = plan.changes)
+        }
         val kcals = plan.items.mapNotNull { it.kcal }
         val limit = if (parsed.products.isEmpty()) MAX_LINES else MAX_LINES - 1
         val lines = plan.items.take(limit).map { ClipLine(it.name, it.amount, it.kcal, it.treat) }
         return ClipOffer(
             key, parsed.items.size, if (kcals.isEmpty()) null else kcals.sum().roundToInt(), false,
-            lines, plan.items.size - lines.size, parsed.products.size,
+            lines, plan.items.size - lines.size, parsed.products.size, plan.changes,
         )
     }
 

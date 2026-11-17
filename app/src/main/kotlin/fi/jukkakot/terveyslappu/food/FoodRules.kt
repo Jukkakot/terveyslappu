@@ -125,11 +125,19 @@ sealed interface Suggestion {
     }
 }
 
-/** The product a typed name logs as: exact own, exact base, else a new product without kcal. */
-fun resolveName(name: String, own: List<Product>, base: List<BaseProduct>): Suggestion {
+/**
+ * What a typed name logs as (Enter, the Enter row, an editor rename): own by key; a base product by
+ * its exact name as today; a base product known only by an alias becomes a new own product under
+ * the typed name with the base energy and usual amount, not its name or category
+ * (food-log "Typed alias of a base product"); else a new product without kcal.
+ */
+fun resolveTyped(name: String, own: List<Product>, base: List<BaseProduct>): Suggestion {
     val key = FoodNames.key(name)
     own.firstOrNull { it.key == key }?.let { return Suggestion.Own(it) }
-    base.firstOrNull { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }?.let { return Suggestion.Base(it) }
+    base.firstOrNull { b -> FoodNames.key(b.name) == key }?.let { return Suggestion.Base(it) }
+    base.firstOrNull { b -> b.aliases.any { FoodNames.key(it) == key } }?.let {
+        return Suggestion.Own(Product(FoodNames.clean(name), treat = false, energy = it.energy, lastAmount = it.portion))
+    }
     return Suggestion.Own(Product(FoodNames.clean(name)))
 }
 
@@ -159,7 +167,7 @@ sealed interface EnterRow {
                     val key = FoodNames.key(input.name)
                     val known = own.any { it.key == key } ||
                         base.any { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }
-                    Named(text, if (known) resolveName(input.name, own, base).product else null)
+                    Named(text, if (known) resolveTyped(input.name, own, base).product else null)
                 }
             }
         }

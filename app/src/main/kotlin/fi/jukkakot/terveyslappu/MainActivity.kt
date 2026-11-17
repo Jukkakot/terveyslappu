@@ -263,7 +263,7 @@ class MainActivity : ComponentActivity() {
                     heightInHealthConnect = heightInHc,
                     listen = listenUi,
                     food = food,
-                    baseProducts = (application as TerveysApp).baseProducts,
+                    baseProducts = foodModel.base,
                     steps = steps,
                     stepsActions = StepsActions(
                         onGrant = ::grantSteps,
@@ -305,6 +305,7 @@ class MainActivity : ComponentActivity() {
                         onEditPick = foodModel::editDraft,
                         onAddDraft = foodModel::addDraft,
                         onEnter = foodModel::addTyped,
+                        onBaseProducts = foodModel::setBaseProducts,
                         onUndoAdd = foodModel::undoAdd,
                         onUndoDelete = foodModel::undoDelete,
                         onEdit = foodModel::openEditor,

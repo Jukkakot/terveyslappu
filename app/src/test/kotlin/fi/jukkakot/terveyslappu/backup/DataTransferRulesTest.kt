@@ -18,6 +18,7 @@ class DataTransferRulesTest {
         "sharedpref:profile.xml",
         "sharedpref:appearance.xml",
         "sharedpref:chart.xml",
+        "sharedpref:food.xml",
         "file:raw-archive.jsonl",
         "file:products.json",
         "file:garmin-history.json",

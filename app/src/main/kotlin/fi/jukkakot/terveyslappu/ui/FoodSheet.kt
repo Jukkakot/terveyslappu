@@ -333,8 +333,8 @@ private fun DayList(
 @Composable
 private fun TypedList(food: FoodUiState, base: List<BaseProduct>, actions: FoodActions, beforeEditor: () -> Unit) {
     val items = food.items.orEmpty()
-    val matches = remember(food.query, items, food.products) { Suggestions.typing(food.query, food.products, base, items) }
-    val enter = remember(food.query, matches, food.products) { EnterRow.of(food.query, matches, food.products, base) }
+    val matches = remember(food.query, items, food.products, base) { Suggestions.typing(food.query, food.products, base, items) }
+    val enter = remember(food.query, matches, food.products, base) { EnterRow.of(food.query, matches, food.products, base) }
     val scroll = rememberScrollState()
     LaunchedEffect(food.query, matches.size) { scroll.scrollTo(scroll.maxValue) }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {

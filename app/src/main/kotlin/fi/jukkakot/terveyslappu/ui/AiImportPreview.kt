@@ -56,6 +56,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.AiItem
+import fi.jukkakot.terveyslappu.food.AiImportPlan
 import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.AiProduct
 import fi.jukkakot.terveyslappu.food.Amount
@@ -105,7 +106,7 @@ private fun numberText(value: Double?): String = value?.let { if (it % 1.0 == 0.
 
 /** Full-screen preview: day, items, products, sum, skipped; Peruuta / Lisää at the bottom. */
 @Composable
-internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
+internal fun AiImportPreview(preview: AiPreview, actions: FoodActions, plan: AiImportPlan? = null) {
     var editItem by remember { mutableStateOf<Int?>(null) }
     var editProduct by remember { mutableStateOf<Int?>(null) }
     var pickDay by remember { mutableStateOf(false) }
@@ -166,8 +167,12 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions) {
                         )
                     }
                 }
-                val total = preview.items.sumOf { it.kcal ?: 0.0 }
-                val without = preview.items.count { it.kcal == null }
+                // The sum and the product lines come from the plan the save would run (items without kcal filled).
+                plan?.changes?.forEach {
+                    Text(it.text(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("aiChange"))
+                }
+                val total = plan?.items?.sumOf { it.kcal ?: 0.0 } ?: preview.items.sumOf { it.kcal ?: 0.0 }
+                val without = plan?.items?.count { it.kcal == null } ?: preview.items.count { it.kcal == null }
                 val sum = buildList {
                     add(stringResource(R.string.food_kcal, formatKcal(total)))
                     if (without > 0) add(stringResource(R.string.food_day_without, without))

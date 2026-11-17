@@ -62,13 +62,13 @@ class FoodRulesTest {
     @Test
     fun `a typed name is its own product, else an exact base product, else new without kcal`() {
         val own = listOf(Product("Rahka", energy = Energy.per100g(65.0), lastAmount = Amount(200.0, AmountUnit.G)))
-        assertEquals(own[0], resolveName("rahka", own, base).product)
-        assertEquals("Kaurapuuro", resolveName("puuro", own, base).product.name)
-        val new = resolveName("Työpaikan pizza", own, base).product
+        assertEquals(own[0], resolveTyped("rahka", own, base).product)
+        assertEquals("Kaurapuuro", resolveTyped("puuro", own, base).product.name)
+        val new = resolveTyped("Työpaikan pizza", own, base).product
         assertEquals("Työpaikan pizza", new.name)
         assertNull(new.energy)
         // Fuzzy matches apply only from a suggestion button.
-        assertNull(resolveName("kaurapuu", own, base).product.energy)
+        assertNull(resolveTyped("kaurapuu", own, base).product.energy)
     }
 
     @Test

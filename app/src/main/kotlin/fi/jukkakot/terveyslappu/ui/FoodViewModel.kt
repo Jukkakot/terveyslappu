@@ -29,7 +29,7 @@ import fi.jukkakot.terveyslappu.food.FoodRecords
 import fi.jukkakot.terveyslappu.food.HealthConnectFoods
 import fi.jukkakot.terveyslappu.food.Product
 import fi.jukkakot.terveyslappu.food.Suggestion
-import fi.jukkakot.terveyslappu.food.resolveName
+import fi.jukkakot.terveyslappu.food.resolveTyped
 import fi.jukkakot.terveyslappu.log.AppLog
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -138,6 +138,10 @@ data class FoodUiState(
     val energyAsk: EnergyAsk? = null,
     /** Counts Ruokakirjaus product saves that finished after a correction check: the product editor closes on each. */
     val productSaves: Int = 0,
+    /** Valmiit ruuat (FoodPrefs): the base products are in use. */
+    val baseOn: Boolean = true,
+    /** The import preview's plan (the sum and the product change lines), null = no preview. */
+    val aiPlan: AiImportPlan? = null,
 ) {
     /** The latest add (the Muuta · Kumoa line). */
     val lastAdded: FoodItem? get() = (line as? SheetLine.Added)?.item
@@ -155,7 +159,8 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     val foods: FoodRecords get() = terveys.foodRecords
     val permissions: Set<String> = HealthConnectFoods.PERMISSIONS
     private val store get() = terveys.products
-    val base get() = terveys.baseProducts
+    /** Empty while Valmiit ruuat is off: then no base product is suggested, resolved or used by an import. */
+    val base: List<fi.jukkakot.terveyslappu.food.BaseProduct> get() = if (terveys.foodPrefs.baseProducts.value) terveys.baseProducts else emptyList()
 
     private val _state = MutableStateFlow(FoodUiState())
     val state: StateFlow<FoodUiState> = _state
@@ -181,6 +186,12 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         // An import (MainViewModel) or the Lisää annos dialog wrote foods or products.
+        viewModelScope.launch {
+            terveys.foodPrefs.baseProducts.collect { on ->
+                _state.update { it.copy(baseOn = on) }
+                if (_state.value.ai != null) replan()
+            }
+        }
         viewModelScope.launch {
             terveys.foodSignal.changes.collect {
                 if (notifyApp) return@collect
@@ -259,7 +270,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     fun addTyped() {
         when (val input = AddInput.parse(_state.value.query) ?: return) {
             is AddInput.Quick -> add(null, input.kcal, "quick")
-            is AddInput.Name -> add(resolveName(input.name, store.all(), base), null, "typed")
+            is AddInput.Name -> add(resolveTyped(input.name, store.all(), base), null, "typed")
         }
         _state.update { it.copy(query = "") }
     }
@@ -318,6 +329,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update {
                     it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now(), ClipOffers.key(p)), sheetDay = null, query = "", line = null, editing = null, draft = null, editReturn = null)
                 }
+                replan()
             }
             is AiResult.Failed -> {
                 AppLog.i("food.import", "failed", "from" to from, "reason" to r.reason.name.lowercase())
@@ -461,14 +473,32 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         (AiPaste.parse(text) as? AiResult.Ok)?.let { markDone(ClipOffers.key(it.parsed)) }
     }
 
-    fun setAi(preview: AiPreview) = _state.update { it.copy(ai = preview.copy(day = minOf(preview.day, LocalDate.now()))) }
+    fun setAi(preview: AiPreview) {
+        _state.update { it.copy(ai = preview.copy(day = minOf(preview.day, LocalDate.now()))) }
+        replan()
+    }
 
-    fun cancelAi() = _state.update { it.copy(ai = null) }
+    fun cancelAi() = _state.update { it.copy(ai = null, aiPlan = null) }
+
+    /** The preview's dry-run plan (the sum and the product change lines), as the save would run it. */
+    private fun replan() = _state.update { s ->
+        val preview = s.ai ?: return@update s.copy(aiPlan = null)
+        val plan = AiImport.plan(
+            preview.items, preview.products, preview.day, s.dayItems(preview.day), store.all(), base, Instant.now(), ZoneId.systemDefault(),
+        ) { "" }
+        s.copy(aiPlan = plan)
+    }
+
+    /** The Valmiit ruuat switch in Ruokakirjaus. */
+    fun setBaseProducts(on: Boolean) {
+        terveys.foodPrefs.setBaseProducts(on)
+        AppLog.i("food.base", "set", "on" to on)
+    }
 
     /** Lisää of the preview: items at the end of the day, products kept; Kumoa takes both back. */
     fun addAi() {
         val preview = _state.value.ai ?: return
-        _state.update { it.copy(ai = null) }
+        _state.update { it.copy(ai = null, aiPlan = null) }
         saveImport(preview.items, preview.products, preview.day, preview.sourceKey)
     }
 
@@ -490,7 +520,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                     items, products, day, _state.value.dayItems(day), store.all(), base, Instant.now(), ZoneId.systemDefault(),
                 ) { UUID.randomUUID().toString() }
                 val started = System.nanoTime()
-                val fields = arrayOf<Pair<String, Any?>>("count" to plan.items.size, "products" to plan.products.size)
+                val fields = arrayOf<Pair<String, Any?>>("count" to plan.items.size, "products" to plan.products.size, "changed" to plan.changes.size)
                 val written = plan.items.isEmpty() || runCatching { foods.insert(plan.items) }
                     .onFailure { AppLog.e("food.import.save", it, "failed", *fields, "ms" to msSince(started)) }
                     .isSuccess

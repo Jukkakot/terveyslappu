@@ -120,6 +120,9 @@ class TerveysApp : Application() {
     /** The own food products (food-log), in app storage and Android backup. */
     val products: fi.jukkakot.terveyslappu.food.ProductStore by lazy { fi.jukkakot.terveyslappu.food.ProductStore(File(filesDir, "products.json")) }
 
+    /** The food settings: the Valmiit ruuat switch (trust-import-energy design 3). */
+    val foodPrefs: fi.jukkakot.terveyslappu.food.FoodPrefs by lazy { fi.jukkakot.terveyslappu.food.FoodPrefs(this) }
+
     /** The shipped base products (food-log design 3), read once. */
     val baseProducts: List<fi.jukkakot.terveyslappu.food.BaseProduct> by lazy {
         runCatching { assets.open("base-products.json").use { fi.jukkakot.terveyslappu.food.BaseProducts.parse(it.readBytes().decodeToString()) } }

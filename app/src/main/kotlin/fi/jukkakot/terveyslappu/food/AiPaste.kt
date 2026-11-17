@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 /** One eaten item of an AI answer; [kcal] is the item's total. */
 @Serializable
@@ -150,11 +151,49 @@ object AiPaste {
     private fun flag(e: JsonElement?): Boolean = text(e)?.trim()?.lowercase() in setOf("true", "kyllä", "kylla")
 }
 
-/** What an import would write: the items, the products to put, and the products as they were (undo). */
-data class AiImportPlan(val items: List<FoodItem>, val products: List<Product>, val before: Map<String, Product?>)
+/**
+ * An existing own product the import would change: its energy (only when it had one before) and/or
+ * its category.
+ */
+data class ProductChange(val name: String, val oldEnergy: Energy?, val newEnergy: Energy?, val oldTreat: Boolean, val newTreat: Boolean) {
+    val energyChanged: Boolean get() = oldEnergy != null && newEnergy != null && !sameEnergy(oldEnergy, newEnergy)
+    val treatChanged: Boolean get() = oldTreat != newTreat
+
+    /** "Rahka: 65 → 80 kcal / 100 g", "Pulla: 250 kcal / kpl → 380 kcal / 100 g", "Lakritsi: 350 → 260 kcal / 100 g, ei herkku". */
+    fun text(): String {
+        val parts = mutableListOf<String>()
+        if (energyChanged) {
+            val o = oldEnergy!!
+            val n = newEnergy!!
+            parts += if (o.per == n.per) "${whole(o.kcal)} → ${unitText(n)}" else "${unitText(o)} → ${unitText(n)}"
+        }
+        if (treatChanged) parts += if (newTreat) "herkku" else "ei herkku"
+        return "$name: ${parts.joinToString(", ")}"
+    }
+
+    private fun whole(kcal: Double) = kcal.roundToInt().toString()
+
+    private fun unitText(e: Energy) = "${whole(e.kcal)} kcal / ${if (e.per == AmountUnit.KPL) "kpl" else "100 g"}"
+
+    companion object {
+        fun sameEnergy(a: Energy, b: Energy) = a.per == b.per && a.kcal.roundToInt() == b.kcal.roundToInt()
+    }
+}
+
+/**
+ * What an import would write: the items, the products to put, the products as they were (undo) and
+ * the existing products it changes ([changes], for the preview and the clipboard card).
+ */
+data class AiImportPlan(
+    val items: List<FoodItem>,
+    val products: List<Product>,
+    val before: Map<String, Product?>,
+    val changes: List<ProductChange> = emptyList(),
+)
 
 /** Planning an AI import with the add and product rules (food-log "Saving an AI import"). Append only. */
 object AiImport {
+    /** The JSON's values win: an item with amount and kcal sets its product's energy and category. */
     fun plan(
         items: List<AiItem>,
         products: List<AiProduct>,
@@ -172,42 +211,58 @@ object AiImport {
         fun touch(key: String) {
             if (key !in before) before[key] = own.firstOrNull { it.key == key }
         }
-        // The chat's explicit list first: it replaces or creates.
+        val quickKey = FoodNames.key(QUICK_ADD)
+        // The chat's explicit list first: it replaces or creates, and beats the items.
+        val listed = mutableSetOf<String>()
         for (p in products) {
             val key = FoodNames.key(p.name)
-            if (p.name == QUICK_ADD || key == FoodNames.key(QUICK_ADD)) continue
+            if (key == quickKey) continue
             touch(key)
+            listed += key
             val old = working[key]
             val usual = p.usual ?: old?.lastAmount?.takeIf { it.unit == p.energy.per }
             working[key] = Product(old?.name ?: p.name, p.treat, p.energy, usual)
         }
-        val out = mutableListOf<FoodItem>()
-        var pos = FoodDay.nextPos(dayItems)
+        // Energy pass: every item teaches its product (the last item wins).
         for (ai in items) {
             val key = FoodNames.key(ai.name)
-            val quick = key == FoodNames.key(QUICK_ADD)
-            var product: Product? = null
-            if (!quick) {
-                val known = working.values.toList()
-                val resolved = resolveName(ai.name, known, base)
-                product = resolved.product
-                touch(product.key)
-                // A new product (not own, not base) takes the item's category.
-                if (resolved is Suggestion.Own && known.none { it.key == product.key }) product = product.copy(treat = ai.treat)
-                // An item teaches only a product without energy, from an amount with kcal.
-                if (product.energy == null && ai.amount != null && ai.kcal != null) {
+            if (key == quickKey) continue
+            touch(key)
+            var product = working[key]
+            if (product == null) {
+                val fromBase = if (ai.kcal == null) {
+                    base.firstOrNull { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }
+                } else {
+                    null
+                }
+                product = Product(FoodNames.clean(ai.name), ai.treat, fromBase?.energy, fromBase?.portion)
+            }
+            if (key !in listed) {
+                product = product.copy(treat = ai.treat)
+                if (ai.amount != null && ai.kcal != null) {
                     val per = ai.amount.unit
                     val kcal = if (per == AmountUnit.G) ai.kcal * 100.0 / ai.amount.value else ai.kcal / ai.amount.value
                     product = product.copy(energy = Energy(kcal, per), lastAmount = ai.amount)
                 }
-                working[product.key] = product
             }
+            working[key] = product
+        }
+        // Item pass: the product's stored name and final category; missing kcal from its final energy.
+        val out = mutableListOf<FoodItem>()
+        var pos = FoodDay.nextPos(dayItems)
+        for (ai in items) {
+            val key = FoodNames.key(ai.name)
+            val product = if (key == quickKey) null else working[key]
             var amount = ai.amount
             var kcal = ai.kcal
             val energy = product?.energy
             if (kcal == null && energy != null) {
-                amount = amount?.takeIf { it.unit == energy.per } ?: product.usualAmount()?.takeIf { it.unit == energy.per }
-                kcal = amount?.let { energy.kcalOf(it) }
+                if (amount != null) {
+                    kcal = energy.kcalOf(amount)
+                } else {
+                    amount = product.usualAmount()?.takeIf { it.unit == energy.per }
+                    kcal = amount?.let { energy.kcalOf(it) }
+                }
             }
             val (time, timed) = FoodDay.timeFor(day, pos, now, zone)
             out += FoodItem(
@@ -217,7 +272,7 @@ object AiImport {
                 name = product?.name ?: QUICK_ADD,
                 kcal = kcal,
                 amount = amount,
-                treat = (product?.treat ?: false) || ai.treat,
+                treat = product?.treat ?: ai.treat,
                 time = time,
                 zoneOffset = zone.rules.getOffset(time),
                 timed = timed,
@@ -225,6 +280,11 @@ object AiImport {
             pos++
         }
         val changed = before.keys.mapNotNull { k -> working[k]?.takeIf { it != before[k] } }
-        return AiImportPlan(out, changed, before.filterKeys { k -> changed.any { it.key == k } })
+        val changes = before.mapNotNull { (k, old) ->
+            val new = working[k]
+            if (old == null || new == null) return@mapNotNull null
+            ProductChange(old.name, old.energy, new.energy, old.treat, new.treat).takeIf { it.energyChanged || it.treatChanged }
+        }
+        return AiImportPlan(out, changed, before.filterKeys { k -> changed.any { it.key == k } }, changes)
     }
 }
