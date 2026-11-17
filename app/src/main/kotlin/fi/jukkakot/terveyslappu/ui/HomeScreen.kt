@@ -142,25 +142,25 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
             .background(cardColour())
             .padding(8.dp)
             .testTag("foodCard"),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
                 .clip(innerShape)
                 .clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .padding(horizontal = 8.dp)
                 .testTag("foodToday"),
         ) {
             CardTitle(R.drawable.ic_restaurant, stringResource(R.string.home_food_title), chevron = true, tone = QuantityTone.FOOD)
             when {
                 needsPermission -> PermissionValue()
                 summary.todayLogged -> {
-                    BigNumber(formatKcal(summary.todayTotal), "kcal", Modifier.padding(top = 4.dp), tag = "foodTodayValue", base = cardNumber(size))
+                    BigNumber(formatKcal(summary.todayTotal), "kcal", Modifier.padding(top = 2.dp), tag = "foodTodayValue", base = cardNumber(size))
                     if (summary.todayTreat > 0) {
                         Text(
                             stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = treatTextColour(),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -183,7 +183,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                 .weight(1f)
                 .clip(innerShape)
                 .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .padding(horizontal = 8.dp)
                 .testTag("foodBars"),
         ) {
             Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
@@ -306,15 +306,15 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
             .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_steps), onClick = onTap) else Modifier)
             .padding(8.dp)
             .testTag("stepsCard"),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsToday")) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).testTag("stepsToday")) {
             CardTitle(R.drawable.ic_walk, stringResource(R.string.home_steps_title), chevron = onTap != null, tone = QuantityTone.STEPS)
             if (steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED) PermissionValue()
             if (shows) {
                 if (summary.today != null) {
-                    BigNumber(formatSteps(summary.today), "askelta", Modifier.padding(top = 4.dp), tag = "stepsTodayValue", base = cardNumber(size))
-                    Text(stringResource(R.string.home_steps_today), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+                    BigNumber(formatSteps(summary.today), "askelta", Modifier.padding(top = 2.dp), tag = "stepsTodayValue", base = cardNumber(size))
+                    Text(stringResource(R.string.home_steps_today), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -334,7 +334,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
         }
         val small = MaterialTheme.typography.labelSmall
         val big = size == CardSize.BIG
-        Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsBars")) {
+        Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp).testTag("stepsBars")) {
             Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
                 val spec = remember(summary, size) { CardCharts.steps(summary, size) }
                 if (spec != null) {
@@ -393,20 +393,20 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
             .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_burn), onClick = onTap) else Modifier)
             .padding(8.dp)
             .testTag("burnCard"),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("burnToday")) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).testTag("burnToday")) {
             CardTitle(R.drawable.ic_burn, stringResource(R.string.home_burn_title), chevron = onTap != null, tone = QuantityTone.BURN)
             if (burn.access == StepsAccess.NEEDS || burn.access == StepsAccess.DENIED) PermissionValue()
             if (shows) {
                 val now = summary.today
                 if (now != null) {
                     // The number and "kcal" on one line (the number shrinks), "aktiivinen N kcal" under them.
-                    BigNumber(formatKcal(now.total.toDouble()), "kcal", Modifier.padding(top = 4.dp), tag = "burnTodayValue", base = cardNumber(size))
+                    BigNumber(formatKcal(now.total.toDouble()), "kcal", Modifier.padding(top = 2.dp), tag = "burnTodayValue", base = cardNumber(size))
                     now.active?.let { active ->
                         Text(
                             stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = colors.onSurfaceVariant,
                             maxLines = 1,
                             modifier = Modifier.testTag("burnTodayActive"),
@@ -431,7 +431,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
         }
         val small = MaterialTheme.typography.labelSmall
         val big = size == CardSize.BIG
-        Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp)) {
+        Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp)) {
             Column(Modifier.fillMaxSize().testTag("burnBars")) {
                 Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
                     val spec = remember(summary, size) { CardCharts.burn(summary, size) }
@@ -518,7 +518,7 @@ private fun LatestCard(
 private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: CardSize, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val small = size == CardSize.SMALL
-    BigNumber(formatKg(summary.latest.kg), "kg", Modifier.padding(top = 4.dp), tag = "latestKg", base = cardNumber(size))
+    BigNumber(formatKg(summary.latest.kg), "kg", Modifier.padding(top = 2.dp), tag = "latestKg", base = cardNumber(size))
     val first = summary.spark.firstOrNull()
     val zone = ZoneId.systemDefault()
     val spec = remember(summary, zone) { CardCharts.weight(summary, zone) }

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fi.jukkakot.terveyslappu.chart.QuantityTone
@@ -29,7 +30,14 @@ import fi.jukkakot.terveyslappu.chart.QuantityTone
  * The big-number style (app-appearance "Big numbers"): semibold, figures of equal width, slightly
  * tight; [base] gives the size (displayMedium on cards and the hero, displaySmall on small cards).
  */
-internal fun TextStyle.bigNumber(): TextStyle = copy(fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum", letterSpacing = (-1).sp)
+internal fun TextStyle.bigNumber(): TextStyle = copy(
+    fontWeight = FontWeight.SemiBold,
+    fontFeatureSettings = "tnum",
+    letterSpacing = (-1).sp,
+    // Tight line: the number needs no leading of its own (the card's plot gets the room).
+    lineHeight = fontSize,
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+)
 
 /**
  * A main number with its unit on the same line, never split: the unit (smaller, regular, muted)

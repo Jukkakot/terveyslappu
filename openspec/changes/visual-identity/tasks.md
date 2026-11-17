@@ -19,10 +19,10 @@
 
 ## 3. Cards and numbers
 
-- [ ] 3.1 Card look: 24 dp corners, no outline, `surfaceContainerLow` cards for front page cards, Historia containers and Asetukset groups.
-- [ ] 3.2 Icon tile (28 dp round, quantity colour at 16 % dark / 12 % light, icon in full colour; own chart card: neutral tile with the chart icon; chevron kept), permission state "anna lupa" under the kept title, and titles "Paino · <day time>", "Syöty", "Askeleet", "Kulutus" (own chart: its name) at every size; "tänään" under the steps number; the weight card reads "Paino" also when empty and in edit mode; smoke test titles not truncated at small size and 130 % text.
-- [ ] 3.3 Big number style (semibold, tabular figures, muted smaller unit, auto-shrink instead of wrap) on cards and the hero figure (design 8).
-- [ ] 3.4 Period label as an outlined neutral chip; the average text muted and smaller.
+- [x] 3.1 Card look: 24 dp corners, no outline, `surfaceContainerLow` cards for front page cards, Historia containers and Asetukset groups.
+- [x] 3.2 Icon tile (28 dp round, quantity colour at 16 % dark / 12 % light, icon in full colour; own chart card: neutral tile with the chart icon; chevron kept), permission state "anna lupa" under the kept title, and titles "Paino · <day time>", "Syöty", "Askeleet", "Kulutus" (own chart: its name) at every size; "tänään" under the steps number; the weight card reads "Paino" also when empty and in edit mode; smoke test titles not truncated at small size and 130 % text.
+- [x] 3.3 Big number style (semibold, tabular figures, muted smaller unit, auto-shrink instead of wrap) on cards and the hero figure (design 8).
+- [x] 3.4 Period label as an outlined neutral chip; the average text muted and smaller.
 
 ## 4. Chart look
 
