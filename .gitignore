@@ -22,6 +22,7 @@ keystore.properties
 *.jpg
 *.jpeg
 Screenshot*
+!app/src/test/**/ScreenshotTour.kt
 Screen_Recording*
 
 # Agent worktrees
