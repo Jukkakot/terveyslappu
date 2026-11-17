@@ -140,6 +140,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.poi)
+    implementation(libs.commons.math3)
     implementation(libs.health.connect)
 
     implementation(platform(libs.compose.bom))

@@ -2,9 +2,9 @@
 
 ## 1. Trend rule
 
-- [ ] 1.1 Add `commons-math3` 3.6.1 to `gradle/libs.versions.toml` and `app/build.gradle.kts` (through the Google mirror like the other deps); check the release build's R8 keeps working.
-- [ ] 1.2 `chart/TrendLine`: segments at `daysBetween > 30`, drop segments under 10 points, window `W = max(21, axisDays / 6)`, bandwidth `clamp(W / spanDays, 4 / n, 1)` per segment, `at(day)` interpolation, clamp into a scale; check x strictly increasing, catch library exceptions and non-finite output (treated as no trend).
-- [ ] 1.3 Unit tests with made-up data: a rising noisy year follows the rise within a tolerance; a gap of 30 days joins and 31 splits; under 10 points gives nothing; no segment with 10+ values gives "too few" (caller falls back, decided after segmenting); one outlier barely moves the line; 3 kk is less smooth than 2 v (window); a failing/non-finite segment gives no trend and no exception.
+- [x] 1.1 Add `commons-math3` 3.6.1 to `gradle/libs.versions.toml` and `app/build.gradle.kts` (through the Google mirror like the other deps); check the release build's R8 keeps working.
+- [x] 1.2 `chart/TrendLine`: segments at `daysBetween > 30`, drop segments under 10 points, window `W = max(21, axisDays / 6)`, bandwidth `clamp(W / spanDays, 4 / n, 1)` per segment, `at(day)` interpolation, clamp into a scale; check x strictly increasing, catch library exceptions and non-finite output (treated as no trend).
+- [x] 1.3 Unit tests with made-up data: a rising noisy year follows the rise within a tolerance; a gap of 30 days joins and 31 splits; under 10 points gives nothing; no segment with 10+ values gives "too few" (caller falls back, decided after segmenting); one outlier barely moves the line; 3 kk is less smooth than 2 v (window); a failing/non-finite segment gives no trend and no exception.
 
 ## 2. Chart definitions (Historia only)
 
