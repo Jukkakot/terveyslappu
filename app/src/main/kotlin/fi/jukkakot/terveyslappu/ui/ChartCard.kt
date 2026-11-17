@@ -43,13 +43,13 @@ internal fun ChartCard(chart: CustomChart, data: HomeCardsData, size: CardSize, 
     Column(
         modifier
             .clip(homeCardShape)
-            .background(colors.surfaceContainer)
+            .background(cardColour())
             .clickable(onClickLabel = stringResource(R.string.home_open_chart)) { data.actions.onOpenChart(chart.id) }
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .testTag("chartCard-${chart.id}"),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Column(Modifier.testTag("chartCardTitle")) { CardTitle(R.drawable.ic_chart, chart.name, chevron = true) }
+        Column(Modifier.testTag("chartCardTitle")) { CardTitle(R.drawable.ic_chart, chart.name, chevron = true, tone = null) }
         CustomChartView(chartData, size, states, modifier = Modifier.weight(1f).testTag("chartCardChart"))
         Text(
             periodText(chart.period),

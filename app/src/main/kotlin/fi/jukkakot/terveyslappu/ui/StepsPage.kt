@@ -117,7 +117,7 @@ private fun StepsBox(content: @Composable () -> Unit) {
         Modifier
             .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             .clip(groupShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(cardColour())
             .fillMaxWidth(),
     ) { content() }
 }

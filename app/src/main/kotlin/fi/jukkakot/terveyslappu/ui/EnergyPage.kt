@@ -50,7 +50,7 @@ internal fun EnergyPage(series: EnergySeries, crosshair: LocalDate? = null, onDa
             Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp)
                 .clip(groupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(cardColour())
                 .padding(12.dp),
         ) {
             if (series.bars.isEmpty()) {

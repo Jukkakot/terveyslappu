@@ -212,7 +212,7 @@ private fun SettingsList(
                 .testTag("settingsList"),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer)) {
+            Column(Modifier.fillMaxWidth().clip(groupShape).background(cardColour())) {
                 PageRow(R.drawable.ic_person, R.string.profile_section, "rowProfile", { actions.onSettingsPage(SettingsPage.PROFILE) }) {
                     StateLine(profileLine)
                 }

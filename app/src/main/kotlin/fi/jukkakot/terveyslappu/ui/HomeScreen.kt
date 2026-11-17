@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -53,6 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.CardCharts
+import fi.jukkakot.terveyslappu.chart.QuantityTone
 import fi.jukkakot.terveyslappu.chart.scaleTop
 import fi.jukkakot.terveyslappu.chart.HomeFood
 import fi.jukkakot.terveyslappu.chart.HomeSummary
@@ -134,7 +139,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
     Column(
         modifier
             .clip(cardShape)
-            .background(colors.surfaceContainer)
+            .background(cardColour())
             .padding(8.dp)
             .testTag("foodCard"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -147,21 +152,18 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                 .padding(horizontal = 8.dp, vertical = 4.dp)
                 .testTag("foodToday"),
         ) {
-            CardTitle(R.drawable.ic_restaurant, stringResource(R.string.home_food_title), chevron = true)
+            CardTitle(R.drawable.ic_restaurant, stringResource(R.string.home_food_title), chevron = true, tone = QuantityTone.FOOD)
             when {
-                needsPermission -> Unit
-                summary.todayLogged -> FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(formatKcal(summary.todayTotal), style = MaterialTheme.typography.displaySmall, modifier = Modifier.alignByBaseline().testTag("foodTodayValue"))
-                        Spacer(Modifier.width(6.dp))
-                        Text("kcal", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
-                    }
+                needsPermission -> PermissionValue()
+                summary.todayLogged -> {
+                    BigNumber(formatKcal(summary.todayTotal), "kcal", Modifier.padding(top = 4.dp), tag = "foodTodayValue", base = cardNumber(size))
                     if (summary.todayTreat > 0) {
                         Text(
                             stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = treatTextColour(),
-                            modifier = Modifier.align(Alignment.CenterVertically),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -170,9 +172,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
         }
         if (needsPermission) {
             // Gated: the same text as before, centred in the free space, with the same tap (design 9).
-            GatedBox(Modifier.clip(innerShape).clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)) {
-                Text(stringResource(R.string.food_today_permission), style = MaterialTheme.typography.titleLarge)
-            }
+            GatedBox(Modifier.clip(innerShape).clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)) {}
             return@Column
         }
         val small = MaterialTheme.typography.labelSmall
@@ -223,16 +223,43 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
     }
 }
 
-/** A card's icon, title and (when it opens something) chevron. */
+/**
+ * A card's title row (home-screen "Card titles", app-appearance "Card look"): the quantity's icon
+ * tile, the title in 600 weight (never shortened), an optional muted [detail] that is shortened
+ * first, and the chevron when the card opens something.
+ */
 @Composable
-internal fun CardTitle(icon: Int, title: String, chevron: Boolean) {
+internal fun CardTitle(icon: Int, title: String, chevron: Boolean, tone: QuantityTone?, detail: String? = null) {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(icon), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        IconTile(icon, tone)
         Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        if (chevron) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.onSurface, maxLines = 1, softWrap = false, modifier = Modifier.testTag("cardTitle"))
+        if (detail != null) {
+            Text(
+                " · $detail",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+        if (chevron) Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
     }
+}
+
+/** A card's main number size: smaller on a small card. */
+@Composable
+private fun cardNumber(size: CardSize): TextStyle =
+    if (size == CardSize.SMALL) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayMedium
+
+/** "anna lupa" in a card's number slot (the card keeps its title and its tap). */
+@Composable
+private fun PermissionValue() {
+    Text(stringResource(R.string.home_permission), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp).testTag("cardPermission"))
 }
 
 /** A gated state (permission, unavailable, loading, failed) centred in the card's free space. */
@@ -250,7 +277,7 @@ private fun ScaleTop(text: String, tag: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f))
+            .background(cardColour().copy(alpha = 0.85f))
             .padding(horizontal = 2.dp)
             .testTag(tag),
     )
@@ -275,17 +302,19 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
     Column(
         modifier
             .clip(cardShape)
-            .background(colors.surfaceContainer)
+            .background(cardColour())
             .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_steps), onClick = onTap) else Modifier)
             .padding(8.dp)
             .testTag("stepsCard"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("stepsToday")) {
-            CardTitle(R.drawable.ic_walk, stringResource(R.string.home_steps_title), chevron = onTap != null)
+            CardTitle(R.drawable.ic_walk, stringResource(R.string.home_steps_title), chevron = onTap != null, tone = QuantityTone.STEPS)
+            if (steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED) PermissionValue()
             if (shows) {
                 if (summary.today != null) {
-                    UnitValue(formatSteps(summary.today), "askelta", "stepsTodayValue")
+                    BigNumber(formatSteps(summary.today), "askelta", Modifier.padding(top = 4.dp), tag = "stepsTodayValue", base = cardNumber(size))
+                    Text(stringResource(R.string.home_steps_today), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -296,7 +325,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                 val gated = MaterialTheme.typography.titleLarge
                 when {
                     steps.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.steps_unavailable), style = gated)
-                    steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED -> Text(stringResource(R.string.steps_today_permission), style = gated)
+                    steps.access == StepsAccess.NEEDS || steps.access == StepsAccess.DENIED -> Unit
                     steps.access == StepsAccess.CHECKING || !steps.loadFailed -> CircularProgressIndicator(Modifier.size(24.dp))
                     else -> Text(stringResource(R.string.steps_read_failed), style = gated, modifier = Modifier.testTag("stepsFailed"))
                 }
@@ -360,32 +389,28 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
     Column(
         modifier
             .clip(cardShape)
-            .background(colors.surfaceContainer)
+            .background(cardColour())
             .then(if (onTap != null) Modifier.clickable(onClickLabel = stringResource(R.string.home_open_burn), onClick = onTap) else Modifier)
             .padding(8.dp)
             .testTag("burnCard"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).testTag("burnToday")) {
-            CardTitle(R.drawable.ic_burn, stringResource(R.string.home_burn_title), chevron = onTap != null)
+            CardTitle(R.drawable.ic_burn, stringResource(R.string.home_burn_title), chevron = onTap != null, tone = QuantityTone.BURN)
+            if (burn.access == StepsAccess.NEEDS || burn.access == StepsAccess.DENIED) PermissionValue()
             if (shows) {
                 val now = summary.today
                 if (now != null) {
-                    // One line: number, "kcal" and (when there is room beside them) the active part; the unit never wraps.
-                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
-                            Text(formatKcal(now.total.toDouble()), style = MaterialTheme.typography.headlineMedium, maxLines = 1, modifier = Modifier.testTag("burnTodayValue"))
-                            Text("kcal", style = MaterialTheme.typography.titleSmall, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(bottom = 4.dp))
-                        }
-                        now.active?.let { active ->
-                            Text(
-                                stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colors.onSurfaceVariant,
-                                maxLines = 1,
-                                modifier = Modifier.align(Alignment.Bottom).padding(bottom = 4.dp).testTag("burnTodayActive"),
-                            )
-                        }
+                    // The number and "kcal" on one line (the number shrinks), "aktiivinen N kcal" under them.
+                    BigNumber(formatKcal(now.total.toDouble()), "kcal", Modifier.padding(top = 4.dp), tag = "burnTodayValue", base = cardNumber(size))
+                    now.active?.let { active ->
+                        Text(
+                            stringResource(R.string.burn_active_line, formatKcal(active.toDouble())),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onSurfaceVariant,
+                            maxLines = 1,
+                            modifier = Modifier.testTag("burnTodayActive"),
+                        )
                     }
                 } else {
                     Text(stringResource(R.string.steps_no_data), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 4.dp))
@@ -397,7 +422,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                 val gated = MaterialTheme.typography.titleLarge
                 when {
                     burn.access == StepsAccess.UNAVAILABLE -> Text(stringResource(R.string.burn_unavailable), style = gated)
-                    burn.access == StepsAccess.NEEDS || burn.access == StepsAccess.DENIED -> Text(stringResource(R.string.burn_today_permission), style = gated)
+                    burn.access == StepsAccess.NEEDS || burn.access == StepsAccess.DENIED -> Unit
                     burn.access == StepsAccess.CHECKING || !burn.loadFailed -> CircularProgressIndicator(Modifier.size(24.dp))
                     else -> Text(stringResource(R.string.burn_read_failed), style = gated, modifier = Modifier.testTag("burnFailed"))
                 }
@@ -440,16 +465,6 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
     }
 }
 
-/** A card's big number with its unit beside it, baseline-aligned (as the food card); the unit may wrap under the number. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun UnitValue(value: String, unit: String, tag: String) {
-    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(value, style = MaterialTheme.typography.displaySmall, modifier = Modifier.testTag(tag))
-        Text(unit, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Bottom).padding(bottom = 6.dp))
-    }
-}
-
 
 private val cardShape = RoundedCornerShape(24.dp)
 internal val homeCardShape get() = cardShape
@@ -475,18 +490,13 @@ private fun LatestCard(
     Column(
         modifier
             .clip(cardShape)
-            .background(colors.surfaceContainer)
+            .background(cardColour())
             .clickable(onClickLabel = stringResource(R.string.home_open_history), onClick = onOpen)
             .padding(start = if (small) 12.dp else 16.dp, end = if (small) 12.dp else 16.dp, top = 12.dp, bottom = 12.dp)
             .testTag("latestCard"),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val title = summary?.let { if (small) formatDayTime(it.latest.time, today) else stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
-                ?: stringResource(R.string.home_card_weight)
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        }
+        CardTitle(R.drawable.ic_scale, stringResource(R.string.home_card_weight), chevron = true, tone = QuantityTone.WEIGHT, detail = summary?.let { formatDayTime(it.latest.time, today) })
         when {
             summary != null -> LatestValues(summary, state.homeDays, size, onHomePeriod)
             state.loadFailed -> GatedBox { Text(stringResource(R.string.recent_failed), style = MaterialTheme.typography.bodyLarge) }
@@ -508,12 +518,7 @@ private fun LatestCard(
 private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: CardSize, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val small = size == CardSize.SMALL
-    Row(verticalAlignment = Alignment.Bottom) {
-        val number = if (small) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall
-        Text(formatKg(summary.latest.kg), style = number, modifier = Modifier.alignByBaseline().testTag("latestKg"))
-        Spacer(Modifier.width(6.dp))
-        Text("kg", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
-    }
+    BigNumber(formatKg(summary.latest.kg), "kg", Modifier.padding(top = 4.dp), tag = "latestKg", base = cardNumber(size))
     val first = summary.spark.firstOrNull()
     val zone = ZoneId.systemDefault()
     val spec = remember(summary, zone) { CardCharts.weight(summary, zone) }
@@ -569,15 +574,17 @@ private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: Car
 private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit, tag: String = "homePeriod") {
     var open by remember { mutableStateOf(false) }
     Box {
+        // An outlined neutral chip (app-appearance "Card look"); Surface keeps the 48 dp touch target.
         Surface(
             onClick = { open = true },
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
+            color = Color.Transparent,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             modifier = Modifier.heightIn(min = 32.dp).testTag(tag),
         ) {
-            Row(Modifier.padding(start = 10.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Icon(painterResource(R.drawable.ic_arrow_drop_down), contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(18.dp))
+            Row(Modifier.padding(start = 12.dp, end = 6.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+                Icon(painterResource(R.drawable.ic_arrow_drop_down), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

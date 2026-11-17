@@ -3,7 +3,6 @@
     <string name="app_name">Terveyslappu</string>
 
     <string name="back">Takaisin</string>
-    <string name="home_latest">Viimeisin · %1$s</string>
     <string name="home_open_history">Avaa historia</string>
     <string name="home_empty">Ei vielä painoja</string>
     <string name="home_empty_hint">Punnitse ⋮-valikosta tai widgetistä</string>
@@ -301,7 +300,7 @@
     <string name="home_open_food">Avaa päivän annokset</string>
     <string name="home_weigh">Punnitse</string>
     <string name="food_week">Viikko</string>
-    <string name="food_today_permission">Ruoka: anna lupa</string>
+    <string name="home_permission">anna lupa</string>
     <string name="food_permission_reason">Annokset tallentuvat Health Connectiin ravintotietoina, ja sovellus näyttää vain itse tallentamansa. Siksi se tarvitsee luvan lukea ja kirjoittaa ravintotietoja. Punnitus toimii ilmankin.</string>
     <string name="food_permission_grant">Anna lupa</string>
     <string name="food_permission_settings">Avaa Health Connect</string>
@@ -439,7 +438,7 @@
     <string name="home_steps_bars">Päivittäiset askeleet jaksolla, %1$d askelpäivää</string>
     <string name="home_steps_average">keskiarvo %1$s askelta/pv</string>
     <string name="steps_no_data">ei tietoa</string>
-    <string name="steps_today_permission">Askeleet: anna lupa</string>
+    <string name="home_steps_today">tänään</string>
     <string name="steps_unavailable">Askeleet: ei saatavilla</string>
     <string name="steps_read_failed">Askelia ei voitu lukea</string>
     <string name="steps_stale">ei päivitetty</string>
@@ -581,7 +580,6 @@
     <string name="burn_reason">Kulutus luetaan Health Connectista, joten sovellus tarvitsee luvan lukea kulutetun energian tietoja (yhteensä ja aktiivinen). Sovellus ei koskaan kirjoita niitä.</string>
     <string name="burn_denied_reason">Kulutustietojen lupaa ei annettu. Voit kysyä sitä uudelleen tai antaa sen Health Connectin asetuksissa.</string>
     <string name="burn_unavailable">Kulutus: ei saatavilla</string>
-    <string name="burn_today_permission">Kulutus: anna lupa</string>
     <string name="burn_read_failed">Kulutusta ei voitu lukea</string>
     <string name="burn_empty">Tällä jaksolla ei ole kulutustietoja.</string>
     <string name="burn_empty_app">%1$s: ei kulutustietoja tällä jaksolla</string>

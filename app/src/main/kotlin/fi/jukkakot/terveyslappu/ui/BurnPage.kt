@@ -102,7 +102,7 @@ private fun BurnSourceLine(burn: BurnUiState, actions: BurnActions) {
 @Composable
 private fun BurnBox(content: @Composable () -> Unit) {
     Box(
-        Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp).clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer).fillMaxWidth(),
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp).clip(groupShape).background(cardColour()).fillMaxWidth(),
     ) { content() }
 }
 

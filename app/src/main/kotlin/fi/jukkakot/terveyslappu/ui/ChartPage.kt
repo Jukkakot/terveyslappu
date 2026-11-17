@@ -124,7 +124,7 @@ internal fun ChartPage(
             Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp)
                 .clip(groupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(cardColour())
                 .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         ) {
             Column {
@@ -157,7 +157,7 @@ internal fun NewChartPage(onNew: () -> Unit) {
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             .clip(groupShape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(cardColour())
             .padding(24.dp)
             .testTag("page-newChart"),
         horizontalAlignment = Alignment.CenterHorizontally,

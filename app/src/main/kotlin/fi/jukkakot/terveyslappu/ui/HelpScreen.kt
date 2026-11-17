@@ -58,7 +58,7 @@ internal fun HelpScreen(actions: MainActions) {
             helpSections.forEach { (title, body) ->
                 Surface(
                     shape = groupShape,
-                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    color = cardColour(),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
