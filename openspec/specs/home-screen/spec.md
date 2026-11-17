@@ -15,11 +15,11 @@ range or the automatic weigh-in state, and SHALL have no action buttons on the c
 the card edit mode (see Card edit mode) is started from the cards.
 
 The weight card SHALL show, at wide size, the latest weight this app wrote (large, with its date and
-time, the change from the weight before it with a direction sign, not by colour alone), a small line
+time; no change from the weight before it, user 2026-11-17), a small line
 chart of the chosen period without axes. The card SHALL hold no button. The small chart SHALL span the whole
 chosen period ending now, use the weight scale of the weight chart, and show under it the first and
 last day of the period, the first and the latest weight of the period with `kg`, and the change over
-it. Both changes SHALL show a small arrow up for a gain and down for a loss next to the number, and
+it. The period's change SHALL show a small arrow up for a gain and down for a loss next to the number, and
 no arrow when the shown value is zero. Its small and big looks are in Card sizes. Tapping the weight
 card elsewhere than its period label SHALL open Historia; the help button SHALL open Ohje.
 
@@ -32,8 +32,8 @@ from anywhere except its period label, unlike the food card's split taps (title 
 #### Scenario: Latest with change
 - **GIVEN** the latest weights are 82.4 kg today 7.05 and 82.9 kg yesterday
 - **WHEN** the home screen is shown
-- **THEN** the card shows 82,4 kg, "tänään 7.05" and −0,5 kg with an arrow down, and no list of
-  weights is shown
+- **THEN** the card shows 82,4 kg and "tänään 7.05" with no −0,5 kg change chip at any card size,
+  and no list of weights is shown
 
 #### Scenario: 30-day change
 - **GIVEN** the home period is 1 kk, the weight 30 days ago was 81.0 kg and the latest is 82.4 kg
@@ -338,12 +338,11 @@ chart SHALL take the height its size leaves free, so a bigger card has a taller 
 (the chart's height inside its inset; for an Allekkain own chart the panels together) SHALL be at
 least 56 dp high at every size and text size, so a change in the data reads at a glance (user
 2026-11-16). To make room the small weight card's title SHALL be one line with the day and time
-only ("eilen 7.05", ellipsized), and the change chip SHALL sit under the number. The card's
+only ("eilen 7.05", ellipsized). The card's
 own taps and period label SHALL work the same at every size.
 
 - **Weight card.** Wide: as described in Simple home screen. Small: the title row with the latest
-  weight's day and time, the latest weight with `kg` and the change chip (under the number when it
-  does not fit beside it), the small chart, the first and last day of the period, the period label
+  weight's day and time, the latest weight with `kg`, the small chart, the first and last day of the period, the period label
   with the period's change; the `81,0 → 82,4 kg` range text is left out. Big: the wide look with a taller chart that shows the top and bottom of its
   weight scale with `kg` at its left edge and the weights as dots when they fit (weight-chart "Dots
   when they fit").
