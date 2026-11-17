@@ -75,7 +75,6 @@ class LargeTextTest {
         show(Screen.HOME)
         compose.onNodeWithTag("help").assertIsDisplayed()
         compose.onNodeWithTag("latestCard").assertIsDisplayed()
-        compose.onNodeWithTag("change", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("appMenu").assertIsDisplayed()
     }
 

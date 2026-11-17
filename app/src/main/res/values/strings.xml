@@ -9,7 +9,6 @@
     <string name="home_empty_hint">Punnitse ⋮-valikosta tai widgetistä</string>
     <string name="home_empty_hint_cd">Punnitse Lisää toimintoja -valikosta tai widgetistä</string>
     <string name="app_menu">Lisää toimintoja</string>
-    <string name="home_change">Muutos edellisestä %1$s kg</string>
     <string name="home_spark">Painon kehitys jaksolla, %1$s → %2$s kg</string>
     <string name="home_spark_range">%1$s → %2$s kg</string>
     <string name="home_backup_failed">Varmuuskopio epäonnistui</string>

@@ -131,7 +131,7 @@ class HomeCardsTest {
     fun `small weight card shows the number and the chip in its half`() {
         cell = HomeCard(HomeLayout.WEIGHT, CardSize.SMALL)
         cells()
-        for (tag in listOf("latestKg", "change", "homePeriod")) assertInside(node(tag), node("cell"), tag)
+        for (tag in listOf("latestKg", "homePeriod")) assertInside(node(tag), node("cell"), tag)
         node("sparkRange").assertDoesNotExist()
     }
 
@@ -185,7 +185,7 @@ class HomeCardsTest {
     @Config(fontScale = 1.3f)
     fun `size matrix at 360 dp and font scale 1_3`() {
         val keys = mapOf(
-            HomeLayout.WEIGHT to listOf("latestKg", "change", "homePeriod"),
+            HomeLayout.WEIGHT to listOf("latestKg", "homePeriod"),
             HomeLayout.FOOD to listOf("foodTodayValue", "foodPeriod", "foodAverage"),
             HomeLayout.STEPS to listOf("stepsTodayValue", "stepsPeriod", "stepsAverage"),
             HomeLayout.BURN to listOf("burnTodayValue", "burnPeriod", "burnAverage"),

@@ -134,7 +134,6 @@ class MainScreenTest {
     fun `card opens Historia, the menu opens Asetukset, back returns home`() {
         show(MainUiState(access = Access.GRANTED, weights = weights))
         compose.onNodeWithTag("recent").assertDoesNotExist()
-        compose.onNodeWithTag("change", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("latestCard").performClick()
         compose.onNodeWithTag("chart").assertExists()
         compose.onNodeWithTag("back").performClick()

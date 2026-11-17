@@ -508,19 +508,11 @@ private fun LatestCard(
 private fun ColumnScope.LatestValues(summary: HomeSummary, days: Long, size: CardSize, onHomePeriod: (Long) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val small = size == CardSize.SMALL
-    FlowRow(
-        Modifier.fillMaxWidth(),
-        // Small: the chip goes under the number when it does not fit beside it.
-        horizontalArrangement = if (small) Arrangement.spacedBy(8.dp) else Arrangement.SpaceBetween,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(end = 8.dp)) {
-            val number = if (small) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall
-            Text(formatKg(summary.latest.kg), style = number, modifier = Modifier.alignByBaseline().testTag("latestKg"))
-            Spacer(Modifier.width(6.dp))
-            Text("kg", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
-        }
-        summary.change?.let { ChangeChip(it, Modifier.align(Alignment.CenterVertically)) }
+    Row(verticalAlignment = Alignment.Bottom) {
+        val number = if (small) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall
+        Text(formatKg(summary.latest.kg), style = number, modifier = Modifier.alignByBaseline().testTag("latestKg"))
+        Spacer(Modifier.width(6.dp))
+        Text("kg", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant, modifier = Modifier.alignByBaseline())
     }
     val first = summary.spark.firstOrNull()
     val zone = ZoneId.systemDefault()
@@ -600,24 +592,6 @@ private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit, tag: Strin
                 )
             }
         }
-    }
-}
-
-/** Change from the weight before: arrow and signed number, never colour alone. */
-@Composable
-private fun ChangeChip(change: Double, modifier: Modifier = Modifier) {
-    val label = stringResource(R.string.home_change, formatChange(change))
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = modifier.testTag("change").clearAndSetSemantics { contentDescription = label },
-    ) {
-        ChangeLabel(
-            stringResource(R.string.kg_value, formatChange(change)),
-            shownDirection(change, 1),
-            Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-        )
     }
 }
 

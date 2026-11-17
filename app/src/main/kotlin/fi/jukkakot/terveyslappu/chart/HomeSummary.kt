@@ -7,8 +7,6 @@ import java.time.Instant
 /** What the home screen's weight card shows (home-screen spec, "Simple home screen"). */
 data class HomeSummary(
     val latest: WeightEntry,
-    /** Latest minus the weight before it, kg; null with a single weight. */
-    val change: Double?,
     /** The chosen period's weights, oldest first, for the sparkline; empty when the latest is older. */
     val spark: List<WeightEntry>,
     /** Last minus first of [spark]; null with fewer than two points. */
@@ -40,7 +38,6 @@ data class HomeSummary(
             val spark = newest.filter { !it.time.isBefore(since) }.reversed()
             return HomeSummary(
                 latest = latest,
-                change = newest.getOrNull(1)?.let { latest.kg - it.kg },
                 spark = spark,
                 sparkChange = if (spark.size > 1) spark.last().kg - spark.first().kg else null,
                 sparkFrom = since,

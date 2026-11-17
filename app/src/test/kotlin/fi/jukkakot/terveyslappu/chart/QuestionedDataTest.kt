@@ -45,7 +45,6 @@ class QuestionedDataTest {
     fun `the home card skips the questioned weight, the three latest include it`() {
         val summary = HomeSummary.of(list.reversed(), now, questioned = setOf("q"))!!
         assertEquals("b", summary.latest.id)
-        assertEquals(0.4, summary.change!!, 1e-9)
         assertEquals(listOf("a", "b"), summary.spark.map { it.id })
         assertEquals(KgRange(81.5, 83.5), summary.sparkScale)
     }
