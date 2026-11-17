@@ -22,7 +22,7 @@ must trust the JSON, and the user must see when an import changes a product they
   then becomes an own product under the JSON's name, not the base product's.
 - When an import changes an existing own product's energy, the preview and the clipboard card show
   one line per such product ("Rahka: 65 → 80 kcal / 100 g"). No dialogs.
-- Asetukset → Ruokakirjaus gets a switch "Valmiit tuotteet" (on by default). Off: base products
+- Asetukset → Ruokakirjaus gets a switch "Valmiit ruuat" (on by default). Off: base products
   are not suggested, not used by Enter, and not used by the import.
 
 ## Capabilities

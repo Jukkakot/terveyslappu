@@ -39,7 +39,7 @@ When a typed name (Enter, the Enter row, or a name changed in the item editor) i
 product but matches a base product only by one of its aliases, the item SHALL be logged under the
 typed name as a new own product that takes the base product's energy and usual amount but not its
 name or category. Tapping a base product's own suggestion row SHALL still log it under its name
-and category. While Valmiit tuotteet is off no base product is consulted.
+and category. While Valmiit ruuat is off no base product is consulted.
 
 #### Scenario: Alias typed
 - **GIVEN** no own product Ranskalaiset, and the base product Ranskalaiset perunat 290 kcal / 100 g,
@@ -124,7 +124,7 @@ Earlier logged items of a changed product SHALL keep their kcal.
 
 #### Scenario: Base product fills a missing kcal
 - **GIVEN** no own product Uuniranskalaiset, the base product Uuniranskalaiset 130 kcal / 100 g,
-  and Valmiit tuotteet on
+  and Valmiit ruuat on
 - **WHEN** an item Uuniranskalaiset 200 g without kcal is added
 - **THEN** the item reads 260 kcal and an own product Uuniranskalaiset 130 kcal / 100 g is created
 
@@ -143,7 +143,7 @@ Earlier logged items of a changed product SHALL keep their kcal.
 The app SHALL ship a set of about 300 generic Finnish foods and drinks (no brands): everyday home
 dishes, breads, dairy, fruit and vegetables, treats, drinks and raw ingredients, with kcal per
 100 g or per piece and a typical portion, taken from open sources (Open Food Facts, ODbL) and
-generic estimates, so the user does not start from nothing. While "Valmiit tuotteet" is on (the
+generic estimates, so the user does not start from nothing. While "Valmiit ruuat" is on (the
 default) they SHALL be found by typing like own products, after them; logging one SHALL make it an
 own product with its values, which the user can then change. While it is off, base products SHALL
 NOT be suggested, SHALL NOT give the Enter row or a typed name a kcal, and SHALL NOT be used by an
@@ -156,12 +156,12 @@ in Ohje.
 - **THEN** Kaurapuuro is suggested with its kcal per 100 g, and one tap logs a typical portion
 
 #### Scenario: Switched off
-- **GIVEN** Valmiit tuotteet is off and no own product Kaurapuuro
+- **GIVEN** Valmiit ruuat is off and no own product Kaurapuuro
 - **WHEN** the user types "kaurapuu"
 - **THEN** no product is suggested and the last row reads "Lisää ”kaurapuu” uutena" without kcal
 
 ### Requirement: Ruokakirjaus in Asetukset
-Asetukset's Ruokakirjaus sub-screen SHALL start with a switch "Valmiit tuotteet" (on by default)
+Asetukset's Ruokakirjaus sub-screen SHALL start with a switch "Valmiit ruuat" (on by default)
 with the line "Sovelluksen mukana tulevat yleiset ruuat ehdotuksissa", which turns the base
 products on and off at once. It SHALL then list the own products with their category and energy,
 and SHALL let the user change the name, energy, usual amount and category, and remove a product
@@ -178,6 +178,6 @@ own products.
 - **THEN** Jauhelihakastike is listed again with 140 kcal / 100 g, usually 250 g
 
 #### Scenario: Turn base products off
-- **WHEN** the user turns Valmiit tuotteet off
+- **WHEN** the user turns Valmiit ruuat off
 - **THEN** typing in the Lisää annos sheet suggests only own products, and the setting is kept
   after restarting the app

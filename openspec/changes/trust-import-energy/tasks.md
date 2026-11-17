@@ -24,7 +24,7 @@
 - [ ] 3.2 `FoodUiState.baseOn`, `FoodViewModel.base`; the sheet in `MainActivity` and
       `FoodAddActivity` reads base from the view model; `base` in `TypedList`'s keys.
 - [ ] 3.3 `ui/ProductsPage`: the switch row first, with its line; log `food.base set on=`.
-- [ ] 3.4 Ohje: one sentence that Valmiit tuotteet can be hidden in Asetukset → Ruokakirjaus.
+- [ ] 3.4 Ohje: one sentence that Valmiit ruuat can be hidden in Asetukset → Ruokakirjaus.
 - [ ] 3.5 `resolveTyped` (design 5) for Enter, the Enter row and editor renames, with unit tests.
 - [ ] 3.6 Smoke test: with the switch off, typing suggests no base product.
 
