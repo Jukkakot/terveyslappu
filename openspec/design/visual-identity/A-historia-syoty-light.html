@@ -1,0 +1,89 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Flex:opsz,wght@8..144,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#2a2c2e;font-family:'Roboto Flex','Roboto',sans-serif;-webkit-font-smoothing:antialiased}
+.cap{height:28px;line-height:28px;padding:0 12px;font:500 12px/28px Roboto,sans-serif;color:#fff;background:#2a2c2e;letter-spacing:.2px}
+.phone{width:360px;height:780px;position:relative;overflow:hidden;background:var(--bg);color:var(--tx)}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;flex:none;user-select:none}
+.top{height:64px;display:flex;align-items:center;padding:0 12px 0 16px;gap:4px}
+.top .ttl{flex:1;font-size:22px;font-weight:500;letter-spacing:-.1px}
+.top .ms{width:40px;text-align:center;color:var(--tx)}
+.wrap{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.row2{display:flex;gap:12px}
+.card{border-radius:var(--r);padding:16px 20px 14px;position:relative}
+.card.s{flex:1;min-width:0;padding:14px 14px 12px}
+.cw{background:var(--cw);color:var(--tw)}.cf{background:var(--cf);color:var(--tf)}.cs{background:var(--cs);color:var(--ts)}
+.cw .mu{color:var(--mw)}.cf .mu{color:var(--mf)}.cs .mu{color:var(--ms)}
+.hd{display:flex;align-items:center;gap:8px;height:28px}
+.hd .t{font-size:14px;font-weight:600;letter-spacing:.1px}
+.hd .sub{font-size:12px}
+.sp{flex:1}
+.tile{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cw .tile{background:var(--tileW);color:var(--tileWf)}.cf .tile{background:var(--tileF);color:var(--tileFf)}.cs .tile{background:var(--tileS);color:var(--tileSf)}
+.dirB .tile{border-radius:10px}
+.dirC .tile{width:20px;height:20px;background:transparent}
+.dirC .hd{gap:6px}
+.nrow{display:flex;align-items:baseline;gap:6px;margin-top:6px;white-space:nowrap}
+.num{font-size:var(--numS);font-weight:var(--numW);line-height:1.05;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.unit{font-size:18px;font-weight:500}
+.s .num{font-size:calc(var(--numS)*.62);letter-spacing:-.5px}
+.s .unit{font-size:13px}
+.dirC .num{letter-spacing:-2px}
+.dirC .s .num{letter-spacing:-1px;font-size:34px}
+.delta{display:inline-flex;align-items:center;gap:2px;height:28px;padding:0 10px 0 6px;border-radius:14px;background:var(--pill);color:var(--pillTx);font-size:14px;font-weight:600;align-self:center;white-space:nowrap}
+.mots{display:flex;gap:8px;margin-top:8px;white-space:nowrap}
+.mot{font-size:13px;display:inline-flex;gap:5px;align-items:center}
+.mot b{font-weight:600}
+.dot{opacity:.5}
+.subl{font-size:12.5px;margin-top:2px;height:17px;white-space:nowrap}
+.ft{display:flex;align-items:center;gap:8px;margin-top:6px;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;height:30px;padding:0 6px 0 12px;border-radius:15px;border:1px solid var(--chipBd);background:var(--chipBg);font-size:13px;font-weight:500}
+.s .chip{height:28px;padding:0 4px 0 10px;font-size:12.5px}
+.rng{font-size:13px}
+.dts{display:flex;justify-content:space-between;font-size:11px;margin-top:4px}
+.fabs{position:absolute;left:16px;right:16px;bottom:22px;display:flex;gap:12px}
+.btn{flex:1;height:56px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;border-radius:calc(var(--r)*.8)}
+.dirB .btn{border-radius:28px}
+.b1{background:var(--fab);color:var(--fabTx);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.b2{background:var(--fab2);color:var(--fab2Tx);border:1px solid var(--fab2Bd)}
+.dirC .b1{box-shadow:0 0 22px color-mix(in srgb,var(--fab) 45%,transparent)}
+
+.tabs{display:flex;height:44px;border-bottom:1px solid var(--grid)}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--mu);position:relative}
+.tab.on{color:var(--acc);font-weight:600}
+.tab.on::after{content:'';position:absolute;bottom:0;left:50%;margin-left:-16px;width:32px;height:3px;border-radius:3px 3px 0 0;background:var(--lw)}
+.seg{display:flex;margin:12px 16px 0;height:36px;border-radius:18px;background:var(--pill2);padding:3px;gap:2px}
+.seg div{flex:1;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--mu)}
+.seg div.on{background:var(--card);color:var(--acc);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.hc{margin:12px 16px 0;background:var(--card);border-radius:var(--r);padding:14px 12px 10px;position:relative}
+.hc .rngt{font-size:12px;color:var(--mu);padding-left:4px;display:flex;justify-content:space-between}
+.hero{margin:12px 16px 0;background:var(--cw);border-radius:var(--r);padding:14px 20px;display:flex;align-items:center}
+.hero .lab{font-size:13px;color:var(--mu)}
+.hero .big{font-size:36px;font-weight:600;letter-spacing:-.8px;display:flex;align-items:center;gap:2px;white-space:nowrap;line-height:1.1}
+.hero .big small{font-size:18px;font-weight:500;color:var(--mu);margin-left:4px;letter-spacing:0}
+.hero .side{margin-left:auto;text-align:right;font-size:13px;color:var(--mu)}
+.hero .side b{display:block;font-size:17px;font-weight:600;color:var(--tx);white-space:nowrap;margin-top:2px}
+.kv{margin:8px 16px 0;background:var(--card);border-radius:var(--r);padding:12px 8px;display:flex}
+.kv div{flex:1;text-align:center;font-size:12px;color:var(--mu);white-space:nowrap}
+.kv div b{display:block;font-size:15.5px;font-weight:600;color:var(--tx);margin-top:2px}
+.kv div+div{border-left:1px solid var(--grid)}
+.lst{margin:8px 16px 0;background:var(--card);border-radius:var(--r);padding:2px 4px 2px 18px}
+.li{display:flex;align-items:center;height:52px;font-size:15px;border-bottom:1px solid var(--grid)}
+.li:last-child{border:0}
+.li .d{flex:1}
+.li .ch{font-size:13px;color:var(--mu);display:flex;align-items:center;margin-right:12px;white-space:nowrap}
+.li .kg{font-weight:600;font-size:16px;white-space:nowrap}
+.li .ms.more{width:36px;text-align:center;color:var(--mu)}
+.mk{position:absolute;background:var(--tx);color:var(--bg);border-radius:12px;padding:6px 10px;font-size:12px;font-weight:500;white-space:nowrap;line-height:1.25}
+.mk b{font-size:14px;font-weight:600;display:block}
+</style></head><body>
+ <div class="cap">A · Historia · Syöty · vaalea</div><div class="phone dirA" style="--dir:A;--bg:#EEF1F0;--tx:#151A19;--card:#FAFBFA;--cw:#E3EFEB;--cf:#FAFBFA;--cs:#FAFBFA;--tw:#151A19;--tf:#151A19;--ts:#151A19;--mw:#586661;--mf:#586661;--ms:#586661;--lw:#2E7D6B;--lwTop:rgba(46,125,107,.32);--bf:#D48A12;--bfp:#EBCF9B;--bft:#8A5A44;--bs:#3D6FC0;--bsp:#BACBEA;--tileW:#CFE6DF;--tileWf:#1F6B5A;--tileF:#F6E3BF;--tileFf:#96590A;--tileS:#D8E4F7;--tileSf:#2F5CA5;--subF:#96590A;--chipBd:rgba(0,0,0,.18);--chipBg:transparent;--pill:#E3EFEB;--pillTx:#174F43;--fab:#2E7D6B;--fabTx:#FFFFFF;--fab2:#DCEBE6;--fab2Tx:#174F43;--fab2Bd:transparent;--r:24px;--numW:600;--numS:52px;--grid:rgba(0,0,0,.08);--avg:rgba(0,0,0,.35);--acc:#1F6B5A;--accBg:#DCEBE6;--scrim:rgba(0,0,0,.5);--glow:0;--cf2:#F7ECD6;--pill2:#E3E8E6;--mu:#586661"><div class="top" style="height:56px"><span class="ms" style="font-size:24px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">arrow_back</span><div class="ttl" style="margin-left:4px">Historia</div><span class="ms" style="font-size:24px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">help</span><span class="ms" style="font-size:24px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div>
+ <div class="tabs"><div class="tab">Paino</div><div class="tab">BMI</div><div class="tab on">Syöty</div><div class="tab">Askeleet</div><div class="tab">Kulutus</div></div>
+ <div class="seg"><div class="on">1 vk</div><div>1 kk</div><div>3 kk</div><div>1 v</div><div>Kaikki</div><div>Oma</div></div>
+ <div class="hc"><div class="rngt"><span>11.11.2026 – 17.11.2026</span></div>
+  <div style="position:relative;margin-top:6px;height:164px"><div style="position:absolute;left:0;top:156px;font-size:11px;color:var(--mu);width:44px;white-space:nowrap">0 kcal</div><div style="position:absolute;left:0;top:84px;font-size:11px;color:var(--mu);width:44px;white-space:nowrap">750 kcal</div><div style="position:absolute;left:48px;right:10px;top:91px;border-top:1px dashed var(--grid)"></div><div style="position:absolute;left:0;top:12px;font-size:11px;color:var(--mu);width:44px;white-space:nowrap">1 500 kcal</div><div style="position:absolute;left:48px;right:10px;top:19px;border-top:1px dashed var(--grid)"></div><div style="position:absolute;left:48px;top:14px"><svg width="246" height="150" viewBox="0 0 246 150" style="display:block;overflow:visible"><line x1="0" x2="246" y1="149.5" y2="149.5" style="stroke:var(--grid)"/><path d="M6.571428571428573,149 L6.571428571428573,55.120000000000005 Q6.571428571428573,50.120000000000005 11.571428571428573,50.120000000000005 L23.571428571428573,50.120000000000005 Q28.571428571428573,50.120000000000005 28.571428571428573,55.120000000000005 L28.571428571428573,149 Z" style="fill:var(--bfp)"/><path d="M41.71428571428572,149 L41.71428571428572,62.80000000000001 Q41.71428571428572,57.80000000000001 46.71428571428572,57.80000000000001 L58.71428571428572,57.80000000000001 Q63.71428571428572,57.80000000000001 63.71428571428572,62.80000000000001 L63.71428571428572,149 Z" style="fill:var(--bfp)"/><rect x="84.85714285714286" y="146" width="6" height="3" rx="1.5" style="fill:var(--bfp)" opacity=".7"/><path d="M112.00000000000001,149 L112.00000000000001,47.44 Q112.00000000000001,42.44 117.00000000000001,42.44 L129,42.44 Q134,42.44 134,47.44 L134,149 Z" style="fill:var(--bfp)"/><path d="M147.14285714285717,149 L147.14285714285717,56.08 Q147.14285714285717,51.08 152.14285714285717,51.08 L164.14285714285717,51.08 Q169.14285714285717,51.08 169.14285714285717,56.08 L169.14285714285717,149 Z" style="fill:var(--bfp)"/><path d="M182.2857142857143,149 L182.2857142857143,70 Q182.2857142857143,65 187.2857142857143,65 L199.2857142857143,65 Q204.2857142857143,65 204.2857142857143,70 L204.2857142857143,149 Z" style="fill:var(--bfp)"/><path d="M217.42857142857147,149 L217.42857142857147,88.816 Q217.42857142857147,83.816 222.42857142857147,83.816 L234.42857142857147,83.816 Q239.42857142857147,83.816 239.42857142857147,88.816 L239.42857142857147,149 Z" style="fill:var(--bft)"/><rect x="217.42857142857147" y="105.896" width="22" height="43.104" style="fill:var(--bf)"/><line x1="0" x2="246" y1="58.376000000000005" y2="58.376000000000005" style="stroke:var(--avg)" stroke-width="1.2" stroke-dasharray="3 3"/></svg></div></div>
+  <div style="position:relative;height:18px;margin-top:4px"><span style="position:absolute;left:55.57142857142857px;width:20px;text-align:center;font-size:11px;color:var(--mu)">Ke</span><span style="position:absolute;left:90.71428571428572px;width:20px;text-align:center;font-size:11px;color:var(--mu)">To</span><span style="position:absolute;left:125.85714285714286px;width:20px;text-align:center;font-size:11px;color:var(--mu)">Pe</span><span style="position:absolute;left:161px;width:20px;text-align:center;font-size:11px;color:var(--mu)">La</span><span style="position:absolute;left:196.14285714285717px;width:20px;text-align:center;font-size:11px;color:var(--mu)">Su</span><span style="position:absolute;left:231.2857142857143px;width:20px;text-align:center;font-size:11px;color:var(--mu)">Ma</span><span style="position:absolute;left:266.42857142857144px;width:20px;text-align:center;font-size:11px;color:var(--mu);color:var(--tx);font-weight:600">Ti</span></div>
+  <div style="display:flex;gap:14px;font-size:11.5px;color:var(--mu);padding:6px 4px 0"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--bf);margin-right:5px;vertical-align:-1px"></i>syöty</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--bft);margin-right:5px;vertical-align:-1px"></i>herkut</span><span>- - keskiarvo</span></div>
+  <div class="mk" style="right:16px;top:44px"><span style="opacity:.7">Ti 17.11.</span><b>679 kcal</b></div></div>
+ <div class="hero" style="background:var(--cf2)"><div><div class="lab">Keskimäärin</div><div class="big">944<small>kcal/pv</small></div></div></div>
+ <div class="kv"><div>Herkut<b>—</b></div><div>Päiviä<b>6 / 7</b></div></div>
+ <div class="lst"><div class="li"><span class="d">Tänään</span><span class="ch" style="color:var(--bft)">herkkuja 230 kcal</span><span class="kg">679 kcal</span><span class="ms more" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div><div class="li"><span class="d">Eilen</span><span class="ch" style="color:var(--bft)"></span><span class="kg">875 kcal</span><span class="ms more" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div><div class="li"><span class="d">Su 15.11.</span><span class="ch" style="color:var(--bft)"></span><span class="kg">1 020 kcal</span><span class="ms more" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div><div class="li"><span class="d">La 14.11.</span><span class="ch" style="color:var(--bft)"></span><span class="kg">1 110 kcal</span><span class="ms more" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div></div></div></body></html>

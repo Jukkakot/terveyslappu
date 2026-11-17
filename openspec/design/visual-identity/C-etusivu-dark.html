@@ -1,0 +1,88 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Flex:opsz,wght@8..144,400..800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#2a2c2e;font-family:'Roboto Flex','Roboto',sans-serif;-webkit-font-smoothing:antialiased}
+.cap{height:28px;line-height:28px;padding:0 12px;font:500 12px/28px Roboto,sans-serif;color:#fff;background:#2a2c2e;letter-spacing:.2px}
+.phone{width:360px;height:780px;position:relative;overflow:hidden;background:var(--bg);color:var(--tx)}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;display:inline-block;flex:none;user-select:none}
+.top{height:64px;display:flex;align-items:center;padding:0 12px 0 16px;gap:4px}
+.top .ttl{flex:1;font-size:22px;font-weight:500;letter-spacing:-.1px}
+.top .ms{width:40px;text-align:center;color:var(--tx)}
+.wrap{padding:0 16px;display:flex;flex-direction:column;gap:12px}
+.row2{display:flex;gap:12px}
+.card{border-radius:var(--r);padding:16px 20px 14px;position:relative}
+.card.s{flex:1;min-width:0;padding:14px 14px 12px}
+.cw{background:var(--cw);color:var(--tw)}.cf{background:var(--cf);color:var(--tf)}.cs{background:var(--cs);color:var(--ts)}
+.cw .mu{color:var(--mw)}.cf .mu{color:var(--mf)}.cs .mu{color:var(--ms)}
+.hd{display:flex;align-items:center;gap:8px;height:28px}
+.hd .t{font-size:14px;font-weight:600;letter-spacing:.1px}
+.hd .sub{font-size:12px}
+.sp{flex:1}
+.tile{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cw .tile{background:var(--tileW);color:var(--tileWf)}.cf .tile{background:var(--tileF);color:var(--tileFf)}.cs .tile{background:var(--tileS);color:var(--tileSf)}
+.dirB .tile{border-radius:10px}
+.dirC .tile{width:20px;height:20px;background:transparent}
+.dirC .hd{gap:6px}
+.nrow{display:flex;align-items:baseline;gap:6px;margin-top:6px;white-space:nowrap}
+.num{font-size:var(--numS);font-weight:var(--numW);line-height:1.05;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.unit{font-size:18px;font-weight:500}
+.s .num{font-size:calc(var(--numS)*.62);letter-spacing:-.5px}
+.s .unit{font-size:13px}
+.dirC .num{letter-spacing:-2px}
+.dirC .s .num{letter-spacing:-1px;font-size:34px}
+.delta{display:inline-flex;align-items:center;gap:2px;height:28px;padding:0 10px 0 6px;border-radius:14px;background:var(--pill);color:var(--pillTx);font-size:14px;font-weight:600;align-self:center;white-space:nowrap}
+.mots{display:flex;gap:8px;margin-top:8px;white-space:nowrap}
+.mot{font-size:13px;display:inline-flex;gap:5px;align-items:center}
+.mot b{font-weight:600}
+.dot{opacity:.5}
+.subl{font-size:12.5px;margin-top:2px;height:17px;white-space:nowrap}
+.ft{display:flex;align-items:center;gap:8px;margin-top:6px;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;height:30px;padding:0 6px 0 12px;border-radius:15px;border:1px solid var(--chipBd);background:var(--chipBg);font-size:13px;font-weight:500}
+.s .chip{height:28px;padding:0 4px 0 10px;font-size:12.5px}
+.rng{font-size:13px}
+.dts{display:flex;justify-content:space-between;font-size:11px;margin-top:4px}
+.fabs{position:absolute;left:16px;right:16px;bottom:22px;display:flex;gap:12px}
+.btn{flex:1;height:56px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;border-radius:calc(var(--r)*.8)}
+.dirB .btn{border-radius:28px}
+.b1{background:var(--fab);color:var(--fabTx);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.b2{background:var(--fab2);color:var(--fab2Tx);border:1px solid var(--fab2Bd)}
+.dirC .b1{box-shadow:0 0 22px color-mix(in srgb,var(--fab) 45%,transparent)}
+</style></head><body>
+ <div class="cap">C · Etusivu · tumma</div><div class="phone dirC" style="--dir:C;--bg:#0E1013;--tx:#F4F6F8;--card:#16191E;--cw:#16191E;--cf:#16191E;--cs:#16191E;--tw:#F4F6F8;--tf:#F4F6F8;--ts:#F4F6F8;--mw:#8A939F;--mf:#8A939F;--ms:#8A939F;--lw:#4DF0B8;--lwTop:rgba(77,240,184,.30);--bf:#4DF0B8;--bfp:#685943;--bft:#E2B97A;--bs:#4DF0B8;--bsp:#46556F;--tileW:transparent;--tileWf:#4DF0B8;--tileF:transparent;--tileFf:#E2B97A;--tileS:transparent;--tileSf:#8FB0E8;--subF:#E2B97A;--chipBd:rgba(255,255,255,.16);--chipBg:transparent;--pill:#1E2229;--pillTx:#C8CFD8;--fab:#4DF0B8;--fabTx:#04261C;--fab2:transparent;--fab2Tx:#F4F6F8;--fab2Bd:rgba(255,255,255,.22);--r:24px;--numW:600;--numS:64px;--grid:rgba(255,255,255,0);--avg:rgba(255,255,255,.35);--acc:#4DF0B8;--accBg:#1E2229;--scrim:rgba(0,0,0,.6);--glow:1">
+ <div class="top"><div class="ttl">Terveyslappu</div><span class="ms" style="font-size:24px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">help</span><span class="ms" style="font-size:24px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">more_vert</span></div>
+ <div class="wrap">
+  <div class="card cw">
+   <div class="hd"><span class="tile"><span class="ms" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">monitor_weight</span></span><span class="t">Paino</span><span class="sub mu">· tänään 7.05</span><span class="sp"></span><span class="ms" style="font-size:22px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;opacity:.7">chevron_right</span></div>
+   <div class="nrow"><span class="num">79,9</span><span class="unit mu">kg</span><span class="sp"></span><span class="delta"><span class="ms" style="font-size:16px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">arrow_downward</span>−0,3 kg</span></div>
+   <div style="margin-top:14px"><svg width="288" height="150" viewBox="0 0 288 150" style="display:block;overflow:visible">
+ <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lwTop)"/><stop offset="1" style="stop-color:var(--lwTop);stop-opacity:0"/></linearGradient>
+ <filter id="g5b" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>
+ 
+ <path d="M10,51.9999999999994 C26.1,49.7 67.2,44.0 99.3,39.4 C131.5,34.9 164.5,24.6 188.7,26.9 C212.8,29.1 217.3,40.7 233.3,52.0 C249.4,63.3 270.0,82.9 278.0,89.7 L278,140 L10,140 Z" fill="url(#g5)"/>
+ <path d="M10,51.9999999999994 C26.1,49.7 67.2,44.0 99.3,39.4 C131.5,34.9 164.5,24.6 188.7,26.9 C212.8,29.1 217.3,40.7 233.3,52.0 C249.4,63.3 270.0,82.9 278.0,89.7" fill="none" style="stroke:var(--lw)" stroke-width="7" stroke-linecap="round" opacity=".55" filter="url(#g5b)"/>
+ <path d="M10,51.9999999999994 C26.1,49.7 67.2,44.0 99.3,39.4 C131.5,34.9 164.5,24.6 188.7,26.9 C212.8,29.1 217.3,40.7 233.3,52.0 C249.4,63.3 270.0,82.9 278.0,89.7" fill="none" style="stroke:var(--lw)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+ <circle cx="10" cy="51.9999999999994" r="3" style="fill:var(--card2,var(--card));stroke:var(--lw)" stroke-width="2"/><circle cx="99.33333333333333" cy="39.42857142857151" r="3" style="fill:var(--card2,var(--card));stroke:var(--lw)" stroke-width="2"/><circle cx="188.66666666666666" cy="26.857142857141838" r="3" style="fill:var(--card2,var(--card));stroke:var(--lw)" stroke-width="2"/><circle cx="233.33333333333334" cy="51.9999999999994" r="3" style="fill:var(--card2,var(--card));stroke:var(--lw)" stroke-width="2"/>
+ <circle cx="278" cy="89.71428571428487" r="10" style="fill:var(--lw)" opacity=".18"/>
+ <circle cx="278" cy="89.71428571428487" r="5.5" style="fill:var(--lw);stroke:var(--card2,var(--card))" stroke-width="2.5"/>
+ </svg></div>
+   <div class="dts mu"><span>11.11.</span><span>17.11.</span></div>
+   <div class="ft"><span class="chip">1 vk <span class="ms" style="font-size:18px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">arrow_drop_down</span></span><span class="sp"></span><span class="rng mu">80,2 → 79,9 kg</span></div>
+  </div>
+  <div class="row2">
+   <div class="card s cf">
+    <div class="hd"><span class="tile"><span class="ms" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">restaurant</span></span><span class="t">Syöty</span><span class="sp"></span><span class="ms" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;opacity:.7">chevron_right</span></div>
+    <div class="nrow"><span class="num">679</span><span class="unit mu">kcal</span></div>
+    <div class="subl" style="color:var(--subF);font-weight:500">herkkuja 230 kcal</div>
+    <div style="margin-top:10px"><svg width="130" height="96" viewBox="0 0 130 96" style="display:block;overflow:visible"><line x1="0" x2="130" y1="95.5" y2="95.5" style="stroke:var(--grid)"/><path d="M2.7857142857142865,95 L2.7857142857142865,22.75 Q2.7857142857142865,17.75 7.7857142857142865,17.75 L10.785714285714286,17.75 Q15.785714285714286,17.75 15.785714285714286,22.75 L15.785714285714286,95 Z" style="fill:var(--bfp)"/><path d="M21.35714285714286,95 L21.35714285714286,28.75 Q21.35714285714286,23.75 26.35714285714286,23.75 L29.35714285714286,23.75 Q34.35714285714286,23.75 34.35714285714286,28.75 L34.35714285714286,95 Z" style="fill:var(--bfp)"/><rect x="43.42857142857143" y="92" width="6" height="3" rx="1.5" style="fill:var(--bfp)" opacity=".7"/><path d="M58.50000000000001,95 L58.50000000000001,16.75 Q58.50000000000001,11.75 63.50000000000001,11.75 L66.5,11.75 Q71.5,11.75 71.5,16.75 L71.5,95 Z" style="fill:var(--bfp)"/><path d="M77.07142857142858,95 L77.07142857142858,23.5 Q77.07142857142858,18.5 82.07142857142858,18.5 L85.07142857142858,18.5 Q90.07142857142858,18.5 90.07142857142858,23.5 L90.07142857142858,95 Z" style="fill:var(--bfp)"/><path d="M95.64285714285715,95 L95.64285714285715,34.375 Q95.64285714285715,29.375 100.64285714285715,29.375 L103.64285714285715,29.375 Q108.64285714285715,29.375 108.64285714285715,34.375 L108.64285714285715,95 Z" style="fill:var(--bfp)"/><path d="M114.21428571428574,95 L114.21428571428574,49.075 Q114.21428571428574,44.075 119.21428571428574,44.075 L122.21428571428574,44.075 Q127.21428571428574,44.075 127.21428571428574,49.075 L127.21428571428574,95 Z" style="fill:var(--bft)"/><rect x="114.21428571428574" y="61.325" width="13" height="33.675" style="fill:var(--bf)"/><line x1="0" x2="130" y1="24.200000000000003" y2="24.200000000000003" style="stroke:var(--avg)" stroke-width="1.2" stroke-dasharray="3 3"/></svg></div>
+    <div class="dts mu"><span>11.11.</span><span>17.11.</span></div>
+    <div class="ft"><span class="chip">1 vk <span class="ms" style="font-size:18px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">arrow_drop_down</span></span><span class="sp"></span><span class="mu" style="font-size:12px">ka 944 /pv</span></div>
+   </div>
+   <div class="card s cs">
+    <div class="hd"><span class="tile"><span class="ms" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">directions_walk</span></span><span class="t">Askeleet</span><span class="sp"></span><span class="ms" style="font-size:20px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;opacity:.7">chevron_right</span></div>
+    <div class="nrow"><span class="num">4 210</span><span class="unit mu">askelta</span></div>
+    <div class="subl mu">tänään</div>
+    <div style="margin-top:10px"><svg width="130" height="96" viewBox="0 0 130 96" style="display:block;overflow:visible"><line x1="0" x2="130" y1="95.5" y2="95.5" style="stroke:var(--grid)"/><path d="M2.7857142857142865,95 L2.7857142857142865,52.235200000000006 Q2.7857142857142865,47.235200000000006 7.7857142857142865,47.235200000000006 L10.785714285714286,47.235200000000006 Q15.785714285714286,47.235200000000006 15.785714285714286,52.235200000000006 L15.785714285714286,95 Z" style="fill:var(--bsp)"/><path d="M21.35714285714286,95 L21.35714285714286,15.040000000000006 Q21.35714285714286,10.040000000000006 26.35714285714286,10.040000000000006 L29.35714285714286,10.040000000000006 Q34.35714285714286,10.040000000000006 34.35714285714286,15.040000000000006 L34.35714285714286,95 Z" style="fill:var(--bsp)"/><path d="M39.92857142857143,95 L39.92857142857143,27.28 Q39.92857142857143,22.28 44.92857142857143,22.28 L47.92857142857143,22.28 Q52.92857142857143,22.28 52.92857142857143,27.28 L52.92857142857143,95 Z" style="fill:var(--bsp)"/><path d="M58.50000000000001,95 L58.50000000000001,32.31999999999999 Q58.50000000000001,27.319999999999993 63.50000000000001,27.319999999999993 L66.5,27.319999999999993 Q71.5,27.319999999999993 71.5,32.31999999999999 L71.5,95 Z" style="fill:var(--bsp)"/><path d="M77.07142857142858,95 L77.07142857142858,41.68 Q77.07142857142858,36.68 82.07142857142858,36.68 L85.07142857142858,36.68 Q90.07142857142858,36.68 90.07142857142858,41.68 L90.07142857142858,95 Z" style="fill:var(--bsp)"/><path d="M95.64285714285715,95 L95.64285714285715,49.599999999999994 Q95.64285714285715,44.599999999999994 100.64285714285715,44.599999999999994 L103.64285714285715,44.599999999999994 Q108.64285714285715,44.599999999999994 108.64285714285715,49.599999999999994 L108.64285714285715,95 Z" style="fill:var(--bsp)"/><path d="M114.21428571428574,95 L114.21428571428574,69.688 Q114.21428571428574,64.688 119.21428571428574,64.688 L122.21428571428574,64.688 Q127.21428571428574,64.688 127.21428571428574,69.688 L127.21428571428574,95 Z" style="fill:var(--bs)"/><line x1="0" x2="130" y1="31.3592" y2="31.3592" style="stroke:var(--avg)" stroke-width="1.2" stroke-dasharray="3 3"/></svg></div>
+    <div class="dts mu"><span>11.11.</span><span>17.11.</span></div>
+    <div class="ft"><span class="chip">1 vk <span class="ms" style="font-size:18px;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;">arrow_drop_down</span></span><span class="sp"></span><span class="mu" style="font-size:11.5px">ka 8 839 /pv</span></div>
+   </div>
+  </div>
+ </div></div></body></html>
