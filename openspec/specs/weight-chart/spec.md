@@ -871,7 +871,7 @@ the plot SHALL move the choice with the finger (scrub) while the chart is not zo
 day SHALL be marked on every panel that draws data, and one marker card SHALL show over the plot at
 that day. The card SHALL hold a head line with the date and one row per shown data with access: a
 dot in the data's colour, its name and that day's own value with its unit (weight in kg, the day's
-last weight not marked "?", or "ei painoa"; kcal or "ei kirjauksia"; steps or "ei tietoa"). There
+last weight not marked "?", or "ei painoa"; kcal or "ei annoksia"; steps or "ei tietoa"). There
 SHALL be no week form and no averages; a data that has a trend line also gets the row "<data> trendi" right after its own row (see "Trend line in the marker card"). The card SHALL be placed beside the chosen day and SHALL
 stay fully inside the chart's area, also at the first and last day. Buttons inside a panel (such as
 a permission button) SHALL stay buttons and a tap outside the drawn plot areas SHALL choose nothing.
@@ -890,7 +890,7 @@ be announced as a polite live region only on a tap, the end of a drag or one of 
 
 #### Scenario: Day without data
 - **WHEN** the user taps a day with weight but no food and no steps
-- **THEN** the card shows the weight row, "ei kirjauksia" in the food row and "ei tietoa" in the
+- **THEN** the card shows the weight row, "ei annoksia" in the food row and "ei tietoa" in the
   steps row
 
 #### Scenario: Last weight of the day
@@ -972,7 +972,7 @@ Askeleet tabs do, and SHALL show the same history notice.
 ### Requirement: Chart data without values
 A chart SHALL NOT ask for any permission by itself. In the Allekkain layout a panel whose data has
 no values in the period SHALL keep its place and height and show one centred line instead of the
-drawing ("Ei painoja tällä jaksolla", "Ei ruokakirjauksia tällä jaksolla", "Ei askeleita tällä
+drawing ("Ei painoja tällä jaksolla", "Ei annoksia tällä jaksolla", "Ei askeleita tällä
 jaksolla"); a panel without its permission SHALL show the reason of its own tab with its grant
 button; a panel still loading SHALL show a progress indicator; the other panels SHALL be
 unaffected. In the Päällekkäin layout such data SHALL be left out of the plot and named in a line
@@ -988,7 +988,7 @@ left out of the readout.
 
 #### Scenario: No food, overlaid
 - **GIVEN** nothing is logged in the period and a chart with Paino and Energia, Päällekkäin
-- **THEN** the plot draws the weights and a line under it reads "Ei ruokakirjauksia tällä jaksolla"
+- **THEN** the plot draws the weights and a line under it reads "Ei annoksia tällä jaksolla"
 
 ### Requirement: Period range line
 Every chart in Historia (Paino, BMI, Energia, Askeleet and every own chart tab) SHALL show, at the
@@ -1021,7 +1021,7 @@ date text.
 ### Requirement: Eaten and burned energy names
 The eaten-energy tab and data, called Energia in this spec, SHALL read "Syöty" where the user sees
 it as a tab or data name (Historia tab, own chart editor, own chart legends and readouts, Ohje); a
-product's energy field and the food texts ("Ei ruokakirjauksia…", legend "ruoka", "herkut") stay.
+product's energy field and the food texts ("Ei annoksia…", legend "ruoka", "herkut") stay.
 The burned-energy tab and data SHALL read "Kulutus". Both are in kcal. Neither SHALL use plus or
 minus signs or show a difference between them. Historia's fixed tabs SHALL be Paino, BMI, Syöty,
 Askeleet, Kulutus, then the own charts and Uusi kaavio.
@@ -1085,7 +1085,7 @@ weekday and the date, with the year when not the current year ("Ma 9.11.", "La 1
 a weekly bar the week ("Vk 46 · 9.–15.11."), and its rows SHALL be:
 - Paino: the head adds the time of that day's last weight not marked "?" ("Su 8.11. · 7.05"), row
   "paino 82,6 kg", or "paino ei painoa"; BMI the same with "BMI 25,3".
-- Syöty: "ruoka 1 760 kcal" and "herkut 230 kcal", or "ruoka ei kirjauksia"; a weekly bar "ruoka
+- Syöty: "ruoka 1 760 kcal" and "herkut 230 kcal", or "ruoka ei annoksia"; a weekly bar "ruoka
   keskiarvo 1 900 kcal/pv".
 - Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; weekly "askeleet keskiarvo 8 200
   askelta/pv".

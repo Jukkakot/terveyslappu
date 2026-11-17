@@ -147,7 +147,7 @@ object TabReadouts {
 
     /**
      * An own chart (weight-chart "Chart crosshair"): one row per shown data with access, its own
-     * value that day or "ei painoa" / "ei kirjauksia" / "ei tietoa"; Kulutus "2 300 kcal ·
+     * value that day or "ei painoa" / "ei annoksia" / "ei tietoa"; Kulutus "2 300 kcal ·
      * aktiivinen 450 kcal" (no lepo). Today unmarked, no week form.
      */
     fun custom(

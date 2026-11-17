@@ -188,7 +188,7 @@ the "?" row in Historia, and still carry its text.
 
 ### Requirement: Food row on the home screen
 The food card SHALL be built like the weight card: the title "Syöty" with today's total kcal large and
-the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
+the treats' share (or "ei annoksia"), small daily kcal bars of the card's own period (7, 30 or 90
 days ending today, chosen from its own menu and remembered, 7 by default) with the treats' share in
 its tone as on Energia, and under them the period's first and last day and its average kcal per
 logged day (today left out, as on Energia). A tap on the card's title or today's number SHALL open Ruoka on
@@ -227,7 +227,7 @@ permission it SHALL read "Ruoka: anna lupa" and a tap SHALL ask for it.
 
 #### Scenario: Nothing logged
 - **WHEN** nothing is logged today
-- **THEN** the card reads "Syöty" and "ei kirjauksia" with no warning tone
+- **THEN** the card reads "Syöty" and "ei annoksia" with no warning tone
 
 ### Requirement: Steps card on the home screen
 The steps card SHALL be built like the food card: the title "Askeleet", today's steps large with "askelta" beside them in a smaller type, as the food card's "kcal", and "tänään" under them
