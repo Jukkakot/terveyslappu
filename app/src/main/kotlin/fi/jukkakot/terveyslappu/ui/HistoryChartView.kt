@@ -7,6 +7,7 @@ import android.graphics.Color as AndroidColor
 import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.drawable.GradientDrawable
 import android.view.View
 import com.github.mikephil.charting.charts.CombinedChart
 import com.github.mikephil.charting.components.Legend
@@ -31,6 +32,8 @@ import com.github.mikephil.charting.utils.Utils
 import com.github.mikephil.charting.utils.ViewPortHandler
 import fi.jukkakot.terveyslappu.chart.AxisSpec
 import fi.jukkakot.terveyslappu.chart.AxisTicks
+import fi.jukkakot.terveyslappu.chart.BarParts
+import fi.jukkakot.terveyslappu.chart.LineLook
 import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.ChartPoint
 import fi.jukkakot.terveyslappu.chart.ChartSpec
@@ -435,21 +438,55 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
             }
         }
     }
+    // The weight line's look (app-appearance "Chart look"): fill sets first (under everything), the
+    // glow under the trend, the ring over the dots; none of them is picked or in the legend.
+    val fills = mutableListOf<ILineDataSet<*>>()
+    val glows = mutableListOf<ILineDataSet<*>>()
+    val rings = mutableListOf<ILineDataSet<*>>()
+    val lineAt = mutableListOf<Int>()
     panel.series.forEach { s ->
         val tone = c.of(s.tone)
         when (val shape = s.shape) {
             is SeriesShape.Line -> {
-                where += true to averages.size + trends.size + lines.size
-                lines += LineDataSet(shape.points.map(::entry), s.id).apply {
+                lineAt += lines.size
+                where += true to -1
+                val look = s.look
+                val points = shape.points.map(::entry)
+                if (look != null && look.fill && points.size > 1) fills += fillSet(points, tone, c, "${s.id}-fill")
+                if (look != null && c.dark && points.size > 1) {
+                    glows += LineDataSet(points, "${s.id}-glow").apply {
+                        axisDependency = YAxis.AxisDependency.LEFT
+                        color = withAlpha(tone, LineLook.GLOW_ALPHA)
+                        lineWidth = LineLook.GLOW_DP
+                        isDrawCirclesEnabled = false
+                        isDrawValuesEnabled = false
+                        isHighlightEnabled = false
+                    }
+                }
+                lines += LineDataSet(points, s.id).apply {
                     axisDependency = YAxis.AxisDependency.LEFT
                     color = tone
-                    lineWidth = shape.widthDp
+                    lineWidth = if (look != null) maxOf(shape.widthDp, LineLook.WIDTH_DP) else shape.widthDp
                     isDrawCirclesEnabled = false
                     isDrawValuesEnabled = false
                     highlightColor = c.muted
                     highlightLineWidth = 1f
                     isHorizontalHighlightIndicatorEnabled = false
                     isHighlightEnabled = !style.card
+                }
+                if (look != null && look.ring && points.isNotEmpty()) {
+                    rings += LineDataSet(listOf(points.last()), "${s.id}-ring").apply {
+                        axisDependency = YAxis.AxisDependency.LEFT
+                        color = AndroidColor.TRANSPARENT
+                        isDrawCirclesEnabled = true
+                        isDrawCircleHoleEnabled = true
+                        circleRadius = LineLook.RING_DP
+                        circleHoleRadius = LineLook.RING_DP - 2f
+                        circleHoleColor = c.card
+                        setCircleColors(tone)
+                        isDrawValuesEnabled = false
+                        isHighlightEnabled = false
+                    }
                 }
                 val shown = shape.dots.shown(shape.points.size, plotWidthDp)
                 dots += LineDataSet(shape.points.filterIndexed { k, _ -> k in shown }.map(::entry), "${s.id}-dots").apply {
@@ -466,13 +503,12 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
             is SeriesShape.Bars -> {
                 where += false to bars.size
                 barWidth = (0.7 * shape.widthDays / shape.slots).toFloat()
-                bars += barSet(s.id, shape.points.map { BarEntry(it.x.toFloat(), it.y.toFloat(), null, it.day) }, listOf(tone), c)
+                bars += barSet(s.id, shape.points, listOf(s.tone), s.today, c)
             }
             is SeriesShape.StackedBars -> {
                 where += false to bars.size
                 barWidth = (0.7 * shape.widthDays).toFloat()
-                val entries = shape.points.map { p -> BarEntry(p.x.toFloat(), (p.parts ?: listOf(p.y)).map { it.toFloat() }, null, p.day) }
-                bars += barSet(s.id, entries, shape.partTones.map(c::of), c)
+                bars += barSet(s.id, shape.points, shape.partTones, s.today, c)
             }
         }
     }
@@ -483,7 +519,11 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
         if (width > 0 && plotPx > 0f) barWidth = maxOf(barWidth, px(CARD_MIN_BAR_DP) / (plotPx / span))
         bars.forEach { it.isHighlightEnabled = false }
     }
-    val lineData = (averages + trends + lines + dots).takeIf { it.isNotEmpty() }?.let { LineData(it) }
+    // A line's index in the line data: everything drawn under the lines comes first.
+    val under = fills.size + averages.size + glows.size + trends.size
+    var nextLine = 0
+    for (k in where.indices) if (where[k].first) where[k] = true to under + lineAt[nextLine++]
+    val lineData = (fills + averages + glows + trends + lines + dots + rings).takeIf { it.isNotEmpty() }?.let { LineData(it) }
     val barData = bars.takeIf { it.isNotEmpty() }?.let { BarData(it).apply { this.barWidth = barWidth } }
     val combined = CombinedData().apply {
         this.lineData = lineData
@@ -504,12 +544,44 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
     invalidate()
 }
 
-private fun barSet(id: String, entries: List<BarEntry<LocalDate>>, tones: List<Int>, c: ChartColors) = BarDataSet(entries, id).apply {
+/**
+ * A bar set (app-appearance "Chart look"): always stacked through [BarParts] so the library rounds
+ * only the topmost non-zero part (4 dp, at most half the bar's width), one colour per drawn part with
+ * the past days dimmed when [today] is emphasised.
+ */
+private fun barSet(id: String, points: List<ChartPoint>, tones: List<ToneRef>, today: LocalDate?, c: ChartColors): BarDataSet<LocalDate> {
+    val parts = BarParts.of(points, tones, today)
+    val entries = points.mapIndexed { i, p -> BarEntry(p.x.toFloat(), parts[i].map { it.value.toFloat() }, null, p.day) }
+    return BarDataSet(entries, id).apply {
+        axisDependency = YAxis.AxisDependency.LEFT
+        colors = BarParts.tones(parts).map(c::of)
+        isDrawValuesEnabled = false
+        highlightColor = c.onSurface
+        highlightAlpha = 90
+        barCornerRadius = Utils.convertDpToPixel(BAR_RADIUS_DP)
+        isStackSectionsRounded = false
+    }
+}
+
+/** A bar's rounded top (app-appearance "Chart look"). */
+private const val BAR_RADIUS_DP = 4f
+
+private fun withAlpha(colour: Int, alpha: Float): Int =
+    AndroidColor.argb((AndroidColor.alpha(colour) * alpha).toInt(), AndroidColor.red(colour), AndroidColor.green(colour), AndroidColor.blue(colour))
+
+/** The paino line's fill: a transparent line whose fill fades from the line's colour at the plot's top to nothing at its bottom. */
+private fun fillSet(points: List<Entry<LocalDate>>, tone: Int, c: ChartColors, id: String) = LineDataSet(points, id).apply {
     axisDependency = YAxis.AxisDependency.LEFT
-    colors = tones
+    color = AndroidColor.TRANSPARENT
+    lineWidth = 0.2f
+    isDrawCirclesEnabled = false
     isDrawValuesEnabled = false
-    highlightColor = c.onSurface
-    highlightAlpha = 90
+    isHighlightEnabled = false
+    isDrawFilledEnabled = true
+    fillDrawable = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(withAlpha(tone, if (c.dark) LineLook.FILL_ALPHA_DARK else LineLook.FILL_ALPHA_LIGHT), AndroidColor.TRANSPARENT),
+    )
 }
 
 private fun LegendItem.toLibrary(c: ChartColors, texts: ChartTexts): MpLegendEntry {

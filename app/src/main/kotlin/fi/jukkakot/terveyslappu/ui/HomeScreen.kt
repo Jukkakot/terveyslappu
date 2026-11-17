@@ -207,7 +207,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
             Text(
                 average,
                 maxLines = 2,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier
                     .weight(1f)
@@ -355,7 +355,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                     stringResource(if (size == CardSize.SMALL) R.string.home_steps_average else R.string.home_steps_average_long, formatSteps(it))
                 } ?: stringResource(R.string.home_food_no_average),
                 maxLines = 2,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("stepsAverage"),
             )
@@ -454,7 +454,7 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                     stringResource(if (size == CardSize.SMALL) R.string.home_burn_average else R.string.home_burn_average_long, formatKcal(it.toDouble()))
                 } ?: stringResource(R.string.home_food_no_average),
                 maxLines = 2,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("burnAverage"),
             )

@@ -124,6 +124,9 @@ sealed interface ToneRef {
         /** The lighter tone (treats of a chosen colour, lepo) and a kokonais Kulutus day. */
         const val LIGHT_ALPHA = 0.45f
         const val TOTAL_ALPHA = 0.7f
+
+        /** The past days' bars when today's bar is emphasised (app-appearance "Chart look"). */
+        const val PAST_ALPHA = 0.6f
     }
 }
 
@@ -217,6 +220,10 @@ data class SeriesSpec(
     val average: Double? = null,
     val averageTone: ToneRef = ToneRef.MUTED,
     val trend: List<List<ChartPoint>>? = null,
+    /** The paino/BMI line's look (app-appearance "Chart look"): glow, ring and, for paino, the fill. */
+    val look: LineLook? = null,
+    /** Daily bars whose period ends today with a bar: every other day at [ToneRef.PAST_ALPHA]. */
+    val today: LocalDate? = null,
 ) {
     companion object {
         /** A trend line's width (period-trend-line design 5). */
@@ -225,6 +232,55 @@ data class SeriesSpec(
         /** An overlaid own chart's trend in the data's tone at this opacity. */
         const val TREND_ALPHA = 0.6f
     }
+}
+
+/**
+ * The weight line's emphasis (app-appearance "Chart look"): 2.5 dp, a soft glow in the dark theme,
+ * a ring on its last point, and with [fill] a fading fill under it (paino, not BMI).
+ */
+data class LineLook(val fill: Boolean, val ring: Boolean = true) {
+    companion object {
+        const val WIDTH_DP = 2.5f
+        const val GLOW_DP = 6f
+        const val GLOW_ALPHA = 0.25f
+        const val RING_DP = 5f
+        const val FILL_ALPHA_DARK = 0.28f
+        const val FILL_ALPHA_LIGHT = 0.18f
+    }
+}
+
+/**
+ * Bar parts as drawn (app-appearance "Chart look"): every entry gets the same number of parts (at
+ * least two), zero parts moved to the bottom so the library rounds the topmost non-zero part, and
+ * one tone per drawn part in the library's colour order (entry by entry, part by part); with
+ * [today] every other entry's parts at [ToneRef.PAST_ALPHA].
+ */
+object BarParts {
+    data class Part(val value: Double, val tone: ToneRef)
+
+    fun of(points: List<ChartPoint>, tones: List<ToneRef>, today: LocalDate?): List<List<Part>> {
+        val raw = points.map { p ->
+            val dim = today != null && p.day != today
+            (p.parts ?: listOf(p.y)).mapIndexed { k, v ->
+                val tone = tones.getOrElse(k) { tones.last() }
+                Part(v, if (dim) tone.alpha(ToneRef.PAST_ALPHA) else tone)
+            }
+        }
+        val size = maxOf(2, raw.maxOfOrNull { it.size } ?: 0)
+        return raw.map { parts ->
+            val zeros = parts.filter { it.value == 0.0 }
+            val shown = parts.filter { it.value != 0.0 }
+            val pad = List(size - parts.size) { Part(0.0, parts.firstOrNull()?.tone ?: tones.first()) }
+            pad + zeros + shown
+        }
+    }
+
+    /** The tones in the library's colour order. */
+    fun tones(parts: List<List<Part>>): List<ToneRef> = parts.flatMap { e -> e.map { it.tone } }
+
+    /** The day to emphasise: daily bars ending today with a bar today, else null (nothing dimmed). */
+    fun todayOf(axis: ChartAxis, days: Collection<LocalDate>, today: LocalDate): LocalDate? =
+        today.takeIf { !axis.weekly && axis.to == today && today in days }
 }
 
 /** A faint band behind the data, [from] to [to] in plot units (already clipped to the scale). */

@@ -47,8 +47,8 @@ object CardCharts {
             ChartPoint(((it.time.epochSecond - t0) / SECONDS_PER_DAY).coerceIn(0.0, span), it.kg, it.time.atZone(zone).toLocalDate())
         }
         val series = listOfNotNull(
-            SeriesSpec("line", ToneRef.WEIGHT, SeriesShape.Line(points, Dots.FitButLast, WEIGHT_LINE_DP, WEIGHT_DOT_DP)).takeIf { points.size > 1 },
-            SeriesSpec("latest", ToneRef.WEIGHT, SeriesShape.Line(listOf(points.last()), Dots.All, WEIGHT_LINE_DP, LAST_DOT_DP)),
+            SeriesSpec("line", ToneRef.WEIGHT, SeriesShape.Line(points, Dots.FitButLast, WEIGHT_LINE_DP, WEIGHT_DOT_DP), look = LineLook(fill = true, ring = false)).takeIf { points.size > 1 },
+            SeriesSpec("latest", ToneRef.WEIGHT, SeriesShape.Line(listOf(points.last()), Dots.All, WEIGHT_LINE_DP, LAST_DOT_DP), look = LineLook(fill = false)),
         )
         val panel = PanelSpec(0, AxisSpec(scale.min, scale.max, ValueUnit.KG), series = series, grid = false, insetDp = WEIGHT_INSET_DP)
         val axis = ChartAxis(summary.sparkFrom.atZone(zone).toLocalDate(), summary.sparkTo.atZone(zone).toLocalDate())
@@ -68,6 +68,7 @@ object CardCharts {
             ToneRef.FOOD,
             SeriesShape.StackedBars(points, listOf(ToneRef.FOOD, ToneRef.TREAT)),
             average = home.averageKcal?.toDouble()?.takeIf { size == CardSize.BIG },
+            today = BarParts.todayOf(axis, home.bars.map { it.from }, home.to),
         )
         return bars(axis, listOf(series), home.bars.maxOf { it.total }.toDouble(), KCAL_STEP, size, ToneRef.FOOD)
     }
@@ -78,7 +79,7 @@ object CardCharts {
         val axis = ChartAxis(home.from, home.to)
         val x = ChartX(axis)
         val points = home.bars.map { ChartPoint(x.of(it.from), it.steps.toDouble(), it.from) }
-        val series = SeriesSpec("steps", ToneRef.STEPS, SeriesShape.Bars(points), average = home.averageSteps?.toDouble()?.takeIf { size == CardSize.BIG })
+        val series = SeriesSpec("steps", ToneRef.STEPS, SeriesShape.Bars(points), average = home.averageSteps?.toDouble()?.takeIf { size == CardSize.BIG }, today = BarParts.todayOf(axis, home.bars.map { it.from }, home.to))
         return bars(axis, listOf(series), home.bars.maxOf { it.steps }.toDouble(), STEPS_STEP, size, ToneRef.STEPS)
     }
 
@@ -98,10 +99,11 @@ object CardCharts {
         val whole = home.bars.filter { it.kind == BurnKind.TOTAL }.map { ChartPoint(x.of(it.from), it.total.toDouble(), it.from) }
         val activeOnly = home.bars.filter { it.kind == BurnKind.ACTIVE }.map { ChartPoint(x.of(it.from), it.total.toDouble(), it.from) }
         val average = home.averageTotal?.toDouble()?.takeIf { size == CardSize.BIG }
+        val day = BarParts.todayOf(axis, home.bars.map { it.from }, home.to)
         val series = listOfNotNull(
-            SeriesSpec("split", tone, SeriesShape.StackedBars(split, listOf(ToneRef.REST, tone))).takeIf { split.isNotEmpty() },
-            SeriesSpec("total", tone.alpha(ToneRef.TOTAL_ALPHA), SeriesShape.Bars(whole)).takeIf { whole.isNotEmpty() },
-            SeriesSpec("active", tone, SeriesShape.Bars(activeOnly)).takeIf { activeOnly.isNotEmpty() },
+            SeriesSpec("split", tone, SeriesShape.StackedBars(split, listOf(ToneRef.REST, tone)), today = day).takeIf { split.isNotEmpty() },
+            SeriesSpec("total", tone.alpha(ToneRef.TOTAL_ALPHA), SeriesShape.Bars(whole), today = day).takeIf { whole.isNotEmpty() },
+            SeriesSpec("active", tone, SeriesShape.Bars(activeOnly), today = day).takeIf { activeOnly.isNotEmpty() },
         ).mapIndexed { i, s -> if (i == 0) s.copy(average = average) else s }
         return bars(axis, series, home.bars.maxOf { it.total }.toDouble(), KCAL_STEP, size, tone)
     }

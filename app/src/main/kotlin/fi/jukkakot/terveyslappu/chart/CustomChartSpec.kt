@@ -113,7 +113,7 @@ object CustomChartSpec {
             val average = lines[kind.kind]?.flat
             val trend = trendPoints(lines[kind.kind], x)
             val series: List<SeriesSpec> = when {
-                kind.style == SeriesStyle.LINE -> lineSeries(kind, values, x, card, today, tone, Side.LEFT, average, ToneRef.MUTED, trend) { it }
+                kind.style == SeriesStyle.LINE -> lineSeries(kind, values, x, card, today, tone, Side.LEFT, average, ToneRef.MUTED, trend, look = LineLook(fill = true).takeIf { !single }) { it }
                 kind.kind == SeriesKind.ENERGY -> {
                     val points = values.map { ChartPoint(x.of(it.day), it.value, it.day, listOf((it.value - it.treat).coerceAtLeast(0.0), it.treat)) }
                     listOf(SeriesSpec(kind.kind.name, tone, SeriesShape.StackedBars(points, listOf(tone, treatTone(chart, tone))), average = average, trend = trend))
@@ -142,9 +142,10 @@ object CustomChartSpec {
      */
     private fun lineSeries(
         kind: KindData, values: List<DayValue>, x: ChartX, card: Boolean, today: LocalDate,
-        tone: ToneRef, side: Side, average: Double?, averageTone: ToneRef, trend: List<List<ChartPoint>>?, y: (Double) -> Double,
+        tone: ToneRef, side: Side, average: Double?, averageTone: ToneRef, trend: List<List<ChartPoint>>?, look: LineLook? = null, y: (Double) -> Double,
     ): List<SeriesSpec> {
-        if (kind.kind == SeriesKind.WEIGHT) return listOf(SeriesSpec(kind.kind.name, tone, line(kind, values, x, card, y), side, average, averageTone, trend))
+        // Allekkain's Paino gets the weight line's look (app-appearance "Chart look"); Päällekkäin none.
+        if (kind.kind == SeriesKind.WEIGHT) return listOf(SeriesSpec(kind.kind.name, tone, line(kind, values, x, card, y), side, average, averageTone, trend, look = look))
         val todayValue = values.filter { it.day == today }
         val before = values.filter { it.day != today }
         // Only today: its series carries the average, so the dashed line still draws.

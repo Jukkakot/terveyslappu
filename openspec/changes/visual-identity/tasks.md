@@ -4,7 +4,7 @@
 
 - [x] 1.1 Add Roborazzi (test only) to `gradle/libs.versions.toml` and `app/build.gradle.kts`; exclude `**/screens/**` from every `Test` task unless the Gradle property `screenshots` is set (design 9).
 - [x] 1.2 Write `screens/ScreenshotTour` (Robolectric, 360 × 780 dp, density 2) rendering front page, Historia Paino/Syöty/Askeleet/Kulutus, Ruoka and Asetukset → Ulkoasu with the existing made-up fixtures, in Tumma and Vaalea; leave a parameter for the colour choice (filled in 2.x).
-- [ ] 1.3 Check that `./gradlew test` runs no screenshot test and that the documented command writes PNGs to `app/build/outputs/roborazzi/`; record the command in `.claude/CLAUDE.md` (Build, release, logs).
+- [x] 1.3 Check that `./gradlew test` runs no screenshot test and that the documented command writes PNGs to `app/build/outputs/roborazzi/`; record the command in `.claude/CLAUDE.md` (Build, release, logs).
 - [x] 1.4 Run the tour once on the current look and keep the PNGs in the session scratchpad as the "before" set.
 
 ## 2. Palette and colour choice
@@ -26,11 +26,11 @@
 
 ## 4. Chart look
 
-- [ ] 4.1 Quantity colours in every Historia tab and front page card (paino/BMI, syöty + herkku, askeleet, kulutus + lepo).
-- [ ] 4.2 Rounded bar tops: `RoundedBarChartRenderer` plugged into the combined chart (top stack part only); render test that a stacked bar draws without error and a 1 dp card bar stays visible.
-- [ ] 4.3 Today emphasis on fixed tabs and feature cards only: per-part bar colours (past daily bars at 60 %, today full; nothing dimmed without a bar today or for weekly bars); a pure colour-list builder walking each entry's parts, unit-tested with a Kulutus week mixing split, total-only and active-only days and a Syöty week with treats.
-- [ ] 4.4 Paino/BMI line: 2.5 dp, dark-theme glow (6 dp, 25 %), gradient fill on Paino only, ring on the last weight in range also without dots, layer order as in "Chart look"; glow and ring sets in their own list after `lines`; own charts: Allekkain only; test that tapping still picks the weight and the legend has no extra entry.
-- [ ] 4.5 Faint horizontal gridlines.
+- [x] 4.1 Quantity colours in every Historia tab and front page card (paino/BMI, syöty + herkku, askeleet, kulutus + lepo).
+- [x] 4.2 Rounded bar tops: `RoundedBarChartRenderer` plugged into the combined chart (top stack part only); render test that a stacked bar draws without error and a 1 dp card bar stays visible.
+- [x] 4.3 Today emphasis on fixed tabs and feature cards only: per-part bar colours (past daily bars at 60 %, today full; nothing dimmed without a bar today or for weekly bars); a pure colour-list builder walking each entry's parts, unit-tested with a Kulutus week mixing split, total-only and active-only days and a Syöty week with treats.
+- [x] 4.4 Paino/BMI line: 2.5 dp, dark-theme glow (6 dp, 25 %), gradient fill on Paino only, ring on the last weight in range also without dots, layer order as in "Chart look"; glow and ring sets in their own list after `lines`; own charts: Allekkain only; test that tapping still picks the weight and the legend has no extra entry.
+- [x] 4.5 Faint horizontal gridlines.
 
 ## 5. Historia header and statistics
 
