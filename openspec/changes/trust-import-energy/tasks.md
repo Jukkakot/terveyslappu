@@ -3,7 +3,7 @@
 ## 1. Import plan
 
 - [ ] 1.1 Rewrite `AiImport.plan` (`food/AiPaste.kt`) per design 1 (three passes).
-- [ ] 1.2 `EnergyChange` and `AiImportPlan.energyChanges` per design 2.
+- [ ] 1.2 `ProductChange` and `AiImportPlan.changes` per design 1–2 (energy and category).
 - [ ] 1.3 Unit tests (made-up values) for every scenario of "Saving an AI import" and "Import shows
       changed products" (incl. last item wins, `products` list wins, unit mismatch logs without
       kcal, base off = no fill); update tests that expected a known product's energy to stay.

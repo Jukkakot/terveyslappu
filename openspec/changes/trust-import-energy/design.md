@@ -22,7 +22,10 @@ knows no ids); what changes is which side wins.
      is never used), `treat = ai.treat` only; missing kcal filled from the product's final energy
      only when the item's unit (or, without amount, the usual amount's unit) matches the energy's
      unit; the item keeps its own amount.
-   - An existing own product's `treat` is untouched (see the open Herkku question).
+   - Category: the energy pass also sets `product.treat = ai.treat` (same last-wins and
+     `products`-list rules); the item's treat = the product's final treat. Earlier items are not
+     rewritten (append-only). `EnergyChange` becomes `ProductChange(name, oldEnergy, newEnergy,
+     oldTreat, newTreat)`; a line when either differs.
    The `before`/`changed` bookkeeping stays, so Kumoa restores updated products for free.
 2. **Changed-product lines**: `AiImportPlan.energyChanges: List<EnergyChange(name, old, new)>` for
    keys whose `before` product had energy and whose final energy differs (unit, or `round(kcal)`).

@@ -5,7 +5,10 @@ When saving an import would change the energy of an existing own product (from a
 "Saving an AI import", or from the `products` list), the preview SHALL show, above the sum, one
 line per such product: "<name>: <old> → <new>" with each energy in its unit (for example
 "Rahka: 65 → 80 kcal / 100 g", or "Pulla: 250 kcal / kpl → 380 kcal / 100 g" when the unit
-changes). The clipboard card SHALL show the same lines as a block after all its other lines.
+changes). When the category of an existing own product would change, its line SHALL read
+"<name>: herkku" or "<name>: ei herkku" (joined with an energy change into one line, e.g.
+"Lakritsi: 350 → 260 kcal / 100 g, ei herkku"). The clipboard card SHALL show the same lines as
+a block after all its other lines.
 Details:
 - Card: at most three change lines, then "+<N> muuta muutosta"; also for products-only JSON.
 - Style: bodyMedium in onSurfaceVariant, no icon, same in the sheet, Ruoka and the front page.
@@ -55,8 +58,7 @@ NOT change or delete items already logged, and SHALL NOT touch weights or anythi
 food log. The JSON's values SHALL win over the app's:
 - Each item SHALL be logged under the own product of its JSON name (compared ignoring case, extra
   spaces and ä/a, ö/o; base names and aliases do not match), created under the JSON name (cleaned like a typed name) when there is none, and SHALL be
-  a treat exactly when its `herkku` is true. A base product SHALL NOT rename it or make it a
-  treat.
+  its category follows the JSON (below). A base product SHALL NOT rename it or make it a treat.
 - An item with both amount and kcal SHALL set its product's energy from the item (kcal per 100 g
   for grams, per piece for kpl) and its usual amount to the item's amount, also when the product
   already exists. When several items of one product carry both, the last one SHALL win, unless
@@ -68,8 +70,11 @@ food log. The JSON's values SHALL win over the app's:
   that base product's energy and usual amount, and the item's name and category. The item SHALL
   keep its own amount; when its unit differs from the energy's unit it SHALL be logged without
   kcal. An item without amount SHALL use the product's usual amount.
-- An existing product's category SHALL NOT change by an item; a new product SHALL take the item's
-  category.
+- A product is always a treat or never (Herkku belongs to the product): every item SHALL set its
+  product's category to its `herkku`, also for an existing product, under the same last-wins and
+  `products`-list rules as the energy; the item is a treat exactly when its product ends up Herkku.
+  The import stays append-only: earlier logged items of the product keep their sign, as they keep
+  their kcal (switching Herkku by hand still changes them all).
 - A product in the `products` list SHALL be saved as given: created when new, its energy, usual
   amount and category replaced when it exists.
 Earlier logged items of a changed product SHALL keep their kcal.
@@ -123,10 +128,11 @@ Earlier logged items of a changed product SHALL keep their kcal.
 - **WHEN** an item Uuniranskalaiset 200 g without kcal is added
 - **THEN** the item reads 260 kcal and an own product Uuniranskalaiset 130 kcal / 100 g is created
 
-#### Scenario: Treat only from the JSON
+#### Scenario: Category from the JSON
 - **GIVEN** an own product Lakritsi in category Herkku
 - **WHEN** an item Lakritsi 50 g 180 kcal without herkku is added
-- **THEN** the item is not a treat and Lakritsi stays in category Herkku
+- **THEN** the preview shows "Lakritsi: ei herkku" among its lines (with the energy change), and
+  after Lisää Lakritsi and its items are not treats
 
 #### Scenario: Product list updates
 - **GIVEN** a product Lohikeitto 300 kcal / kpl
