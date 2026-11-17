@@ -195,7 +195,7 @@ logged day (today left out, as on Energia). A tap on the card's title or today's
 today; a tap on the bars or what is under them (not the period label) SHALL open Historia on
 Energia. There SHALL be no change arrow from the previous day and no separate button for today.
 The card SHALL hold no button (adding is "Lisää annos" in the App menu, the widget or Ruoka). At small size the period label and the average SHALL
-share one row (the average shortens to "ka 1 900 kcal/pv", wrapping to two lines when it does not fit) and the bars take the rest of the height; all parts SHALL stay readable and tappable (44 dp touch targets). Its wide and big looks
+share one row (the average reads "keskiarvo 1 900 kcal/pv", wrapping to two lines when it does not fit) and the bars take the rest of the height; all parts SHALL stay readable and tappable (44 dp touch targets). Its wide and big looks
 are in Card sizes. The card SHALL be shown also when no weights exist yet; without the nutrition
 permission it SHALL read "Ruoka: anna lupa" and a tap SHALL ask for it.
 
@@ -233,8 +233,8 @@ permission it SHALL read "Ruoka: anna lupa" and a tap SHALL ask for it.
 The steps card SHALL be built like the food card: the title "Askeleet tänään", today's steps large with "askelta" beside them in a smaller type, as the food card's "kcal"
 (thin-space thousands, "6 420"), small daily bars of the card's own period (7, 30 or 90 days ending
 today, chosen from its own menu, remembered, 7 by default and separate from the weight and food
-periods) in one tone, and under them the period's first and last day and the average ("keskim.
-7 800 askelta/pv", "ka 7 800 askelta/pv" at small size, wrapping to two lines when it does not fit) of days with steps, today left out. Its wide
+periods) in one tone, and under them the period's first and last day and the average ("keskiarvo
+7 800 askelta/pv", "keskiarvo 7 800 askelta/pv" at small size, wrapping to two lines when it does not fit) of days with steps, today left out. Its wide
 and big looks are in Card sizes. The card has no quick action, no change arrow and no goal. A tap
 anywhere on the card except its period label SHALL open Historia on Askeleet; back SHALL return to
 the home screen. The card SHALL be shown also when no weights exist yet and SHALL reload when the

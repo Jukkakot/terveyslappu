@@ -277,7 +277,7 @@ chart and the statistics SHALL show the treats' share apart from base food, so t
 whether the excess comes from ordinary meals or from treats. Herkku SHALL NOT be red or styled as
 a warning. There SHALL be no other categories.
 
-The treat share text ("herkkuja 230 kcal", "herkkuja ka 230 kcal/pv", the Energia statistics'
+The treat share text ("herkkuja 230 kcal", "herkkuja keskiarvo 230 kcal/pv", the Energia statistics'
 Herkut value) SHALL be drawn in the treat tone of the Energia bars wherever it is shown: the Ruoka
 summary line, the add sheet's line under its header, the home food card, the Energia list's day and
 group rows and the Energia statistics. Only the treat part takes the tone; the other parts of the

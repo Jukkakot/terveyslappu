@@ -1096,9 +1096,9 @@ opens Ruoka; an Askeleet or Kulutus day opens nothing).
 A group row SHALL show the group's name as a weight group does ("2024", "Marraskuu 2025", "Vk 45 ·
 3.–9.11."), the per-day average of the tab's main value over the group's listed days, the number of
 those days ("12 pv"), and the open sign; tapping it SHALL open or close it:
-- Energia: "ka 1 850 kcal/pv" and "herkkuja ka 230 kcal/pv" (left out when zero).
-- Askeleet: "ka 8 400 askelta/pv".
-- Kulutus: "ka 2 300 kcal/pv" and "aktiivinen ka 450 kcal/pv" (left out when no day of the group has an
+- Energia: "keskiarvo 1 850 kcal/pv" and "herkkuja keskiarvo 230 kcal/pv" (left out when zero).
+- Askeleet: "keskiarvo 8 400 askelta/pv".
+- Kulutus: "keskiarvo 2 300 kcal/pv" and "aktiivinen keskiarvo 450 kcal/pv" (left out when no day of the group has an
   active value).
 Details:
 - Listed days are the days each list already shows (Energia: days with kcal; Askeleet: days with
@@ -1108,7 +1108,7 @@ Details:
 - Secondary averages use the stats' denominators (treats over all listed days, active over the days
   with an active value), rounded as the stats (whole numbers, grouped thousands); a part that
   rounds to 0 or is missing is left out.
-- Group row layout reuses the weight group row: name left, "ka … /pv" right on the first line; the
+- Group row layout reuses the weight group row: name left, "keskiarvo … /pv" right on the first line; the
   secondary part and "N pv" on the second; the open sign; rows indented by depth. A month shows its
   year only when not the current year.
 - Each list keeps its own open groups; every list closes all groups on a period change and on a
@@ -1119,11 +1119,11 @@ Details:
 #### Scenario: Numbers in a week group
 - **GIVEN** today is Wednesday and Askeleet lists Monday 8 000, Tuesday 10 000 and today 3 000 in a
   period of over 14 listed days
-- **THEN** the week's row reads "ka 9 000 askelta/pv" and "3 pv"
+- **THEN** the week's row reads "keskiarvo 9 000 askelta/pv" and "3 pv"
 
 #### Scenario: Only today in the week
 - **GIVEN** today is Monday with 2 000 kcal logged and the period lists over 14 days
-- **THEN** this week's Energia row reads "ka 2 000 kcal/pv" and "1 pv"
+- **THEN** this week's Energia row reads "keskiarvo 2 000 kcal/pv" and "1 pv"
 
 #### Scenario: A week stays flat
 - **GIVEN** the period 1 vk with seven logged days on Energia
