@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.food.AiItem
@@ -17,6 +19,7 @@ import fi.jukkakot.terveyslappu.food.ClipOffer
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.Energy
+import fi.jukkakot.terveyslappu.food.ProductChange
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,6 +63,17 @@ class AiImportPreviewTest {
         compose.onNodeWithTag("aiAdd").performClick()
         assertEquals(1, added)
         assertEquals(0, cancelled)
+    }
+
+    @Test
+    fun `clip card shows at most three product changes and counts the rest`() {
+        val changes = (1..4).map { ProductChange("Testi$it", Energy(65.0, AmountUnit.G), Energy(80.0, AmountUnit.G), false, false) }
+        compose.setContent {
+            TerveysTheme { ClipOfferCard(ClipOffer("k", 1, 100, false, changes = changes), LocalDate.now(), FoodActions()) }
+        }
+        compose.onAllNodesWithTag("clipChange").assertCountEquals(3)
+        compose.onNodeWithText("Testi1: 65 → 80 kcal / 100 g").assertExists()
+        compose.onNodeWithText("+1 muuta muutosta").assertExists()
     }
 
     @Test

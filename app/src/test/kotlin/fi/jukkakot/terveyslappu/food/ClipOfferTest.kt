@@ -97,7 +97,8 @@ class ClipOfferTest {
         val offer = ClipOffers.offer(parsed, own, emptyList())
         val plan = AiImport.plan(parsed.items, parsed.products, java.time.LocalDate.now(), emptyList(), own, emptyList(), java.time.Instant.now(), java.time.ZoneId.systemDefault()) { "" }
         assertEquals(plan.items.map { ClipLine(it.name, it.amount, it.kcal, it.treat) }, offer.lines)
-        assertEquals(ClipLine("Rahka", Amount(200.0, AmountUnit.G), 130.0, true), offer.lines.first())
+        assertEquals(ClipLine("Rahka", Amount(200.0, AmountUnit.G), 130.0, false), offer.lines.first())
+        assertEquals(listOf("Rahka: ei herkku"), offer.changes.map { it.text() })
         assertEquals(135, offer.kcal)
         assertEquals(0, offer.more)
         assertEquals(0, offer.products)

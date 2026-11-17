@@ -7,6 +7,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -63,12 +64,34 @@ class FoodRulesTest {
     fun `a typed name is its own product, else an exact base product, else new without kcal`() {
         val own = listOf(Product("Rahka", energy = Energy.per100g(65.0), lastAmount = Amount(200.0, AmountUnit.G)))
         assertEquals(own[0], resolveTyped("rahka", own, base).product)
-        assertEquals("Kaurapuuro", resolveTyped("puuro", own, base).product.name)
+        assertEquals("Kaurapuuro", resolveTyped("kaurapuuro", own, base).product.name)
         val new = resolveTyped("Työpaikan pizza", own, base).product
         assertEquals("Työpaikan pizza", new.name)
         assertNull(new.energy)
         // Fuzzy matches apply only from a suggestion button.
         assertNull(resolveTyped("kaurapuu", own, base).product.energy)
+    }
+
+    @Test
+    fun `with no base products nothing base is suggested or given a kcal`() {
+        assertTrue(Suggestions.typing("kaurapuu", emptyList(), emptyList(), emptyList()).isEmpty())
+        assertEquals(EnterRow.Named("kaurapuu", null), EnterRow.of("kaurapuu", emptyList(), emptyList(), emptyList()))
+        assertTrue(Suggestions.typing("kaurapuu", emptyList(), base, emptyList()).isNotEmpty())
+    }
+
+    @Test
+    fun `an alias typed logs under the typed name with the base energy but not its name or category`() {
+        val fries = BaseProduct("Ranskalaiset perunat", listOf("Ranskalaiset"), Energy.per100g(290.0), Amount(150.0, AmountUnit.G), true)
+        val typed = resolveTyped("ranskalaiset", emptyList(), listOf(fries))
+        val product = assertIs<Suggestion.Own>(typed).product
+        assertEquals("ranskalaiset", product.name)
+        assertFalse(product.treat)
+        assertEquals(Energy.per100g(290.0), product.energy)
+        assertEquals(Amount(150.0, AmountUnit.G), product.lastAmount)
+        // The base product's own name still logs it as itself.
+        assertIs<Suggestion.Base>(resolveTyped("Ranskalaiset perunat", emptyList(), listOf(fries)))
+        // With the switch off (no base) nothing is consulted.
+        assertNull(resolveTyped("ranskalaiset", emptyList(), emptyList()).product.energy)
     }
 
     @Test
@@ -268,7 +291,7 @@ class FoodRulesTest {
         val base = listOf(BaseProduct("Testipuuro", listOf("puuro"), Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G), false))
         assertEquals(EnterRow.Quick("350", 350), EnterRow.of(" 350 ", emptyList(), listOf(rahka), base))
         assertEquals(EnterRow.Named("työpaikan pizza", null), EnterRow.of("työpaikan  pizza", emptyList(), listOf(rahka), base))
-        assertEquals(EnterRow.Named("puuro", base.single().toProduct()), EnterRow.of("puuro", emptyList(), listOf(rahka), base))
+        assertEquals(EnterRow.Named("puuro", Product("puuro", false, base.single().energy, base.single().portion)), EnterRow.of("puuro", emptyList(), listOf(rahka), base))
         assertNull(EnterRow.of("testirahka", listOf(Suggestion.Own(rahka)), listOf(rahka), base))
         assertNull(EnterRow.of("  ", emptyList(), listOf(rahka), base))
     }

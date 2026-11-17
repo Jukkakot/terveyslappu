@@ -52,6 +52,13 @@ knows no ids); what changes is which side wins.
    `food.base set on=true|false`.
 7. **Old data**: no migration.
 
+## Implementation notes
+
+- The switch is a plain row with a Switch on the Ruokakirjaus page (no change to Asetukset's list row).
+- Preview rows still show the raw JSON values; only the sum and the change lines come from the plan.
+- Change lines are built by `ProductChange.text()` (Finnish literals, like other pure text builders).
+- A category-only change on a product without energy also gets a line ("<name>: herkku").
+
 ## Risks
 
 - A sloppy JSON value now overwrites a good product energy. Mitigated by the visible change line

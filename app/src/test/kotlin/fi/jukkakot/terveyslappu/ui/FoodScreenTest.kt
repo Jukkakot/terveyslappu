@@ -193,6 +193,16 @@ class FoodScreenTest {
     }
 
     @Test
+    fun `Ruokakirjaus starts with the Valmiit ruuat switch`() {
+        var set: Boolean? = null
+        compose.setContent {
+            TerveysTheme { ProductList(emptyList(), FoodActions(onBaseProducts = { set = it }), baseOn = true) }
+        }
+        compose.onNodeWithTag("baseSwitch").performClick()
+        assertEquals(false, set)
+    }
+
+    @Test
     fun `Ruoka shows the day's items and the total`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
         compose.onNodeWithTag("foodToday").performScrollTo().performClick()
