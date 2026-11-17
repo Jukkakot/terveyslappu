@@ -25,6 +25,9 @@
 - `RowActions` already exists in `ui/FoodScreen.kt` (different signature): replaced by the shared
   `RowMenu` below.
 
+User answers (2026-11-17): today's bar in the quantity's own colour, earlier days dimmed (1A);
+the ⋮ row menu in every list (2A).
+
 ## Goals / Non-Goals
 
 **Goals:**
