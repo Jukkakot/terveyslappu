@@ -7,6 +7,24 @@ scale, the weight is saved. No ads, no extra screens (the OKOK International app
 of ads, which is why this app exists). Weigh-ins can happen at any time of day; morning is just
 the habit. Long term the app may grow into a small personal health app.
 
+## Terms (UI glossary, 2026-11-17)
+
+One word per thing the user sees; two names for one thing is a bug. Every UI text follows this.
+
+- **ruoka** (pl. ruuat): a reusable food the user logs (rice, kanakastike, rahka); own ones
+  "Omat ruuat", shipped ones "Valmiit ruuat". Never "tuote". Code: `Product`.
+- **annos**: one logged row of a ruoka (amount + kcal). Never "kirjaus" or "ruoka-annos".
+- **Ruoka**: the day screen where annokset are added.
+- **Syöty**: eaten kcal as numbers (Historia tab, home card, charts, statistics). Never "Energia".
+- **Kulutus**: burned kcal. Its parts: "yhteensä", "aktiivinen", "lepo".
+- **Kalorit**: the kcal field of a ruoka.
+- **Herkku**: a ruoka counted apart as a treat; always or never per ruoka.
+- **paino**: a weight value; **punnitus**: weighing on the scale.
+- **Automaattinen punnitus**: the background feature (never "kuuntelu"); **Tunnistusnopeus**
+  Normaali/Nopea; **Tarkistusraja**: above it a weight waits for a check.
+- **Tuo tiedostosta / Vie tiedostoon**; section **Tiedostot ja varmuuskopio**.
+- **Mistä askeleet luetaan**: the steps source setting.
+
 ## How the data flows (decided 2026-11-08)
 
 ```
