@@ -24,6 +24,7 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
   Normaali/Nopea; **Tarkistusraja**: above it a weight waits for a check.
 - **Tuo tiedostosta / Vie tiedostoon**; section **Tiedostot ja varmuuskopio**.
 - **Mistä askeleet luetaan**: the steps source setting.
+- **keskiarvo**: the average of a period (labels, legends, tiles); never "keskimäärin", "keskim." or "ka.".
 
 ## How the data flows (decided 2026-11-08)
 
@@ -48,6 +49,11 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   The user prefers an active, visible sync over a silent backup that could break unnoticed.
 
 ## Decisions and reasons
+
+- **A plain tool, no gamification** (user 2026-11-17, after the app audit): no motivation
+  views, praise, rewarding saved states, streaks or encouragement lines. Improvements go into
+  showing the data well (several ways to view it, the clearest one by default) and into the
+  look (a more modern visual identity).
 
 - **Data reads one way only** (user 2026-11-16): every chart, number and list is built so a
   person cannot misread it: units always shown, scales fitted so differences show, the same unit
