@@ -13,13 +13,13 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
 
 - **ruoka** (pl. ruuat): a reusable food the user logs (rice, kanakastike, rahka); own ones
   "Omat ruuat", shipped ones "Valmiit ruuat". Never "tuote". Code: `Product`.
-- **annos**: one logged row of a ruoka (amount + kcal). Never "kirjaus" or "ruoka-annos".
-- **Ruoka**: the day screen where annokset are added.
-- **Syöty**: eaten kcal as numbers (Historia tab, home card, charts, statistics). Never "Energia".
+- **annos**: one logged row of a ruoka (amount + kcal). Never "kirjaus", "ruokakirjaus" or "ruoka-annos" in any form; the verb "kirjata" is fine.
+- **Ruoka**: the food feature and its day screen where annokset are added (Ohje, permissions).
+- **Syöty**: eaten kcal as numbers (Historia tab, home card, charts, statistics). Never "Energia" as a name (prose "energia" is fine).
 - **Kulutus**: burned kcal. Its parts: "yhteensä", "aktiivinen", "lepo".
 - **Kalorit**: the kcal field of a ruoka.
 - **Herkku**: a ruoka counted apart as a treat; always or never per ruoka.
-- **paino**: a weight value; **punnitus**: weighing on the scale.
+- **paino**: a weight value, also a saved or queued one ("Poista paino"); **punnitus**: weighing on the scale. A heard scale is "tunnistettu", never "kuultu".
 - **Automaattinen punnitus**: the background feature (never "kuuntelu"); **Tunnistusnopeus**
   Normaali/Nopea; **Tarkistusraja**: above it a weight waits for a check.
 - **Tuo tiedostosta / Vie tiedostoon**; section **Tiedostot ja varmuuskopio**.

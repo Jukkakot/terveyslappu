@@ -43,3 +43,35 @@
 - Many strings at once: a missed one keeps an old word. Mitigation: after the edit, grep
   strings.xml and the prompt for "tuote", "kirjaus", "ruoka-annos", "kuunte", "Hyväksyntä",
   "Energia", "Lepää", "Estetty", "Pikalisäys", "Lähde".
+
+## Review decisions (2026-11-17)
+
+- Status order = the code's `ListenStatusRule` order (delta matches it).
+- Widget: keep the four-value `WidgetState` enum, rule, prefs and log values; map to two symbols
+  (ON/DONE/RESTING → dot, BLOCKED → triangle) only when drawing (`WeighInWidget.views`,
+  `ListenStatus.symbol()`). `shown()` also turns a stored BLOCKED into the dot after the stored end.
+- Widget readout: "Punnitse, automaattinen punnitus päällä" / "… ei toimi". Asetukset symbol stays
+  decorative.
+- Texts the delta did not name: switch "Tallenna punnitus automaattisesti"; its hint "Sovellus
+  tunnistaa vaa'an valitsemanasi aikana ja tallentaa painon itse, myös sovelluksen ollessa
+  kiinni."; the Tarkistusraja line replaces `listen_limit_hint`; "Pienennä/Suurenna
+  tarkistusrajaa"; delete unused widget state strings.
+- Last heard: "Vaaka tunnistettu viimeksi tänään 7.12, signaali -97" / "Vaakaa ei vielä
+  tunnistettu" (add a MODIFIED "Last heard" to the delta).
+- The food feature's name is "Ruoka" (Ohje title, permission texts); only the Asetukset row and
+  sub-screen are "Omat ruuat".
+- The ban covers the nouns kirjaus/ruokakirjaus in every form; the verb "kirjata" is allowed.
+  "energia" is allowed in prose, never as a name or title. The risk grep is case-insensitive.
+- Steps: row "Askeleet: Garmin Connect (automaattinen)", "Askeleet: kaikki sovellukset
+  yhdistettynä"; "Vaihda, mistä askeleet luetaan"; "Valinta koskee myös Kulutusta"; Garmin line
+  "…kun askeleet luetaan Garmin Connectista tai kaikista sovelluksista".
+- Both "Tiedot" and "Tiedot ja varmuuskopio" → "Tiedostot ja varmuuskopio"; Ohje title "Tuo
+  tiedostosta ja vie tiedostoon"; "kohdasta Tuo tiedostosta".
+- Requirements whose behaviour changes go into the delta as MODIFIED (not in-place):
+  background-weigh-in "Stop after the window's weight", "Listen in the background" and "Last
+  heard"; scale-weigh-in's widget requirement (Päällä/Lepää/Estetty).
+- Tunnistusnopeus default: whatever `ListenMode.of(null)` gives today, named in the spec.
+- "huomenna" before "klo" whenever the time is on the next date, in "Alkaa", "Odottaa vaakaa" and
+  "Tänään punnittu"; add the window end to the Listening status. Time format "H.mm".
+- A saved or queued weight is "paino": "Poista paino", "N painoa odottaa tallennusta"; "punnitus"
+  only for weighing on the scale.

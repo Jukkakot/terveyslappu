@@ -50,16 +50,16 @@ and SHALL NOT be restored to another phone from a system backup.
 
 ### Requirement: Trial status
 While the feature is on, the section SHALL show one explanation line under the switch, the first
-that applies: "Ei toimi: Bluetooth-lupa puuttuu", "Ei toimi: Health Connect -lupa puuttuu" (weight
-write access missing), "Ei toimi: Bluetooth pois päältä", "Ei toimi: virransäästötila päällä"
-(power saving on and the switch for it off), "Ei toimi: avaa sovellus kerran" (the system stopped
-the app by force), "Ei toimi: vaakaa ei vielä tunneta", "Tänään punnittu, seuraavan kerran klo
+that applies: "Ei toimi: vaakaa ei vielä tunneta", "Ei toimi: Bluetooth-lupa puuttuu", "Ei toimi:
+Health Connect -lupa puuttuu" (weight write access missing), "Ei toimi: Bluetooth pois päältä",
+"Ei toimi: avaa sovellus kerran" (the system stopped the app by force), "Ei toimi:
+virransäästötila päällä" (power saving on and the switch for it off), "Tänään punnittu, seuraavan kerran klo
 HH.MM" (see "Status symbol in Asetukset"), "Odottaa vaakaa klo HH.MM asti" (inside the window), or
 "Alkaa klo HH.MM". While the feature is off the line SHALL be absent. When the app's battery use is
 restricted by the phone, a warning line SHALL be shown under it, "Akunkäyttö rajoitettu: punnitus
 voi jäädä tunnistamatta", while scanning still runs. When notifications are not allowed, a warning
-line "Ilmoitukset estetty" SHALL be shown. Each "Ei toimi" reason and each warning SHALL have a
-button that opens the matching system screen or permission request. While weights wait in the
+line "Ilmoitukset estetty" SHALL be shown. Each "Ei toimi" reason (except "avaa sovellus kerran"
+and "vaakaa ei vielä tunneta") and each warning SHALL have a button that opens the matching system screen or permission request. While weights wait in the
 pending queue the section SHALL also show "N punnitusta odottaa tallennusta".
 
 #### Scenario: Battery use restricted
@@ -85,8 +85,9 @@ While the feature is on, the 1x1 home-screen widget SHALL show one small symbol 
 times), read out by a screen reader: "Automaattinen punnitus päällä" (green filled dot) or
 "Automaattinen punnitus ei toimi" (amber warning triangle: an "Ei toimi" reason inside the
 window). The warnings (battery use restricted, notifications off) SHALL NEVER show the triangle.
-The symbol SHALL change within about 15 minutes of a reason appearing or clearing at the window
-start; outside the window it SHALL be the dot. With the feature off the widget SHALL show no
+The symbol SHALL change within about 15 minutes of the window start and end, and of a reason
+appearing or clearing inside the window; outside the window, and at a redraw after the stored
+window end, it SHALL be the dot. With the feature off the widget SHALL show no
 symbol.
 
 #### Scenario: Morning
@@ -120,8 +121,9 @@ symbol.
 - **THEN** the widget shows only Punnitse as before
 
 ### Requirement: Status symbol in Asetukset
-The explanation line of "Automaattinen punnitus" SHALL start with the same symbol and colour as the
-widget (no symbol while the feature is off). While the window's weight is saved, from that save
+The explanation line of "Automaattinen punnitus" SHALL start with the green dot, or the amber
+triangle for every "Ei toimi" line at any time of day (no symbol while the feature is off); the
+symbol is decorative for screen readers, the line carries the meaning. While the window's weight is saved, from that save
 until the next window start, the line SHALL read "Tänään punnittu, seuraavan kerran klo HH.MM",
 with "huomenna" before "klo" when the next start is tomorrow; it comes after the "Ei toimi"
 reasons and before "Odottaa vaakaa" and "Alkaa".
