@@ -160,4 +160,53 @@ class CustomChartSpecTest {
         assertEquals(ValueUnit.KCAL, p.right!!.unit)
         assertEquals(ToneRef.PRIMARY, p.right!!.tone)
     }
+
+    @Test
+    fun `a running line stops before today and today is a separate one-point series`() {
+        val s = spec(chart(ChartLayout.STACKED, SeriesKind.STEPS to SeriesStyle.LINE, SeriesKind.WEIGHT to SeriesStyle.LINE))
+        val steps = s.panels.single { it.kind == SeriesKind.STEPS }.series
+        assertEquals(listOf("STEPS", "STEPS.today"), steps.map { it.id })
+        val line = (steps[0].shape as SeriesShape.Line).points
+        assertEquals(9, line.size)
+        assertTrue(line.none { it.day == today })
+        val dot = (steps[1].shape as SeriesShape.Line).points.single()
+        assertEquals(today, dot.day)
+        assertEquals(steps[0].tone, steps[1].tone)
+        assertEquals(steps[0].side, steps[1].side)
+        assertEquals(1, (steps[1].shape as SeriesShape.Line).dots.shown(1, 300f).size)
+    }
+
+    @Test
+    fun `only today is a lone dot with no line`() {
+        val data = CustomChartData.of(chart(ChartLayout.STACKED, SeriesKind.STEPS to SeriesStyle.LINE, average = true), today, zone, null, null, listOf(StepsDay(today, 3000)), burnDays = null)
+        val series = CustomChartSpec.of(data, today) { true }.panels.single().series
+        assertEquals(listOf("STEPS.today"), series.map { it.id })
+    }
+
+    @Test
+    fun `overlaid lines also leave today out and the dot shares the side`() {
+        val s = spec(chart(ChartLayout.OVERLAID, SeriesKind.ENERGY to SeriesStyle.LINE, SeriesKind.STEPS to SeriesStyle.LINE, average = true))
+        val series = s.panels.single().series
+        assertEquals(listOf("ENERGY", "ENERGY.today", "STEPS", "STEPS.today"), series.map { it.id })
+        assertEquals(listOf(Side.LEFT, Side.LEFT, Side.RIGHT, Side.RIGHT), series.map { it.side })
+        assertTrue(series.filter { it.id.endsWith(".today") }.all { it.average == null })
+        assertTrue(series.filter { !it.id.endsWith(".today") }.all { s0 -> (s0.shape as SeriesShape.Line).points.none { it.day == today } })
+    }
+
+    @Test
+    fun `the weight line still joins today`() {
+        val todayWeight = weightEntry("t", today.atTime(7, 0).atZone(zone).toInstant(), null, 82.0, "me", "me")
+        val data = CustomChartData.of(chart(ChartLayout.STACKED, SeriesKind.WEIGHT to SeriesStyle.LINE), today, zone, listOf(todayWeight) + weights, null, null, burnDays = null)
+        val series = CustomChartSpec.of(data, today) { true }.panels.single().series
+        assertEquals(listOf("WEIGHT"), series.map { it.id })
+        assertTrue((series.single().shape as SeriesShape.Line).points.any { it.day == today })
+    }
+
+    @Test
+    fun `bars are unchanged and today stays in them`() {
+        val s = spec(chart(ChartLayout.STACKED, SeriesKind.STEPS to SeriesStyle.BARS))
+        val series = s.panels.single().series
+        assertEquals(listOf("STEPS"), series.map { it.id })
+        assertTrue((series.single().shape as SeriesShape.Bars).points.any { it.day == today })
+    }
 }
