@@ -119,6 +119,7 @@ fun MainScreen(
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
     backup: BackupStatus = BackupStatus(),
     themeMode: ThemeMode = ThemeMode.SYSTEM,
+    colourChoice: ColourChoice = ColourChoice.BRAND,
     profile: OwnerProfile = OwnerProfile(),
     heightInHealthConnect: Boolean = true,
     listen: ListenUi = ListenUi(),

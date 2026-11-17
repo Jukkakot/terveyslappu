@@ -2,10 +2,10 @@
 
 ## 1. Screenshot harness (developer tool)
 
-- [ ] 1.1 Add Roborazzi (test only) to `gradle/libs.versions.toml` and `app/build.gradle.kts`; exclude `**/screens/**` from every `Test` task unless the Gradle property `screenshots` is set (design 9).
-- [ ] 1.2 Write `screens/ScreenshotTour` (Robolectric, 360 × 780 dp, density 2) rendering front page, Historia Paino/Syöty/Askeleet/Kulutus, Ruoka and Asetukset → Ulkoasu with the existing made-up fixtures, in Tumma and Vaalea; leave a parameter for the colour choice (filled in 2.x).
+- [x] 1.1 Add Roborazzi (test only) to `gradle/libs.versions.toml` and `app/build.gradle.kts`; exclude `**/screens/**` from every `Test` task unless the Gradle property `screenshots` is set (design 9).
+- [x] 1.2 Write `screens/ScreenshotTour` (Robolectric, 360 × 780 dp, density 2) rendering front page, Historia Paino/Syöty/Askeleet/Kulutus, Ruoka and Asetukset → Ulkoasu with the existing made-up fixtures, in Tumma and Vaalea; leave a parameter for the colour choice (filled in 2.x).
 - [ ] 1.3 Check that `./gradlew test` runs no screenshot test and that the documented command writes PNGs to `app/build/outputs/roborazzi/`; record the command in `.claude/CLAUDE.md` (Build, release, logs).
-- [ ] 1.4 Run the tour once on the current look and keep the PNGs in the session scratchpad as the "before" set.
+- [x] 1.4 Run the tour once on the current look and keep the PNGs in the session scratchpad as the "before" set.
 
 ## 2. Palette and colour choice
 

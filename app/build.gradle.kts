@@ -118,9 +118,19 @@ android {
             val repoUrl = providers.gradleProperty("robolectricRepoUrl").orNull
             // Chart render tests save PNGs here for review (ChartRenderTest).
             val rendersDir = layout.buildDirectory.dir("chart-renders").get().asFile.absolutePath
+            // The screenshot tour (screens/ScreenshotTour, Roborazzi) runs only with -Pscreenshots:
+            // never in `./gradlew test` or CI. Its PNGs land in build/outputs/roborazzi/.
+            val screenshots = providers.gradleProperty("screenshots").isPresent
+            val shotsDir = layout.buildDirectory.dir("outputs/roborazzi").get().asFile.absolutePath
             all {
                 if (repoUrl != null) it.systemProperty("robolectric.dependency.repo.url", repoUrl)
                 it.systemProperty("chart.renders.out", rendersDir)
+                if (screenshots) {
+                    it.systemProperty("roborazzi.test.record", "true")
+                    it.systemProperty("screenshots.out", shotsDir)
+                } else {
+                    it.exclude("**/screens/**")
+                }
             }
         }
     }
@@ -150,6 +160,7 @@ dependencies {
     implementation(libs.mpchart.lib)
     implementation(libs.calendar.compose)
     implementation(libs.reorderable)
+    implementation(libs.material.kolor)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 
@@ -161,6 +172,8 @@ dependencies {
     testImplementation(libs.androidx.test.junit)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
 }
 
 // CI reads the version for the release title.

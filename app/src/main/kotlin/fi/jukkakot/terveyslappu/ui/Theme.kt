@@ -23,10 +23,10 @@ import fi.jukkakot.terveyslappu.TerveysApp
  * Asetukset (default: follow the system). Every activity uses it, so a change applies everywhere.
  */
 @Composable
-fun TerveysTheme(content: @Composable () -> Unit) {
+fun TerveysTheme(mode: ThemeMode? = null, colours: ColourChoice? = null, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val appearance = (context.applicationContext as? TerveysApp)?.appearance
-    val mode = appearance?.mode?.collectAsState()?.value ?: ThemeMode.SYSTEM
+    val mode = mode ?: appearance?.mode?.collectAsState()?.value ?: ThemeMode.SYSTEM
     val dark = mode.isDark(isSystemInDarkTheme())
     val colors = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     val view = LocalView.current

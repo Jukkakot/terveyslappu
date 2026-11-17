@@ -57,6 +57,7 @@ The global CLAUDE.md's master-session rule applies; worktree checks here are
   opened by `FoodAddWidget` (static, never redrawn by food code) and the second launcher shortcut;
   reuses `FoodViewModel`, content `ui/FoodAddDialog`, clipboard `ui/FoodClipboard`; its import hands the text to
   `MainActivity.importIntent`), `PrivacyActivity` (Health Connect's page).
+- Screenshot tour (developer tool, Roborazzi, made-up data): `./gradlew testDebugUnitTest -Pscreenshots --tests '*ScreenshotTour*'` renders the front page, Historia tabs, Ruoka and Ulkoasu at 360 × 780 dp in both themes and colour choices to `app/build/outputs/roborazzi/` (`app/src/test/.../screens/`, excluded from `test` and CI without `-Pscreenshots`); never commit the PNGs.
 - Replay a shared weigh-in log: copy its dialog `scale.packet` lines (not `src=bg`, the listen trial's; replay skips those) into
   `app/src/test/resources/scale-replays/<case>.replay`, replace the weight bytes with made-up
   ones (NFR-1), first line `# expect kg=<weight>` or `# expect none`; `ScaleReplayTest` runs all.
