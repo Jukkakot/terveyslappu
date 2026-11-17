@@ -56,20 +56,20 @@ energy is unknown; it SHALL show no treat sign. Last, the field with a search ic
 "Hae ruokaa tai kirjoita kcal".
 
 Tapping a chip SHALL add that product at once at the end of the day with its usual amount, show it
-in the day list, highlighted and scrolled into view; no confirmation line is shown (the row's edit
-and delete buttons replace Muuta and Kumoa). A long press on a chip SHALL open the editor for a new item
+in the day list, highlighted and scrolled into view; no confirmation line is shown (the row's ⋮ menu replaces Muuta and
+Kumoa). A long press on a chip SHALL open the editor for a new item
 of that product (below); the chip's accessibility actions SHALL offer the same.
 
 While typing, the list "Omat ruuat" SHALL cover the day list and the chips, directly above the field:
 up to five matching products, own products before base products, each row with the product's name
 and under it its usual amount and the kcal that amount gives ("200 g · 130 kcal"; with no usual
 amount the energy, "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when the energy is unknown),
-the treat sign for a Herkku product, and an edit button; and as the last row "Lisää ”<text>”
+the treat sign for a Herkku product, and a ⋮ button (see "Removing a product from the sheet"); and as the last row "Lisää ”<text>”
 uutena" with a line telling what it adds (for a bare number "Lisää pelkkä <N> kcal"; for other text
 "ilman kcal" or the known product's kcal); tapping it SHALL do what Enter does. Tapping a product
 row SHALL add it as a chip does. Clearing the field SHALL bring the day list and the chips back.
 
-The editor for a new item (a match row's edit button or a chip's long press) SHALL be the same
+The editor for a new item (a match row's ⋮ → Muokkaa or a chip's long press) SHALL be the same
 editor and rules as Muuta (name, amount and unit, energy, Herkku; changes reach the product as
 after Tallenna), filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and
 Poista: Lisää SHALL add the item as edited, show it highlighted in the day list and return to the
@@ -133,7 +133,7 @@ Folding the add panel:
 
 #### Scenario: Set the amount before adding
 - **GIVEN** a product Jauhelihakastike 140 kcal / 100 g, usually 250 g
-- **WHEN** the user long-presses its chip (or types "jauh" and taps the edit button on its row),
+- **WHEN** the user long-presses its chip (or types "jauh" and taps ⋮ → Muokkaa on its row),
   changes the amount to 350 g and taps Lisää
 - **THEN** Jauhelihakastike 350 g, 490 kcal is added and highlighted in the day list, and
   the next Jauhelihakastike starts at 350 g
@@ -143,7 +143,7 @@ Folding the add panel:
 - **THEN** nothing is added and the sheet is as before
 
 #### Scenario: Edit a typed match
-- **WHEN** the user types "kaurapuu" and taps the edit button on Kaurapuuro
+- **WHEN** the user types "kaurapuu" and taps ⋮ → Muokkaa on Kaurapuuro
 - **THEN** the editor opens with Kaurapuuro's typical portion, and Lisää adds it as edited
 
 #### Scenario: What enter does
@@ -200,8 +200,8 @@ Folding the add panel:
 
 #### Scenario: Long name on one line
 - **WHEN** the day holds "Keitetty täysjyvämakaroni" 200 g, 300 kcal on a narrow phone
-- **THEN** the row shows the name on one line shortened with "…", "200 g" under it, and the kcal,
-  pencil and trash in full
+- **THEN** the row shows the name on one line shortened with "…", "200 g" under it, and the kcal
+  and the ⋮ button in full
 
 ### Requirement: Products
 Every distinct name the user logs SHALL become one product (names compared ignoring case and extra
@@ -334,7 +334,8 @@ Asetukset's Omat ruuat sub-screen SHALL start with a switch "Valmiit ruuat" (on 
 with the line "Sovelluksen mukana tulevat yleiset ruuat ehdotuksissa", which turns the base
 products on and off at once. It SHALL then list the own products with their category and energy,
 and SHALL let the user change the name, energy, usual amount and category, and remove a product
-(from suggestions; logged items keep their values) with the product editor's red "Poista ruoka",
+(from suggestions; logged items keep their values) with the product editor's red "Poista ruoka"
+or the row's ⋮ → Poista,
 which shows "<name> poistettu · Kumoa"; Kumoa SHALL bring the product back as it was. Its row in Asetukset SHALL read the count of
 own products.
 
@@ -699,20 +700,20 @@ and keep the sheet open.
   "4 annosta lisätty · Kumoa"
 
 ### Requirement: Removing a product from the sheet
-Each Omat ruuat row of an own product (shown while typing) SHALL have a red delete button next to the
-edit button. It SHALL remove the product (as removing it under Omat ruuat in Asetukset does:
-logged items keep their values) and show "<name> poistettu · Kumoa" in the sheet's line; Kumoa
-SHALL bring the product back as it was. Base products SHALL have no delete button. Chips SHALL have
-no delete.
+Each Omat ruuat row (shown while typing) SHALL end with a ⋮ button whose menu offers "Muokkaa" (the
+editor for a new item, as above) and, for an own product only, "Poista" (in the theme's error
+colour). Poista SHALL remove the product (as removing it under Omat ruuat in Asetukset does: logged
+items keep their values) and show "<name> poistettu · Kumoa" in the sheet's line; Kumoa SHALL bring
+the product back as it was. Base products SHALL have no Poista. Chips SHALL have no delete.
 
 #### Scenario: Remove a one-off
-- **WHEN** the user types "lumi" and taps the delete button on Lumipallo
+- **WHEN** the user types "lumi" and taps ⋮ → Poista on Lumipallo
 - **THEN** Lumipallo is gone from the list and the chips, earlier Lumipallo items stay on their days,
   and Kumoa brings it back
 
 #### Scenario: Base product
 - **WHEN** the user types "kaurapuu" and Kaurapuuro is a base product not yet used
-- **THEN** its row has the edit button but no delete button
+- **THEN** its ⋮ menu offers Muokkaa but no Poista
 
 ### Requirement: Undoing Ohita
 Tapping ✕ (Ohita) on the clipboard card SHALL show "Ohitettu · Kumoa"; Kumoa SHALL make the content
@@ -723,24 +724,27 @@ offered again, as if it had never been skipped.
 - **THEN** the card is shown again with the same items
 
 ### Requirement: Item row buttons
-Every logged item row in the add sheet's day list and on the Ruoka screen SHALL end with the same
-buttons as the other food lists: an edit button (pencil, named "Muokkaa <name>") that opens the
-item's editor, and a red delete button (trash, named "Poista <name>") that deletes the item at once
-and shows "<name> poistettu · Kumoa" (in the sheet in its line, on Ruoka as its Kumoa bar); Kumoa
-SHALL bring the item back in its place. The trash SHALL act exactly as the editor's Poista (in the
-sheet it clears the highlight of that item, replaces the line and keeps the keyboard as it was).
-On a narrow row the name SHALL be shortened first; kcal and the buttons never shrink. Tapping
-elsewhere on the row SHALL still open the editor.
-Järjestä keeps its own move buttons and shows no edit or delete buttons.
+Every logged item row in the add sheet's day list and on the Ruoka screen SHALL end with one ⋮
+button (named "Toiminnot: <name>") that opens a menu with "Muokkaa" (opens the item's editor) and
+"Poista" (in the theme's error colour) that deletes the item at once and shows "<name> poistettu ·
+Kumoa" (in the sheet in its line, on Ruoka as its Kumoa bar); Kumoa SHALL bring the item back in its
+place. Poista SHALL act exactly as the editor's Poista (in the sheet it clears the highlight of that
+item, replaces the line and keeps the keyboard as it was). On a narrow row the name SHALL be
+shortened first; kcal and the ⋮ button never shrink. Tapping elsewhere on the row SHALL still open
+the editor. Järjestä keeps its own move buttons and shows no ⋮ button.
 
 #### Scenario: Delete from the sheet
-- **WHEN** the user taps the trash on Tomaatti in the sheet's day list
+- **WHEN** the user taps ⋮ on Tomaatti in the sheet's day list and then Poista
 - **THEN** Tomaatti is gone from the day, the header total drops, the line reads "Tomaatti poistettu
   · Kumoa", and Kumoa brings it back in its place
 
 #### Scenario: Edit from Ruoka
-- **WHEN** the user taps the pencil on Kurkku on the Ruoka screen
+- **WHEN** the user taps ⋮ on Kurkku on the Ruoka screen and then Muokkaa
 - **THEN** Kurkku's editor opens
+
+#### Scenario: Menu closed without a choice
+- **WHEN** the user opens the ⋮ menu on Kurkku and taps outside it
+- **THEN** the menu closes and nothing changes
 
 ### Requirement: Correcting a product's energy
 A product's energy SHALL count as corrected when it is saved, from an item's editor (Tallenna or

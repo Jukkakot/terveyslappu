@@ -187,7 +187,7 @@ the "?" row in Historia, and still carry its text.
 - **THEN** no notice about checking is shown
 
 ### Requirement: Food row on the home screen
-The food card SHALL be built like the weight card: "Syöty tänään" with today's total kcal large and
+The food card SHALL be built like the weight card: the title "Syöty" with today's total kcal large and
 the treats' share (or "ei kirjauksia"), small daily kcal bars of the card's own period (7, 30 or 90
 days ending today, chosen from its own menu and remembered, 7 by default) with the treats' share in
 its tone as on Energia, and under them the period's first and last day and its average kcal per
@@ -227,10 +227,10 @@ permission it SHALL read "Ruoka: anna lupa" and a tap SHALL ask for it.
 
 #### Scenario: Nothing logged
 - **WHEN** nothing is logged today
-- **THEN** the card reads "Syöty tänään: ei kirjauksia" with no warning tone
+- **THEN** the card reads "Syöty" and "ei kirjauksia" with no warning tone
 
 ### Requirement: Steps card on the home screen
-The steps card SHALL be built like the food card: the title "Askeleet tänään", today's steps large with "askelta" beside them in a smaller type, as the food card's "kcal"
+The steps card SHALL be built like the food card: the title "Askeleet", today's steps large with "askelta" beside them in a smaller type, as the food card's "kcal", and "tänään" under them
 (thin-space thousands, "6 420"), small daily bars of the card's own period (7, 30 or 90 days ending
 today, chosen from its own menu, remembered, 7 by default and separate from the weight and food
 periods) in one tone, and under them the period's first and last day and the average ("keskiarvo
@@ -259,7 +259,7 @@ app is resumed and when the home screen is shown.
 
 #### Scenario: No steps data at all
 - **GIVEN** Health Connect holds no steps
-- **THEN** the card keeps the title "Askeleet tänään", shows "ei tietoa" in the number slot and
+- **THEN** the card keeps the title "Askeleet", shows "ei tietoa" in the number slot and
   "ei vielä keskiarvoa" for the average
 
 ### Requirement: Steps card without access
@@ -337,8 +337,8 @@ target at least 44 dp, at the system's default text size and up to 130 % of it. 
 chart SHALL take the height its size leaves free, so a bigger card has a taller chart, and its plot
 (the chart's height inside its inset; for an Allekkain own chart the panels together) SHALL be at
 least 56 dp high at every size and text size, so a change in the data reads at a glance (user
-2026-11-16). To make room the small weight card's title SHALL be one line with the day and time
-only ("eilen 7.05", ellipsized). The card's
+2026-11-16). To make room the small weight card's title SHALL be one line, "Paino · eilen 7.05", where the day
+and time are shortened first (see "Card titles"). The card's
 own taps and period label SHALL work the same at every size.
 
 - **Weight card.** Wide: as described in Simple home screen. Small: the title row with the latest
@@ -520,7 +520,8 @@ the only shown card, the default layout (the three feature cards) SHALL be shown
 SHALL take every chart card off the edited layout, and a layout with a chart card SHALL NOT count as
 the default; the charts stay in Historia.
 
-A chart card SHALL show the chart's name as its title with a chart icon and a chevron, the chart as
+A chart card SHALL show the chart's name as its title after a neutral icon tile with the chart
+icon (app-appearance "Card look") and with a chevron, the chart as
 defined (its data, styles and layout, real daily values as in Historia) over the chart's own period,
 filling the card's free space, and the period as a plain label ("1 kk", "Kaikki", "1.9.–15.10.").
 The period SHALL be the one stored in the chart and shown on its Historia tab; it SHALL be changed
@@ -639,3 +640,25 @@ toimintoja" for TalkBack.
 #### Scenario: No gear or plus
 - **WHEN** the front page or Historia is shown
 - **THEN** its top bar shows the help button and ⋮ only
+
+### Requirement: Card titles
+Every front page card's title SHALL be its quantity's name and nothing else: "Paino", "Syöty",
+"Askeleet", "Kulutus" (an own chart card: the chart's name), after the quantity's icon tile
+(app-appearance "Card look"), in full at every size and at 130 % text size. The weight card SHALL
+show the latest weight's day and time after its title in the muted tone ("Paino · tänään 7.05");
+at small size, where both do not fit, the day and time SHALL be shortened first ("…"), never the
+title. The weight card SHALL read "Paino" also when no weights exist yet and in edit mode. Only the
+steps card shows "tänään" under its number; the food card shows the treats' share there and the
+Kulutus card "aktiivinen N kcal", as today. Without permission a card SHALL keep its title and
+read "anna lupa" in the number's place (no "Ruoka:" / "Askeleet:" / "Kulutus:" prefix); its
+tap is unchanged. The
+period's change SHALL stay where it is today (under the chart, by the range text or the period
+label); no change SHALL be shown next to the big number.
+
+#### Scenario: Small cards
+- **GIVEN** the food and steps cards share a row at small size
+- **THEN** their titles read "Syöty" and "Askeleet" in full, with no "…"
+
+#### Scenario: No weights yet
+- **GIVEN** no weights exist
+- **THEN** the weight card's title reads "Paino"
