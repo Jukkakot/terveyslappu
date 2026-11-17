@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.QuantityTone
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.TabCharts
@@ -78,30 +79,22 @@ private fun EnergyChart(series: EnergySeries, crosshair: LocalDate?, onDay: (Loc
     }
 }
 
+/** Syöty statistics (weight-chart "Statistics layout"): hero Keskiarvo; row Herkut, Päiviä. */
 @Composable
 private fun EnergyStatsTiles(series: EnergySeries) {
     val s = series.stats
-    val tiles = listOf(
-        R.string.energy_stat_average to (s.averageKcal?.let { stringResource(R.string.energy_per_day, formatKcal(it)) } ?: "–"),
-        R.string.energy_stat_treats to (s.averageTreat?.let { stringResource(R.string.energy_per_day, formatKcal(it)) } ?: "–"),
-        R.string.energy_stat_days to stringResource(R.string.energy_days, s.loggedDays, s.periodDays),
-    )
+    val none = StatsLayout.NONE
     val treatTone = (s.averageTreat ?: 0) > 0
-    Row(Modifier.fillMaxWidth().padding(16.dp).testTag("energyStats"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        tiles.forEach { (label, value) ->
-            Column(
-                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 12.dp, vertical = 8.dp),
-            ) {
-                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    value,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (label == R.string.energy_stat_treats && treatTone) treatTextColour() else Color.Unspecified,
-                )
-            }
-        }
-    }
+    TabStats(
+        Stat(stringResource(R.string.energy_stat_average), s.averageKcal?.let { formatKcal(it) } ?: none, stringResource(R.string.unit_kcal_per_day).takeIf { s.averageKcal != null }),
+        QuantityTone.FOOD,
+        null,
+        listOf(
+            Stat(stringResource(R.string.energy_stat_treats), s.averageTreat?.let { stringResource(R.string.energy_per_day, formatKcal(it)) } ?: none, valueColor = if (treatTone) treatTextColour() else Color.Unspecified),
+            Stat(stringResource(R.string.energy_stat_days), stringResource(R.string.energy_days, s.loggedDays, s.periodDays)),
+        ),
+        "energyStats",
+    )
 }
 
 /** One logged day of the Energia list: date, total and treat share; opens Ruoka on it. */

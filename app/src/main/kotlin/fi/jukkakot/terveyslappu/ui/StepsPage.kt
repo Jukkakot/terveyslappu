@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.QuantityTone
 import fi.jukkakot.terveyslappu.chart.AxisTicks
 import fi.jukkakot.terveyslappu.chart.ChartAxis
 import fi.jukkakot.terveyslappu.chart.TabCharts
@@ -195,23 +196,17 @@ private fun StepsChart(series: StepsSeries, crosshair: LocalDate?, onDay: (Local
     }
 }
 
+/** Askeleet statistics (weight-chart "Statistics layout"): hero Keskiarvo; row Päiviä. */
 @Composable
 private fun StepsStatsTiles(series: StepsSeries) {
     val s = series.stats
-    val tiles = listOf(
-        R.string.steps_stat_average to (s.averageSteps?.let { stringResource(R.string.steps_per_day, formatSteps(it)) } ?: "–"),
-        R.string.steps_stat_days to stringResource(R.string.energy_days, s.stepDays, s.periodDays),
+    TabStats(
+        Stat(stringResource(R.string.steps_stat_average), s.averageSteps?.let { formatSteps(it) } ?: StatsLayout.NONE, stringResource(R.string.unit_steps_per_day).takeIf { s.averageSteps != null }),
+        QuantityTone.STEPS,
+        null,
+        listOf(Stat(stringResource(R.string.steps_stat_days), stringResource(R.string.energy_days, s.stepDays, s.periodDays))),
+        "stepsStats",
     )
-    Row(Modifier.fillMaxWidth().padding(16.dp).testTag("stepsStats"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        tiles.forEach { (label, value) ->
-            Column(
-                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 12.dp, vertical = 8.dp),
-            ) {
-                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
 }
 
 /** One day of the Askeleet list: date and steps; a row opens nothing. */

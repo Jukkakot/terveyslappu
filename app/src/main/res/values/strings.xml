@@ -44,6 +44,8 @@
     <string name="settings_backup_off">Varmuuskopio pois</string>
     <string name="settings_appearance_line">%1$s · %2$s</string>
     <string name="settings_colours">Värit</string>
+    <string name="unit_kcal_per_day">kcal/pv</string>
+    <string name="unit_steps_per_day">askelta/pv</string>
     <string name="colours_brand">Terveyslappu</string>
     <string name="colours_phone">Puhelimen värit</string>
     <string name="settings_support_line">Loki · v%1$s</string>

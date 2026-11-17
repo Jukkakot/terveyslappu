@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.QuantityTone
 import fi.jukkakot.terveyslappu.burn.BurnBar
 import fi.jukkakot.terveyslappu.burn.BurnDay
 import fi.jukkakot.terveyslappu.burn.BurnKind
@@ -178,24 +179,21 @@ private fun BurnChart(series: BurnSeries, crosshair: LocalDate?, onDay: (LocalDa
     }
 }
 
+/** Kulutus statistics (weight-chart "Statistics layout"): hero Keskiarvo; row Aktiivinen keskiarvo, Päiviä. */
 @Composable
 private fun BurnStatsTiles(series: BurnSeries) {
     val s = series.stats
-    val tiles = listOf(
-        R.string.energy_stat_average to (s.averageTotal?.let { stringResource(R.string.energy_per_day, formatKcal(it.toDouble())) } ?: "–"),
-        R.string.burn_stat_active to (s.averageActive?.let { stringResource(R.string.energy_per_day, formatKcal(it.toDouble())) } ?: "–"),
-        R.string.burn_stat_days to stringResource(R.string.energy_days, s.dataDays, s.periodDays),
+    val none = StatsLayout.NONE
+    TabStats(
+        Stat(stringResource(R.string.energy_stat_average), s.averageTotal?.let { formatKcal(it.toDouble()) } ?: none, stringResource(R.string.unit_kcal_per_day).takeIf { s.averageTotal != null }),
+        QuantityTone.BURN,
+        null,
+        listOf(
+            Stat(stringResource(R.string.burn_stat_active), s.averageActive?.let { stringResource(R.string.energy_per_day, formatKcal(it.toDouble())) } ?: none),
+            Stat(stringResource(R.string.burn_stat_days), stringResource(R.string.energy_days, s.dataDays, s.periodDays)),
+        ),
+        "burnStats",
     )
-    Row(Modifier.fillMaxWidth().padding(16.dp).testTag("burnStats"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        tiles.forEach { (label, value) ->
-            Column(
-                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 12.dp, vertical = 8.dp),
-            ) {
-                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
 }
 
 /** One day of the Kulutus list: date, total kcal and "aktiivinen N kcal"; a row opens nothing. */

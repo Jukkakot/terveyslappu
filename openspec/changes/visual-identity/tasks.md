@@ -34,9 +34,9 @@
 
 ## 5. Historia header and statistics
 
-- [ ] 5.1 Tab row first, five fixed tabs fitting 360 dp, own chart tabs by scrolling; smoke test the order (tabs above periods).
-- [ ] 5.2 Periods as one six-segment row under the tabs (one selectable group for TalkBack); Oma stays "Oma" when chosen, reopens the calendar on every tap, and the range line shows the dates; smoke test all six visible at 360 dp and 130 % text.
-- [ ] 5.3 `HeroStat` + `StatRow` on Paino, BMI, Syöty, Askeleet and Kulutus exactly as the per-tab list in weight-chart "Statistics layout" (BMI: Viimeisin with class word in the hero); "—" for missing values; a pure mapping per tab with a unit test.
+- [x] 5.1 Tab row first, five fixed tabs fitting 360 dp, own chart tabs by scrolling; smoke test the order (tabs above periods).
+- [x] 5.2 Periods as one six-segment row under the tabs (one selectable group for TalkBack); Oma stays "Oma" when chosen, reopens the calendar on every tap, and the range line shows the dates; smoke test all six visible at 360 dp and 130 % text.
+- [x] 5.3 `HeroStat` + `StatRow` on Paino, BMI, Syöty, Askeleet and Kulutus exactly as the per-tab list in weight-chart "Statistics layout" (BMI: Viimeisin with class word in the hero); "—" for missing values; a pure mapping per tab with a unit test.
 
 ## 6. Row ⋮ menu
 

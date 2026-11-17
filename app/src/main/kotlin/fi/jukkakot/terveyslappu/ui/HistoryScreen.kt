@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
+import fi.jukkakot.terveyslappu.chart.QuantityTone
 import fi.jukkakot.terveyslappu.chart.ChartData
 import fi.jukkakot.terveyslappu.chart.DayGroups
 import fi.jukkakot.terveyslappu.chart.DayNode
@@ -278,6 +279,58 @@ private fun PeriodList(
     val burnRows = remember(burnSeries, openBurn) { DayGroups.flatten(DayGroups.build(burnSeries.days) { it.day }, openBurn) }
     val scope = rememberCoroutineScope()
     LazyColumn(Modifier.fillMaxSize().testTag("weights"), state = listState) {
+        item(key = "tabs") {
+            // The topmost row (weight-chart "One quantity at a time"): compact tabs so the five fixed
+            // ones fit 360 dp; own charts by scrolling.
+            PrimaryScrollableTabRow(
+                selectedTabIndex = pager.currentPage,
+                edgePadding = 8.dp,
+                containerColor = Color.Transparent,
+                minTabWidth = 0.dp,
+            ) {
+                Quantity.entries.forEachIndexed { i, quantity ->
+                    CompactTab(
+                        selected = pager.currentPage == i,
+                        onClick = { scope.launch { pager.animateScrollToPage(i) } },
+                        text = { Text(stringResource(quantity.title()), maxLines = 1) },
+                        modifier = Modifier.testTag("tab-${quantity.name}"),
+                    )
+                }
+                CompactTab(
+                    selected = onEnergy,
+                    onClick = { scope.launch { pager.animateScrollToPage(ENERGY_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_energy), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-ENERGY"),
+                )
+                CompactTab(
+                    selected = onSteps,
+                    onClick = { scope.launch { pager.animateScrollToPage(STEPS_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_steps), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-STEPS"),
+                )
+                CompactTab(
+                    selected = onBurn,
+                    onClick = { scope.launch { pager.animateScrollToPage(BURN_PAGE) } },
+                    text = { Text(stringResource(R.string.quantity_burn), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-BURN"),
+                )
+                state.charts.forEach { c ->
+                    val index = pages.indexOfChart(c.id)
+                    CompactTab(
+                        selected = pager.currentPage == index,
+                        onClick = { scope.launch { pager.animateScrollToPage(index) } },
+                        text = { Text(c.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 160.dp)) },
+                        modifier = Modifier.testTag("tab-chart-${c.id}"),
+                    )
+                }
+                CompactTab(
+                    selected = page == HistoryPage.NewChart,
+                    onClick = { scope.launch { pager.animateScrollToPage(pages.size - 1) } },
+                    text = { Text(stringResource(R.string.chart_new), maxLines = 1) },
+                    modifier = Modifier.testTag("tab-NEW"),
+                )
+            }
+        }
         item(key = "chips") {
             PeriodChips(
                 chipPeriod,
@@ -289,56 +342,6 @@ private fun PeriodList(
         }
         if (state.history == HistoryAccess.NOT_GRANTED && chipPeriod.needsHistory(now, zone)) {
             item(key = "history") { HistoryNotice(actions.onGrantHistory) }
-        }
-        item(key = "tabs") {
-            PrimaryScrollableTabRow(
-                selectedTabIndex = pager.currentPage,
-                edgePadding = 16.dp,
-                containerColor = Color.Transparent,
-                modifier = Modifier.padding(top = 8.dp),
-            ) {
-                Quantity.entries.forEachIndexed { i, quantity ->
-                    Tab(
-                        selected = pager.currentPage == i,
-                        onClick = { scope.launch { pager.animateScrollToPage(i) } },
-                        text = { Text(stringResource(quantity.title()), maxLines = 1) },
-                        modifier = Modifier.testTag("tab-${quantity.name}"),
-                    )
-                }
-                Tab(
-                    selected = onEnergy,
-                    onClick = { scope.launch { pager.animateScrollToPage(ENERGY_PAGE) } },
-                    text = { Text(stringResource(R.string.quantity_energy), maxLines = 1) },
-                    modifier = Modifier.testTag("tab-ENERGY"),
-                )
-                Tab(
-                    selected = onSteps,
-                    onClick = { scope.launch { pager.animateScrollToPage(STEPS_PAGE) } },
-                    text = { Text(stringResource(R.string.quantity_steps), maxLines = 1) },
-                    modifier = Modifier.testTag("tab-STEPS"),
-                )
-                Tab(
-                    selected = onBurn,
-                    onClick = { scope.launch { pager.animateScrollToPage(BURN_PAGE) } },
-                    text = { Text(stringResource(R.string.quantity_burn), maxLines = 1) },
-                    modifier = Modifier.testTag("tab-BURN"),
-                )
-                state.charts.forEach { c ->
-                    val index = pages.indexOfChart(c.id)
-                    Tab(
-                        selected = pager.currentPage == index,
-                        onClick = { scope.launch { pager.animateScrollToPage(index) } },
-                        text = { Text(c.name, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 160.dp)) },
-                        modifier = Modifier.testTag("tab-chart-${c.id}"),
-                    )
-                }
-                Tab(
-                    selected = page == HistoryPage.NewChart,
-                    onClick = { scope.launch { pager.animateScrollToPage(pages.size - 1) } },
-                    text = { Text(stringResource(R.string.chart_new), maxLines = 1) },
-                    modifier = Modifier.testTag("tab-NEW"),
-                )
-            }
         }
         item(key = "pager") {
             androidx.compose.runtime.CompositionLocalProvider(LocalChartReset provides pager.currentPage) {
@@ -519,52 +522,58 @@ private fun QuantityPage(
     }
 }
 
-/** One stats tile; [direction] puts an arrow on a change (0: none); [valueColor] tints the value. */
-private data class Tile(val label: Int, val value: String, val direction: Int = 0, val valueColor: Color = Color.Unspecified)
+/** A Historia tab with 12 dp sides (weight-chart "One quantity at a time": five fit 360 dp). */
+@Composable
+private fun CompactTab(selected: Boolean, onClick: () -> Unit, text: @Composable () -> Unit, modifier: Modifier = Modifier) {
+    Tab(
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 48.dp),
+        selectedContentColor = MaterialTheme.colorScheme.primary,
+        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    ) {
+        Box(Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
+            androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.titleSmall) { text() }
+        }
+    }
+}
 
-/** Key numbers as small tiles, three per row; a number that means nothing (one weight) is left out. */
+/**
+ * Paino and BMI statistics (weight-chart "Statistics layout"): Paino's hero Muutos with Viikossa at
+ * its right, BMI's hero Viimeisin with its class word in its tone and Muutos at its right; the row
+ * Keskiarvo, Alin, Ylin, Painoja. A value that cannot be shown reads "—".
+ */
 @Composable
 private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT, profile: OwnerProfile = OwnerProfile(), latestTime: Instant? = null) {
-    val tiles = buildList {
-        if (quantity != Quantity.WEIGHT) {
-            // Derived quantities have no rate; the latest takes its place, BMI with its class word in its tone.
-            val minor = latestTime != null && Derived.minor(profile, latestTime.atZone(ZoneId.systemDefault()).year)
-            if (quantity == Quantity.BMI && !minor) {
-                val word = stringResource(Derived.bmiClass(stats.latest).word())
-                add(Tile(R.string.stats_latest, "${quantity.format(stats.latest)} $word", valueColor = toneColor(Derived.tone(stats.latest))))
-            } else {
-                add(Tile(R.string.stats_latest, quantity.format(stats.latest)))
-            }
+    val none = StatsLayout.NONE
+    val unit = if (quantity == Quantity.WEIGHT) "kg" else null
+    fun number(v: Double) = formatKg(v)
+    val change = Stat(
+        stringResource(R.string.stats_change),
+        stats.change?.let { formatChange(it) } ?: none,
+        unit.takeIf { stats.change != null },
+        stats.change?.let { shownDirection(it, 1) } ?: 0,
+    )
+    val values = buildMap<StatsLayout.Key, Stat> {
+        put(StatsLayout.Key.CHANGE, change)
+        put(
+            StatsLayout.Key.RATE,
+            Stat(stringResource(R.string.stats_rate), stats.perWeek?.let { formatRate(it) } ?: none, "kg".takeIf { stats.perWeek != null }, stats.perWeek?.let { shownDirection(it, 2) } ?: 0),
+        )
+        val minor = latestTime != null && Derived.minor(profile, latestTime.atZone(ZoneId.systemDefault()).year)
+        val latest = if (quantity == Quantity.BMI && !minor) {
+            Stat(stringResource(R.string.stats_latest), number(stats.latest), stringResource(Derived.bmiClass(stats.latest).word()), unitColor = toneColor(Derived.tone(stats.latest)))
+        } else {
+            Stat(stringResource(R.string.stats_latest), number(stats.latest), unit)
         }
-        stats.change?.let { add(Tile(R.string.stats_change, quantity.changeText(it), shownDirection(it, 1))) }
-        stats.perWeek?.let { add(Tile(R.string.stats_rate, stringResource(R.string.kg_value, formatRate(it)), shownDirection(it, 2))) }
-        add(Tile(R.string.stats_average, quantity.format(stats.average)))
-        add(Tile(R.string.stats_min, quantity.format(stats.min)))
-        add(Tile(R.string.stats_max, quantity.format(stats.max)))
-        add(Tile(R.string.stats_count, stats.count.toString()))
+        put(StatsLayout.Key.LATEST, latest)
+        put(StatsLayout.Key.AVERAGE, Stat(stringResource(R.string.stats_average), quantity.format(stats.average)))
+        put(StatsLayout.Key.MIN, Stat(stringResource(R.string.stats_min), quantity.format(stats.min)))
+        put(StatsLayout.Key.MAX, Stat(stringResource(R.string.stats_max), quantity.format(stats.max)))
+        put(StatsLayout.Key.COUNT, Stat(stringResource(R.string.stats_count), stats.count.toString()))
     }
-    Column(
-        Modifier.fillMaxWidth().padding(16.dp).testTag("stats"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        tiles.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                row.forEach { (label, value, direction, valueColor) ->
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainer)
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
-                    ) {
-                        Text(stringResource(label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        ChangeLabel(value, direction, style = MaterialTheme.typography.bodyMedium, color = valueColor, fontWeight = FontWeight.SemiBold, singleLine = true)
-                    }
-                }
-                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-            }
-        }
-    }
+    val layout = StatsLayout.of(if (quantity == Quantity.WEIGHT) StatsLayout.Tab.WEIGHT else StatsLayout.Tab.BMI)
+    TabStats(values.getValue(layout.hero), QuantityTone.WEIGHT, layout.right?.let(values::getValue), layout.row.map(values::getValue), "stats")
 }
 
 /**

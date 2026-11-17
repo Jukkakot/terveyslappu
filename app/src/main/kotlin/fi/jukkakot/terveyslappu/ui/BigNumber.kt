@@ -3,6 +3,7 @@ package fi.jukkakot.terveyslappu.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -51,11 +53,12 @@ internal fun BigNumber(
     tag: String? = null,
     base: TextStyle = MaterialTheme.typography.displayMedium,
     color: Color = MaterialTheme.colorScheme.onSurface,
-    leading: (@Composable () -> Unit)? = null,
+    unitColor: Color = Color.Unspecified,
+    leading: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val style = base.bigNumber().copy(color = color)
     Row(modifier, verticalAlignment = Alignment.Bottom) {
-        leading?.invoke()
+        leading?.invoke(this)
         BasicText(
             value,
             style = style,
@@ -66,7 +69,7 @@ internal fun BigNumber(
         )
         if (unit != null) {
             Spacer(Modifier.width(4.dp))
-            Text(unit, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
+            Text(unit, style = MaterialTheme.typography.titleMedium, color = unitColor.takeOrElse { MaterialTheme.colorScheme.onSurfaceVariant }, maxLines = 1, softWrap = false, modifier = Modifier.alignByBaseline())
         }
     }
 }
