@@ -43,7 +43,10 @@
     <string name="settings_listen_off">Pois</string>
     <string name="settings_listen_on">Päällä %1$s–%2$s</string>
     <string name="settings_backup_off">Varmuuskopio pois</string>
-    <string name="settings_theme_line">Teema: %1$s</string>
+    <string name="settings_appearance_line">%1$s · %2$s</string>
+    <string name="settings_colours">Värit</string>
+    <string name="colours_brand">Terveyslappu</string>
+    <string name="colours_phone">Puhelimen värit</string>
     <string name="settings_support_line">Loki · v%1$s</string>
     <string name="settings_version">v%1$s</string>
     <string name="menu_help">Ohje</string>

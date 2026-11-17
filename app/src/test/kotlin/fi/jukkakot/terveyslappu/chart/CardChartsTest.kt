@@ -39,7 +39,7 @@ class CardChartsTest {
         assertEquals(summary.sparkScale!!.min, panel.left!!.min)
         assertEquals(summary.sparkScale!!.max, panel.left!!.max)
         assertEquals(CardCharts.WEIGHT_INSET_DP, panel.insetDp)
-        assertTrue(panel.series.all { it.tone == ToneRef.PRIMARY }, "the card's weight is primary, not Historia's secondary")
+        assertTrue(panel.series.all { it.tone == ToneRef.WEIGHT }, "the card's weight is in the weight colour")
     }
 
     @Test
@@ -95,7 +95,7 @@ class CardChartsTest {
             assertEquals(0.0, panel.left!!.min)
             assertNull(panel.series.single().average)
             assertTrue(!panel.grid)
-            assertEquals(ToneRef.PRIMARY.alpha(CardCharts.BASELINE_ALPHA), panel.baseline)
+            assertEquals(ToneRef.STEPS.alpha(CardCharts.BASELINE_ALPHA), panel.baseline)
         }
         val big = CardCharts.steps(home, CardSize.BIG)!!.panels.single()
         assertEquals(AxisTicks.bars(highest, CardCharts.STEPS_STEP).last(), big.left!!.max)

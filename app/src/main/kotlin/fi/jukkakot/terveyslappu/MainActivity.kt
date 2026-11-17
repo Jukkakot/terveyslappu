@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 val backupStatus by viewModel.backup.status.collectAsStateWithLifecycle()
                 val appearance = (application as TerveysApp).appearance
                 val themeMode by appearance.mode.collectAsStateWithLifecycle()
+                val colourChoice by appearance.colours.collectAsStateWithLifecycle()
                 val profile by viewModel.profile.profile.collectAsStateWithLifecycle()
                 val heightInHc by viewModel.profile.heightInHealthConnect.collectAsStateWithLifecycle()
                 val heightLauncher = rememberLauncherForActivityResult(
@@ -259,6 +260,7 @@ class MainActivity : ComponentActivity() {
                     versionName = BuildConfig.VERSION_NAME,
                     snackbar = snackbar,
                     themeMode = themeMode,
+                    colourChoice = colourChoice,
                     profile = profile,
                     heightInHealthConnect = heightInHc,
                     listen = listenUi,
@@ -368,6 +370,10 @@ class MainActivity : ComponentActivity() {
                         onTheme = { mode ->
                             AppLog.i("theme.set", mode.name)
                             appearance.set(mode)
+                        },
+                        onColours = { colours ->
+                            AppLog.i("theme.colours", colours.name)
+                            appearance.set(colours)
                         },
                         onWeightText = viewModel::onWeightText,
                         onPickedTime = viewModel::onPickedTime,

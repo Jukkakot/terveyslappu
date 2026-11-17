@@ -36,7 +36,7 @@ object TabReadouts {
     const val BURN = "kulutus"
 
     /** The Kulutus tab's tone (the palette's oranssi). */
-    val BURN_TONE: ToneRef = ToneRef.Palette(SeriesColour.ORANSSI)
+    val BURN_TONE: ToneRef = ToneRef.BURN
 
     /** "Ma 9.11.", "Su 15.9.2024". */
     fun day(day: LocalDate, today: LocalDate): String {
@@ -93,7 +93,7 @@ object TabReadouts {
      * Paino and BMI: head "Su 8.11. · 7.05" from the day's last weight in [data] (no "?" weights
      * there) and the row "[name] 82,6 kg", or "[name] ei painoa" under the bare date.
      */
-    fun weight(data: ChartData, day: LocalDate, zone: ZoneId, today: LocalDate, name: String = WEIGHT, tone: ToneRef = ToneRef.PRIMARY, label: (Double) -> String): ReadoutCard {
+    fun weight(data: ChartData, day: LocalDate, zone: ZoneId, today: LocalDate, name: String = WEIGHT, tone: ToneRef = ToneRef.WEIGHT, label: (Double) -> String): ReadoutCard {
         val last = data.entries.indices
             .filter { data.entries[it].time.atZone(zone).toLocalDate() == day }
             .maxByOrNull { data.entries[it].time }
@@ -104,7 +104,7 @@ object TabReadouts {
 
     /** Syöty: "syöty 1 760 kcal" and "herkut 230 kcal", or "syöty ei annoksia"; a week "syöty keskiarvo 1 900 kcal/pv". */
     fun energy(series: EnergySeries, key: LocalDate, today: LocalDate): ReadoutCard {
-        val food = ToneRef.PRIMARY
+        val food = ToneRef.FOOD
         if (series.weekly) {
             val bar = series.bars.firstOrNull { it.from == monday(key) }
             return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(food, FOOD, bar?.let { "keskiarvo ${formatKcal(it.total)} kcal/pv" } ?: NO_FOOD)))
@@ -112,13 +112,13 @@ object TabReadouts {
         val logged = series.days.firstOrNull { it.day == key } ?: return ReadoutCard(day(key, today), listOf(ReadoutRow(food, FOOD, NO_FOOD)))
         return ReadoutCard(
             day(key, today),
-            listOf(ReadoutRow(food, FOOD, "${formatKcal(logged.total)} kcal"), ReadoutRow(ToneRef.TERTIARY, TREAT, "${formatKcal(logged.treat)} kcal")),
+            listOf(ReadoutRow(food, FOOD, "${formatKcal(logged.total)} kcal"), ReadoutRow(ToneRef.TREAT, TREAT, "${formatKcal(logged.treat)} kcal")),
         )
     }
 
     /** Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; a week "askeleet keskiarvo 8 200 askelta/pv". */
     fun steps(series: StepsSeries, key: LocalDate, today: LocalDate): ReadoutCard {
-        val tone = ToneRef.PRIMARY
+        val tone = ToneRef.STEPS
         if (series.weekly) {
             val bar = series.bars.firstOrNull { it.from == monday(key) }
             return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(tone, STEPS, bar?.let { "keskiarvo ${formatSteps(it.steps)} askelta/pv" } ?: NO_DATA)))

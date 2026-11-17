@@ -79,10 +79,11 @@ internal fun SettingsScreen(
     steps: StepsUiState = StepsUiState(),
     stepsSources: StepsSourcesUi = StepsSourcesUi(),
     stepsActions: StepsActions = StepsActions(),
+    colourChoice: ColourChoice = ColourChoice.BRAND,
 ) {
     val shown = if (page == SettingsPage.DATA && !granted) SettingsPage.LIST else page
     when (shown) {
-        SettingsPage.LIST -> SettingsList(granted, themeMode, profile, backup, versionName, actions, snackbar, listen, food.products.size, steps, stepsSources)
+        SettingsPage.LIST -> SettingsList(granted, themeMode, colourChoice, profile, backup, versionName, actions, snackbar, listen, food.products.size, steps, stepsSources)
         SettingsPage.FOOD -> SubPage(R.string.settings_food, actions, snackbar, "foodPage") {
             Section(null) { ProductList(food.products, foodActions, food.items, food.productSaves, food.baseOn) }
         }
@@ -118,6 +119,8 @@ internal fun SettingsScreen(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge)
                     ThemeChoice(themeMode, actions.onTheme)
+                    Text(stringResource(R.string.settings_colours), style = MaterialTheme.typography.bodyLarge)
+                    ColourChoiceChips(colourChoice, actions.onColours)
                 }
             }
         }
@@ -179,6 +182,7 @@ private fun SupportPage(versionName: String, actions: MainActions, snackbar: Sna
 private fun SettingsList(
     granted: Boolean,
     themeMode: ThemeMode,
+    colourChoice: ColourChoice,
     profile: OwnerProfile,
     backup: BackupStatus,
     versionName: String,
@@ -228,7 +232,7 @@ private fun SettingsList(
                     StateLine(stepsLineText(line, stepsSources.sourceName), warn = line.warn)
                 }
                 PageRow(R.drawable.ic_palette, R.string.settings_appearance, "rowAppearance", { actions.onSettingsPage(SettingsPage.APPEARANCE) }) {
-                    StateLine(stringResource(R.string.settings_theme_line, stringResource(themeMode.label())))
+                    StateLine(stringResource(R.string.settings_appearance_line, stringResource(themeMode.label()), stringResource(colourChoice.label())))
                 }
                 PageRow(R.drawable.ic_file, R.string.settings_support, "rowSupport", { actions.onSettingsPage(SettingsPage.SUPPORT) }) {
                     StateLine(stringResource(R.string.settings_support_line, versionName))
@@ -315,7 +319,7 @@ private fun Section(title: Int?, content: @Composable ColumnScope.() -> Unit) {
             modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 8.dp),
         )
     }
-    Column(Modifier.fillMaxWidth().clip(groupShape).background(MaterialTheme.colorScheme.surfaceContainer), content = content)
+    Column(Modifier.fillMaxWidth().clip(groupShape).background(cardColour()), content = content)
 }
 
 private fun ThemeMode.label(): Int = when (this) {
@@ -344,6 +348,33 @@ private fun ThemeChoice(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
                     null
                 },
                 modifier = Modifier.testTag("theme-${option.name}"),
+            )
+        }
+    }
+}
+
+private fun ColourChoice.label(): Int = when (this) {
+    ColourChoice.BRAND -> R.string.colours_brand
+    ColourChoice.PHONE -> R.string.colours_phone
+}
+
+/** Värit: Terveyslappu or Puhelimen värit, the same chips as [ThemeChoice]. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColourChoiceChips(choice: ColourChoice, onColours: (ColourChoice) -> Unit) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ColourChoice.entries.forEach { option ->
+            val selected = option == choice
+            FilterChip(
+                selected = selected,
+                onClick = { onColours(option) },
+                label = { Text(stringResource(option.label())) },
+                leadingIcon = if (selected) {
+                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else {
+                    null
+                },
+                modifier = Modifier.testTag("colours-${option.name}"),
             )
         }
     }

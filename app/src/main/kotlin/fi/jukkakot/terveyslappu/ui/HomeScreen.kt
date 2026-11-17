@@ -160,7 +160,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                         Text(
                             stringResource(R.string.food_day_treats, formatKcal(summary.todayTreat)),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = colors.tertiary,
+                            color = treatTextColour(),
                             modifier = Modifier.align(Alignment.CenterVertically),
                         )
                     }
@@ -457,7 +457,7 @@ internal val homeCardShape get() = cardShape
 private val innerShape = RoundedCornerShape(16.dp)
 /** The least height of a card's chart; the chart takes the height its size leaves free (design 2). */
 private val MIN_CHART = 32.dp
-internal val groupShape = RoundedCornerShape(20.dp)
+internal val groupShape = RoundedCornerShape(24.dp)
 
 /** The weight card: latest weight, change and small chart; no button (weighing is in the App menu). */
 @Composable

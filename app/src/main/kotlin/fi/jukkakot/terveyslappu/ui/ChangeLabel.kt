@@ -43,10 +43,10 @@ fun ChangeLabel(
     }
 }
 
-/** Gain and loss colours that judge neither direction (no red/green): palette tones, zero neutral. */
+/**
+ * A row's or card's change colour: the muted text tone for a gain, a loss and zero alike
+ * (app-appearance "Quantity colours": a change is never mint or green). Statistics use the main tone.
+ */
+@Suppress("UNUSED_PARAMETER")
 @Composable
-fun changeColor(direction: Int): Color = when {
-    direction > 0 -> MaterialTheme.colorScheme.tertiary
-    direction < 0 -> MaterialTheme.colorScheme.primary
-    else -> MaterialTheme.colorScheme.onSurfaceVariant
-}
+fun changeColor(direction: Int): Color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -93,7 +93,7 @@ class ScreenshotTour {
     @Test
     fun tour() {
         val current = androidx.compose.runtime.mutableStateOf(Triple(base, true, ColourChoice.BRAND))
-        compose.setContent { current.value.let { Shown(it.first, it.second, it.third) } }
+        compose.setContent { current.value.let { androidx.compose.runtime.key(it) { Shown(it.first, it.second, it.third) } } }
         for (colours in ColourChoice.entries) {
             for (dark in listOf(true, false)) {
                 for ((name, state) in screens) {

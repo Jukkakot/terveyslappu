@@ -29,22 +29,26 @@ object CustomChartSpec {
     }
 
     /**
-     * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else weight
-     * secondary, Syöty primary, Kulutus oranssi, steps tertiary when overlaid (primary when stacked).
+     * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else (Oletus)
+     * its quantity colour.
      */
     fun tone(chart: CustomChart, kind: SeriesKind, overlaid: Boolean): ToneRef {
         chart.colourOf(kind)?.let { return ToneRef.Palette(it) }
         return when (kind) {
-            SeriesKind.WEIGHT -> ToneRef.SECONDARY
-            SeriesKind.ENERGY -> ToneRef.PRIMARY
-            SeriesKind.BURN -> TabReadouts.BURN_TONE
-            SeriesKind.STEPS -> if (overlaid) ToneRef.TERTIARY else ToneRef.PRIMARY
+            SeriesKind.WEIGHT -> ToneRef.WEIGHT
+            SeriesKind.ENERGY -> ToneRef.FOOD
+            SeriesKind.BURN -> ToneRef.BURN
+            SeriesKind.STEPS -> ToneRef.STEPS
         }
     }
 
-    /** Syöty's treat share: the lighter tone of a chosen colour, else tertiary. */
+    /** Syöty's treat share: the lighter tone of a chosen colour, else the herkku colour. */
     fun treatTone(chart: CustomChart, tone: ToneRef): ToneRef =
-        if (chart.colourOf(SeriesKind.ENERGY) != null) tone.alpha(ToneRef.LIGHT_ALPHA) else ToneRef.TERTIARY
+        if (chart.colourOf(SeriesKind.ENERGY) != null) tone.alpha(ToneRef.LIGHT_ALPHA) else ToneRef.TREAT
+
+    /** Kulutus's lepo part: the lighter tone of a chosen colour, else the lepo colour. */
+    fun restTone(chart: CustomChart, tone: ToneRef): ToneRef =
+        if (chart.colourOf(SeriesKind.BURN) != null) tone.alpha(ToneRef.LIGHT_ALPHA) else ToneRef.REST
 
     /** A card's line width and dot radius (today's card look, home-cards-on-chart-library design 3). */
     const val CARD_LINE_DP = 2f
@@ -118,7 +122,7 @@ object CustomChartSpec {
                     val split = values.filter { it.active != null }.map { ChartPoint(x.of(it.day), it.value, it.day, listOf((it.value - it.active!!).coerceAtLeast(0.0), it.active)) }
                     val whole = values.filter { it.active == null }.map { ChartPoint(x.of(it.day), it.value, it.day) }
                     listOfNotNull(
-                        SeriesSpec("${kind.kind.name}-split", tone, SeriesShape.StackedBars(split, listOf(tone.alpha(ToneRef.LIGHT_ALPHA), tone))).takeIf { split.isNotEmpty() },
+                        SeriesSpec("${kind.kind.name}-split", tone, SeriesShape.StackedBars(split, listOf(restTone(chart, tone), tone))).takeIf { split.isNotEmpty() },
                         SeriesSpec("${kind.kind.name}-total", tone.alpha(ToneRef.TOTAL_ALPHA), SeriesShape.Bars(whole)).takeIf { whole.isNotEmpty() },
                     ).mapIndexed { i, s -> if (i == 0) s.copy(average = average, trend = trend) else s }
                 }
@@ -170,7 +174,7 @@ object CustomChartSpec {
         return when (kind.kind) {
             SeriesKind.ENERGY -> listOf(LegendItem(LegendLabel.FOOD, tone, LegendForm.SQUARE), LegendItem(LegendLabel.TREAT, treatTone(chart, tone), LegendForm.SQUARE))
             SeriesKind.BURN -> listOfNotNull(
-                LegendItem(LegendLabel.REST, tone.alpha(ToneRef.LIGHT_ALPHA), LegendForm.SQUARE),
+                LegendItem(LegendLabel.REST, restTone(chart, tone), LegendForm.SQUARE),
                 LegendItem(LegendLabel.ACTIVE, tone, LegendForm.SQUARE),
                 LegendItem(LegendLabel.TOTAL, tone.alpha(ToneRef.TOTAL_ALPHA), LegendForm.SQUARE).takeIf { kind.values.orEmpty().any { it.active == null } },
             )

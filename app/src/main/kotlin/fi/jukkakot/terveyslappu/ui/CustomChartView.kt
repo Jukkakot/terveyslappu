@@ -82,29 +82,20 @@ internal fun CustomChartView(
     }
 }
 
-/**
- * The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else Oletus = weight
- * secondary, Syöty primary, Kulutus oranssi, steps tertiary when overlaid (its tab's primary when stacked).
- */
+/** The data's tone (weight-chart "Data colours in own charts"): its chosen colour, else Oletus = its quantity colour. */
 @Composable
 private fun toneOf(kind: SeriesKind, colour: SeriesColour?, overlaid: Boolean): Color {
     if (colour != null) return paletteColour(colour)
-    val c = MaterialTheme.colorScheme
-    return when (kind) {
-        SeriesKind.WEIGHT -> c.secondary
-        SeriesKind.ENERGY -> c.primary
-        SeriesKind.BURN -> burnColour()
-        SeriesKind.STEPS -> if (overlaid) c.tertiary else c.primary
-    }
+    return quantityColour(QuantityColours.of(kind))
 }
 
 @Composable
 private fun CustomChartData.toneOf(kind: SeriesKind, overlaid: Boolean): Color = toneOf(kind, chart.colourOf(kind), overlaid)
 
-/** Syöty's treat share: the lighter tone of a chosen colour, else today's tertiary (old charts unchanged). */
+/** Syöty's treat share: the lighter tone of a chosen colour, else the herkku colour. */
 @Composable
 private fun CustomChartData.treatTone(tone: Color): Color =
-    if (chart.colourOf(SeriesKind.ENERGY) != null) tone.copy(alpha = ChartPalette.LIGHT_ALPHA) else MaterialTheme.colorScheme.tertiary
+    if (chart.colourOf(SeriesKind.ENERGY) != null) tone.copy(alpha = ChartPalette.LIGHT_ALPHA) else quantityColour(fi.jukkakot.terveyslappu.chart.QuantityTone.TREAT)
 
 /** "82 kg", "2 500 kcal", "14 000 askelta". */
 @Composable
@@ -195,7 +186,7 @@ private fun DatesAndLegend(data: CustomChartData, card: CardSize, overlaid: Bool
             SeriesKind.ENERGY -> if (!overlaid && !line) listOf(LegendEntry(food, tone), LegendEntry(treat, data.treatTone(tone))) else listOf(LegendEntry(food, tone, line))
             SeriesKind.BURN -> if (!overlaid && !line) {
                 listOfNotNull(
-                    LegendEntry(rest, tone.copy(alpha = ChartPalette.LIGHT_ALPHA)),
+                    LegendEntry(rest, if (data.chart.colourOf(SeriesKind.BURN) != null) tone.copy(alpha = ChartPalette.LIGHT_ALPHA) else quantityColour(fi.jukkakot.terveyslappu.chart.QuantityTone.REST)),
                     LegendEntry(active, tone),
                     LegendEntry(whole, tone.copy(alpha = ChartPalette.TOTAL_ALPHA)).takeIf { kind.values.orEmpty().any { it.active == null } },
                 )

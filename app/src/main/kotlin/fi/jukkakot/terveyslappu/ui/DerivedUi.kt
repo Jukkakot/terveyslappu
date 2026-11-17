@@ -38,7 +38,7 @@ import fi.jukkakot.terveyslappu.derived.Tone
 /** Tone colours tuned for text on the card in each theme; the class word always goes with them. */
 @Composable
 fun toneColor(tone: Tone): Color {
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val dark = isDarkTheme()
     return when (tone) {
         Tone.GREEN -> if (dark) Color(0xFF81C995) else Color(0xFF1E7B34)
         Tone.YELLOW -> if (dark) Color(0xFFFDD663) else Color(0xFF8A5A00)

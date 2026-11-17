@@ -9,13 +9,13 @@
 
 ## 2. Palette and colour choice
 
-- [ ] 2.1 Add MaterialKolor; build the Terveyslappu scheme from seed `#2E7D6B` with the graphite dark neutrals, mint dark primary and light neutrals (design 1).
-- [ ] 2.2 Add `ColourChoice` (BRAND default, PHONE) to `AppearancePrefs` (key `colours`); `TerveysTheme` picks the brand or the dynamic scheme; unit test the decode default and that an existing `theme` value is kept.
-- [ ] 2.3 Ulkoasu sub-screen: "Värit" chip group (Terveyslappu, Puhelimen värit) under "Teema"; the Asetukset row reads "<teema> · <värit>" (`SettingsSummary`); smoke test that picking Puhelimen värit changes the scheme.
-- [ ] 2.4 Add `QuantityColours` with light/dark shades and one `isDarkTheme()` helper; replace the scattered `luminance()` picks (`checkColors`, `paletteColour`, `burnColour`); test every shade ≥ 3:1 against the brand card surfaces and the surfaces `ChartPaletteTest` uses (design 3).
-- [ ] 2.5 Own charts: Oletus resolves to the quantity colour; Kulutus default coral; update `ChartPaletteTest` and the chart editor's Oletus dot.
-- [ ] 2.6 Neutral change colours: `changeColor()` and every change value/arrow (Historia statistics and rows, cards) in the neutral text tones for gain and loss; update its test.
-- [ ] 2.7 Add the colour choice to the screenshot tour (both palettes).
+- [x] 2.1 Add MaterialKolor; build the Terveyslappu scheme from seed `#2E7D6B` with the graphite dark neutrals, mint dark primary and light neutrals (design 1).
+- [x] 2.2 Add `ColourChoice` (BRAND default, PHONE) to `AppearancePrefs` (key `colours`); `TerveysTheme` picks the brand or the dynamic scheme; unit test the decode default and that an existing `theme` value is kept.
+- [x] 2.3 Ulkoasu sub-screen: "Värit" chip group (Terveyslappu, Puhelimen värit) under "Teema"; the Asetukset row reads "<teema> · <värit>" (`SettingsSummary`); smoke test that picking Puhelimen värit changes the scheme.
+- [x] 2.4 Add `QuantityColours` with light/dark shades and one `isDarkTheme()` helper; replace the scattered `luminance()` picks (`checkColors`, `paletteColour`, `burnColour`); test every shade ≥ 3:1 against the brand card surfaces and the surfaces `ChartPaletteTest` uses (design 3).
+- [x] 2.5 Own charts: Oletus resolves to the quantity colour; Kulutus default coral; update `ChartPaletteTest` and the chart editor's Oletus dot.
+- [x] 2.6 Neutral change colours: `changeColor()` and every change value/arrow (Historia statistics and rows, cards) in the neutral text tones for gain and loss; update its test.
+- [x] 2.7 Add the colour choice to the screenshot tour (both palettes).
 
 ## 3. Cards and numbers
 

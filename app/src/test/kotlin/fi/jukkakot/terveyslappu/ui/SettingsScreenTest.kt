@@ -300,4 +300,24 @@ class SettingsScreenTest {
         assertEquals(ThemeMode.DARK, app.appearance.mode.value)
         app.appearance.set(ThemeMode.SYSTEM)
     }
+
+    @Test
+    fun `picking Puhelimen varit changes the scheme at once`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        var background = Color.Unspecified
+        compose.setContent {
+            TerveysTheme(mode = ThemeMode.DARK) {
+                background = MaterialTheme.colorScheme.background
+                val colours = app.appearance.colours.collectAsState().value
+                SettingsScreen(SettingsPage.APPEARANCE, true, ThemeMode.DARK, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(onColours = app.appearance::set), SnackbarHostState(), colourChoice = colours)
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(BrandColours.DARK_BACKGROUND, background)
+        compose.onNodeWithTag("colours-PHONE").performClick()
+        compose.waitForIdle()
+        assertTrue(background != BrandColours.DARK_BACKGROUND)
+        assertEquals(ColourChoice.PHONE, app.appearance.colours.value)
+        app.appearance.set(ColourChoice.BRAND)
+    }
 }

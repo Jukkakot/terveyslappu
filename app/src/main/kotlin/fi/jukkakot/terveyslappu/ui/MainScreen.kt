@@ -85,6 +85,8 @@ class MainActions(
     val onOpenWeek: () -> Unit = {},
     val onGrantHistory: () -> Unit = {},
     val onTheme: (ThemeMode) -> Unit = {},
+    /** Värit in Ulkoasu. */
+    val onColours: (ColourChoice) -> Unit = {},
     val onProfile: (OwnerProfile) -> Unit = {},
     val onOpenProfile: () -> Unit = {},
     val onListenEnabled: (Boolean) -> Unit = {},
@@ -139,7 +141,7 @@ fun MainScreen(
     when (screen) {
         Screen.HOME -> HomeScreen(state, actions, snackbar, backup, food, foodActions, steps, stepsActions, burn, burnActions)
         Screen.HISTORY -> HistoryScreen(state, actions, snackbar, profile, food, foodActions, steps, stepsActions, burn, burnActions)
-        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions, steps, stepsSources, stepsActions)
+        Screen.SETTINGS -> SettingsScreen(state.settingsPage, granted, themeMode, profile, heightInHealthConnect, backup, versionName, actions, snackbar, listen, food, foodActions, steps, stepsSources, stepsActions, colourChoice)
         Screen.HELP -> HelpScreen(actions)
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)
     }

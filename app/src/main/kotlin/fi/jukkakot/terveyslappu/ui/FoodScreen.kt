@@ -150,13 +150,13 @@ internal fun dayTitle(day: LocalDate, today: LocalDate = LocalDate.now()): Strin
 @Composable
 internal fun daySumText(sum: DaySum): AnnotatedString = summaryLine(
     stringResource(R.string.food_kcal, formatKcal(sum.total)),
-    daySummaryTreat(sum), daySummaryWithout(sum), MaterialTheme.colorScheme.tertiary,
+    daySummaryTreat(sum), daySummaryWithout(sum), treatTextColour(),
 )
 
 /** The sum line without the total ("herkkuja 230 · 1 ilman kcal"); empty when both parts are zero. */
 @Composable
 internal fun daySummaryText(sum: DaySum): AnnotatedString =
-    summaryLine(null, daySummaryTreat(sum), daySummaryWithout(sum), MaterialTheme.colorScheme.tertiary)
+    summaryLine(null, daySummaryTreat(sum), daySummaryWithout(sum), treatTextColour())
 
 @Composable
 private fun daySummaryTreat(sum: DaySum): String? = if (sum.treat > 0) stringResource(R.string.food_day_treats, formatKcal(sum.treat)) else null

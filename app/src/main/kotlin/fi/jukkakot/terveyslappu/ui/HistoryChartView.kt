@@ -61,6 +61,8 @@ internal data class ChartColors(
     val grid: Int,
     val onSurface: Int,
     val dark: Boolean,
+    /** The card's surface: the hole of the latest weight's ring. */
+    val card: Int = if (dark) 0xFF16191E.toInt() else 0xFFFFFFFF.toInt(),
 ) {
     fun of(tone: ToneRef): Int {
         val base = when (tone) {
@@ -72,6 +74,7 @@ internal data class ChartColors(
             }
             is ToneRef.Palette -> ChartPalette.shades.getValue(tone.colour).let { if (dark) it.dark else it.light }.toArgbInt()
             is ToneRef.Band -> bandColour(tone.tone)
+            is ToneRef.Of -> QuantityColours.of(tone.quantity, dark).toArgbInt()
         }
         val alpha = (AndroidColor.alpha(base) * tone.alpha).toInt().coerceIn(0, 255)
         return AndroidColor.argb(alpha, AndroidColor.red(base), AndroidColor.green(base), AndroidColor.blue(base))

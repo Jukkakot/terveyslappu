@@ -1,6 +1,5 @@
 package fi.jukkakot.terveyslappu.ui
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -40,18 +39,15 @@ internal object ChartPalette {
         val lb = b.luminance().toDouble()
         return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
     }
-
-    /** The Kulutus tab's colour and Kulutus's Oletus in own charts. */
-    val BURN = SeriesColour.ORANSSI
 }
 
-/** [colour]'s shade for the current theme (picked by the surface's lightness, like [checkColors]). */
+/** [colour]'s shade for the current theme ([isDarkTheme]). */
 @Composable
 internal fun paletteColour(colour: SeriesColour): Color {
     val shades = ChartPalette.shades.getValue(colour)
-    return if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) shades.dark else shades.light
+    return if (isDarkTheme()) shades.dark else shades.light
 }
 
-/** The Kulutus colour (oranssi) for the current theme. */
+/** The Kulutus colour (coral) for the current theme. */
 @Composable
-internal fun burnColour(): Color = paletteColour(ChartPalette.BURN)
+internal fun burnColour(): Color = quantityColour(fi.jukkakot.terveyslappu.chart.QuantityTone.BURN)

@@ -73,9 +73,10 @@ import kotlin.math.roundToInt
 @Composable
 internal fun rememberChartColors(): ChartColors {
     val c = MaterialTheme.colorScheme
-    val dark = c.surface.run { (red * 0.299f + green * 0.587f + blue * 0.114f) < 0.5f }
-    return remember(c) {
-        ChartColors(c.primary.toArgb(), c.secondary.toArgb(), c.tertiary.toArgb(), c.onSurfaceVariant.toArgb(), c.outlineVariant.toArgb(), c.onSurface.toArgb(), dark)
+    val dark = isDarkTheme()
+    val card = cardColour()
+    return remember(c, dark, card) {
+        ChartColors(c.primary.toArgb(), c.secondary.toArgb(), c.tertiary.toArgb(), c.onSurfaceVariant.toArgb(), c.onSurface.copy(alpha = 0.08f).toArgb(), c.onSurface.toArgb(), dark, card.toArgb())
     }
 }
 

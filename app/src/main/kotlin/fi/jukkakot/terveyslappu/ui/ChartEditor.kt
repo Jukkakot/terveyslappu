@@ -114,13 +114,7 @@ private fun colourName(colour: SeriesColour?): String = stringResource(
 @Composable
 private fun swatch(kind: SeriesKind, colour: SeriesColour?): Color {
     if (colour != null) return paletteColour(colour)
-    val c = MaterialTheme.colorScheme
-    return when (kind) {
-        SeriesKind.WEIGHT -> c.secondary
-        SeriesKind.ENERGY -> c.primary
-        SeriesKind.BURN -> burnColour()
-        SeriesKind.STEPS -> c.primary
-    }
+    return quantityColour(QuantityColours.of(kind))
 }
 
 /**

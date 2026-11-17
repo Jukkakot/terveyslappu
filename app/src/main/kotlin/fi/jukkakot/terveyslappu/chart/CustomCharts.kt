@@ -7,7 +7,7 @@ enum class SeriesKind { WEIGHT, ENERGY, BURN, STEPS }
 
 /**
  * A data's fixed colour in an own chart (weight-chart "Data colours in own charts"); null on a
- * [ChartSeries] = Oletus (the theme tone; Kulutus's is oranssi). Shades live in `ui/ChartPalette`.
+ * [ChartSeries] = Oletus (the quantity colour). Shades live in `ui/ChartPalette`.
  */
 enum class SeriesColour { SININEN, VIHREA, ORANSSI, PUNAINEN, VIOLETTI, TURKOOSI, KELTAINEN, HARMAA }
 

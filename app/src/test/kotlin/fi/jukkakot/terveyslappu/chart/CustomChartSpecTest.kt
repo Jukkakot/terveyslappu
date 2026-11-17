@@ -76,7 +76,7 @@ class CustomChartSpecTest {
         assertTrue(energy.x < steps.x)
         assertEquals(energy.day, s.dayAt(energy.x))
         assertEquals(steps.day, s.dayAt(steps.x))
-        assertEquals(ToneRef.TERTIARY, panel.series[2].tone)
+        assertEquals(ToneRef.STEPS, panel.series[2].tone)
     }
 
     @Test
@@ -158,7 +158,7 @@ class CustomChartSpecTest {
     fun `burned without permission leaves eaten's own right axis`() {
         val p = overlaid(SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.BURN, burn = false)
         assertEquals(ValueUnit.KCAL, p.right!!.unit)
-        assertEquals(ToneRef.PRIMARY, p.right!!.tone)
+        assertEquals(ToneRef.FOOD, p.right!!.tone)
     }
 
     @Test

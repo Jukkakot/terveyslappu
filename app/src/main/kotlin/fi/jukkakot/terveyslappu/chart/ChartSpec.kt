@@ -85,6 +85,9 @@ fun ChartAxis.pick(day: LocalDate): LocalDate = if (weekly) maxOf(weekOf(day), f
 /** Whether a chosen key is still on this axis. */
 fun ChartAxis.shows(day: LocalDate): Boolean = if (weekly) !day.plusDays(6).isBefore(from) && !day.isAfter(to) else day in this
 
+/** The quantities' fixed colours (app-appearance "Quantity colours"); shades live in `ui/QuantityColours`. */
+enum class QuantityTone { WEIGHT, FOOD, TREAT, STEPS, BURN, REST }
+
 /** A symbolic tone, resolved to a colour in the UI from the colour scheme or the palette. */
 sealed interface ToneRef {
     val alpha: Float
@@ -94,11 +97,13 @@ sealed interface ToneRef {
     data class Scheme(val role: Role, override val alpha: Float = 1f) : ToneRef
     data class Palette(val colour: SeriesColour, override val alpha: Float = 1f) : ToneRef
     data class Band(val tone: Tone, override val alpha: Float = BAND_ALPHA) : ToneRef
+    data class Of(val quantity: QuantityTone, override val alpha: Float = 1f) : ToneRef
 
     fun alpha(a: Float): ToneRef = when (this) {
         is Scheme -> copy(alpha = alpha * a)
         is Palette -> copy(alpha = alpha * a)
         is Band -> copy(alpha = alpha * a)
+        is Of -> copy(alpha = alpha * a)
     }
 
     companion object {
@@ -106,6 +111,12 @@ sealed interface ToneRef {
         val SECONDARY = Scheme(Role.SECONDARY)
         val TERTIARY = Scheme(Role.TERTIARY)
         val MUTED = Scheme(Role.ON_SURFACE_VARIANT)
+        val WEIGHT = Of(QuantityTone.WEIGHT)
+        val FOOD = Of(QuantityTone.FOOD)
+        val TREAT = Of(QuantityTone.TREAT)
+        val STEPS = Of(QuantityTone.STEPS)
+        val BURN = Of(QuantityTone.BURN)
+        val REST = Of(QuantityTone.REST)
 
         /** The BMI bands' faint fill (weight-chart "BMI chart"). */
         const val BAND_ALPHA = 0.14f

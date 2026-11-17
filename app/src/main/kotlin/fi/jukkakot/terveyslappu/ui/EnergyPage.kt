@@ -97,7 +97,7 @@ private fun EnergyStatsTiles(series: EnergySeries) {
                     value,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (label == R.string.energy_stat_treats && treatTone) MaterialTheme.colorScheme.tertiary else Color.Unspecified,
+                    color = if (label == R.string.energy_stat_treats && treatTone) treatTextColour() else Color.Unspecified,
                 )
             }
         }
@@ -113,7 +113,7 @@ internal fun EnergyDayRow(day: EnergyDay, today: LocalDate, depth: Int = 0, onOp
     ) {
         Text(dayTitle(day.day, today), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         if (day.treat > 0) {
-            Text(stringResource(R.string.food_day_treats, formatKcal(day.treat)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
+            Text(stringResource(R.string.food_day_treats, formatKcal(day.treat)), style = MaterialTheme.typography.bodyMedium, color = treatTextColour())
             Spacer(Modifier.size(12.dp))
         }
         Text(stringResource(R.string.food_kcal, formatKcal(day.total)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
