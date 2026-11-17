@@ -140,3 +140,8 @@ against their main part). Own charts' Oletus maps to these;
   that compiles with it.
 - **Five tabs at 360 dp with 130 % text**: may not fit; then the row scrolls (still the first row)
   and the test only asserts Paino…Askeleet visible.
+
+## After implementation (user, 2026-11-17)
+
+- `ROW_UNIT` stays 268 dp; cards are tighter inside instead of taller.
+- Dark Syöty amber `#E9A23B` (not the mockup's `#F5C16A`) so the treat share stays distinct.
