@@ -201,8 +201,8 @@ the sub-screen merely opens. The default SHALL be "Automaattinen". The chosen so
 #### Scenario: Order and averages
 - **GIVEN** Garmin Connect has 150 000 steps in 30 days on 30 days with steps (5 000 a day) and the
   phone has 120 000 steps on 12 days with steps (10 000 a day)
-- **THEN** Garmin Connect is listed first with "keskim. 5 000 askelta/pv", then Puhelin with
-  "keskim. 10 000 askelta/pv"
+- **THEN** Garmin Connect is listed first with "keskiarvo 5 000 askelta/pv", then Puhelin with
+  "keskiarvo 10 000 askelta/pv"
 
 #### Scenario: Pick an app
 - **WHEN** the user picks Puhelin

@@ -348,12 +348,12 @@ own taps and period label SHALL work the same at every size.
   when they fit").
 - **Food card.** Small: as described in Food row on the home screen. Wide: the title, today's kcal
   and the treats' share on top, the bars across the full width, then one row with the period label,
-  the average in its long form ("keskim. 1 900 kcal/pv"). Big: the
+  the average in its long form ("keskiarvo 1 900 kcal/pv"). Big: the
   wide look with taller bars, the top of the kcal scale (the Energia tab's rule, e.g. "2 500 kcal") at the bars' top left, and
   a dashed line across the bars at the period's average when there is one.
 - **Steps card.** Small: as described in Steps card on the home screen. Wide: the title and today's
   steps on top, the bars across the full width, then one row with the period label and the average
-  in its long form ("keskim. 7 800 askelta/pv"). Big: the wide look with taller bars, the top of
+  in its long form ("keskiarvo 7 800 askelta/pv"). Big: the wide look with taller bars, the top of
   the steps scale (the Askeleet tab's rule, e.g. "14 000 askelta") at the bars' top left, and a dashed line at the period's
   average when there is one.
 - A card without its permission, unavailable, loading or failed SHALL show the same text or
@@ -366,7 +366,7 @@ own taps and period label SHALL work the same at every size.
 
 #### Scenario: Wide food card
 - **GIVEN** the food card is wide and 1 900 kcal per logged day is the period's average
-- **THEN** the average reads "keskim. 1 900 kcal/pv" and no button is on the card
+- **THEN** the average reads "keskiarvo 1 900 kcal/pv" and no button is on the card
 
 #### Scenario: Big steps card
 - **GIVEN** the steps card is big and the period's highest day has 11 400 steps

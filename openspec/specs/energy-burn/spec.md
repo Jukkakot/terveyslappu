@@ -66,7 +66,7 @@ for periods over 90 days; the shared axes, period range line and legend ("lepo",
 "keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show, on the chart's marker card, its
 day (or week) and the row "kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal" (a total-only day
 "kulutus 2 300 kcal", an active-only day "kulutus 465 kcal · aktiivinen 465 kcal", no data "kulutus ei
-tietoa"; a weekly bar its averages per day, "keskim. 2 300 kcal/pv · aktiivinen 450 kcal/pv · lepo 1 850 kcal/pv", as food's "keskim. 1 900 kcal/pv"). Under the chart: the average total kcal per
+tietoa"; a weekly bar its averages per day, "keskiarvo 2 300 kcal/pv · aktiivinen 450 kcal/pv · lepo 1 850 kcal/pv", as food's "keskiarvo 1 900 kcal/pv"). Under the chart: the average total kcal per
 day, the average active kcal per
 day, and "x / y päivää"; then the days newest first and grouped as in weight-chart "Grouped day lists", each with its date ("Tänään", "Eilen",
 weekday and date as on Askeleet), total kcal and "aktiivinen N kcal". The tab SHALL show energy
@@ -90,7 +90,7 @@ burned only: no eaten energy, no difference, no target.
 The front page SHALL have a card "Kulutus" built like the steps card at every size: title
 "Kulutettu tänään", today's total large with "kcal" beside it in a smaller type, as the food card, with "aktiivinen N kcal" under it, small two-tone daily
 bars of the card's own period (7, 30 or 90 days, its own menu, remembered, 7 by default), the
-period's first and last day and the average total ("keskim. 2 300 kcal/pv", "ka 2 300 kcal/pv" at
+period's first and last day and the average total ("keskiarvo 2 300 kcal/pv", "ka 2 300 kcal/pv" at
 small size), the big size's scale top and dashed average line. A tap anywhere but the period label
 SHALL open Historia on Kulutus. Without the permissions it SHALL read "Kulutus: anna lupa" and a
 tap SHALL ask for them. The card SHALL be hidden by default (see home-screen "Card grid"); its default size is small.

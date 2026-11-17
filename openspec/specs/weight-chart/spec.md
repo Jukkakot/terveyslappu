@@ -1050,8 +1050,8 @@ a weekly bar the week ("Vk 46 · 9.–15.11."), and its rows SHALL be:
 - Paino: the head adds the time of that day's last weight not marked "?" ("Su 8.11. · 7.05"), row
   "paino 82,6 kg", or "paino ei painoa"; BMI the same with "BMI 25,3".
 - Syöty: "ruoka 1 760 kcal" and "herkut 230 kcal", or "ruoka ei kirjauksia"; a weekly bar "ruoka
-  keskim. 1 900 kcal/pv".
-- Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; weekly "askeleet keskim. 8 200
+  keskiarvo 1 900 kcal/pv".
+- Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; weekly "askeleet keskiarvo 8 200
   askelta/pv".
 - Kulutus: as in energy-burn "Kulutus tab".
 The removal rules and TalkBack actions SHALL be those of "Chart crosshair". The chart SHALL have no
@@ -1081,7 +1081,7 @@ keep their tap (open Historia) and have no marker.
 #### Scenario: Weekly bar
 - **GIVEN** Syöty with 1 v
 - **WHEN** the user taps a week's bar
-- **THEN** the card reads "Vk 46 · 9.–15.11." with "ruoka keskim. 1 900 kcal/pv"
+- **THEN** the card reads "Vk 46 · 9.–15.11." with "ruoka keskiarvo 1 900 kcal/pv"
 
 ### Requirement: Grouped day lists
 The day lists of Energia, Askeleet and Kulutus SHALL be grouped by the same rule as the weight list
