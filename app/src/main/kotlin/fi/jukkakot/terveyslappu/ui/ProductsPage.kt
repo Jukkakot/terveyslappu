@@ -71,7 +71,7 @@ internal fun ProductList(products: List<Product>, actions: FoodActions, items: L
     sorted.forEachIndexed { i, p ->
         if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Row(
-            Modifier.fillMaxWidth().clickable { editing = p }.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("product-${p.name}"),
+            Modifier.fillMaxWidth().clickable { editing = p }.heightIn(min = 56.dp).padding(start = 16.dp, end = 6.dp, top = 8.dp, bottom = 8.dp).testTag("product-${p.name}"),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
@@ -81,13 +81,7 @@ internal fun ProductList(products: List<Product>, actions: FoodActions, items: L
                 Text(line, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (p.treat) TreatSign()
-            RowActions(
-                stringResource(R.string.food_edit_item, p.name),
-                stringResource(R.string.food_product_delete, p.name),
-                { editing = p },
-                { actions.onRemoveProduct(p.key) },
-                "product-${p.name}",
-            )
+            RowMenu(p.name, "product-${p.name}", { editing = p }, { actions.onRemoveProduct(p.key) })
         }
     }
     editing?.let { p ->

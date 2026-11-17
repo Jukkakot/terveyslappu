@@ -171,23 +171,26 @@ class FoodAddDialogTest {
     }
 
     @Test
-    fun `only own products have the delete button`() {
+    fun `only own products have Poista in the menu`() {
         val app = ApplicationProvider.getApplicationContext<TerveysApp>()
         app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
         open().use {
             compose.onNodeWithTag("addField").performTextInput("kaurapuu")
             compose.waitForIdle()
-            compose.onNodeWithTag("deleteProduct-Kaurapuuro testi").assertExists()
-            compose.onNodeWithTag("edit-Kaurapuuro").assertExists()
-            compose.onNodeWithTag("deleteProduct-Kaurapuuro").assertDoesNotExist()
-            compose.onNodeWithTag("deleteProduct-Kaurapuuro testi").performClick()
+            compose.onNodeWithTag("match-Kaurapuuro-menu").performClick()
+            compose.onNodeWithTag("match-Kaurapuuro-edit").assertExists()
+            compose.onNodeWithTag("match-Kaurapuuro-delete").assertDoesNotExist()
+            androidx.test.espresso.Espresso.pressBack()
+            compose.waitForIdle()
+            compose.onNodeWithTag("match-Kaurapuuro testi-menu").performClick()
+            compose.onNodeWithTag("match-Kaurapuuro testi-delete").performClick()
             compose.waitUntilAtLeastOneExists(hasTestTag("sheetProductRemoved"), 5_000)
             assertNull(app.products.find("Kaurapuuro testi"))
         }
     }
 
     @Test
-    fun `the trash in the sheet's day list deletes and Kumoa restores`() {
+    fun `the menu in the sheet's day list deletes and Kumoa restores`() {
         val app = ApplicationProvider.getApplicationContext<TerveysApp>()
         app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
         open().use {
@@ -196,6 +199,7 @@ class FoodAddDialogTest {
             compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             shadowOf(Looper.getMainLooper()).idle()
             val uuid = records.items.single().uuid
+            compose.onNodeWithTag("sheet-$uuid-menu").performClick()
             compose.onNodeWithTag("sheet-$uuid-delete").performClick()
             compose.waitUntilAtLeastOneExists(hasTestTag("sheetDeleted"), 5_000)
             shadowOf(Looper.getMainLooper()).idle()

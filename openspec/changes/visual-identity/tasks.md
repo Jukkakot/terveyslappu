@@ -40,9 +40,9 @@
 
 ## 6. Row ⋮ menu
 
-- [ ] 6.1 Shared `RowMenu` (⋮ + menu, Muokkaa, red Poista, extra items, TalkBack name "Toiminnot: <name>"), replacing `FoodScreen`'s `RowActions`.
-- [ ] 6.2 Use it on Historia weight rows (questioned rows: Hyväksy then Poista; their tap still opens the dialog), Ruoka, the sheet's day list and typing rows (base products: Muokkaa only), Omat ruuat and the AI preview; remove the pencil and trash buttons; update the affected screen tests (delete through the menu, Kumoa still restores).
-- [ ] 6.3 Check Ohje (`HelpScreen` strings) for mentions of the trash or pencil and reword to "⋮ → Poista".
+- [x] 6.1 Shared `RowMenu` (⋮ + menu, Muokkaa, red Poista, extra items, TalkBack name "Toiminnot: <name>"), replacing `FoodScreen`'s `RowActions`.
+- [x] 6.2 Use it on Historia weight rows (questioned rows: Hyväksy then Poista; their tap still opens the dialog), Ruoka, the sheet's day list and typing rows (base products: Muokkaa only), Omat ruuat and the AI preview; remove the pencil and trash buttons; update the affected screen tests (delete through the menu, Kumoa still restores).
+- [x] 6.3 Check Ohje (`HelpScreen` strings) for mentions of the trash or pencil and reword to "⋮ → Poista".
 
 ## 7. Check and docs
 

@@ -436,7 +436,7 @@ private fun PeriodList(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             when (val node = row.node) {
                 is ListNode.Weight -> if (node.questioned) {
-                    QuestionedRowItem(node.entry, today, row.depth, onCheck = { checking = node.entry }, onDelete = { actions.onDelete(node.entry) })
+                    QuestionedRowItem(node.entry, today, row.depth, onCheck = { checking = node.entry }, onAccept = { actions.onAccept(node.entry) }, onDelete = { actions.onDelete(node.entry) })
                 } else {
                     WeightRowItem(node.entry, node.change, today, row.depth, onDelete = { actions.onDelete(node.entry) })
                 }
@@ -581,7 +581,7 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
  * sign and "tarkista", no change; a tap opens Hyväksy / Poista / Peruuta.
  */
 @Composable
-private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, onCheck: () -> Unit, onDelete: () -> Unit) {
+private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, onCheck: () -> Unit, onAccept: () -> Unit, onDelete: () -> Unit) {
     val check = checkColors()
     val shape = RoundedCornerShape(12.dp)
     val description = stringResource(R.string.check_row_description, formatKg(entry.kg))
@@ -609,10 +609,14 @@ private fun QuestionedRowItem(entry: WeightEntry, today: LocalDate, depth: Int, 
             color = check.content,
             modifier = Modifier.semantics { contentDescription = description },
         )
-        val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
-        IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.error)
-        }
+        // ⋮: Hyväksy, then Poista (app-appearance "List rows"); a tap on the row still opens the dialog.
+        RowMenu(
+            stringResource(R.string.kg_value, formatKg(entry.kg)),
+            "weight-${entry.id}",
+            onEdit = null,
+            onDelete = onDelete,
+            extra = listOf(RowMenuItem(stringResource(R.string.check_accept), R.drawable.ic_check, "weight-${entry.id}-accept", onAccept)),
+        )
     }
 }
 
@@ -654,9 +658,7 @@ private fun WeightRowItem(entry: WeightEntry, change: Double?, today: LocalDate,
             )
         }
         Text(stringResource(R.string.kg_value, formatKg(entry.kg)), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-        val label = stringResource(R.string.delete_weight, formatKg(entry.kg))
-        IconButton(onClick = onDelete, modifier = Modifier.testTag("delete-${entry.id}")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = label, tint = MaterialTheme.colorScheme.error)
-        }
+        // ⋮ with a red Poista only (a weight has no editor).
+        RowMenu(stringResource(R.string.kg_value, formatKg(entry.kg)), "weight-${entry.id}", onEdit = null, onDelete = onDelete)
     }
 }

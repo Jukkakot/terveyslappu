@@ -272,15 +272,15 @@ class MainScreenTest {
         show(MainUiState(access = Access.GRANTED, weights = weights, period = Period.WEEK, screen = Screen.HISTORY))
         compose.onNodeWithTag("chart").assertExists()
         compose.onNodeWithTag("stats").assertExists()
-        compose.onNodeWithTag("delete-2").assertExists()
-        compose.onNodeWithTag("delete-3").assertDoesNotExist()
+        compose.onNodeWithTag("weight-2-menu").assertExists()
+        compose.onNodeWithTag("weight-3-menu").assertDoesNotExist()
         // Two weights in the week: the newer row shows its change, the older none; Muutos and Tahti get an arrow down.
         compose.onNodeWithTag("rowChange-1", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("rowChange-2", useUnmergedTree = true).assertDoesNotExist()
         assertEquals(2, compose.onAllNodes(hasTestTag("arrowDown") and hasAnyAncestor(hasTestTag("stats")), useUnmergedTree = true).fetchSemanticsNodes().size)
         compose.onNodeWithTag("period-30").performClick()
         compose.onNodeWithTag("period-30").assertIsSelected()
-        compose.onNodeWithTag("delete-3").assertExists()
+        compose.onNodeWithTag("weight-3-menu").assertExists()
     }
 
     @Test
@@ -297,10 +297,11 @@ class MainScreenTest {
     }
 
     @Test
-    fun `the trash deletes at once and a long-press does nothing`() {
+    fun `the menu's Poista deletes at once and a long-press does nothing`() {
         var deleted: String? = null
         show(MainUiState(access = Access.GRANTED, weights = listOf(weight("1", 0, 82.4)), screen = Screen.HISTORY), onDelete = { deleted = it.id })
-        compose.onNodeWithTag("delete-1").performClick()
+        compose.onNodeWithTag("weight-1-menu").performClick()
+        compose.onNodeWithTag("weight-1-delete").performClick()
         assertEquals("1", deleted)
         deleted = null
         compose.onNode(hasText("82,4 kg") and hasAnyAncestor(hasTestTag("weights")) and !hasAnyAncestor(hasTestTag("stats")))
@@ -353,7 +354,7 @@ class MainScreenTest {
         compose.onNodeWithTag("page-BMI").assertExists()
         compose.onNode(hasText("Viimeisin") and hasAnyAncestor(hasTestTag("stats"))).assertExists()
         compose.onNodeWithTag("chart").assertExists()
-        compose.onNodeWithTag("delete-3").assertExists()
+        compose.onNodeWithTag("weight-3-menu").assertExists()
     }
 
     @Test
@@ -375,7 +376,7 @@ class MainScreenTest {
         }
         show(MainUiState(access = Access.GRANTED, weights = many.reversed(), period = Period.All, screen = Screen.HISTORY))
         compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-y2023"))
-        compose.onNodeWithTag("delete-2023-6").assertDoesNotExist()
+        compose.onNodeWithTag("weight-2023-6-menu").assertDoesNotExist()
         compose.onNodeWithTag("group-m2023-06").assertDoesNotExist()
         compose.onNodeWithTag("group-y2023").performClick()
         compose.onNodeWithTag("weights").performScrollToNode(hasTestTag("group-m2023-06"))

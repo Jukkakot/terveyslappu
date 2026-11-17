@@ -270,13 +270,7 @@ internal fun FoodScreen(
                                 items.forEachIndexed { i, item ->
                                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                     FoodRow(item, ZoneId.systemDefault(), Modifier.clickable { actions.onEdit(item) }) {
-                                        RowActions(
-                                            stringResource(R.string.food_edit_item, item.name),
-                                            stringResource(R.string.food_delete_item, item.name),
-                                            { actions.onEdit(item) },
-                                            { actions.onDelete(item) },
-                                            "food-${item.uuid}",
-                                        )
+                                        RowMenu(item.name, "food-${item.uuid}", { actions.onEdit(item) }, { actions.onDelete(item) })
                                     }
                                 }
                             }
@@ -308,7 +302,7 @@ private fun DayBar(day: LocalDate, today: LocalDate, enabled: Boolean, onDay: (L
 internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier, trailing: @Composable () -> Unit = {}) {
     val colors = MaterialTheme.colorScheme
     Row(
-        modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp).testTag("food-${item.uuid}"),
+        modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 6.dp, top = 8.dp, bottom = 8.dp).testTag("food-${item.uuid}"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -328,17 +322,6 @@ internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier
             modifier = Modifier.padding(end = 8.dp),
         )
         trailing()
-    }
-}
-
-/** The row's end: the pencil (editor) then the red trash (delete with Kumoa), 48 dp each; tags `<tag>-edit` / `<tag>-delete`. */
-@Composable
-internal fun RowActions(editLabel: String, deleteLabel: String, onEdit: () -> Unit, onDelete: () -> Unit, tag: String) {
-    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag("$tag-edit")) {
-        Icon(painterResource(R.drawable.ic_edit), contentDescription = editLabel)
-    }
-    IconButton(onClick = onDelete, modifier = Modifier.size(48.dp).testTag("$tag-delete")) {
-        Icon(painterResource(R.drawable.ic_delete), contentDescription = deleteLabel, tint = MaterialTheme.colorScheme.error)
     }
 }
 

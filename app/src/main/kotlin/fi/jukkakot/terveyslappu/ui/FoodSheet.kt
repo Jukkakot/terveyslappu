@@ -316,13 +316,7 @@ private fun DayList(
             else -> items(dayItems, key = { it.uuid }) { item ->
                 val tint = if (item.uuid == highlight) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
                 FoodRow(item, zone, Modifier.background(tint).clickable { beforeEditor(); actions.onEdit(item) }) {
-                    RowActions(
-                        stringResource(R.string.food_edit_item, item.name),
-                        stringResource(R.string.food_delete_item, item.name),
-                        { beforeEditor(); actions.onEdit(item) },
-                        { if (item.uuid == highlight) clearHighlight(); actions.onDelete(item) },
-                        "sheet-${item.uuid}",
-                    )
+                    RowMenu(item.name, "sheet-${item.uuid}", { beforeEditor(); actions.onEdit(item) }, { if (item.uuid == highlight) clearHighlight(); actions.onDelete(item) })
                 }
             }
         }
@@ -474,8 +468,7 @@ internal fun suggestionDetail(product: Product): String {
 
 /**
  * One suggestion (empty-field list and typed matches): name and usual amount · kcal; a tap adds at
- * once. A fixed trailing column: the treat sign, the pencil (editor on a new item first) and, on an
- * own product, the red trash (removes the product).
+ * once. A fixed trailing column: the treat sign and the ⋮ menu (Muokkaa; Poista on an own product).
  */
 @Composable
 private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions, beforeEditor: () -> Unit = {}) {
@@ -490,16 +483,17 @@ private fun SuggestionRow(s: Suggestion, tag: String, actions: FoodActions, befo
             }
             if (s.product.treat) TreatSign()
         }
-        IconButton(onClick = { beforeEditor(); actions.onEditPick(s) }, modifier = Modifier.size(48.dp).testTag("edit-${s.name}")) {
-            Icon(painterResource(R.drawable.ic_edit), contentDescription = stringResource(R.string.food_edit_before_add))
-        }
-        if (s is Suggestion.Own) {
-            IconButton(onClick = { actions.onDeleteProduct(s.product) }, modifier = Modifier.size(48.dp).testTag("deleteProduct-${s.name}")) {
-                Icon(painterResource(R.drawable.ic_delete), contentDescription = stringResource(R.string.food_product_delete, s.name), tint = MaterialTheme.colorScheme.error)
-            }
-        } else {
-            Spacer(Modifier.size(48.dp))
-        }
+        // ⋮: Muokkaa (the editor for a new item) and, on an own product, Poista (removes the product).
+        RowMenu(
+            s.name,
+            "match-${s.name}",
+            { beforeEditor(); actions.onEditPick(s) },
+            if (s is Suggestion.Own) {
+                { actions.onDeleteProduct(s.product) }
+            } else {
+                null
+            },
+        )
     }
 }
 

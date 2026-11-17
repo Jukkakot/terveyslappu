@@ -44,6 +44,9 @@
     <string name="settings_backup_off">Varmuuskopio pois</string>
     <string name="settings_appearance_line">%1$s · %2$s</string>
     <string name="settings_colours">Värit</string>
+    <string name="row_actions">Toiminnot: %1$s</string>
+    <string name="row_edit">Muokkaa</string>
+    <string name="row_delete">Poista</string>
     <string name="unit_kcal_per_day">kcal/pv</string>
     <string name="unit_steps_per_day">askelta/pv</string>
     <string name="colours_brand">Terveyslappu</string>
@@ -141,7 +144,6 @@
 
     <string name="delete_done">Paino poistettu</string>
     <string name="undo">Kumoa</string>
-    <string name="delete_weight">Poista %1$s kg</string>
     <string name="restore_failed">Palautus epäonnistui. Syy on lokissa.</string>
     <string name="delete_failed">Poisto epäonnistui</string>
     <string name="cancel">Peruuta</string>
@@ -349,7 +351,6 @@
     <string name="food_per_100g">%1$s kcal / 100 g</string>
     <string name="food_usual">tavallisesti %1$s</string>
     <string name="food_row_no_kcal">ei kcal</string>
-    <string name="food_edit_before_add">Muokkaa ennen lisäystä</string>
     <string name="food_energy_unknown">kcal ei tiedossa</string>
     <string name="food_products_empty">Omia ruokia ei vielä ole. Jokaisesta lisäämästäsi nimestä tulee ruoka tänne.</string>
     <!-- product-energy-fix: correcting a product's energy. -->
@@ -386,8 +387,6 @@
     <string name="food_product_title">Ruoka</string>
     <string name="food_product_energy">Kalorit</string>
     <string name="food_product_usual">Tavallinen määrä</string>
-    <string name="food_edit_item">Muokkaa %1$s</string>
-    <string name="food_delete_item">Poista %1$s</string>
     <string name="food_product_remove">Poista ruoka</string>
     <string name="food_product_remove_note">Poisto vie ruoan ehdotuksista; annokset säilyvät.</string>
     <string name="ai_paste">Tuo annokset</string>
@@ -417,7 +416,6 @@
     <string name="food_list_products">Omat ruuat</string>
     <string name="food_enter_row">Lisää ”%1$s” uutena</string>
     <string name="food_enter_quick">Lisää pelkkä %1$s kcal</string>
-    <string name="food_product_delete">Poista ruoka %1$s</string>
     <string name="ai_clip_changed">Leikepöytä muuttui</string>
     <string name="ai_title">Tuo annokset</string>
     <string name="ai_day">Päivälle</string>
@@ -426,7 +424,6 @@
     <string name="ai_skipped">%1$d riviä ohitettu (ei nimeä tai luvut käyttökelvottomia)</string>
     <string name="ai_sum">Yhteensä %1$s</string>
     <string name="ai_add">Lisää</string>
-    <string name="ai_remove">Poista %1$s</string>
     <string name="ai_added">%1$d annosta lisätty</string>
     <string name="ai_products_saved">%1$d ruokaa tallennettu</string>
     <string name="ai_product_edit">Muokkaa ruokaa</string>
@@ -499,7 +496,7 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d annosta ja %3$d ruokaa</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d annosta jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruoka</string>
-    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-sivulta, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin Lisää annos -ikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän annokset ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, kynä avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja punainen roskakori poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruokassa ja Lisää annos -ikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten ja ruokien riveillä kynä muokkaa ja punainen roskakori poistaa (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
+    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-sivulta, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin Lisää annos -ikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän annokset ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, rivin ⋮ → Muokkaa avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja ⋮ → Poista poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruokassa ja Lisää annos -ikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten, ruokien ja painojen riveillä ⋮ avaa valikon: Muokkaa ja Poista (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
     <string name="home_food_average_long">keskiarvo %1$s kcal/pv</string>
     <string name="home_steps_average_long">keskiarvo %1$s askelta/pv</string>
     <!-- home-card-layout: the front page's edit mode -->

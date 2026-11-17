@@ -143,7 +143,7 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions, plan: AiI
                         SectionTitle(stringResource(R.string.ai_items))
                         preview.items.forEachIndexed { i, item ->
                             val details = listOf(item.amount?.let(::formatAmount), item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal))
-                            PreviewRow(item.name, item.treat, details.filterNotNull().joinToString(" · "), stringResource(R.string.ai_remove, item.name), "aiItem-$i", { editItem = i }) {
+                            PreviewRow(item.name, item.treat, details.filterNotNull().joinToString(" · "), "aiItem-$i", { editItem = i }) {
                                 actions.onAiEdit(preview.withoutItem(i))
                                 removed = RemovedRow.Item(i, item)
                             }
@@ -152,7 +152,7 @@ internal fun AiImportPreview(preview: AiPreview, actions: FoodActions, plan: AiI
                     if (preview.products.isNotEmpty()) {
                         SectionTitle(stringResource(R.string.ai_products))
                         preview.products.forEachIndexed { i, p ->
-                            PreviewRow(p.name, p.treat, energyText(p.energy), stringResource(R.string.ai_remove, p.name), "aiProduct-$i", { editProduct = i }) {
+                            PreviewRow(p.name, p.treat, energyText(p.energy), "aiProduct-$i", { editProduct = i }) {
                                 actions.onAiEdit(preview.withoutProduct(i))
                                 removed = RemovedRow.Product(i, p)
                             }
@@ -216,10 +216,9 @@ private fun SectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
 }
 
-/** A row: tap edits; the remove button has its own column at the edge. */
+/** A row: tap edits; the ⋮ menu (Muokkaa, Poista) has its own column at the edge. */
 @Composable
-private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabel: String, tag: String, onEdit: () -> Unit, onRemove: () -> Unit) {
-    val editLabel = stringResource(R.string.food_edit_item, name)
+private fun PreviewRow(name: String, treat: Boolean, details: String, tag: String, onEdit: () -> Unit, onRemove: () -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).clickable(onClick = onEdit).padding(vertical = 6.dp).testTag(tag)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -228,12 +227,7 @@ private fun PreviewRow(name: String, treat: Boolean, details: String, removeLabe
             }
             Text(details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        IconButton(onClick = onEdit, modifier = Modifier.size(48.dp).testTag("$tag-edit")) {
-            Icon(painterResource(R.drawable.ic_edit), contentDescription = editLabel)
-        }
-        IconButton(onClick = onRemove, modifier = Modifier.size(48.dp).testTag("$tag-remove")) {
-            Icon(painterResource(R.drawable.ic_delete), contentDescription = removeLabel, tint = MaterialTheme.colorScheme.error)
-        }
+        RowMenu(name, tag, onEdit, onRemove)
     }
 }
 

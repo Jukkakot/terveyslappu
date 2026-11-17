@@ -173,20 +173,23 @@ class FoodScreenTest {
     }
 
     @Test
-    fun `Ruoka rows show a pencil and a trash that act`() {
+    fun `Ruoka rows' menu edits and deletes`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
+        compose.onNodeWithTag("food-a-menu").performClick()
         compose.onNodeWithTag("food-a-edit").performClick()
         assertEquals("Rahka", editedItem)
+        compose.onNodeWithTag("food-b-menu").performClick()
         compose.onNodeWithTag("food-b-delete").performClick()
         assertEquals("Pullo", deletedItem)
     }
 
     @Test
-    fun `Ruokakirjaus rows show a pencil and a trash that act`() {
+    fun `Omat ruuat rows' menu edits and deletes`() {
         var removed: String? = null
         compose.setContent {
             TerveysTheme { ProductList(listOf(Product("Rahka")), FoodActions(onRemoveProduct = { removed = it })) }
         }
+        compose.onNodeWithTag("product-Rahka-menu").performClick()
         compose.onNodeWithTag("product-Rahka-edit").assertExists()
         compose.onNodeWithTag("product-Rahka-delete").performClick()
         assertEquals("rahka", removed?.lowercase())
