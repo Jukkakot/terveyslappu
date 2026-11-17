@@ -39,6 +39,7 @@ import fi.jukkakot.terveyslappu.chart.LegendItem
 import fi.jukkakot.terveyslappu.chart.LegendLabel
 import fi.jukkakot.terveyslappu.chart.PanelSpec
 import fi.jukkakot.terveyslappu.chart.SeriesShape
+import fi.jukkakot.terveyslappu.chart.SeriesSpec
 import fi.jukkakot.terveyslappu.chart.ToneRef
 import fi.jukkakot.terveyslappu.chart.ValueUnit
 import fi.jukkakot.terveyslappu.derived.Tone
@@ -113,6 +114,7 @@ internal val plainTexts = ChartTexts(
             LegendLabel.ACTIVE -> "aktiivinen"
             LegendLabel.TOTAL -> "yhteensä"
             LegendLabel.AVERAGE -> "keskiarvo"
+            LegendLabel.TREND -> "trendi"
             LegendLabel.WEEKLY -> "viikoittain"
         }
     },
@@ -414,11 +416,27 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
             isHighlightEnabled = false
         }
     }
+    // Trend lines (period-trend-line design 5): solid, over the bars (line data draws after bar
+    // data), before the value lines and their dots so those and the ring sit on top; never picked.
+    val trends = mutableListOf<ILineDataSet<*>>()
+    panel.series.forEach { s ->
+        s.trend?.forEachIndexed { k, segment ->
+            trends += LineDataSet(segment.map(::entry), "${s.id}-trend-$k").apply {
+                axisDependency = YAxis.AxisDependency.LEFT
+                color = c.of(s.averageTone)
+                lineWidth = SeriesSpec.TREND_DP
+                mode = LineDataSet.Mode.LINEAR
+                isDrawCirclesEnabled = false
+                isDrawValuesEnabled = false
+                isHighlightEnabled = false
+            }
+        }
+    }
     panel.series.forEach { s ->
         val tone = c.of(s.tone)
         when (val shape = s.shape) {
             is SeriesShape.Line -> {
-                where += true to averages.size + lines.size
+                where += true to averages.size + trends.size + lines.size
                 lines += LineDataSet(shape.points.map(::entry), s.id).apply {
                     axisDependency = YAxis.AxisDependency.LEFT
                     color = tone
@@ -462,7 +480,7 @@ internal fun HistoryCombinedChart.bind(spec: ChartSpec, panel: PanelSpec, style:
         if (width > 0 && plotPx > 0f) barWidth = maxOf(barWidth, px(CARD_MIN_BAR_DP) / (plotPx / span))
         bars.forEach { it.isHighlightEnabled = false }
     }
-    val lineData = (averages + lines + dots).takeIf { it.isNotEmpty() }?.let { LineData(it) }
+    val lineData = (averages + trends + lines + dots).takeIf { it.isNotEmpty() }?.let { LineData(it) }
     val barData = bars.takeIf { it.isNotEmpty() }?.let { BarData(it).apply { this.barWidth = barWidth } }
     val combined = CombinedData().apply {
         this.lineData = lineData

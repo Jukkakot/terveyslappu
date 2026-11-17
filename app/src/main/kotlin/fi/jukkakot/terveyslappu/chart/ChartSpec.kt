@@ -195,6 +195,8 @@ sealed interface SeriesShape {
 /**
  * One series of a panel. [average]: the flat dashed line in plot units, in [averageTone]; [kind]
  * names the data (an own chart's tag and the readout); bars are tappable only inside their slot.
+ * [trend]: the trend line's segments in plot units (period-trend-line design 4), drawn in
+ * [averageTone]; never picked or highlighted.
  */
 data class SeriesSpec(
     val id: String,
@@ -203,7 +205,16 @@ data class SeriesSpec(
     val side: Side = Side.LEFT,
     val average: Double? = null,
     val averageTone: ToneRef = ToneRef.MUTED,
-)
+    val trend: List<List<ChartPoint>>? = null,
+) {
+    companion object {
+        /** A trend line's width (period-trend-line design 5). */
+        const val TREND_DP = 2.5f
+
+        /** An overlaid own chart's trend in the data's tone at this opacity. */
+        const val TREND_ALPHA = 0.6f
+    }
+}
 
 /** A faint band behind the data, [from] to [to] in plot units (already clipped to the scale). */
 data class BandSpec(val from: Double, val to: Double, val tone: ToneRef)
@@ -276,7 +287,7 @@ data class LegendItem(val label: LegendLabel, val tone: ToneRef?, val form: Lege
 
 enum class LegendForm { SQUARE, LINE, DASHED, NONE }
 
-enum class LegendLabel { WEIGHT, BMI, FOOD, TREAT, STEPS, BURN, REST, ACTIVE, TOTAL, AVERAGE, WEEKLY }
+enum class LegendLabel { WEIGHT, BMI, FOOD, TREAT, STEPS, BURN, REST, ACTIVE, TOTAL, AVERAGE, TREND, WEEKLY }
 
 /** One row of the marker card: a dot in [tone], the data's [name] and its [value] with unit. */
 data class ReadoutRow(val tone: ToneRef, val name: String, val value: String)

@@ -53,13 +53,29 @@ object TabCharts {
         val points = data.entries.indices.map { i ->
             ChartPoint(x.of(data.entries[i].time, zone), data.ys[i], data.entries[i].time.atZone(zone).toLocalDate())
         }
-        val series = SeriesSpec("line", ToneRef.PRIMARY, SeriesShape.Line(points, Dots.FitOrLone(data.lone)))
+        // The trend (period-trend-line design 3): each day's last weight, today included, at its time.
+        val last = data.entries.indices.groupBy { data.entries[it].time.atZone(zone).toLocalDate() }
+            .mapValues { (_, list) -> list.maxBy { data.entries[it].time } }
+        val trend = AverageLine.of(axis.days, last.map { (day, i) -> day to data.ys[i] }, null).trend
+            ?.map { it.clamped(data.minY, data.maxY) }
+        val trendPoints = trend?.map { s ->
+            s.days.indices.map { k -> ChartPoint(x.of(data.entries[last.getValue(s.days[k])].time, zone), s.values[k], s.days[k]) }
+        }
+        val series = SeriesSpec("line", ToneRef.PRIMARY, SeriesShape.Line(points, Dots.FitOrLone(data.lone)), trend = trendPoints)
         val panel = PanelSpec(PLOT_DP, AxisSpec(data.minY, data.maxY, unit), series = listOf(series), bands = bands)
-        return ChartSpec(axis, listOf(panel), listOf(LegendItem(label, ToneRef.PRIMARY, LegendForm.LINE)), readout = { readout(data, it) })
+        val legend = listOfNotNull(LegendItem(label, ToneRef.PRIMARY, LegendForm.LINE), TREND_LEGEND.takeIf { trend != null })
+        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.withTrend(readout(data, it), trend, it, axis, unit) })
     }
 
-    private fun legendTail(average: Boolean, weekly: Boolean): List<LegendItem> = listOfNotNull(
-        LegendItem(LegendLabel.AVERAGE, ToneRef.MUTED, LegendForm.DASHED).takeIf { average },
+    val TREND_LEGEND = LegendItem(LegendLabel.TREND, ToneRef.MUTED, LegendForm.LINE)
+
+    /** The trend's points on [x], one per smoothed day at the day's centre. */
+    fun trendPoints(trend: List<TrendSegment>?, x: ChartX): List<List<ChartPoint>>? =
+        trend?.map { s -> s.days.indices.map { k -> ChartPoint(x.of(s.days[k]), s.values[k], s.days[k]) } }
+
+    private fun legendTail(line: AverageLine, weekly: Boolean): List<LegendItem> = listOfNotNull(
+        LegendItem(LegendLabel.AVERAGE, ToneRef.MUTED, LegendForm.DASHED).takeIf { line is AverageLine.Flat },
+        TREND_LEGEND.takeIf { line is AverageLine.Trend },
         LegendItem(LegendLabel.WEEKLY, null, LegendForm.NONE).takeIf { weekly },
     )
 
@@ -67,8 +83,8 @@ object TabCharts {
     fun energy(series: EnergySeries, today: LocalDate): ChartSpec {
         val axis = ChartAxis(series.from, series.to, series.weekly)
         val x = ChartX(axis)
-        val average = series.stats.averageKcal?.toDouble()
-        val top = AxisTicks.bars(max(series.bars.maxOfOrNull { it.total } ?: 0, series.stats.averageKcal ?: 0).toDouble(), KCAL_STEP).last()
+        val line = AverageLine.of(axis.days, series.days.filter { it.day != today }.map { it.day to it.total.toDouble() }, series.stats.averageKcal?.toDouble())
+        val top = AxisTicks.bars(max((series.bars.maxOfOrNull { it.total } ?: 0).toDouble(), line.highest ?: 0.0), KCAL_STEP).last()
         val points = series.bars.map { bar ->
             val at = if (series.weekly) x.ofWeek(bar.from) else x.of(bar.from)
             ChartPoint(at, bar.total.toDouble(), bar.from, listOf((bar.total - bar.treat).toDouble().coerceAtLeast(0.0), bar.treat.toDouble()))
@@ -77,29 +93,30 @@ object TabCharts {
             "food",
             ToneRef.PRIMARY,
             SeriesShape.StackedBars(points, listOf(ToneRef.PRIMARY, ToneRef.TERTIARY), weekWidth(series.weekly)),
-            average = average,
+            average = line.flat,
+            trend = trendPoints(line.trend?.map { it.clamped(0.0, top) }, x),
         )
         val legend = listOf(
             LegendItem(LegendLabel.FOOD, ToneRef.PRIMARY, LegendForm.SQUARE),
             LegendItem(LegendLabel.TREAT, ToneRef.TERTIARY, LegendForm.SQUARE),
-        ) + legendTail(average != null, series.weekly)
+        ) + legendTail(line, series.weekly)
         val panel = PanelSpec(PLOT_DP, AxisSpec(0.0, top, ValueUnit.KCAL), series = listOf(bars))
-        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.energy(series, it, today) })
+        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.withTrend(TabReadouts.energy(series, it, today), line.trend?.map { t -> t.clamped(0.0, top) }, it, axis, ValueUnit.KCAL, after = 0) })
     }
 
     /** Askeleet: one bar per day with steps (weekly over 90 days) and the average line. */
     fun steps(series: StepsSeries, today: LocalDate): ChartSpec {
         val axis = ChartAxis(series.from, series.to, series.weekly)
         val x = ChartX(axis)
-        val average = series.stats.averageSteps?.toDouble()
-        val top = AxisTicks.bars(max(series.bars.maxOfOrNull { it.steps } ?: 0L, series.stats.averageSteps ?: 0L).toDouble(), STEPS_STEP).last()
+        val line = AverageLine.of(axis.days, series.days.filter { it.day != today }.map { it.day to it.steps.toDouble() }, series.stats.averageSteps?.toDouble())
+        val top = AxisTicks.bars(max((series.bars.maxOfOrNull { it.steps } ?: 0L).toDouble(), line.highest ?: 0.0), STEPS_STEP).last()
         val points = series.bars.map { bar ->
             ChartPoint(if (series.weekly) x.ofWeek(bar.from) else x.of(bar.from), bar.steps.toDouble(), bar.from)
         }
-        val bars = SeriesSpec("steps", ToneRef.PRIMARY, SeriesShape.Bars(points, weekWidth(series.weekly)), average = average)
-        val legend = listOf(LegendItem(LegendLabel.STEPS, ToneRef.PRIMARY, LegendForm.SQUARE)) + legendTail(average != null, series.weekly)
+        val bars = SeriesSpec("steps", ToneRef.PRIMARY, SeriesShape.Bars(points, weekWidth(series.weekly)), average = line.flat, trend = trendPoints(line.trend?.map { it.clamped(0.0, top) }, x))
+        val legend = listOf(LegendItem(LegendLabel.STEPS, ToneRef.PRIMARY, LegendForm.SQUARE)) + legendTail(line, series.weekly)
         val panel = PanelSpec(PLOT_DP, AxisSpec(0.0, top, ValueUnit.STEPS), series = listOf(bars))
-        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.steps(series, it, today) })
+        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.withTrend(TabReadouts.steps(series, it, today), line.trend?.map { t -> t.clamped(0.0, top) }, it, axis, ValueUnit.STEPS) })
     }
 
     /**
@@ -110,8 +127,8 @@ object TabCharts {
         val axis = ChartAxis(series.from, series.to, series.weekly)
         val x = ChartX(axis)
         val tone = TabReadouts.BURN_TONE
-        val average = series.stats.averageTotal?.toDouble()
-        val top = AxisTicks.bars(max(series.bars.maxOfOrNull { it.total } ?: 0L, series.stats.averageTotal ?: 0L).toDouble(), KCAL_STEP).last()
+        val line = AverageLine.of(axis.days, series.days.filter { it.day != today }.map { it.day to it.total.toDouble() }, series.stats.averageTotal?.toDouble())
+        val top = AxisTicks.bars(max((series.bars.maxOfOrNull { it.total } ?: 0L).toDouble(), line.highest ?: 0.0), KCAL_STEP).last()
         fun at(from: LocalDate) = if (series.weekly) x.ofWeek(from) else x.of(from)
         val width = weekWidth(series.weekly)
         val split = series.bars.filter { it.kind == BurnKind.SPLIT }.map { bar ->
@@ -125,14 +142,14 @@ object TabCharts {
             SeriesSpec("total", tone.alpha(ToneRef.TOTAL_ALPHA), SeriesShape.Bars(whole, width)).takeIf { whole.isNotEmpty() },
             SeriesSpec("active", tone, SeriesShape.Bars(activeOnly, width)).takeIf { activeOnly.isNotEmpty() },
         )
-        // One average line for the panel, carried by its first series.
-        val withAverage = shapes.mapIndexed { i, s -> if (i == 0) s.copy(average = average) else s }
+        // One average or trend line for the panel, carried by its first series.
+        val withAverage = shapes.mapIndexed { i, s -> if (i == 0) s.copy(average = line.flat, trend = trendPoints(line.trend?.map { it.clamped(0.0, top) }, x)) else s }
         val legend = listOfNotNull(
             LegendItem(LegendLabel.REST, tone.alpha(ToneRef.LIGHT_ALPHA), LegendForm.SQUARE),
             LegendItem(LegendLabel.ACTIVE, tone, LegendForm.SQUARE),
             LegendItem(LegendLabel.TOTAL, tone.alpha(ToneRef.TOTAL_ALPHA), LegendForm.SQUARE).takeIf { whole.isNotEmpty() },
-        ) + legendTail(average != null, series.weekly)
+        ) + legendTail(line, series.weekly)
         val panel = PanelSpec(PLOT_DP, AxisSpec(0.0, top, ValueUnit.KCAL), series = withAverage)
-        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.burn(series, it, today) })
+        return ChartSpec(axis, listOf(panel), legend, readout = { TabReadouts.withTrend(TabReadouts.burn(series, it, today), line.trend?.map { t -> t.clamped(0.0, top) }, it, axis, ValueUnit.KCAL) })
     }
 }

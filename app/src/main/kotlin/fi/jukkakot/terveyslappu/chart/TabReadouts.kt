@@ -57,6 +57,38 @@ object TabReadouts {
 
     private fun monday(key: LocalDate) = key.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
+    const val TREND = "trendi"
+
+    /**
+     * The trend at a chosen [key] (weight-chart "Trend line in the marker card"): the day itself; a
+     * weekly bar's the week's middle day when it is inside the axis and covered, else the nearest
+     * covered day of the week inside the axis; null when none is covered.
+     */
+    fun trendAt(trend: List<TrendSegment>?, key: LocalDate, axis: ChartAxis): Double? {
+        if (trend.isNullOrEmpty()) return null
+        if (!axis.weekly) return trend.at(key)
+        val mid = monday(key).plusDays(3)
+        return (0L..6L).map { monday(key).plusDays(it) }
+            .filter { it in axis }
+            .sortedBy { kotlin.math.abs(java.time.temporal.ChronoUnit.DAYS.between(mid, it)) }
+            .firstNotNullOfOrNull { trend.at(it) }
+    }
+
+    /** "8 200 askelta/pv", "2 050 kcal/pv", "81,4 kg", "24,8": a trend value like the keskiarvo rows. */
+    fun trendValue(unit: ValueUnit, v: Double): String = when (unit) {
+        ValueUnit.KG -> "${formatKg(v)} kg"
+        ValueUnit.BMI -> formatKg(v)
+        ValueUnit.KCAL -> "${formatKcal(v)} kcal/pv"
+        ValueUnit.STEPS -> "${formatSteps(kotlin.math.round(v).toLong())} askelta/pv"
+    }
+
+    /** [card] with the trend row ("[name] 81,4 kg") inserted after its row [after]; unchanged without a trend that day. */
+    fun withTrend(card: ReadoutCard, trend: List<TrendSegment>?, key: LocalDate, axis: ChartAxis, unit: ValueUnit, name: String = TREND, after: Int = card.rows.size - 1, tone: ToneRef = ToneRef.MUTED): ReadoutCard {
+        val v = trendAt(trend, key, axis) ?: return card
+        val rows = card.rows.toMutableList().apply { add(after + 1, ReadoutRow(tone, name, trendValue(unit, v))) }
+        return card.copy(rows = rows)
+    }
+
     /**
      * Paino and BMI: head "Su 8.11. · 7.05" from the day's last weight in [data] (no "?" weights
      * there) and the row "[name] 82,6 kg", or "[name] ei painoa" under the bare date.
@@ -118,8 +150,20 @@ object TabReadouts {
      * value that day or "ei painoa" / "ei kirjauksia" / "ei tietoa"; Kulutus "2 300 kcal ·
      * aktiivinen 450 kcal" (no lepo). Today unmarked, no week form.
      */
-    fun custom(readout: Readout, today: LocalDate, tone: (SeriesKind) -> ToneRef): ReadoutCard =
-        ReadoutCard(day(readout.day, today), readout.values.map { (kind, value) -> ReadoutRow(tone(kind), kindName(kind), customValue(kind, value)) })
+    fun custom(
+        readout: Readout,
+        today: LocalDate,
+        trends: Map<SeriesKind, List<TrendSegment>> = emptyMap(),
+        trendTone: (SeriesKind) -> ToneRef = { ToneRef.MUTED },
+        tone: (SeriesKind) -> ToneRef,
+    ): ReadoutCard = ReadoutCard(
+        day(readout.day, today),
+        readout.values.flatMap { (kind, value) ->
+            // A data with a trend gets "<data> trendi" right after its own row (period-trend-line design 6).
+            val trend = trends[kind]?.at(readout.day)?.let { ReadoutRow(trendTone(kind), "${kindName(kind)} $TREND", trendValue(CustomChartSpec.unit(kind), it)) }
+            listOfNotNull(ReadoutRow(tone(kind), kindName(kind), customValue(kind, value)), trend)
+        },
+    )
 
     fun kindName(kind: SeriesKind): String = when (kind) {
         SeriesKind.WEIGHT -> WEIGHT

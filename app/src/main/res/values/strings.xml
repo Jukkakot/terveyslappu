@@ -453,6 +453,7 @@
     <string name="legend_weight">paino</string>
     <string name="legend_bmi">BMI</string>
     <string name="legend_weekly">viikoittain</string>
+    <string name="legend_trend">trendi</string>
     <string name="steps_source_phone">Puhelin</string>
     <string name="settings_steps">Askeleet</string>
     <string name="settings_steps_auto">Automaattinen: %1$s</string>
@@ -488,7 +489,7 @@
     <string name="energy_legend_treat">herkut</string>
     <string name="energy_legend_average">keskiarvo</string>
     <string name="chart_average">Keskiarvo</string>
-    <string name="chart_average_line">Vaakaviiva jakson keskiarvon kohdalla</string>
+    <string name="chart_average_line">Vaakaviiva jakson keskiarvon kohdalla, yli kuukauden jaksoilla trendiviiva</string>
     <string name="import_found_foods">Löytyi %1$d annosta ja %2$d ruokaa.</string>
     <string name="import_confirm_foods">Tuo</string>
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d annosta ja %3$d ruokaa</string>

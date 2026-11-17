@@ -110,6 +110,7 @@ internal fun legendText(label: LegendLabel): Int = when (label) {
     LegendLabel.ACTIVE -> R.string.burn_legend_active
     LegendLabel.TOTAL -> R.string.burn_legend_total
     LegendLabel.AVERAGE -> R.string.energy_legend_average
+    LegendLabel.TREND -> R.string.legend_trend
     LegendLabel.WEEKLY -> R.string.legend_weekly
 }
 
