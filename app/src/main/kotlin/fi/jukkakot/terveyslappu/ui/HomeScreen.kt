@@ -483,7 +483,7 @@ private fun LatestCard(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             val title = summary?.let { if (small) formatDayTime(it.latest.time, today) else stringResource(R.string.home_latest, formatDayTime(it.latest.time, today)) }
-                ?: stringResource(R.string.history_title)
+                ?: stringResource(R.string.home_card_weight)
             Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }

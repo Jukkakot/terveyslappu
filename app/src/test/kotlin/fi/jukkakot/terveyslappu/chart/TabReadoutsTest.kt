@@ -64,9 +64,9 @@ class TabReadoutsTest {
         assertEquals("To 12.11. | syöty 1 760 kcal | herkut 230 kcal", text(TabReadouts.energy(daily, day, today)))
         assertEquals("Pe 13.11. | syöty ei annoksia", text(TabReadouts.energy(daily, day.plusDays(1), today)))
         val weekly = EnergySeries.of(listOf(food(LocalDate.of(2026, 11, 10), 1800.0), food(day, 2000.0)), Period.Last(365), today)
-        assertEquals("Vk 46 · 9.–15.11. | syöty keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 9), today)))
+        assertEquals("Vk 46 · 9.–15.11. | syöty keskiarvo 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 9), today)))
         // Any day of the week (the key is the week's first day inside the period) finds its bar.
-        assertEquals("Vk 46 · 9.–15.11. | syöty keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 11), today)))
+        assertEquals("Vk 46 · 9.–15.11. | syöty keskiarvo 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 11), today)))
         assertEquals("Vk 45 · 2.–8.11. | syöty ei annoksia", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 2), today)))
     }
 
@@ -77,7 +77,7 @@ class TabReadoutsTest {
         assertEquals("To 12.11. | askeleet 9 202 askelta", text(TabReadouts.steps(daily, day, today)))
         assertEquals("Ke 11.11. | askeleet ei tietoa", text(TabReadouts.steps(daily, day.minusDays(1), today)))
         val weekly = StepsSeries.of(listOf(StepsDay(LocalDate.of(2026, 11, 10), 8000), StepsDay(day, 8400)), Period.Last(365), today)
-        assertEquals("Vk 46 · 9.–15.11. | askeleet keskim. 8 200 askelta/pv", text(TabReadouts.steps(weekly, LocalDate.of(2026, 11, 9), today)))
+        assertEquals("Vk 46 · 9.–15.11. | askeleet keskiarvo 8 200 askelta/pv", text(TabReadouts.steps(weekly, LocalDate.of(2026, 11, 9), today)))
     }
 
     @Test

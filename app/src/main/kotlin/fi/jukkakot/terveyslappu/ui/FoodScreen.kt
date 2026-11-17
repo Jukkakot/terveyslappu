@@ -126,7 +126,7 @@ class FoodActions(
 )
 
 private val finnish = Locale.forLanguageTag("fi")
-private val dayFormat = DateTimeFormatter.ofPattern("EEEE d.M.", finnish)
+private val dayFormat = DateTimeFormatter.ofPattern("EEE d.M.", finnish)
 
 /** 1760 → "1 760". */
 fun formatKcal(kcal: Double): String = NumberFormat.getIntegerInstance(finnish).format(kcal.roundToInt())

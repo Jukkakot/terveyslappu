@@ -98,7 +98,7 @@ internal fun SettingsScreen(
         }
         SettingsPage.DATA -> SubPage(R.string.settings_data_backup, actions, snackbar, "dataPage") {
             var choosingFormat by remember { mutableStateOf(false) }
-            Section(R.string.settings_data) {
+            Section(null) {
                 SettingsRow(R.drawable.ic_import, stringResource(R.string.menu_import), actions.onImportHistory, "import")
                 SettingsRow(R.drawable.ic_export, stringResource(R.string.menu_export), { choosingFormat = true }, "export")
             }

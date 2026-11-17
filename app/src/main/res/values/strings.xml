@@ -36,7 +36,6 @@
     <string name="gender_male">Mies</string>
     <string name="gender_female">Nainen</string>
     <string name="gender_none">Ei valittu</string>
-    <string name="settings_data">Tiedostot ja varmuuskopio</string>
     <string name="settings_backup">Varmuuskopio</string>
     <string name="settings_support">Tuki</string>
     <string name="settings_data_backup">Tiedostot ja varmuuskopio</string>
@@ -52,7 +51,7 @@
     <string name="help_intro">Terveyslappu kirjaa painosi Health Connectiin vaivattomasti. Tässä lyhyesti, mitä sovelluksella voi tehdä.</string>
     <string name="help_weigh_title">Punnitse nopeasti</string>
     <string name="help_weigh_body">Aloita punnitus ⋮-valikon Punnitse-kohdasta, kotinäytön widgetistä, pika-asetusten laatasta tai sovelluksen kuvakkeen pikakuvakkeesta. Astu vaa\'alle, ja vakaa paino tallentuu Health Connectiin.</string>
-    <string name="help_manual_title">Syötä paino käsin</string>
+    <string name="help_manual_title">Lisää paino käsin</string>
     <string name="help_manual_body">⋮-valikon Lisää paino käsin -kohdasta voit kirjata painon itse, myös takautuvasti valitsemallasi ajankohdalla.</string>
     <string name="help_history_title">Historia</string>
     <string name="help_history_body">Historiassa näet painokaavion, valittavat jaksot ja tilastot sekä listan painoista. Avaa se etusivun painokortista.</string>
@@ -111,10 +110,10 @@
     <string name="group_values">%1$s → %2$s kg · %3$d painoa</string>
     <string name="group_count_only">%1$d painoa</string>
     <string name="group_days">%1$d pv</string>
-    <string name="group_avg_kcal">ka %1$s kcal/pv</string>
-    <string name="group_avg_steps">ka %1$s askelta/pv</string>
-    <string name="group_avg_treats">herkkuja ka %1$s kcal/pv</string>
-    <string name="group_avg_active">aktiivinen ka %1$s kcal/pv</string>
+    <string name="group_avg_kcal">keskiarvo %1$s kcal/pv</string>
+    <string name="group_avg_steps">keskiarvo %1$s askelta/pv</string>
+    <string name="group_avg_treats">herkkuja keskiarvo %1$s kcal/pv</string>
+    <string name="group_avg_active">aktiivinen keskiarvo %1$s kcal/pv</string>
     <string name="group_gap">Ei painoja %1$s–%2$s</string>
 
     <string name="quantity_weight">Paino</string>
@@ -290,10 +289,10 @@
     <!-- food-log -->
     <string name="food_title">Ruoka</string>
     <string name="food_add">Lisää annos</string>
-    <string name="home_food_title">Syöty tänään</string>
+    <string name="home_food_title">Syöty</string>
     <string name="home_food_none">ei annoksia</string>
     <string name="home_food_bars">Päivittäin syödyt kilokalorit jaksolla, %1$d päivää</string>
-    <string name="home_food_average">ka %1$s kcal/pv</string>
+    <string name="home_food_average">keskiarvo %1$s kcal/pv</string>
     <string name="home_food_no_average">ei vielä keskiarvoa</string>
     <string name="home_open_energy">Avaa Syöty</string>
     <string name="home_open_food">Avaa päivän annokset</string>
@@ -432,10 +431,10 @@
     <string name="settings_food_base_line">Sovelluksen mukana tulevat yleiset ruuat ehdotuksissa</string>
     <string name="settings_food_line">%1$d omaa ruokaa</string>
     <string name="quantity_steps">Askeleet</string>
-    <string name="home_steps_title">Askeleet tänään</string>
+    <string name="home_steps_title">Askeleet</string>
     <string name="home_open_steps">Avaa askeleet</string>
     <string name="home_steps_bars">Päivittäiset askeleet jaksolla, %1$d askelpäivää</string>
-    <string name="home_steps_average">ka %1$s askelta/pv</string>
+    <string name="home_steps_average">keskiarvo %1$s askelta/pv</string>
     <string name="steps_no_data">ei tietoa</string>
     <string name="steps_today_permission">Askeleet: anna lupa</string>
     <string name="steps_unavailable">Askeleet: ei saatavilla</string>
@@ -446,9 +445,9 @@
     <string name="steps_ask_again">Kysy uudelleen</string>
     <string name="steps_empty">Tällä jaksolla ei ole askeltietoja. Yhdistä Garmin Connect (tai muu askelia kirjaava sovellus) Health Connectiin, niin askeleet näkyvät täällä.</string>
     <string name="steps_chart_description">Askeleet, %1$d palkkia</string>
-    <string name="steps_stat_average">Keskimäärin</string>
-    <string name="steps_stat_days">Askelpäiviä</string>
-    <string name="steps_per_day">%1$s askelta/pv</string>
+    <string name="steps_stat_average">Keskiarvo</string>
+    <string name="steps_stat_days">Päiviä</string>
+    <string name="steps_per_day">%1$s askelta/⁠pv</string>
     <string name="steps_value">%1$s askelta</string>
     <string name="steps_legend">askeleet</string>
     <string name="legend_weight">paino</string>
@@ -466,7 +465,7 @@
     <string name="steps_source_now">Nyt: %1$s</string>
     <string name="steps_source_all">Kaikki sovellukset yhdistettynä</string>
     <string name="steps_source_none_recent">ei askelia 30 päivään</string>
-    <string name="steps_source_average">keskim. %1$s askelta/pv</string>
+    <string name="steps_source_average">keskiarvo %1$s askelta/pv</string>
     <string name="steps_source_last_seen">viimeksi %1$s</string>
     <string name="steps_source_failed">Sovelluksia ei voitu lukea</string>
     <string name="steps_source_checking">Haetaan sovelluksia</string>
@@ -480,10 +479,10 @@
     <string name="energy_reason">Syöty vaatii luvan ravintotietoihin</string>
     <string name="energy_empty">Tällä jaksolla ei ole annoksia.</string>
     <string name="energy_chart_description">Syöty, %1$d palkkia</string>
-    <string name="energy_stat_average">Keskimäärin</string>
+    <string name="energy_stat_average">Keskiarvo</string>
     <string name="energy_stat_treats">Herkut</string>
     <string name="energy_stat_days">Päiviä</string>
-    <string name="energy_per_day">%1$s kcal/pv</string>
+    <string name="energy_per_day">%1$s kcal/⁠pv</string>
     <string name="energy_days">%1$d / %2$d päivää</string>
     <string name="energy_legend_food">syöty</string>
     <string name="energy_legend_treat">herkut</string>
@@ -495,9 +494,9 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d annosta ja %3$d ruokaa</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d annosta jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruoka</string>
-    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-näkymästä, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin lisäysikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän annokset ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, kynä avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja punainen roskakori poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruoka-näkymässä ja lisäysikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten ja ruokien riveillä kynä muokkaa ja punainen roskakori poistaa (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
-    <string name="home_food_average_long">keskim. %1$s kcal/pv</string>
-    <string name="home_steps_average_long">keskim. %1$s askelta/pv</string>
+    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-sivulta, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin Lisää annos -ikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän annokset ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, kynä avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja punainen roskakori poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruokassa ja Lisää annos -ikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten ja ruokien riveillä kynä muokkaa ja punainen roskakori poistaa (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia, ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
+    <string name="home_food_average_long">keskiarvo %1$s kcal/pv</string>
+    <string name="home_steps_average_long">keskiarvo %1$s askelta/pv</string>
     <!-- home-card-layout: the front page's edit mode -->
     <string name="home_card_weight">Paino</string>
     <string name="home_card_food">Syöty</string>
@@ -587,12 +586,12 @@
     <string name="burn_legend_active">aktiivinen</string>
     <string name="burn_legend_total">yhteensä</string>
     <string name="burn_legend">kulutus</string>
-    <string name="burn_stat_active">Aktiivinen keskim.</string>
+    <string name="burn_stat_active">Aktiivinen keskiarvo</string>
     <string name="burn_stat_days">Päiviä</string>
     <string name="burn_active_line">aktiivinen %1$s kcal</string>
-    <string name="home_burn_title">Kulutettu tänään</string>
-    <string name="home_burn_average">ka %1$s kcal/pv</string>
-    <string name="home_burn_average_long">keskim. %1$s kcal/pv</string>
+    <string name="home_burn_title">Kulutus</string>
+    <string name="home_burn_average">keskiarvo %1$s kcal/pv</string>
+    <string name="home_burn_average_long">keskiarvo %1$s kcal/pv</string>
     <string name="home_burn_bars">Päivittäinen kulutus jaksolla, %1$d päivää</string>
     <string name="home_open_burn">Avaa Kulutus</string>
     <string name="home_card_burn">Kulutus</string>

@@ -70,12 +70,12 @@ object TabReadouts {
         return ReadoutCard(head, listOf(ReadoutRow(tone, name, label(data.ys[last]))))
     }
 
-    /** Syöty: "syöty 1 760 kcal" and "herkut 230 kcal", or "syöty ei annoksia"; a week "syöty keskim. 1 900 kcal/pv". */
+    /** Syöty: "syöty 1 760 kcal" and "herkut 230 kcal", or "syöty ei annoksia"; a week "syöty keskiarvo 1 900 kcal/pv". */
     fun energy(series: EnergySeries, key: LocalDate, today: LocalDate): ReadoutCard {
         val food = ToneRef.PRIMARY
         if (series.weekly) {
             val bar = series.bars.firstOrNull { it.from == monday(key) }
-            return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(food, FOOD, bar?.let { "keskim. ${formatKcal(it.total)} kcal/pv" } ?: NO_FOOD)))
+            return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(food, FOOD, bar?.let { "keskiarvo ${formatKcal(it.total)} kcal/pv" } ?: NO_FOOD)))
         }
         val logged = series.days.firstOrNull { it.day == key } ?: return ReadoutCard(day(key, today), listOf(ReadoutRow(food, FOOD, NO_FOOD)))
         return ReadoutCard(
@@ -84,12 +84,12 @@ object TabReadouts {
         )
     }
 
-    /** Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; a week "askeleet keskim. 8 200 askelta/pv". */
+    /** Askeleet: "askeleet 9 202 askelta" or "askeleet ei tietoa"; a week "askeleet keskiarvo 8 200 askelta/pv". */
     fun steps(series: StepsSeries, key: LocalDate, today: LocalDate): ReadoutCard {
         val tone = ToneRef.PRIMARY
         if (series.weekly) {
             val bar = series.bars.firstOrNull { it.from == monday(key) }
-            return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(tone, STEPS, bar?.let { "keskim. ${formatSteps(it.steps)} askelta/pv" } ?: NO_DATA)))
+            return ReadoutCard(week(monday(key), today), listOf(ReadoutRow(tone, STEPS, bar?.let { "keskiarvo ${formatSteps(it.steps)} askelta/pv" } ?: NO_DATA)))
         }
         val day = series.days.firstOrNull { it.day == key } ?: return ReadoutCard(day(key, today), listOf(ReadoutRow(tone, STEPS, NO_DATA)))
         return ReadoutCard(day(key, today), listOf(ReadoutRow(tone, STEPS, "${formatSteps(day.steps)} askelta")))
@@ -106,7 +106,7 @@ object TabReadouts {
         val bar = series.bars.firstOrNull { it.from == start } ?: return ReadoutCard(head, listOf(ReadoutRow(BURN_TONE, BURN, NO_DATA)))
         val unit = if (series.weekly) "kcal/pv" else "kcal"
         val parts = buildList {
-            add("${if (series.weekly) "keskim. " else ""}${formatKcal(bar.total.toDouble())} $unit")
+            add("${if (series.weekly) "keskiarvo " else ""}${formatKcal(bar.total.toDouble())} $unit")
             bar.active?.let { add("aktiivinen ${formatKcal(it.toDouble())} $unit") }
             if (bar.active != null) bar.rest?.let { add("lepo ${formatKcal(it.toDouble())} $unit") }
         }
