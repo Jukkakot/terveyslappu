@@ -22,7 +22,7 @@
 
 ## 4. Context and release
 
-- [ ] 4.1 `product.md`: replace "never smoothed values" with the trend rule (user 2026-11-17, Historia only); glossary term **trendi**.
-- [ ] 4.2 Ohje: one sentence on the trend line where the charts are described.
+- [x] 4.1 `product.md`: replace "never smoothed values" with the trend rule (user 2026-11-17, Historia only); glossary term **trendi**.
+- [x] 4.2 Ohje: one sentence on the trend line where the charts are described.
 - [ ] 4.3 Global `~/.claude/knowledge.md` Charts: a bullet on LOESS trend lines over noisy daily data with a source (claude-config repo).
-- [ ] 4.4 Roadmap backlog entry done; bump MINOR in `gradle.properties`.
+- [x] 4.4 Roadmap backlog entry done; bump MINOR in `gradle.properties`.

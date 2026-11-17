@@ -25,6 +25,8 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
 - **Tuo tiedostosta / Vie tiedostoon**; section **Tiedostot ja varmuuskopio**.
 - **Mistä askeleet luetaan**: the steps source setting.
 - **keskiarvo**: the average of a period (labels, legends, tiles); never "keskimäärin", "keskim." or "ka.".
+- **trendi**: the smooth line through the daily values on Historia's long periods (legend
+  "trendi", marker row "trendi …", own charts "<data> trendi"); never "liukuva keskiarvo" or "tasoitus".
 
 ## How the data flows (decided 2026-11-08)
 
@@ -218,12 +220,16 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - BR4 Treats visible: small frequent treats add up unnoticed, so they stand apart from meals.
   - BR5 No pressure: a missed day is fine; no streaks, red numbers or judgement.
   - Motivation (user 2026-11-15): logging itself is what works; no gamification, no comparison to
-    other people, no week-to-week comparison features for now. Show facts, never smoothed
-    values; a flat period-average line is fine as a reference. Bad news weighs 2-3 times more
+    other people, no week-to-week comparison features for now. Show facts; a flat
+    period-average line is fine as a reference. Bad news weighs 2-3 times more
     than good, so keep framing neutral (research: knowledge.md "Motivation and feedback").
   - Period average line (user 2026-11-15): Energia and Askeleet draw one flat dashed line at the
     period's average (today left out) instead of a rolling 7-day line, as the big cards do; own
     charts get a Keskiarvo switch (off by default).
+  - Trend line (user 2026-11-17, period-trend-line; replaces "never smoothed values" of
+    2026-11-15): on Historia periods over 31 axis days the charts draw a smooth trend line (LOESS)
+    in place of the flat average line, also on Paino and BMI; the daily values stay drawn as
+    they are. Front page cards keep the flat line at every period; statistics stay numbers.
   - Food log goal restated (user 2026-11-15): log for a while, now and then, to learn the kcal of
     everyday meals; earlier the same meals every day made counting unnecessary.
   - Chart granularity is the app's choice, not a setting (user 2026-11-15): long periods are not

@@ -72,3 +72,17 @@ statistics; no change to the Paino/BMI scale rule.
   points keep it small. Bar scales cover the trend's highest value; elsewhere values are clamped.
 - Performance: Kaikki over 3 years ≈ 1 100 points; LOESS is O(n·k), well under 50 ms; computed in
   the pure series step, remembered with the spec.
+
+## Implementation choices (apply, 2026-11-17)
+
+Points the spec left open, settled the simplest way:
+
+- Syöty tab's marker card: the trend row goes right after the "syöty" row, before "herkut".
+- Weekly bar's trend row: the week's days inside the axis, nearest to the middle (Thursday)
+  first, earlier day on a tie; the first one the line covers gives the value.
+- Bar tabs clamp the trend into 0..top (top already covers its highest value).
+- Kulutus tab: one trend per panel, carried by its first bar series (as the average was).
+- Päällekkäin own charts: trend 2.5 dp like the fixed tabs; its marker row dot is the data's tone
+  at 60 %. Allekkain: neutral tone in the chart and the marker row.
+- Paino/BMI trend input = each day's last weight in the chart's data (the "?" weights are not
+  there); its point x = that weight's time.
