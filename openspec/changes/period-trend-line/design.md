@@ -13,7 +13,7 @@ the axis start, day centre (`ChartAxis`).
 **Goals:** one pure trend rule shared by every chart; library smoothing; same look and legend
 everywhere.
 
-**Non-Goals:** no trend on the front page cards (user 2026-11-17); no trend on periods of 31 days or less; no setting for smoothness; no trend number in the
+**Non-Goals:** no trend on the front page cards (user 2026-11-17); no show/hide switch for the trend on Historia tabs (decided 2026-11-17: shown by the period rule, a quiet neutral line; revisit if it disturbs in use); no trend on periods of 31 days or less; no setting for smoothness; no trend number in the
 statistics; no change to the Paino/BMI scale rule.
 
 ## Decisions
