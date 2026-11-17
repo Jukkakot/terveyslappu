@@ -8,17 +8,17 @@
 
 ## 2. Chart definitions (Historia only)
 
-- [ ] 2.1 `SeriesSpec.trend` (own field, excluded from tap picking and highlight), `LegendLabel.TREND`; the shared `averageOrTrend` helper (axis over 31 days and a segment with 10+ values → trend, else flat average; Paino/BMI none).
-- [ ] 2.2 `TabCharts`: Syöty, Askeleet, Kulutus use the helper (daily values also when bars are weekly; end before today; scale top = max(highest bar, average, trend's highest)); Paino and BMI get the trend (points at the time of each day's last weight, today included, values clamped into the scale).
-- [ ] 2.3 `CustomChartSpec` tabs: Keskiarvo on → helper per drawn data (not for data not drawn), shared "trendi" legend entry next to "keskiarvo" when both kinds. `CardCharts` and the front page stay as today (flat line at any period).
-- [ ] 2.4 `TabReadouts`: trend row after the data's row ("trendi 8 200 askelta/pv"; own charts "<data> trendi"), formatted like the keskiarvo rows, dot in the trend tone; weekly bar: week's middle day inside the axis, else nearest covered day, else none; no row for today on Syöty/Askeleet/Kulutus.
-- [ ] 2.5 Tests: spec choice by axis days (Oma 31 flat, 32 trend, short Kaikki flat, few values flat, no segment with 10+ flat), legend entries (both kinds), readout rows (week, today, own chart names), bar scale top covers the trend, tapping between weights still picks the nearest weight, a card spec never carries a trend.
+- [x] 2.1 `SeriesSpec.trend` (own field, excluded from tap picking and highlight), `LegendLabel.TREND`; the shared `averageOrTrend` helper (axis over 31 days and a segment with 10+ values → trend, else flat average; Paino/BMI none).
+- [x] 2.2 `TabCharts`: Syöty, Askeleet, Kulutus use the helper (daily values also when bars are weekly; end before today; scale top = max(highest bar, average, trend's highest)); Paino and BMI get the trend (points at the time of each day's last weight, today included, values clamped into the scale).
+- [x] 2.3 `CustomChartSpec` tabs: Keskiarvo on → helper per drawn data (not for data not drawn), shared "trendi" legend entry next to "keskiarvo" when both kinds. `CardCharts` and the front page stay as today (flat line at any period).
+- [x] 2.4 `TabReadouts`: trend row after the data's row ("trendi 8 200 askelta/pv"; own charts "<data> trendi"), formatted like the keskiarvo rows, dot in the trend tone; weekly bar: week's middle day inside the axis, else nearest covered day, else none; no row for today on Syöty/Askeleet/Kulutus.
+- [x] 2.5 Tests: spec choice by axis days (Oma 31 flat, 32 trend, short Kaikki flat, few values flat, no segment with 10+ flat), legend entries (both kinds), readout rows (week, today, own chart names), bar scale top covers the trend, tapping between weights still picks the nearest weight, a card spec never carries a trend.
 
 ## 3. Drawing
 
-- [ ] 3.1 `HistoryChartView`: trend segments as solid 2.5 dp lines over bars, under the Paino/BMI dots and the crosshair ring, not highlightable; own chart tabs in both layouts like their average lines (Päällekkäin data tone at 60 % opacity through the shared scale).
-- [ ] 3.2 Chart editor: the Keskiarvo switch's supporting text "Vaakaviiva jakson keskiarvon kohdalla, yli kuukauden jaksoilla trendiviiva".
-- [ ] 3.3 One smoke test that a long-period tab binds a trend data set.
+- [x] 3.1 `HistoryChartView`: trend segments as solid 2.5 dp lines over bars, under the Paino/BMI dots and the crosshair ring, not highlightable; own chart tabs in both layouts like their average lines (Päällekkäin data tone at 60 % opacity through the shared scale).
+- [x] 3.2 Chart editor: the Keskiarvo switch's supporting text "Vaakaviiva jakson keskiarvon kohdalla, yli kuukauden jaksoilla trendiviiva".
+- [x] 3.3 One smoke test that a long-period tab binds a trend data set.
 
 ## 4. Context and release
 

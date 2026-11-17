@@ -192,6 +192,18 @@ class StepsScreenTest {
     }
 
     @Test
+    fun `a year of steps binds a trend line and its legend`() {
+        val year = (1L..200L).map { StepsDay(today.minusDays(it), 6000 + it * 7) }
+        show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.YEAR), StepsUiState(access = StepsAccess.GRANTED, days = year))
+        compose.waitForIdle()
+        val chart = compose.activity.chartViews().single()
+        val trend = chart.data!!.lineData!!.dataSets.filter { it.label.startsWith("steps-trend") }
+        assertEquals(1, trend.size)
+        assertTrue(trend.single().entryCount > 100 && !trend.single().isHighlightEnabled)
+        assertTrue(chart.legend.entries.any { it.label == "trendi" } && chart.legend.entries.none { it.label == "keskiarvo" })
+    }
+
+    @Test
     fun `a year's dates read month and year`() {
         show(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true, period = Period.YEAR), granted)
         compose.waitForIdle()
