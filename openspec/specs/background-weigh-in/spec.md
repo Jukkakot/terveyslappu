@@ -9,15 +9,17 @@ what it heard; saving the weight comes later.
 
 ### Requirement: Trial setting
 Asetukset SHALL have a section "Automaattinen punnitus" with: an on/off switch, a start and an end
-time (time pickers, whole minutes, defaults 06:00 and 10:00), a listening mode "Säästö" or
-"Tasapaino" (default as chosen from the phase 1 trial), a switch "Kuuntele myös
-virransäästötilassa" (default on) and "Hyväksyntäraja" (0.5 to 20 kg in 0.5 kg steps, default
-5 kg). The switch SHALL be off on a first install and SHALL keep its state over app updates, also
-over the update from the trial. An end earlier than the start SHALL mean the window runs over
-midnight; start equal to end SHALL be refused. Turning the switch on SHALL ask for the
-notification permission when it is missing; a denial SHALL NOT keep the switch off. The choices
-SHALL survive app and phone restarts and SHALL NOT be restored to another phone from a system
-backup.
+time (time pickers, whole minutes, defaults 06:00 and 10:00), "Tunnistusnopeus" with the choices
+"Normaali" (the lowest-power scan) and "Nopea" (the balanced scan) and the line "Nopea tunnistaa
+vaa'an varmemmin, mutta kuluttaa enemmän akkua." (default as chosen from the phase 1 trial), a
+switch "Toimii myös virransäästötilassa" (default on) and "Tarkistusraja" (0.5 to 20 kg in 0.5 kg
+steps, default 5 kg) with the line "Jos uusi paino poikkeaa edellisestä hyväksytystä yli tämän, se
+jää tarkistettavaksi." No text of the section SHALL say "kuuntelu" or "kuuntele". The switch SHALL
+be off on a first install and SHALL keep its state over app updates, also over the update from the
+trial. An end earlier than the start SHALL mean the window runs over midnight; start equal to end
+SHALL be refused. Turning the switch on SHALL ask for the notification permission when it is
+missing; a denial SHALL NOT keep the switch off. The choices SHALL survive app and phone restarts
+and SHALL NOT be restored to another phone from a system backup.
 
 #### Scenario: Turn on
 - **WHEN** the user turns the switch on and allows notifications
@@ -43,12 +45,13 @@ backup.
 - **THEN** the choice is refused with a short message and the previous end stays
 
 #### Scenario: Settings changed while on
-- **WHEN** the user changes the window, the mode or the power-saving switch while it is on
+- **WHEN** the user changes the window, the Tunnistusnopeus or the power-saving switch while it is
+  on
 - **THEN** listening is re-planned at once (stopped with a summary if now is outside the new
-  window, restarted with the new mode if inside)
+  window, restarted with the new scan if inside)
 
 #### Scenario: Limit changed
-- **WHEN** the user changes the limit from 5 kg to 3 kg
+- **WHEN** the user changes the Tarkistusraja from 5 kg to 3 kg
 - **THEN** later automatic weights are checked against 3 kg and weights already saved keep their
   mark
 
@@ -69,9 +72,9 @@ remembered one. A packet from another address SHALL NOT count as heard, even wit
 
 ### Requirement: Listen in the background
 While the trial is on and the current time is inside the window, the phone SHALL listen for the
-remembered scale with the chosen mode (Säästö = the lowest-power scan, Tasapaino = the balanced
-scan), with the screen off and the app not open, waking the app only for the scale's packets.
-Outside the window it SHALL NOT scan. When the phone's power saving mode is on and "Kuuntele myös
+remembered scale with the chosen Tunnistusnopeus (Normaali = the lowest-power scan, the default, as
+`ListenMode.of(null)` gives; Nopea = the balanced scan), with the screen off and the app not open, waking the app only for the scale's packets.
+Outside the window it SHALL NOT scan. When the phone's power saving mode is on and "Toimii myös
 virransäästötilassa" is off, it SHALL NOT scan. The window start may be late because of the
 phone's idle mode; how late SHALL be logged. While inside the window the app SHALL check about
 once an hour that listening is still possible and register it again, so a scan lost to Bluetooth
@@ -96,8 +99,8 @@ the scan at once.
 - **THEN** listening is running again within about an hour
 
 #### Scenario: Power saving mode
-- **WHEN** the phone's power saving mode is on and "Kuuntele myös virransäästötilassa" is off
-- **THEN** no scan runs and the status says so
+- **WHEN** the phone's power saving mode is on and "Toimii myös virransäästötilassa" is off
+- **THEN** no scan runs and the line says "Ei toimi: virransäästötila päällä"
 
 #### Scenario: Weigh-in dialog open
 - **WHEN** the user opens the weigh-in dialog while the trial listens
@@ -126,38 +129,46 @@ level at the start and at the end.
 - **THEN** the next start or turn-on logs that window's summary as unfinished first
 
 ### Requirement: Last heard
-The section SHALL show when the scale was last heard by the trial and the signal strength:
-"Ei vielä kuultu", "Kuultu viimeksi tänään 7.12, signaali -97", "eilen 7.12" or "12.11. klo
-7.12". It SHALL refresh when Asetukset is shown and every minute while it is open.
+The section SHALL show when the scale was last recognised in the background and the signal
+strength: "Vaakaa ei vielä tunnistettu", "Vaaka tunnistettu viimeksi tänään 7.12, signaali -97",
+"… eilen 7.12" or "… 12.11. klo 7.12". It SHALL refresh when Asetukset is shown and every minute
+while it is open.
 
 #### Scenario: Heard this morning
-- **WHEN** the trial heard the scale at 7.12 today with signal -97
-- **THEN** the line reads "Kuultu viimeksi tänään 7.12, signaali -97"
+- **WHEN** the background heard the scale at 7.12 today with signal -97
+- **THEN** the line reads "Vaaka tunnistettu viimeksi tänään 7.12, signaali -97"
 
 ### Requirement: Trial status
-The section SHALL show one status, the first that applies: "Estetty: Bluetooth-lupa puuttuu",
-"Estetty: Health Connect -lupa puuttuu" (weight write access missing), "Estetty: Bluetooth pois
-päältä", "Tauolla: virransäästötila" (power saving on and the switch for it off), "Kuuntelee nyt",
-"Pysäytetty" (the system stopped the app by force), or "Lepää, alkaa klo HH.MM". When the app's battery use is restricted by the phone, a warning line
-SHALL be shown under the status, "Akunkäyttö rajoitettu: kuuntelu voi katketa", while listening
-still runs. When notifications are not allowed, a warning line "Ilmoitukset estetty" SHALL be
-shown. Each blocked reason and each warning SHALL have a button that opens the matching system
-screen or permission request. "Pysäytetty" SHALL say to open the app once. While weights wait in the pending queue the
-section SHALL also show "N painoa odottaa tallennusta".
+While the feature is on, the section SHALL show one explanation line under the switch, the first
+that applies: "Ei toimi: vaakaa ei vielä tunneta", "Ei toimi: Bluetooth-lupa puuttuu", "Ei toimi:
+Health Connect -lupa puuttuu" (weight write access missing), "Ei toimi: Bluetooth pois päältä",
+"Ei toimi: avaa sovellus kerran" (the system stopped the app by force), "Ei toimi:
+virransäästötila päällä" (power saving on and the switch for it off), "Tänään punnittu, seuraavan kerran klo
+HH.MM" (see "Status symbol in Asetukset"), "Odottaa vaakaa klo HH.MM asti" (inside the window), or
+"Alkaa klo HH.MM". While the feature is off the line SHALL be absent. When the app's battery use is
+restricted by the phone, a warning line SHALL be shown under it, "Akunkäyttö rajoitettu: punnitus
+voi jäädä tunnistamatta", while scanning still runs. When notifications are not allowed, a warning
+line "Ilmoitukset estetty" SHALL be shown. Each "Ei toimi" reason (except "avaa sovellus kerran"
+and "vaakaa ei vielä tunneta") and each warning SHALL have a button that opens the matching system screen or permission request. While weights wait in the
+pending queue the section SHALL also show "N painoa odottaa tallennusta".
 
 #### Scenario: Battery use restricted
 - **WHEN** the phone restricts the app's battery use and the window is on
-- **THEN** the status says "Kuuntelee nyt", the warning line is shown with a button to the app's
-  battery setting, and listening runs
+- **THEN** the line says "Odottaa vaakaa klo 10.00 asti", the warning line is shown with a button
+  to the app's battery setting, and scanning runs
 
 #### Scenario: Bluetooth off
 - **WHEN** Bluetooth is off inside the window
-- **THEN** the status says "Estetty: Bluetooth pois päältä" with a button to turn it on
+- **THEN** the line says "Ei toimi: Bluetooth pois päältä" with a button to turn it on
 
 #### Scenario: Health Connect access missing
 - **WHEN** weight write access to Health Connect has been taken away
-- **THEN** the status says "Estetty: Health Connect -lupa puuttuu" with a button that asks for it,
+- **THEN** the line says "Ei toimi: Health Connect -lupa puuttuu" with a button that asks for it,
   and no scan runs
+
+#### Scenario: Before the window
+- **WHEN** the window is 06:00-10:00 and the time is 23.00
+- **THEN** the line says "Alkaa huomenna klo 6.00"
 
 ### Requirement: Save the automatic weight
 While the feature is on, a weight heard from the remembered scale inside the window SHALL be
@@ -377,42 +388,40 @@ leave the mark.
 - **THEN** the notification closes
 
 ### Requirement: Widget status
-While the feature is on, the 1x1 home-screen widget SHALL show the automatic weigh-in's state as a
-small symbol only (no text, no times), each state with its own shape and colour and read out by a
-screen reader by its name: Kuuntelee (green filled dot: inside the window and listening), Valmis
-(green check: the window's weight is saved, from that save until the next window start, also after
-the window has ended), Lepää (grey moon: outside the window with no weight of the window saved)
-and Estetty (amber warning triangle: a blocked reason, Tauolla or Pysäytetty, inside the window).
-The warnings (battery use restricted, notifications off) SHALL NEVER mean Estetty. The state SHALL
-change within about 15 minutes of the window start and end; the widget SHALL store the window end
-and show Lepää instead of Kuuntelee once it has passed when it is next redrawn. With the feature
-off the widget SHALL show no symbol.
+While the feature is on, the 1x1 home-screen widget SHALL show one small symbol only (no text, no
+times), read out by a screen reader: "Automaattinen punnitus päällä" (green filled dot) or
+"Automaattinen punnitus ei toimi" (amber warning triangle: an "Ei toimi" reason inside the
+window). The warnings (battery use restricted, notifications off) SHALL NEVER show the triangle.
+The symbol SHALL change within about 15 minutes of the window start and end, and of a reason
+appearing or clearing inside the window; outside the window, and at a redraw after the stored
+window end, it SHALL be the dot. With the feature off the widget SHALL show no
+symbol.
 
 #### Scenario: Morning
 - **GIVEN** the window is 06:00-10:00 and nothing blocks
-- **WHEN** the window starts
-- **THEN** the widget shows Kuuntelee within about 15 minutes
+- **WHEN** the window starts, and after the weight is saved
+- **THEN** the widget shows the dot
 
 #### Scenario: Weighed
 - **WHEN** the morning's weight is saved at 07.12 without a mark
-- **THEN** the widget shows Valmis, still at 20.00, and Kuuntelee from the next 06:00
+- **THEN** the widget shows the dot, still at 20.00
+
+#### Scenario: Window ended
+- **GIVEN** the widget showed the triangle because Bluetooth was off and the window end has passed
+- **WHEN** the widget is next redrawn
+- **THEN** it shows the dot
 
 #### Scenario: Night
-- **WHEN** the time is outside the window and no weight of the window was saved
-- **THEN** the widget shows Lepää, also when Bluetooth is off
+- **WHEN** the time is outside the window
+- **THEN** the widget shows the dot, also when Bluetooth is off
 
 #### Scenario: Battery restricted
 - **WHEN** the phone restricts the app's battery use inside the window
-- **THEN** the status shows its warning and the widget still shows Kuuntelee
+- **THEN** the section shows its warning and the widget still shows the dot
 
 #### Scenario: Power saving pause
-- **WHEN** power saving is on and the switch for listening in it is off, inside the window
-- **THEN** the widget shows Estetty
-
-#### Scenario: Window ended
-- **GIVEN** the widget showed Kuuntelee and the window end has passed
-- **WHEN** the widget is next redrawn
-- **THEN** it shows Lepää
+- **WHEN** power saving is on and the switch for it is off, inside the window
+- **THEN** the widget shows the triangle
 
 #### Scenario: Feature off
 - **WHEN** the feature is off
@@ -430,7 +439,8 @@ NOT count. Stopping SHALL be logged (`listen.stop reason=done`).
 #### Scenario: Morning weight saved
 - **GIVEN** a 06:00-10:00 window
 - **WHEN** 82.5 kg is saved automatically at 07.12 without a mark
-- **THEN** the scan stops, and the status and the widget show Valmis
+- **THEN** the scan stops, the line reads "Tänään punnittu, seuraavan kerran huomenna klo
+  6.00" and the widget shows the dot
 
 #### Scenario: Weighed from the widget
 - **WHEN** the user saves a weigh-in from the dialog at 07.12 inside the window
@@ -464,14 +474,14 @@ stable packet, while the user may still stand on the scale.
 - **THEN** the weight is saved and notified within a few seconds, at the time 16.23.02
 
 ### Requirement: Status symbol in Asetukset
-The status line of "Automaattinen punnitus" SHALL start with the same symbol and colour as the
-widget's state (no symbol while the feature is off). While the window's weight is saved the status
-SHALL read "Valmis: tämän päivän paino tallennettu, kuuntelee taas klo HH.MM", with "huomenna"
-before "klo" when the next start is tomorrow; it comes after the blocked reasons and before
-"Kuuntelee nyt" and "Lepää".
+The explanation line of "Automaattinen punnitus" SHALL start with the green dot, or the amber
+triangle for every "Ei toimi" line at any time of day (no symbol while the feature is off); the
+symbol is decorative for screen readers, the line carries the meaning. While the window's weight is saved, from that save
+until the next window start, the line SHALL read "Tänään punnittu, seuraavan kerran klo HH.MM",
+with "huomenna" before "klo" when the next start is tomorrow; it comes after the "Ei toimi"
+reasons and before "Odottaa vaakaa" and "Alkaa".
 
 #### Scenario: Weighed this morning
 - **GIVEN** a 06:00-10:00 window and the weight saved at 07.12
 - **WHEN** Asetukset is opened at 08.00
-- **THEN** the status shows the green check and "Valmis: tämän päivän paino tallennettu, kuuntelee
-  taas huomenna klo 6.00"
+- **THEN** the line shows the green dot and "Tänään punnittu, seuraavan kerran huomenna klo 6.00"

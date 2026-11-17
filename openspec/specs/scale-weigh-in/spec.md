@@ -120,7 +120,8 @@ The weigh-in dialog SHALL open with one tap from a Quick Settings tile, a home-s
 launcher shortcut on the app icon; inside the app it is "Punnitse" in the ⋮ menu of the front page
 and Historia (two taps, the one exception to one tap). The widget and the tile SHALL
 show only the Punnitse action, never a weight; while automatic weigh-in is on, the widget SHALL
-also show its state (Päällä, Lepää or Estetty). The widget SHALL fit one home-screen cell.
+also show its symbol (the dot or the warning triangle, see "Widget status" in
+background-weigh-in). The widget SHALL fit one home-screen cell.
 
 #### Scenario: From the tile
 - **WHEN** the user taps the Punnitse tile in Quick Settings
