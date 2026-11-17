@@ -331,8 +331,8 @@ internal fun TreatSign() {
     Text(
         stringResource(R.string.food_treat_sign),
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onTertiaryContainer,
-        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.tertiaryContainer).padding(horizontal = 6.dp, vertical = 1.dp),
+        color = treatTextColour(),
+        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(treatTextColour().copy(alpha = if (isDarkTheme()) 0.16f else 0.12f)).padding(horizontal = 6.dp, vertical = 1.dp),
     )
 }
 

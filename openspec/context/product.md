@@ -25,6 +25,10 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
 - **Tuo tiedostosta / Vie tiedostoon**; section **Tiedostot ja varmuuskopio**.
 - **Mistä askeleet luetaan**: the steps source setting.
 - **keskiarvo**: the average of a period (labels, legends, tiles); never "keskimäärin", "keskim." or "ka.".
+- **Värit**: the colour choice in Asetukset → Ulkoasu, next to **Teema**: **Terveyslappu** (the
+  app's own mint/graphite palette, default) or **Puhelimen värit** (Material You).
+- **⋮ (Toiminnot)**: a list row's one action button; its menu holds **Muokkaa** and a red
+  **Poista** (a "?" weight: Hyväksy, Poista). Never a pencil or a trash on a row.
 - **trendi**: the smooth line through the daily values on Historia's long periods (legend
   "trendi", marker row "trendi …", own charts "<data> trendi"); never "liukuva keskiarvo" or "tasoitus".
 
@@ -306,6 +310,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - Products are learnt from what is typed (as in kauppalappu); about 300 base products (dishes and raw
     ingredients) from open sources and generic estimates, so nothing starts from zero. Storage: Health Connect, app storage, the data
     file and its backup; no server database.
+  - Decided (visual-identity, user 2026-11-17, v1.61): the app has its own look, direction AC:
+    graphite dark theme (`#0E1013`, cards `#16191E`) and a calm near-white light theme from one
+    mint seed (MaterialKolor), borderless 24 dp cards, a tinted icon tile per quantity, one fixed
+    colour per quantity (paino mint, Syöty amber, Askeleet blue, Kulutus coral) that never means
+    good or bad, semibold tabular big numbers, a glowing weight line with a fill and a ring on the
+    latest weight, rounded bars with today's bar emphasised, Historia's tabs first with one
+    segmented period row and a hero statistic, and one ⋮ menu per list row. Puhelimen värit keeps
+    Material You as a choice; the quantity colours stay in both. Mockups and the audit:
+    `openspec/design/visual-identity/`.
   - Simple and intuitive: never wonder what to do next; every field says what goes in it; one
     modern look across the app. Not doing: flags for unrealistically low days.
 

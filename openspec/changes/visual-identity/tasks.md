@@ -46,6 +46,6 @@
 
 ## 7. Check and docs
 
-- [ ] 7.1 Run the screenshot tour (the specs win over the mockups where they differ) in both themes and palettes, compare with the AC mockups (`openspec/design/visual-identity/vertailu-*.png`) and fix gaps; keep the PNGs in the scratchpad only.
-- [ ] 7.2 `./gradlew test lint assembleDebug`.
-- [ ] 7.3 Update `openspec/context/product.md` (visual identity decision, glossary: Värit, Terveyslappu, Puhelimen värit, ⋮ menu), `.claude/CLAUDE.md` map (`QuantityColours`, `RowActions`, `ColourChoice`, harness), mark visual-identity done in `roadmap.md`, and bump MINOR in `gradle.properties`.
+- [x] 7.1 Run the screenshot tour (the specs win over the mockups where they differ) in both themes and palettes, compare with the AC mockups (`openspec/design/visual-identity/vertailu-*.png`) and fix gaps; keep the PNGs in the scratchpad only.
+- [x] 7.2 `./gradlew test lint assembleDebug`.
+- [x] 7.3 Update `openspec/context/product.md` (visual identity decision, glossary: Värit, Terveyslappu, Puhelimen värit, ⋮ menu), `.claude/CLAUDE.md` map (`QuantityColours`, `RowActions`, `ColourChoice`, harness), mark visual-identity done in `roadmap.md`, and bump MINOR in `gradle.properties`.

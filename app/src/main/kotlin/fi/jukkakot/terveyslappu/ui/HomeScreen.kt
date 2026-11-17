@@ -55,6 +55,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.chart.CardCharts
 import fi.jukkakot.terveyslappu.chart.QuantityTone
@@ -202,12 +203,12 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
         val average = summary.averageKcal?.let {
             stringResource(if (size == CardSize.SMALL) R.string.home_food_average else R.string.home_food_average_long, formatKcal(it))
         } ?: stringResource(R.string.home_food_no_average)
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, onPeriod, "foodPeriod")
             Text(
                 average,
-                maxLines = 2,
-                style = MaterialTheme.typography.labelSmall,
+                maxLines = 3,
+                style = averageStyle(),
                 color = colors.onSurfaceVariant,
                 modifier = Modifier
                     .weight(1f)
@@ -216,7 +217,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                     .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
                     .heightIn(min = 44.dp)
                     .wrapContentHeight(Alignment.CenterVertically)
-                    .padding(horizontal = 4.dp)
+                    .padding(end = 2.dp)
                     .testTag("foodAverage"),
             )
         }
@@ -255,6 +256,10 @@ internal fun CardTitle(icon: Int, title: String, chevron: Boolean, tone: Quantit
 @Composable
 private fun cardNumber(size: CardSize): TextStyle =
     if (size == CardSize.SMALL) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayMedium
+
+/** A card's average: muted and smaller than the period label, up to three tight lines in the 44 dp row. */
+@Composable
+private fun averageStyle(): TextStyle = MaterialTheme.typography.labelSmall.copy(lineHeight = 14.sp)
 
 /** "anna lupa" in a card's number slot (the card keeps its title and its tap). */
 @Composable
@@ -348,16 +353,16 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, actions.onPeriod, "stepsPeriod")
             Text(
                 summary.averageSteps?.let {
                     stringResource(if (size == CardSize.SMALL) R.string.home_steps_average else R.string.home_steps_average_long, formatSteps(it))
                 } ?: stringResource(R.string.home_food_no_average),
-                maxLines = 2,
-                style = MaterialTheme.typography.labelSmall,
+                maxLines = 3,
+                style = averageStyle(),
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("stepsAverage"),
+                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(end = 2.dp).testTag("stepsAverage"),
             )
         }
         if (steps.stale) {
@@ -447,16 +452,16 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             HomePeriodLabel(days, actions.onPeriod, "burnPeriod")
             Text(
                 summary.averageTotal?.let {
                     stringResource(if (size == CardSize.SMALL) R.string.home_burn_average else R.string.home_burn_average_long, formatKcal(it.toDouble()))
                 } ?: stringResource(R.string.home_food_no_average),
-                maxLines = 2,
-                style = MaterialTheme.typography.labelSmall,
+                maxLines = 3,
+                style = averageStyle(),
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 4.dp).testTag("burnAverage"),
+                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(end = 2.dp).testTag("burnAverage"),
             )
         }
         if (burn.stale) {
@@ -582,8 +587,8 @@ private fun HomePeriodLabel(days: Long, onHomePeriod: (Long) -> Unit, tag: Strin
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             modifier = Modifier.heightIn(min = 32.dp).testTag(tag),
         ) {
-            Row(Modifier.padding(start = 12.dp, end = 6.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+            Row(Modifier.padding(start = 10.dp, end = 2.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Period.Last(days).label()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                 Icon(painterResource(R.drawable.ic_arrow_drop_down), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
