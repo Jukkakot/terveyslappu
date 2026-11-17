@@ -15,7 +15,7 @@ object LastHeardText {
     private val day = DateTimeFormatter.ofPattern("d.M.", finnish)
 
     fun text(heard: LastHeard?, now: Instant, zone: ZoneId): String {
-        if (heard == null) return "Ei vielä kuultu"
+        if (heard == null) return "Vaakaa ei vielä tunnistettu"
         val at = heard.at.atZone(zone)
         val today = now.atZone(zone).toLocalDate()
         val whenText = when (at.toLocalDate()) {
@@ -23,6 +23,6 @@ object LastHeardText {
             today.minusDays(1) -> "eilen ${time.format(at)}"
             else -> "${day.format(at)} klo ${time.format(at)}"
         }
-        return "Kuultu viimeksi $whenText, signaali ${heard.rssi}"
+        return "Vaaka tunnistettu viimeksi $whenText, signaali ${heard.rssi}"
     }
 }

@@ -18,7 +18,7 @@ app is installed on the new phone.
 
 #### Scenario: Weights still come from the backup file
 - **GIVEN** the app data was restored on the new phone
-- **WHEN** the user has not yet run Tuo tiedot
+- **WHEN** the user has not yet run Tuo tiedostosta
 - **THEN** the app shows no weights of its own until the backup file is imported or Health
   Connect holds them
 

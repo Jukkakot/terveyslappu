@@ -67,14 +67,22 @@ class ListenCoreTest {
     @Test
     fun `status takes the first that applies`() {
         assertNull(ListenStatusRule.status(facts.copy(enabled = false)))
-        assertEquals(ListenStatus.Listening, ListenStatusRule.status(facts))
+        assertIs<ListenStatus.Listening>(ListenStatusRule.status(facts))
         assertEquals(ListenStatus.Resting(LocalTime.of(6, 0)), ListenStatusRule.status(facts.copy(inside = false)))
         assertEquals(ListenStatus.PermissionMissing, ListenStatusRule.status(facts.copy(permission = false, bluetoothOn = false)))
         assertEquals(ListenStatus.BluetoothOff, ListenStatusRule.status(facts.copy(bluetoothOn = false, powerSave = true, listenInPowerSave = false)))
         assertEquals(ListenStatus.PowerSavePause, ListenStatusRule.status(facts.copy(powerSave = true, listenInPowerSave = false)))
-        assertEquals(ListenStatus.Listening, ListenStatusRule.status(facts.copy(powerSave = true)))
+        assertIs<ListenStatus.Listening>(ListenStatusRule.status(facts.copy(powerSave = true)))
         assertEquals(ListenStatus.Stopped, ListenStatusRule.status(facts.copy(armed = false)))
         assertEquals(ListenStatus.NoScale, ListenStatusRule.status(facts.copy(hasScale = false)))
+    }
+
+    @Test
+    fun `listening and resting carry the window end and whether the start is tomorrow`() {
+        val listening = ListenStatusRule.status(facts.copy(windowEnd = LocalTime.of(2, 0), windowEndTomorrow = true))
+        assertEquals(ListenStatus.Listening(LocalTime.of(2, 0), true), listening)
+        val resting = ListenStatusRule.status(facts.copy(inside = false, nextStartTomorrow = true))
+        assertEquals(ListenStatus.Resting(LocalTime.of(6, 0), true), resting)
     }
 
     private val scale = KnownScale("00:11:22:33:44:55", "Yoda1")
@@ -159,9 +167,9 @@ class ListenCoreTest {
     @Test
     fun `last heard reads today, yesterday or a date`() {
         val now = at("2026-11-14T09:00")
-        assertEquals("Ei vielä kuultu", LastHeardText.text(null, now, zone))
-        assertEquals("Kuultu viimeksi tänään 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-14T07:12"), -97), now, zone))
-        assertEquals("Kuultu viimeksi eilen 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-13T07:12"), -97), now, zone))
-        assertEquals("Kuultu viimeksi 12.11. klo 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-12T07:12"), -97), now, zone))
+        assertEquals("Vaakaa ei vielä tunnistettu", LastHeardText.text(null, now, zone))
+        assertEquals("Vaaka tunnistettu viimeksi tänään 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-14T07:12"), -97), now, zone))
+        assertEquals("Vaaka tunnistettu viimeksi eilen 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-13T07:12"), -97), now, zone))
+        assertEquals("Vaaka tunnistettu viimeksi 12.11. klo 7.12, signaali -97", LastHeardText.text(LastHeard(at("2026-11-12T07:12"), -97), now, zone))
     }
 }

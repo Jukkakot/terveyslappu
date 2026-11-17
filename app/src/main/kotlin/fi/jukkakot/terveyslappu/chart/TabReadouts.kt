@@ -25,12 +25,12 @@ object TabReadouts {
     private val time = DateTimeFormatter.ofPattern("H.mm", Locale.forLanguageTag("fi"))
 
     const val NO_WEIGHT = "ei painoa"
-    const val NO_FOOD = "ei kirjauksia"
+    const val NO_FOOD = "ei annoksia"
     const val NO_DATA = "ei tietoa"
 
     const val WEIGHT = "paino"
     const val BMI = "BMI"
-    const val FOOD = "ruoka"
+    const val FOOD = "syöty"
     const val TREAT = "herkut"
     const val STEPS = "askeleet"
     const val BURN = "kulutus"
@@ -70,7 +70,7 @@ object TabReadouts {
         return ReadoutCard(head, listOf(ReadoutRow(tone, name, label(data.ys[last]))))
     }
 
-    /** Syöty: "ruoka 1 760 kcal" and "herkut 230 kcal", or "ruoka ei kirjauksia"; a week "ruoka keskim. 1 900 kcal/pv". */
+    /** Syöty: "syöty 1 760 kcal" and "herkut 230 kcal", or "syöty ei annoksia"; a week "syöty keskim. 1 900 kcal/pv". */
     fun energy(series: EnergySeries, key: LocalDate, today: LocalDate): ReadoutCard {
         val food = ToneRef.PRIMARY
         if (series.weekly) {

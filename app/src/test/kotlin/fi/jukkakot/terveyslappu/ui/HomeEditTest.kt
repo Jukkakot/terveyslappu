@@ -326,7 +326,7 @@ class HomeEditTest {
         assertEquals(listOf("Muokkaa etusivua"), before)
         enter()
         val config = node("homeSlot-food").fetchSemanticsNode().config
-        assertEquals(listOf("Ruoka, 2/3, pieni"), config[SemanticsProperties.ContentDescription])
+        assertEquals(listOf("Syöty, 2/3, pieni"), config[SemanticsProperties.ContentDescription])
         val labels = config[SemanticsActions.CustomActions].map { it.label }
         assertTrue("Siirrä aiemmaksi" in labels && "Siirrä myöhemmäksi" in labels && "Leveä" in labels && "Iso" in labels && "Piilota" in labels, labels.toString())
         assertTrue("Pieni" !in labels, "the current size is not offered")

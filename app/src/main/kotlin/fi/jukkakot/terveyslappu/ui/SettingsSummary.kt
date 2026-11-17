@@ -101,4 +101,4 @@ sealed interface BackupLine {
 }
 
 /** Blocked: not listening, not resting and not done for the day. */
-internal fun ListenStatus.isBlocked() = this != ListenStatus.Listening && this !is ListenStatus.Resting && this !is ListenStatus.Done
+internal fun ListenStatus.isBlocked() = this !is ListenStatus.Listening && this !is ListenStatus.Resting && this !is ListenStatus.Done

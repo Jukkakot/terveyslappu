@@ -14,8 +14,9 @@ sealed interface ListenStatus {
     data object PowerSavePause : ListenStatus
     /** The window's weight is saved: from that save until the next window start, also outside the window. */
     data class Done(val nextStart: LocalTime, val tomorrow: Boolean) : ListenStatus
-    data object Listening : ListenStatus
-    data class Resting(val startsAt: LocalTime) : ListenStatus
+    /** Inside the window, waiting for the scale; [until] is the window end, [tomorrow] when it is on the next date. */
+    data class Listening(val until: LocalTime, val tomorrow: Boolean = false) : ListenStatus
+    data class Resting(val startsAt: LocalTime, val tomorrow: Boolean = false) : ListenStatus
 }
 
 /** What the status is chosen from. */
@@ -34,6 +35,9 @@ data class ListenFacts(
     val done: Boolean = false,
     /** [nextStart] is on tomorrow's date (the status text says "huomenna"). */
     val nextStartTomorrow: Boolean = false,
+    /** The current window's end and whether it is on tomorrow's date (the Listening line). */
+    val windowEnd: LocalTime = LocalTime.of(10, 0),
+    val windowEndTomorrow: Boolean = false,
 )
 
 object ListenStatusRule {
@@ -50,7 +54,7 @@ object ListenStatusRule {
         !f.armed -> ListenStatus.Stopped
         f.powerSave && !f.listenInPowerSave -> ListenStatus.PowerSavePause
         f.done -> ListenStatus.Done(f.nextStart, f.nextStartTomorrow)
-        f.inside -> ListenStatus.Listening
-        else -> ListenStatus.Resting(f.nextStart)
+        f.inside -> ListenStatus.Listening(f.windowEnd, f.windowEndTomorrow)
+        else -> ListenStatus.Resting(f.nextStart, f.nextStartTomorrow)
     }
 }

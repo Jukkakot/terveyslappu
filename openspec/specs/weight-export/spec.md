@@ -7,13 +7,13 @@ can import again on another phone.
 ## Requirements
 
 ### Requirement: Export to a chosen file
-Asetukset SHALL offer "Vie tiedot", which first asks for the format, CSV or JSON, then asks where to
+Asetukset SHALL offer "Vie tiedostoon", which first asks for the format, CSV or JSON, then asks where to
 save a file named `terveyslappu-export-<yyyyMMdd-HHmmss-SSS>.csv` (or `.json`; local time to the
 millisecond, so two exports never get the same name) with the system picker and writes the app's
 data file there in that format.
 
 #### Scenario: Export
-- **WHEN** the user taps Vie tiedot, picks CSV and a folder
+- **WHEN** the user taps Vie tiedostoon, picks CSV and a folder
 - **THEN** the CSV file is written and the app says how many weights it holds
 
 #### Scenario: File name
@@ -58,7 +58,7 @@ header row `date;time;weight_kg;source;raw;check`.
 - **THEN** the CSV file starts with the version line
 
 #### Scenario: Read back
-- **WHEN** an exported file of either format is imported with Tuo tiedot
+- **WHEN** an exported file of either format is imported with Tuo tiedostosta
 - **THEN** the same weights and times are found, their raw data is kept on the phone again, and
   "?" weights are marked again
 

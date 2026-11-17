@@ -110,7 +110,7 @@ class CustomChartSpecTest {
         val data = CustomChartData.of(chart(ChartLayout.STACKED, *three), today, zone, weights, food, steps)
         val s = CustomChartSpec.of(data, today) { it != SeriesKind.STEPS }
         val card = s.readout(today.minusDays(1))
-        assertEquals(listOf("paino", "ruoka"), card.rows.map { it.name })
+        assertEquals(listOf("paino", "syöty"), card.rows.map { it.name })
         assertEquals("ei painoa", card.rows[0].value)
     }
 

@@ -447,12 +447,12 @@ page steps card keeps its existing empty text.
 
 #### Scenario: Chosen app empty
 - **GIVEN** the source is Garmin Connect and it wrote no steps in the period, while the phone did
-- **THEN** the tab says Garmin Connect has no steps in this period, with a "Vaihda lähde" button
+- **THEN** the tab says Garmin Connect has no steps in this period, with a "Vaihda, mistä askeleet luetaan" button
   that opens Asetukset → Askeleet
 
 #### Scenario: Picked app empty
 - **GIVEN** "Automaattinen" has picked Garmin Connect and it wrote no steps in the period
-- **THEN** the tab shows the same "Garmin Connect: ei askelia tällä jaksolla" and a "Vaihda lähde"
+- **THEN** the tab shows the same "Garmin Connect: ei askelia tällä jaksolla" and a "Vaihda, mistä askeleet luetaan"
   button
 
 ### Requirement: Askeleet list
@@ -530,7 +530,7 @@ scale 1.3. Axis, legend and marker text SHALL follow the system font size. While
 
 ### Requirement: Chart legends
 Every bar and line in a Historia chart SHALL have a legend entry under its chart saying what it is,
-with a swatch in its colour: Paino "paino", BMI "BMI", Energia "ruoka", "herkut" and
+with a swatch in its colour: Paino "paino", BMI "BMI", Energia "syöty", "herkut" and
 "keskiarvo", Askeleet "askeleet" and "keskiarvo"; an own chart's average lines share one
 "keskiarvo" entry; every "keskiarvo" swatch SHALL be a dashed line in the neutral line tone. An entry SHALL be shown only while its bar or
 line is drawn (no average line: no average entry). When the bars are weekly (periods over 90
@@ -548,9 +548,9 @@ narrow phone rather than cut text.
 - **THEN** the legend has no "paino" entry
 
 ### Requirement: Askeleet source line
-While the steps permission is granted, the Askeleet tab SHALL show one quiet line naming the steps source in use ("Lähde:
-Garmin Connect (automaattinen)", "Lähde: Puhelin", "Lähde: kaikki sovellukset", and "Lähde: kaikki
-sovellukset (automaattinen)" when the automatic pick found no app), directly under the chart, or
+While the steps permission is granted, the Askeleet tab SHALL show one quiet line naming the steps source in use ("Askeleet:
+Garmin Connect (automaattinen)", "Askeleet: Puhelin", "Askeleet: kaikki sovellukset yhdistettynä", and "Askeleet: kaikki
+sovellukset yhdistettynä (automaattinen)" when the automatic pick found no app), directly under the chart, or
 under the empty-period message, and above the statistics, also while the data loads, when the
 period is empty and when the data is stale. A chosen app without steps in 30 days SHALL show in the
 warning tint once today's source check has run (unknown before it: no tint). Tapping the line SHALL open Asetukset →
@@ -560,7 +560,7 @@ source.
 #### Scenario: Automatic source
 - **GIVEN** the automatic source is Garmin Connect
 - **WHEN** Askeleet is shown
-- **THEN** the line reads "Lähde: Garmin Connect (automaattinen)"
+- **THEN** the line reads "Askeleet: Garmin Connect (automaattinen)"
 
 #### Scenario: Open the setting
 - **WHEN** the user taps the source line

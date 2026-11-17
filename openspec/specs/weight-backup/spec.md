@@ -78,10 +78,10 @@ backup off; turning it off SHALL release the file access and keep the file as it
 - **THEN** no further writes happen and the status shows off
 
 ### Requirement: Restorable
-The backup file SHALL be readable by Tuo tiedot, so a new phone gets the data back.
+The backup file SHALL be readable by Tuo tiedostosta, so a new phone gets the data back.
 
 #### Scenario: New phone
-- **WHEN** the backup file is imported with Tuo tiedot on another phone
+- **WHEN** the backup file is imported with Tuo tiedostosta on another phone
 - **THEN** the weights, times and raw data in it are found
 
 ### Requirement: Backup does not silently shrink

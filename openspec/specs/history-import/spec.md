@@ -7,12 +7,12 @@ with its original dates, after showing the user what will be imported.
 ## Requirements
 
 ### Requirement: Pick a history file
-Asetukset SHALL offer "Tuo tiedot", which opens the system file picker for a text file (CSV or
+Asetukset SHALL offer "Tuo tiedostosta", which opens the system file picker for a text file (CSV or
 JSON) or an old binary Excel file (`.xls`) and reads the chosen file without any other permission.
 The format SHALL be recognised from the content, not the file name.
 
 #### Scenario: Pick a file
-- **WHEN** the user taps Tuo tiedot and picks a CSV file
+- **WHEN** the user taps Tuo tiedostosta and picks a CSV file
 - **THEN** the app reads it and shows the preview
 
 #### Scenario: Pick a JSON file
@@ -20,7 +20,7 @@ The format SHALL be recognised from the content, not the file name.
 - **THEN** the app reads it and shows the preview
 
 #### Scenario: Pick an Excel file
-- **WHEN** the user taps Tuo tiedot and picks an `.xls` file exported by OKOK
+- **WHEN** the user taps Tuo tiedostosta and picks an `.xls` file exported by OKOK
 - **THEN** the app reads its first sheet and shows the preview
 
 #### Scenario: Picker cancelled

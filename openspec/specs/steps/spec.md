@@ -171,14 +171,14 @@ device-specific package name. A failing read or check SHALL leave a log line wit
 - **THEN** the log gets a line naming `phone` and Garmin Connect's package name, with no step totals
 
 ### Requirement: Steps source setting
-Asetukset SHALL have a row "Askeleet", after Ruokakirjaus and before Ulkoasu, whose state line
-names the source in use ("Automaattinen: Garmin Connect", "Garmin Connect", "Kaikki (Health
-Connectin järjestys)"; "Ei lupaa" without the steps permission, whether it is missing or denied;
+Asetukset SHALL have a row "Askeleet", after Omat ruuat and before Ulkoasu, whose state line
+names the source in use ("Automaattinen: Garmin Connect", "Garmin Connect", "Kaikki
+sovellukset yhdistettynä"; "Ei lupaa" without the steps permission, whether it is missing or denied;
 "Ei saatavilla" when Health Connect is unavailable; blank while the permission is still being
 checked). Before any source check has run in this app start, the row SHALL read from the stored
-automatic pick. Its sub-screen SHALL hold "Lähde", a single choice of: "Automaattinen" (with a line
+automatic pick. Its sub-screen SHALL hold "Mistä askeleet luetaan", a single choice of: "Automaattinen" (with a line
 naming the app it uses now; when a check fails the stored pick is still named), every app that wrote
-steps in the last 30 days, and "Kaikki (Health Connectin järjestys)". Each app SHALL show a readable
+steps in the last 30 days, and "Kaikki sovellukset yhdistettynä". Each app SHALL show a readable
 name (the phone's own steps as "Puhelin"; otherwise the installed app's name, or its package name
 when the name cannot be found) and its average steps per day with steps over those 30 days, today
 left out (it is not over). Apps SHALL be listed by their 30-day total steps, today included, most
@@ -190,7 +190,7 @@ once: the front page steps card and Askeleet re-read their whole range from the 
 the steps permission the sub-screen SHALL show the same reason and buttons as Askeleet (asking or
 opening Health Connect's settings from there) and no list; the permission SHALL NOT be asked when
 the sub-screen merely opens. The default SHALL be "Automaattinen". The chosen source SHALL also be the source of Kulutus
-(energy-burn), and the sub-screen SHALL say so in one line under "Lähde".
+(energy-burn), and the sub-screen SHALL say so in one line under "Mistä askeleet luetaan" ("Valinta koskee myös Kulutusta.").
 
 #### Scenario: First visit
 - **GIVEN** Garmin Connect and the phone wrote steps in the last 30 days and the user never chose
@@ -338,7 +338,7 @@ backup and transfer. After a reinstall or on a new phone the choice SHALL read a
 - **THEN** the new phone uses "Automaattinen"
 
 ### Requirement: Import Garmin step history
-Tuo tiedot SHALL also accept a ZIP file (the picker offers ZIP files next to the current types)
+Tuo tiedostosta SHALL also accept a ZIP file (the picker offers ZIP files next to the current types)
 and SHALL recognise Garmin's account data export by its entries
 `DI_CONNECT/DI-Connect-Aggregator/UDSFile_*.json` (any folder depth before `DI_CONNECT` allowed).
 Each such entry is a JSON array of daily summaries; the app SHALL read `calendarDate`
@@ -357,7 +357,7 @@ stored.
 #### Scenario: Import
 - **GIVEN** a Garmin export ZIP with daily summaries from 18.7.2023 to 8.11.2026, 1 206 of them
   with steps
-- **WHEN** the user picks it in Tuo tiedot
+- **WHEN** the user picks it in Tuo tiedostosta
 - **THEN** the preview reads Garminin askelhistoria, 18.7.2023 – 8.11.2026, 1 206 päivää, and Tuo
   saves them
 
@@ -407,7 +407,7 @@ as without an import. Own charts with steps SHALL use the same merged days.
 Asetukset → Askeleet SHALL show, under the source choice, a row "Garminin historia" with the
 imported range and day count (and, when the stored history has no kcal, the line "Tuo ZIP
 uudelleen, niin kulutus tulee mukaan") ("18.7.2023 – 8.11.2026 · 1 206 päivää") and a red "Poista" button,
-or, with nothing imported, the line "Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedot". The
+or, with nothing imported, the line "Tuo Garminin tietojen latauksen ZIP kohdasta Tuo tiedostosta". The
 row SHALL show also without the steps permission. Poista SHALL delete the imported history at once
 and show "Askelhistoria poistettu · Kumoa"; Kumoa SHALL bring it back unchanged. The steps card and
 Askeleet SHALL update at once after an import, a delete and an undo.

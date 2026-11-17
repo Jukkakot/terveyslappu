@@ -55,7 +55,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   chart and number decisions; pick the option that cannot mislead.
 
 - **Moving to a new phone** (user 2026-11-09, Q3): the backup file in the user's own cloud
-  carries the weights (Tuo tiedot restores it); Android's own backup (encrypted Google cloud
+  carries the weights (Tuo tiedostosta restores it); Android's own backup (encrypted Google cloud
   backup and Smart Switch transfer) carries the app's own data: owner details, theme, periods,
   raw-data archive. The backup file setting, the log and the weigh-in state stay behind
   (app-data-transfer). Samsung Cloud is not relied on.
@@ -83,8 +83,8 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
 - **Interim phone-move answer: visible backup file** (autopilot 2026-11-08, weight-backup):
   the user picks one CSV file (e.g. Google Drive); the app rewrites it after its own changes
   and on the first opening of each day, and Asetukset shows last success or failure (home only a notice on trouble). Chosen because the
-  user prefers an active, visible sync; no server (NFR-2). Same CSV as Vie tiedot and read by
-  Tuo tiedot. No background job: the write is a cheap local file write, and Samsung's battery
+  user prefers an active, visible sync; no server (NFR-2). Same CSV as Vie tiedostoon and read by
+  Tuo tiedostosta. No background job: the write is a cheap local file write, and Samsung's battery
   rules make background jobs unreliable (user 2026-11-09, generic-data-transfer).
 - **No weight before weighing; Poista or Valmis on the result** (user 2026-11-09,
   weigh-in-button-redo, weigh-in-discard): the widget is a plain 1x1 Punnitse button and the tile
@@ -118,7 +118,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   permission asked on the first save, the app keeps the height when denied). Not carried in the
   export/backup since generic-data-transfer: static, quickly typed again. Not now: BMI, filling
   from an OKOK file's title rows.
-- **One data file, CSV or JSON** (user 2026-11-09, generic-data-transfer): Vie tiedot / Tuo tiedot
+- **One data file, CSV or JSON** (user 2026-11-09, generic-data-transfer): Vie tiedostoon / Tuo tiedostosta
   move the measured raw data between apps and phones; the user picks CSV or JSON on export, import
   detects the format. One part per data kind (`#table;<kind>` in CSV, a key in JSON), today only
   weights; a new kind gets its own part and travels through export, import and backup with no
@@ -277,7 +277,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     that lets another app fill its gaps; the source is Automaattinen (most steps in 30 days) by
     default, one app, or Kaikki (Health Connectin järjestys), set in Asetukset → Askeleet and kept
     only on the phone; the source holds for the whole history (no per-day fallback).
-  - Decided (garmin-steps-history, v1.41): Garmin's account data export ZIP is read in Tuo tiedot
+  - Decided (garmin-steps-history, v1.41): Garmin's account data export ZIP is read in Tuo tiedostosta
     (only the UDSFile daily summaries) and kept as day -> steps in app storage
     (`garmin-steps.json`, in Android backup and transfer, not in the data file); Health Connect
     stays read only. The import fills days with Garmin Connect or Kaikki as the source, the larger

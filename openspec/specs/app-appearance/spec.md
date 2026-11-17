@@ -45,7 +45,7 @@ Every delete in the app (a weight, a food item, a product, an own chart, a row i
 and skipping the clipboard offer SHALL happen at once, without a confirmation, and SHALL offer
 Kumoa: the timed bar of "Undo messages", or the line inside an open sheet. Kumoa SHALL restore
 exactly what was removed. Every delete control (a row's trash button, an editor's "Poista" or
-"Poista tuote" / "Poista kaavio" button) SHALL be drawn in the theme's error colour.
+"Poista ruoka" / "Poista kaavio" button) SHALL be drawn in the theme's error colour.
 
 #### Scenario: Chart deleted
 - **WHEN** the user taps Poista kaavio in the chart editor
@@ -69,8 +69,8 @@ left and Peruuta before the confirming action (Tallenna, Lisää) on the right.
 - **THEN** Poista is on the left in red, and Peruuta and Tallenna on the right in that order
 
 ### Requirement: List rows
-Every list row (Historia's weights, Energia and Askeleet days, Ruoka's items, Ruokakirjaus's
-products, the AI preview's rows, the sheet's suggestions) SHALL be at least 56 dp high, with its
+Every list row (Historia's weights, Energia and Askeleet days, Ruoka's items, Omat ruuat's
+foods, the AI preview's rows, the sheet's suggestions) SHALL be at least 56 dp high, with its
 content 16 dp from the screen's edge. A row whose thing can be edited SHALL show a pencil button
 that opens its editor, and a row whose thing can be deleted SHALL show a red trash button that
 deletes it (as "Delete and Kumoa"); the pencil SHALL come before the trash at the row's end. A row
@@ -91,5 +91,5 @@ sheet's suggestions add at once). A row with nothing to edit or delete SHALL sho
 - **THEN** its row shows a red trash and no pencil
 
 #### Scenario: Products
-- **WHEN** the user opens Asetukset → Ruokakirjaus
+- **WHEN** the user opens Asetukset → Omat ruuat
 - **THEN** each product row shows a pencil and a red trash

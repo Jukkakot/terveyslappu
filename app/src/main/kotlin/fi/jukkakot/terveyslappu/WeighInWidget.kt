@@ -15,7 +15,7 @@ import fi.jukkakot.terveyslappu.log.AppLog
 
 /**
  * Home-screen widget: a "Punnitse" button that opens the weigh-in; it never shows a weight. While
- * automatic weigh-in is on, a small mark shows its state (Päällä, Lepää, Estetty: background-weigh-in
+ * automatic weigh-in is on, a small symbol shows it (dot or warning triangle: background-weigh-in
  * "Widget status"), redrawn by [update] at the listen alarms, boot, update, app resume, settings
  * changes, automatic weigh-ins and notification actions (design 10).
  */
@@ -89,11 +89,11 @@ class WeighInWidget : AppWidgetProvider() {
                     setViewVisibility(R.id.widget_state, View.GONE)
                     setContentDescription(R.id.widget_root, context.getString(R.string.weighin_action))
                 } else {
-                    val (icon, color, label) = when (state) {
-                        WidgetState.ON -> Triple(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
-                        WidgetState.DONE -> Triple(R.drawable.ic_state_done, R.color.widget_state_done, R.string.widget_state_done)
-                        WidgetState.RESTING -> Triple(R.drawable.ic_state_rest, R.color.widget_state_rest, R.string.widget_state_rest)
-                        WidgetState.BLOCKED -> Triple(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
+                    // Two symbols only: the triangle for BLOCKED, the dot for ON, DONE and RESTING.
+                    val (icon, color, label) = if (state == WidgetState.BLOCKED) {
+                        Triple(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
+                    } else {
+                        Triple(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
                     }
                     setViewVisibility(R.id.widget_state, View.VISIBLE)
                     setImageViewResource(R.id.widget_state, icon)

@@ -75,3 +75,15 @@
   "Tänään punnittu"; add the window end to the Listening status. Time format "H.mm".
 - A saved or queued weight is "paino": "Poista paino", "N painoa odottaa tallennusta"; "punnitus"
   only for weighing on the scale.
+
+## Implementation notes (2026-11-17)
+
+- The stored name of a quick-added item, `QUICK_ADD` = "Pikalisäys", stays: it is data in Health Connect
+  and matched by code; only the row "Lisää pelkkä N kcal" changed.
+- "N painoa odottaa tallennusta" is now a plural ("1 paino odottaa tallennusta").
+- Notification channel names: "Tallennetut painot" / "Tarkistettavat painot"; the notification
+  "Tarkista paino" title; the notification action "Poista paino".
+- `ListenStatus.Listening` and `Resting` carry the window end / start and whether it is tomorrow
+  (the delta scenario "Before the window" now reads "Alkaa huomenna klo 6.00").
+- Own-chart and Syöty legend/readout name is "syöty" (was "ruoka"); Kulutus "yhteensä" (was "kokonais").
+- The AI instruction says `per` is "100g" or "kpl" only; the reader still accepts "annos".

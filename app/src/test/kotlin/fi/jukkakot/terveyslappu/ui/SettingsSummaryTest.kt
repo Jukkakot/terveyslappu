@@ -11,6 +11,7 @@ import fi.jukkakot.terveyslappu.steps.StepsChoice
 import fi.jukkakot.terveyslappu.steps.StepsSourceRules
 import org.junit.Test
 import java.time.Instant
+import java.time.LocalTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -39,9 +40,9 @@ class SettingsSummaryTest {
         val all = ListenUi(settings = on, status = ListenStatus.BluetoothOff, batteryRestricted = true, notificationsOff = true, pending = 2)
         assertEquals(ListenLine.Pending(2), SettingsSummary.listen(all))
         assertEquals(ListenLine.Blocked(ListenStatus.BluetoothOff), SettingsSummary.listen(all.copy(pending = 0)))
-        assertEquals(ListenLine.Battery, SettingsSummary.listen(all.copy(pending = 0, status = ListenStatus.Listening)))
-        assertEquals(ListenLine.Notifications, SettingsSummary.listen(all.copy(pending = 0, status = ListenStatus.Listening, batteryRestricted = false)))
-        val ok = SettingsSummary.listen(ListenUi(settings = on, status = ListenStatus.Listening))
+        assertEquals(ListenLine.Battery, SettingsSummary.listen(all.copy(pending = 0, status = ListenStatus.Listening(LocalTime.of(10, 0)))))
+        assertEquals(ListenLine.Notifications, SettingsSummary.listen(all.copy(pending = 0, status = ListenStatus.Listening(LocalTime.of(10, 0)), batteryRestricted = false)))
+        val ok = SettingsSummary.listen(ListenUi(settings = on, status = ListenStatus.Listening(LocalTime.of(10, 0))))
         assertIs<ListenLine.On>(ok)
         assertFalse(ok.warn)
     }

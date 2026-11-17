@@ -7,6 +7,7 @@ import java.time.ZoneId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -45,7 +46,7 @@ class DoneTest {
         assertEquals(done, ListenStatusRule.status(facts.copy(inside = false)))
         assertEquals(ListenStatus.BluetoothOff, ListenStatusRule.status(facts.copy(bluetoothOn = false)))
         assertEquals(ListenStatus.PowerSavePause, ListenStatusRule.status(facts.copy(powerSave = true, listenInPowerSave = false)))
-        assertEquals(ListenStatus.Listening, ListenStatusRule.status(facts.copy(done = false)))
+        assertIs<ListenStatus.Listening>(ListenStatusRule.status(facts.copy(done = false)))
         assertNull(ListenStatusRule.status(facts.copy(enabled = false)))
     }
 
@@ -54,7 +55,7 @@ class DoneTest {
         val done = ListenStatus.Done(LocalTime.of(6, 0), true)
         assertEquals(WidgetState.DONE, WidgetStateRule.of(done, inside = true))
         assertEquals(WidgetState.DONE, WidgetStateRule.of(done, inside = false))
-        assertEquals(WidgetState.ON, WidgetStateRule.of(ListenStatus.Listening, inside = true))
+        assertEquals(WidgetState.ON, WidgetStateRule.of(ListenStatus.Listening(LocalTime.of(10, 0)), inside = true))
         assertEquals(WidgetState.RESTING, WidgetStateRule.of(ListenStatus.Resting(LocalTime.of(6, 0)), inside = false))
         assertEquals(WidgetState.BLOCKED, WidgetStateRule.of(ListenStatus.BluetoothOff, inside = true))
         assertNull(WidgetStateRule.of(null, inside = true))

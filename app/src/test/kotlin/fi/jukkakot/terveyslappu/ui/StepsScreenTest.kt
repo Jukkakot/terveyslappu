@@ -157,7 +157,7 @@ class StepsScreenTest {
             MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.HISTORY, historyOnSteps = true),
             StepsUiState(access = StepsAccess.GRANTED, source = source, sourceName = "Garmin Connect"),
         )
-        compose.onNodeWithText("Lähde: Garmin Connect (automaattinen)").assertExists()
+        compose.onNodeWithText("Askeleet: Garmin Connect (automaattinen)").assertExists()
         compose.onNodeWithTag("stepsSource").performClick()
         assertEquals(1, sourceOpened)
     }
@@ -207,7 +207,7 @@ class StepsScreenTest {
         compose.waitForIdle()
         compose.onNodeWithTag("energyWeights", useUnmergedTree = true).assertDoesNotExist()
         val legend = compose.activity.chartViews().single().legend.entries.map { it.label }
-        assertTrue("ruoka" in legend && "paino" !in legend, legend.toString())
+        assertTrue("syöty" in legend && "paino" !in legend, legend.toString())
     }
 
     @Test

@@ -382,6 +382,7 @@ class ListenController(
         val hasScale = device.scale() != null
         val plan = settings.window.plan(now, zone)
         val nextStart = settings.window.nextStart(now, zone)
+        val windowEnd = (plan as? WindowPlan.Inside)?.end
         val facts = ListenFacts(
             enabled = settings.enabled,
             hasScale = hasScale,
@@ -395,6 +396,8 @@ class ListenController(
             nextStart = nextStart.atZone(zone).toLocalTime(),
             done = store.done().holds(settings.window, now, zone),
             nextStartTomorrow = nextStart.atZone(zone).toLocalDate().isAfter(now.atZone(zone).toLocalDate()),
+            windowEnd = windowEnd?.atZone(zone)?.toLocalTime() ?: settings.end,
+            windowEndTomorrow = windowEnd?.atZone(zone)?.toLocalDate()?.isAfter(now.atZone(zone).toLocalDate()) ?: false,
         )
         val status = ListenStatusRule.status(facts)
         return ListenUi(

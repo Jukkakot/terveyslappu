@@ -105,13 +105,13 @@ internal val plainTexts = ChartTexts(
         when (it) {
             LegendLabel.WEIGHT -> "paino"
             LegendLabel.BMI -> "BMI"
-            LegendLabel.FOOD -> "ruoka"
+            LegendLabel.FOOD -> "syöty"
             LegendLabel.TREAT -> "herkut"
             LegendLabel.STEPS -> "askeleet"
             LegendLabel.BURN -> "kulutus"
             LegendLabel.REST -> "lepo"
             LegendLabel.ACTIVE -> "aktiivinen"
-            LegendLabel.TOTAL -> "kokonais"
+            LegendLabel.TOTAL -> "yhteensä"
             LegendLabel.AVERAGE -> "keskiarvo"
             LegendLabel.WEEKLY -> "viikoittain"
         }

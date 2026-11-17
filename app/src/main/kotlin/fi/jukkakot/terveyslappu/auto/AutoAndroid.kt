@@ -144,7 +144,7 @@ class AutoNotifications(private val context: Context) : AutoNotifier {
     }
 }
 
-/** OK, Poista punnitus and Hyväksy from a weigh-in notification (not exported: only our PendingIntents reach it). */
+/** OK, Poista paino and Hyväksy from a weigh-in notification (not exported: only our PendingIntents reach it). */
 class AutoActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext as TerveysApp
@@ -163,7 +163,7 @@ class AutoActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        /** OK, Poista punnitus or Hyväksy for the weight the intent names. */
+        /** OK, Poista paino or Hyväksy for the weight the intent names. */
         suspend fun handle(auto: AutoWeights, notifier: AutoNotifier, intent: Intent) {
             val id = intent.getStringExtra(EXTRA_ID) ?: return
             val timeMs = intent.getLongExtra(EXTRA_TIME, 0)

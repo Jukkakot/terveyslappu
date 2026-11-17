@@ -12,7 +12,7 @@ The app SHALL read each day's burned energy from Health Connect (daily total cal
 daily active calories burned, read-only permissions only) for the steps source in use (Garmin
 Connect, another single app, or all apps), and from the imported Garmin history (see steps
 "Import Garmin step history"). A day's parts SHALL be: active = the active kcal, lepo = total −
-active, when both are known; only total known: the day is one part "kokonais"; only active known:
+active, when both are known; only total known: the day is one part "yhteensä"; only active known:
 the day is active only. The app SHALL NOT estimate any part from height, weight, age or a formula,
 and SHALL NOT write, change or delete calories burned in Health Connect. Burned energy SHALL be
 shown only inside the app and SHALL NOT be in the data file or the backup file.
@@ -23,7 +23,7 @@ shown only inside the app and SHALL NOT be in the data file or the backup file.
 
 #### Scenario: Total only
 - **GIVEN** Health Connect holds a total of 2 200 kcal for a day and no active kcal
-- **THEN** the day is one bar of 2 200 kcal in the "kokonais" tone, without a split
+- **THEN** the day is one bar of 2 200 kcal in the "yhteensä" tone, without a split
 
 ### Requirement: Imported Garmin days for burned energy
 An imported day's active and resting kcal SHALL be used under the same source rule as imported
@@ -59,12 +59,12 @@ averages (it is not over); it SHALL count as a day with data in "x / y päivää
 ### Requirement: Kulutus tab
 Historia SHALL have a fixed tab "Kulutus" after Askeleet. Its chart SHALL show for the chosen
 period one bar per day with data: lepo at the bottom in a light tone and aktiivinen on top in the
-full tone of the Kulutus colour (a "kokonais" day in the light tone, an active-only day in the full
+full tone of the Kulutus colour (a "yhteensä" day in the light tone, an active-only day in the full
 tone), bar height the day's total; the flat dashed average line at the period's average total per
 day with data (today left out); weekly bars (average per day with data of the week, today left out)
 for periods over 90 days; the shared axes, period range line and legend ("lepo", "aktiivinen",
 "keskiarvo", "viikoittain" when weekly). Tapping a bar SHALL show, on the chart's marker card, its
-day (or week) and the row "kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal" (a kokonais day
+day (or week) and the row "kulutus 2 946 kcal · aktiivinen 465 kcal · lepo 2 481 kcal" (a total-only day
 "kulutus 2 300 kcal", an active-only day "kulutus 465 kcal · aktiivinen 465 kcal", no data "kulutus ei
 tietoa"; a weekly bar its averages per day, "keskim. 2 300 kcal/pv · aktiivinen 450 kcal/pv · lepo 1 850 kcal/pv", as food's "keskim. 1 900 kcal/pv"). Under the chart: the average total kcal per
 day, the average active kcal per

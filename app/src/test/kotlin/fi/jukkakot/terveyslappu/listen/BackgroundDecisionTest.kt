@@ -95,7 +95,8 @@ class WidgetStateTest {
     fun `a stored ON becomes RESTING once the window end has passed`() {
         assertEquals(WidgetState.RESTING, WidgetStateRule.shown(WidgetState.ON, 1_000, 1_000))
         assertEquals(WidgetState.ON, WidgetStateRule.shown(WidgetState.ON, 1_000, 999))
-        assertEquals(WidgetState.BLOCKED, WidgetStateRule.shown(WidgetState.BLOCKED, 1_000, 2_000))
+        assertEquals(WidgetState.RESTING, WidgetStateRule.shown(WidgetState.BLOCKED, 1_000, 2_000))
+        assertEquals(WidgetState.BLOCKED, WidgetStateRule.shown(WidgetState.BLOCKED, 1_000, 999))
         assertNull(WidgetStateRule.shown(null, null, 0))
     }
 }

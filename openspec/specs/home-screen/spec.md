@@ -102,7 +102,7 @@ from anywhere except its period label, unlike the food card's split taps (title 
 #### Scenario: Backup in trouble
 - **GIVEN** the backup is on
 - **WHEN** its last run failed or its last success is older than three days
-- **THEN** the home screen shows one notice that opens Asetukset at Tiedot ja varmuuskopio;
+- **THEN** the home screen shows one notice that opens Asetukset at Tiedostot ja varmuuskopio;
   otherwise nothing about the backup
 
 ### Requirement: Historia screen
@@ -116,8 +116,8 @@ weights with delete and undo, and the App menu in its top bar (manual entry is "
 ### Requirement: Asetukset screen
 Asetukset SHALL be a list of rows, each with an icon, a name, one line of its current state and a
 chevron, and each SHALL open its own sub-screen holding what was its section: Omat tiedot,
-Automaattinen punnitus, Tiedot ja varmuuskopio (Tuo tiedot, Vie tiedot and the backup; shown only
-with the Health Connect permission, as before), Ruokakirjaus, Askeleet (the steps source), Ulkoasu
+Automaattinen punnitus, Tiedostot ja varmuuskopio (Tuo tiedostosta, Vie tiedostoon and the backup; shown only
+with the Health Connect permission, as before), Omat ruuat, Askeleet (the steps source), Ulkoasu
 (theme) and Tuki (Jaa loki, Kopioi loki, the version). The sections' contents and behaviour SHALL
 stay as they were. A section's warning (backup failed or late, weighings waiting to be saved,
 listening blocked, a chosen steps source without steps) SHALL show on its row's state line in the
@@ -128,22 +128,22 @@ opened from it, otherwise the screen holding the link.
 #### Scenario: Asetukset contents
 - **WHEN** the user opens Asetukset
 - **THEN** seven rows are shown with their state lines, in the order Omat tiedot, Automaattinen
-  punnitus, Tiedot ja varmuuskopio, Ruokakirjaus, Askeleet, Ulkoasu and Tuki, e.g. Omat tiedot
+  punnitus, Tiedostot ja varmuuskopio, Omat ruuat, Askeleet, Ulkoasu and Tuki, e.g. Omat tiedot
   "180 cm · 1990 · Mies", Automaattinen punnitus "Päällä 6.00–10.00", Askeleet "Automaattinen:
   Garmin Connect", Ulkoasu "Teema: Järjestelmä", Tuki with the version
 
 #### Scenario: Open a sub-screen
-- **WHEN** the user taps Tiedot ja varmuuskopio
-- **THEN** its sub-screen shows Tuo tiedot, Vie tiedot and the backup; back returns to Asetukset
+- **WHEN** the user taps Tiedostot ja varmuuskopio
+- **THEN** its sub-screen shows Tuo tiedostosta, Vie tiedostoon and the backup; back returns to Asetukset
 
 #### Scenario: Warning on the row
 - **GIVEN** the backup's last run failed
 - **WHEN** Asetukset is shown
-- **THEN** the Tiedot ja varmuuskopio row says so in the warning tint
+- **THEN** the Tiedostot ja varmuuskopio row says so in the warning tint
 
 #### Scenario: Link from home
 - **WHEN** the user taps the backup notice on the home screen
-- **THEN** the Tiedot ja varmuuskopio sub-screen opens, and back returns to the home screen
+- **THEN** the Tiedostot ja varmuuskopio sub-screen opens, and back returns to the home screen
 
 ### Requirement: Home chart period
 The home card's small chart SHALL show the last 7 days the first time. A period label under the
@@ -197,7 +197,7 @@ Energia. There SHALL be no change arrow from the previous day and no separate bu
 The card SHALL hold no button (adding is "Lisää annos" in the App menu, the widget or Ruoka). At small size the period label and the average SHALL
 share one row (the average shortens to "ka 1 900 kcal/pv", wrapping to two lines when it does not fit) and the bars take the rest of the height; all parts SHALL stay readable and tappable (44 dp touch targets). Its wide and big looks
 are in Card sizes. The card SHALL be shown also when no weights exist yet; without the nutrition
-permission it SHALL read "Ruokakirjaus: anna lupa" and a tap SHALL ask for it.
+permission it SHALL read "Ruoka: anna lupa" and a tap SHALL ask for it.
 
 #### Scenario: Something eaten
 - **GIVEN** today 1 240 kcal is logged, 230 of it Herkku

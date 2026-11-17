@@ -143,7 +143,7 @@ SHALL be shown under the status, "Akunkäyttö rajoitettu: kuuntelu voi katketa"
 still runs. When notifications are not allowed, a warning line "Ilmoitukset estetty" SHALL be
 shown. Each blocked reason and each warning SHALL have a button that opens the matching system
 screen or permission request. "Pysäytetty" SHALL say to open the app once. While weights wait in the pending queue the
-section SHALL also show "N punnitusta odottaa tallennusta".
+section SHALL also show "N painoa odottaa tallennusta".
 
 #### Scenario: Battery use restricted
 - **WHEN** the phone restricts the app's battery use and the window is on
@@ -196,12 +196,12 @@ other SHALL ignore packets with that key. A claim whose write failed and was que
 When writing an automatic weight fails, the weight SHALL be kept on the phone in a pending queue
 and written the next time it can be, and SHALL NOT be lost. The queue SHALL be retried at the next
 weigh-in, the hourly check, and at the start of the first foreground read after the app opens,
-before the list is shown. Asetukset SHALL show "N punnitusta odottaa tallennusta" while the queue is
+before the list is shown. Asetukset SHALL show "N painoa odottaa tallennusta" while the queue is
 not empty. The notification of a queued weight SHALL come when it is written.
 
 #### Scenario: Write fails
 - **WHEN** Health Connect refuses the background write
-- **THEN** the weight is kept, the cause is logged, Asetukset shows "1 punnitusta odottaa
+- **THEN** the weight is kept, the cause is logged, Asetukset shows "1 painoa odottaa
   tallennusta", and it is written when the app is next opened, before Historia shows its list
 
 ### Requirement: Background time budget
@@ -316,9 +316,9 @@ weight SHALL remove it like any weight.
 ### Requirement: Weigh-in notification
 After every automatic weigh-in the app SHALL show a notification with the weight and, when a
 reference exists, the change from it ("82,5 kg tallennettu", "−0,3 kg edellisestä"). A normal
-weigh-in's notification SHALL have the actions OK and Poista punnitus. A "?" weight's notification
+weigh-in's notification SHALL have the actions OK and Poista paino. A "?" weight's notification
 SHALL say it needs checking ("61,3 kg – tarkista", "Poikkeaa 20,7 kg edellisestä hyväksytystä") and
-SHALL have Hyväksy and Poista punnitus. With no reference the text SHALL be only "82,5 kg
+SHALL have Hyväksy and Poista paino. With no reference the text SHALL be only "82,5 kg
 tallennettu". A weight saved late from the pending queue SHALL add its weighing time ("82,5 kg
 tallennettu klo 7.12"). Tapping the notification SHALL open Historia. All the notifications SHALL
 be in one group in one alerting channel family, and none SHALL disappear by itself. Without the
@@ -326,12 +326,12 @@ notification permission the weight SHALL still be saved.
 
 #### Scenario: Normal weigh-in
 - **WHEN** 82.5 kg is saved automatically without a mark
-- **THEN** an alerting notification shows 82,5 kg, the change, OK and Poista punnitus, and stays
+- **THEN** an alerting notification shows 82,5 kg, the change, OK and Poista paino, and stays
   until dismissed
 
 #### Scenario: Questioned weigh-in
 - **WHEN** 61.3 kg is saved automatically and marked "?"
-- **THEN** an alerting notification asks to check it and offers Hyväksy and Poista punnitus, and
+- **THEN** an alerting notification asks to check it and offers Hyväksy and Poista paino, and
   stays until dismissed
 
 #### Scenario: No reference
@@ -347,13 +347,13 @@ notification permission the weight SHALL still be saved.
 - **THEN** the silent channel is removed and the next normal weigh-in alerts
 
 ### Requirement: Notification actions
-Poista punnitus SHALL delete the weight and its raw data without a confirmation; Hyväksy SHALL
+Poista paino SHALL delete the weight and its raw data without a confirmation; Hyväksy SHALL
 accept the weight (with chained acceptance); OK SHALL only close the notification. Each SHALL work
 without opening the app and SHALL close the notification. Swiping a "?" notification away SHALL
 leave the mark.
 
 #### Scenario: Delete from the notification
-- **WHEN** the user taps Poista punnitus on the notification
+- **WHEN** the user taps Poista paino on the notification
 - **THEN** the weight and its raw data are removed from the phone and the notification closes
 
 #### Scenario: Accept from the notification

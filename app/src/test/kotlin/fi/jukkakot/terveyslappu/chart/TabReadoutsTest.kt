@@ -61,13 +61,13 @@ class TabReadoutsTest {
     fun `Syoty has ruoka and herkut rows, a week its average`() {
         val day = LocalDate.of(2026, 11, 12)
         val daily = EnergySeries.of(listOf(food(day, 1530.0), food(day, 230.0, treat = true, pos = 2)), Period.WEEK, today)
-        assertEquals("To 12.11. | ruoka 1 760 kcal | herkut 230 kcal", text(TabReadouts.energy(daily, day, today)))
-        assertEquals("Pe 13.11. | ruoka ei kirjauksia", text(TabReadouts.energy(daily, day.plusDays(1), today)))
+        assertEquals("To 12.11. | syöty 1 760 kcal | herkut 230 kcal", text(TabReadouts.energy(daily, day, today)))
+        assertEquals("Pe 13.11. | syöty ei annoksia", text(TabReadouts.energy(daily, day.plusDays(1), today)))
         val weekly = EnergySeries.of(listOf(food(LocalDate.of(2026, 11, 10), 1800.0), food(day, 2000.0)), Period.Last(365), today)
-        assertEquals("Vk 46 · 9.–15.11. | ruoka keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 9), today)))
+        assertEquals("Vk 46 · 9.–15.11. | syöty keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 9), today)))
         // Any day of the week (the key is the week's first day inside the period) finds its bar.
-        assertEquals("Vk 46 · 9.–15.11. | ruoka keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 11), today)))
-        assertEquals("Vk 45 · 2.–8.11. | ruoka ei kirjauksia", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 2), today)))
+        assertEquals("Vk 46 · 9.–15.11. | syöty keskim. 1 900 kcal/pv", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 11), today)))
+        assertEquals("Vk 45 · 2.–8.11. | syöty ei annoksia", text(TabReadouts.energy(weekly, LocalDate.of(2026, 11, 2), today)))
     }
 
     @Test
@@ -107,7 +107,7 @@ class TabReadoutsTest {
             ),
         )
         assertEquals(
-            "To 12.11. | paino 82,4 kg | ruoka ei kirjauksia | kulutus 2 300 kcal · aktiivinen 450 kcal | askeleet ei tietoa",
+            "To 12.11. | paino 82,4 kg | syöty ei annoksia | kulutus 2 300 kcal · aktiivinen 450 kcal | askeleet ei tietoa",
             text(TabReadouts.custom(readout, today) { ToneRef.PRIMARY }),
         )
     }

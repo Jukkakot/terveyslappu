@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -56,8 +57,8 @@ internal val clockFormat = DateTimeFormatter.ofPattern("H.mm")
 
 /**
  * "Automaattinen punnitus" (background-weigh-in): the switch, the status with its fix, the battery
- * and notification warnings, the pending queue, the window, the mode, the power-saving choice, the
- * acceptance limit and the last-heard line.
+ * and notification warnings, the pending queue, the window, the Tunnistusnopeus, the power-saving choice, the
+ * check limit and the last-heard line.
  */
 @Composable
 internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarHostState) {
@@ -86,7 +87,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
         ListenNotice(stringResource(R.string.listen_notifications_warning), warn = true, fix = ListenFix.NOTIFICATIONS, tag = "listenNotifications", actions = actions)
     }
     if (ui.pending > 0) {
-        ListenNotice(stringResource(R.string.listen_pending, ui.pending), warn = true, fix = null, tag = "listenPending", actions = actions)
+        ListenNotice(pluralStringResource(R.plurals.listen_pending, ui.pending, ui.pending), warn = true, fix = null, tag = "listenPending", actions = actions)
     }
     TimeRow(stringResource(R.string.listen_start), settings.start, "listenStart") { picking = true }
     TimeRow(stringResource(R.string.listen_end), settings.end, "listenEnd") { picking = false }
@@ -132,23 +133,29 @@ internal fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (
     ListenStatus.BluetoothOff -> stringResource(R.string.listen_status_bluetooth) to ListenFix.BLUETOOTH
     ListenStatus.Stopped -> stringResource(R.string.listen_status_stopped) to null
     ListenStatus.PowerSavePause -> stringResource(R.string.listen_status_power_save) to ListenFix.POWER_SAVE
-    ListenStatus.Listening -> stringResource(R.string.listen_status_listening) to null
-    is ListenStatus.Resting -> stringResource(R.string.listen_status_resting, clockFormat.format(status.startsAt)) to null
+    is ListenStatus.Listening -> stringResource(
+        if (status.tomorrow) R.string.listen_status_listening_tomorrow else R.string.listen_status_listening,
+        clockFormat.format(status.until),
+    ) to null
+    is ListenStatus.Resting -> stringResource(
+        if (status.tomorrow) R.string.listen_status_resting_tomorrow else R.string.listen_status_resting,
+        clockFormat.format(status.startsAt),
+    ) to null
     is ListenStatus.Done -> stringResource(
         if (status.tomorrow) R.string.listen_status_done_tomorrow else R.string.listen_status_done,
         clockFormat.format(status.nextStart),
     ) to null
 }
 
-/** The widget's symbol for the status, in its colour (same drawable and colour resources). */
-internal class StatusSymbol(val icon: Int, val color: Int, val label: Int)
+/** The status symbol: the green dot, or the amber triangle for every "Ei toimi" line (decorative, the line carries the meaning). */
+internal class StatusSymbol(val icon: Int, val color: Int)
 
-internal fun ListenStatus.symbol(): StatusSymbol = when (this) {
-    ListenStatus.Listening -> StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
-    is ListenStatus.Done -> StatusSymbol(R.drawable.ic_state_done, R.color.widget_state_done, R.string.widget_state_done)
-    is ListenStatus.Resting -> StatusSymbol(R.drawable.ic_state_rest, R.color.widget_state_rest, R.string.widget_state_rest)
-    else -> StatusSymbol(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
-}
+internal fun ListenStatus.symbol(): StatusSymbol =
+    if (isBlocked()) {
+        StatusSymbol(R.drawable.ic_state_blocked, R.color.widget_state_blocked)
+    } else {
+        StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on)
+    }
 
 private fun ListenFix.label(): Int = when (this) {
     ListenFix.PERMISSION -> R.string.listen_fix_permission
@@ -169,7 +176,7 @@ private fun ListenNotice(text: String, warn: Boolean, fix: ListenFix?, tag: Stri
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (symbol != null) {
-            Icon(painterResource(symbol.icon), contentDescription = stringResource(symbol.label), tint = colorResource(symbol.color), modifier = Modifier.size(20.dp))
+            Icon(painterResource(symbol.icon), contentDescription = null, tint = colorResource(symbol.color), modifier = Modifier.size(20.dp))
         } else if (warn) {
             Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = colors.error, modifier = Modifier.size(20.dp))
         }
@@ -216,7 +223,7 @@ private fun TimeRow(label: String, time: LocalTime, tag: String, onClick: () -> 
     }
 }
 
-/** Hyväksyntäraja: 0,5-20 kg in 0,5 kg steps with − and + (background-weigh-in "Trial setting"). */
+/** Tarkistusraja: 0,5-20 kg in 0,5 kg steps with − and + (background-weigh-in "Trial setting"). */
 @Composable
 private fun LimitRow(limit: Double, onLimit: (Double) -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -249,12 +256,13 @@ private fun LimitRow(limit: Double, onLimit: (Double) -> Unit) {
     }
 }
 
-/** Säästö / Tasapaino as filter chips, like the theme choice. */
+/** Normaali / Nopea (Tunnistusnopeus) as filter chips, like the theme choice. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ModeChoice(mode: ListenMode, onMode: (ListenMode) -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.listen_mode), style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.listen_mode_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ListenMode.entries.forEach { option ->
                 val selected = option == mode

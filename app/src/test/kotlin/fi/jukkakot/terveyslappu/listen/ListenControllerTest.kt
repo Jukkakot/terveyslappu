@@ -83,7 +83,7 @@ class ListenControllerTest {
         assertEquals(ListenMode.SAVE, radio.running)
         assertNotNull(store.session())
         assertEquals(at("2026-11-14T08:00"), nextAlarm()!!.triggerAtTime)
-        assertEquals(ListenStatus.Listening, listen.ui().status)
+        assertIs<ListenStatus.Listening>(listen.ui().status)
     }
 
     @Test
@@ -230,7 +230,7 @@ class ListenControllerTest {
         device.now = at("2026-11-15T06:00")
         listen.replan(ListenController.ACTION_START)
         assertEquals(ListenMode.SAVE, radio.running)
-        assertEquals(ListenStatus.Listening, listen.ui().status)
+        assertIs<ListenStatus.Listening>(listen.ui().status)
     }
 
     @Test

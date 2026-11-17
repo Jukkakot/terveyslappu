@@ -129,6 +129,6 @@ class AutoAndroidTest {
         WeighInWidget.update(app)
         val view = manager.getViewFor(id)
         assertEquals(View.VISIBLE, view.findViewById<ImageView>(R.id.widget_state).visibility)
-        assertTrue(view.findViewById<View>(R.id.widget_root).contentDescription.contains(app.getString(R.string.widget_state_rest)))
+        assertTrue(view.findViewById<View>(R.id.widget_root).contentDescription.contains(app.getString(R.string.widget_state_on)))
     }
 }

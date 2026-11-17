@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -278,7 +279,7 @@ private fun StateLine(text: String, warn: Boolean = false, symbol: StatusSymbol?
 internal fun ListenState(line: ListenLine, status: ListenStatus?) {
     when (line) {
         ListenLine.Off -> StateLine(stringResource(R.string.settings_listen_off))
-        is ListenLine.Pending -> StateLine(stringResource(R.string.listen_pending, line.count), warn = true)
+        is ListenLine.Pending -> StateLine(pluralStringResource(R.plurals.listen_pending, line.count, line.count), warn = true)
         is ListenLine.Blocked -> StateLine(statusText(line.status).first, warn = true)
         ListenLine.Battery -> StateLine(stringResource(R.string.listen_battery_warning), warn = true)
         ListenLine.Notifications -> StateLine(stringResource(R.string.listen_notifications_warning), warn = true)

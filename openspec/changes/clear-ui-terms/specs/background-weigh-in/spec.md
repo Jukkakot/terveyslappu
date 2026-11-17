@@ -60,7 +60,7 @@ restricted by the phone, a warning line SHALL be shown under it, "Akunkäyttö r
 voi jäädä tunnistamatta", while scanning still runs. When notifications are not allowed, a warning
 line "Ilmoitukset estetty" SHALL be shown. Each "Ei toimi" reason (except "avaa sovellus kerran"
 and "vaakaa ei vielä tunneta") and each warning SHALL have a button that opens the matching system screen or permission request. While weights wait in the
-pending queue the section SHALL also show "N punnitusta odottaa tallennusta".
+pending queue the section SHALL also show "N painoa odottaa tallennusta".
 
 #### Scenario: Battery use restricted
 - **WHEN** the phone restricts the app's battery use and the window is on
@@ -78,7 +78,7 @@ pending queue the section SHALL also show "N punnitusta odottaa tallennusta".
 
 #### Scenario: Before the window
 - **WHEN** the window is 06:00-10:00 and the time is 23.00
-- **THEN** the line says "Alkaa klo 6.00"
+- **THEN** the line says "Alkaa huomenna klo 6.00"
 
 ### Requirement: Widget status
 While the feature is on, the 1x1 home-screen widget SHALL show one small symbol only (no text, no

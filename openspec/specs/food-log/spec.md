@@ -60,12 +60,12 @@ in the day list, highlighted and scrolled into view; no confirmation line is sho
 and delete buttons replace Muuta and Kumoa). A long press on a chip SHALL open the editor for a new item
 of that product (below); the chip's accessibility actions SHALL offer the same.
 
-While typing, the list "Tuotteet" SHALL cover the day list and the chips, directly above the field:
+While typing, the list "Omat ruuat" SHALL cover the day list and the chips, directly above the field:
 up to five matching products, own products before base products, each row with the product's name
 and under it its usual amount and the kcal that amount gives ("200 g · 130 kcal"; with no usual
 amount the energy, "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when the energy is unknown),
 the treat sign for a Herkku product, and an edit button; and as the last row "Lisää ”<text>”
-uutena" with a line telling what it adds (for a bare number "Pikalisäys <N> kcal"; for other text
+uutena" with a line telling what it adds (for a bare number "Lisää pelkkä <N> kcal"; for other text
 "ilman kcal" or the known product's kcal); tapping it SHALL do what Enter does. Tapping a product
 row SHALL add it as a chip does. Clearing the field SHALL bring the day list and the chips back.
 
@@ -89,7 +89,7 @@ Details:
   than two rows, the chips drop to fewer rows (down to one). A drag down on the sheet's handle, or on the
   day list at its top, closes the sheet; the panel and its handle never close the sheet.
 - Clipboard card: the first entry of the scrolling day list (it scrolls away), hidden while typing.
-- While typing, the Tuotteet rows replace the day list (header and summary stay), bottom-aligned
+- While typing, the Omat ruuat rows replace the day list (header and summary stay), bottom-aligned
   just above the line and the field, best match nearest the field and "Lisää … uutena" closest to
   it; they scroll when they do not fit.
 - Highlight: only the newest add in this sheet (for Lisää kaikki the last of its items); it stays
@@ -148,7 +148,7 @@ Folding the add panel:
 
 #### Scenario: What enter does
 - **WHEN** the user types "kana"
-- **THEN** the Tuotteet rows replace the day list and the chips above the field, the last row reads
+- **THEN** the Omat ruuat rows replace the day list and the chips above the field, the last row reads
   "Lisää ”kana” uutena", and tapping it adds what Enter would
 
 #### Scenario: Only a number
@@ -329,21 +329,21 @@ widget or shortcut that only opens the add field is allowed.
 - **WHEN** the user adds an item in the sheet opened from the widget
 - **THEN** the sheet shows the item, and the widget itself shows nothing about it
 
-### Requirement: Ruokakirjaus in Asetukset
-Asetukset's Ruokakirjaus sub-screen SHALL start with a switch "Valmiit ruuat" (on by default)
+### Requirement: Omat ruuat in Asetukset
+Asetukset's Omat ruuat sub-screen SHALL start with a switch "Valmiit ruuat" (on by default)
 with the line "Sovelluksen mukana tulevat yleiset ruuat ehdotuksissa", which turns the base
 products on and off at once. It SHALL then list the own products with their category and energy,
 and SHALL let the user change the name, energy, usual amount and category, and remove a product
-(from suggestions; logged items keep their values) with the product editor's red "Poista tuote",
+(from suggestions; logged items keep their values) with the product editor's red "Poista ruoka",
 which shows "<name> poistettu · Kumoa"; Kumoa SHALL bring the product back as it was. Its row in Asetukset SHALL read the count of
 own products.
 
 #### Scenario: See what usual dishes contain
-- **WHEN** the user opens Ruokakirjaus
+- **WHEN** the user opens Omat ruuat
 - **THEN** Jauhelihakastike shows 140 kcal / 100 g, usually 250 g
 
 #### Scenario: Undo a product removal
-- **WHEN** the user removes Jauhelihakastike under Ruokakirjaus and taps Kumoa
+- **WHEN** the user removes Jauhelihakastike under Omat ruuat and taps Kumoa
 - **THEN** Jauhelihakastike is listed again with 140 kcal / 100 g, usually 250 g
 
 #### Scenario: Turn base products off
@@ -383,7 +383,7 @@ kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL 
 the preview's Lisää would, to the day the sheet or Ruoka shows, without opening the preview, and
 show "<N> annosta lisätty · Kumoa". "Muokkaa" SHALL open the preview. When the JSON holds only
 products the card SHALL list the products with their energy and its button SHALL read "Tallenna
-tuotteet". On the front page the same card SHALL be shown above the cards, adding to today. The
+ruuat". On the front page the same card SHALL be shown above the cards, adding to today. The
 offer SHALL be shown again on every open and resume while the same content is on the clipboard,
 until the user saves that content (Lisää kaikki or the preview's Lisää) or taps Ohita or ✕; after
 either, that content SHALL NOT be offered again, on any screen, also when it is copied again; Kumoa
@@ -514,7 +514,7 @@ food log. The JSON's values SHALL win over the app's:
   log their own kcal.
 - An item without kcal SHALL take its kcal from its product's final energy in this import (after
   all items and the `products` list); when there is no own product of that name and "Valmiit
-  tuotteet" is on, from the base product of that name or alias. The new own product SHALL then take
+  ruuat" is on, from the base product of that name or alias. The new own product SHALL then take
   that base product's energy and usual amount, and the item's name and category. The item SHALL
   keep its own amount; when its unit differs from the energy's unit it SHALL be logged without
   kcal. An item without amount SHALL use the product's usual amount.
@@ -699,8 +699,8 @@ and keep the sheet open.
   "4 annosta lisätty · Kumoa"
 
 ### Requirement: Removing a product from the sheet
-Each Tuotteet row of an own product (shown while typing) SHALL have a red delete button next to the
-edit button. It SHALL remove the product (as removing it under Ruokakirjaus in Asetukset does:
+Each Omat ruuat row of an own product (shown while typing) SHALL have a red delete button next to the
+edit button. It SHALL remove the product (as removing it under Omat ruuat in Asetukset does:
 logged items keep their values) and show "<name> poistettu · Kumoa" in the sheet's line; Kumoa
 SHALL bring the product back as it was. Base products SHALL have no delete button. Chips SHALL have
 no delete.
@@ -744,7 +744,7 @@ Järjestä keeps its own move buttons and shows no edit or delete buttons.
 
 ### Requirement: Correcting a product's energy
 A product's energy SHALL count as corrected when it is saved, from an item's editor (Tallenna or
-a new item's Lisää) or from Ruokakirjaus, with the same unit (kpl or 100 g) and a different kcal.
+a new item's Lisää) or from Omat ruuat, with the same unit (kpl or 100 g) and a different kcal.
 A unit change, a cleared energy, or a save that changes only the amount, Herkku or the name SHALL
 NOT count. On a correction, every logged item of that product the app can read from Health
 Connect, on any day, whose kcal came from the old energy SHALL be recalculated as amount × new
@@ -755,9 +755,9 @@ imports SHALL never recalculate (they stay append-only).
 #### Scenario: Heavier liquorice
 - **GIVEN** Lakritsi is 10 kcal / kpl, logged 5 kpl (50 kcal) on three days and once with a typed
   total of 80 kcal and no amount
-- **WHEN** the user changes Lakritsi to 12 kcal / kpl in Ruokakirjaus and taps Päivitä kaikki
+- **WHEN** the user changes Lakritsi to 12 kcal / kpl in Omat ruuat and taps Päivitä kaikki
 - **THEN** the three items read 60 kcal, the 80 kcal item is unchanged, those days' totals rise
-  by 10 kcal each, and "Päivitetty 3 kirjausta · Kumoa" shows
+  by 10 kcal each, and "Päivitetty 3 annosta · Kumoa" shows
 
 #### Scenario: Amount only
 - **WHEN** the user opens a Lakritsi item, changes 5 kpl to 6 kpl and taps Tallenna
@@ -786,9 +786,9 @@ the other unit, without kcal (they are filled as in "Kcal filled in later") or w
 
 ### Requirement: Confirming a correction
 When a correction would change at least one other item, a dialog SHALL ask before anything is
-written: title "Päivitetäänkö aiemmat kirjaukset?", the line "<name>: <N> kirjausta <D> päivältä,
+written: title "Päivitetäänkö aiemmat annokset?", the line "<name>: <N> annosta <D> päivältä,
 yhteensä <old> → <new> kcal" (the sums over those N items, rounded after summing), a line "<M>
-itse annettua kirjausta pysyy ennallaan" when M > 0, and the buttons "Päivitä kaikki", "Vain
+itse annettua annosta pysyy ennallaan" when M > 0, and the buttons "Päivitä kaikki", "Vain
 jatkossa" and Peruuta, with singular forms for 1. The dialog SHALL govern only the recalculation:
 the product's new energy, a rename, Herkku and the filling of items without kcal SHALL happen as
 today with Päivitä kaikki or Vain jatkossa. Vain jatkossa SHALL save without recalculating;
@@ -810,28 +810,28 @@ no dialog.
 - **THEN** no dialog is shown
 
 ### Requirement: Undoing a correction
-After Päivitä kaikki a bar "Päivitetty <N> kirjausta · Kumoa" SHALL show where the edit was made
+After Päivitä kaikki a bar "Päivitetty <N> annosta · Kumoa" SHALL show where the edit was made
 (in the add sheet and the Lisää annos dialog on the sheet's line, in place of the edited item
 "Adding an item" shows there; the app bar on Ruoka and in
-Ruokakirjaus) for as long as such bars last. Kumoa SHALL undo the whole save: the product's old
+Omat ruuat) for as long as such bars last. Kumoa SHALL undo the whole save: the product's old
 energy, the edited item as it was, and every recalculated item whose kcal is still amount × new
 energy (an item changed again since stays). When the bar is gone Kumoa is gone. When writing the
-recalculated items fails, the bar SHALL read "Päivitettiin <X>/<N> kirjausta · Yritä uudelleen";
+recalculated items fails, the bar SHALL read "Päivitettiin <X>/<N> annosta · Yritä uudelleen";
 a retry SHALL recalculate from the items as they are now.
 
 #### Scenario: Undo
-- **WHEN** the user taps Kumoa on "Päivitetty 3 kirjausta"
+- **WHEN** the user taps Kumoa on "Päivitetty 3 annosta"
 - **THEN** Lakritsi is 10 kcal / kpl again and the three items read 50 kcal
 
 ### Requirement: Product use count
-The product editor in Ruokakirjaus SHALL show under the energy field how many items of the product
-are logged ("Kirjattu 6 kertaa", "Kirjattu 1 kerran"); it SHALL show nothing when the product is
+The product editor in Omat ruuat SHALL show under the energy field how many items of the product
+are logged ("Lisätty 6 kertaa", "Lisätty 1 kerran"); it SHALL show nothing when the product is
 not logged or the items are not known.
 
 #### Scenario: Use count
 - **GIVEN** Lakritsi logged on four items
-- **WHEN** the user opens Lakritsi in Ruokakirjaus
-- **THEN** the editor reads "Kirjattu 4 kertaa" under the energy
+- **WHEN** the user opens Lakritsi in Omat ruuat
+- **THEN** the editor reads "Lisätty 4 kertaa" under the energy
 
 ### Requirement: Import shows changed products
 When saving an import would change the energy of an existing own product (from an item, see
