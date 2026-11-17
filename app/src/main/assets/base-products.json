@@ -2123,8 +2123,7 @@
  {
   "name": "Ranskalaiset perunat",
   "aliases": [
-   "Ranskalaiset",
-   "Ranskalaiset uuni"
+   "Ranskalaiset"
   ],
   "per": "100g",
   "kcal": 290,
@@ -2699,6 +2698,7 @@
   "name": "Uuniranskalaiset",
   "aliases": [
    "Ranskalaiset uunissa",
+   "Ranskalaiset uuni",
    "Uuniperunat ranskalaiset"
   ],
   "per": "100g",
