@@ -5,10 +5,16 @@ When saving an import would change the energy of an existing own product (from a
 "Saving an AI import", or from the `products` list), the preview SHALL show, above the sum, one
 line per such product: "<name>: <old> → <new>" with each energy in its unit (for example
 "Rahka: 65 → 80 kcal / 100 g", or "Pulla: 250 kcal / kpl → 380 kcal / 100 g" when the unit
-changes). The clipboard card SHALL show the same lines under its items (at most three, then
-"+<N> muuta tuotetta"). An energy counts as changed when its unit differs or its kcal rounded to
-whole numbers differs. New products and unchanged products SHALL get no line. The lines SHALL
-follow the preview's edits and removals. There SHALL be no dialog or extra confirmation.
+changes). The clipboard card SHALL show the same lines as a block after all its other lines.
+Details:
+- Card: at most three change lines, then "+<N> muuta muutosta"; also for products-only JSON.
+- Style: bodyMedium in onSurfaceVariant, no icon, same in the sheet, Ruoka and the front page.
+- Changed means the unit differs or the kcal rounded to whole numbers differs; smaller drifts and
+  the usual amount are saved without a line. New products and products without energy before get
+  no line.
+- The lines and the preview's sum SHALL come from the same plan the save would run (items without
+  kcal filled), and follow the preview's edits, removals and day.
+- No dialog or extra confirmation.
 
 #### Scenario: Reused product changes
 - **GIVEN** a product Rahka 65 kcal / 100 g
@@ -25,6 +31,20 @@ follow the preview's edits and removals. There SHALL be no dialog or extra confi
 - **WHEN** the user removes the Rahka item
 - **THEN** the line is gone
 
+### Requirement: Typed alias of a base product
+When a typed name (Enter, the Enter row, or a name changed in the item editor) is not an own
+product but matches a base product only by one of its aliases, the item SHALL be logged under the
+typed name as a new own product that takes the base product's energy and usual amount but not its
+name or category. Tapping a base product's own suggestion row SHALL still log it under its name
+and category. While Valmiit tuotteet is off no base product is consulted.
+
+#### Scenario: Alias typed
+- **GIVEN** no own product Ranskalaiset, and the base product Ranskalaiset perunat 290 kcal / 100 g,
+  Herkku, with the alias Ranskalaiset
+- **WHEN** the user types "Ranskalaiset" and presses enter
+- **THEN** an item Ranskalaiset with 290 kcal / 100 g at its usual amount is added, not a treat,
+  and Ranskalaiset is an own product
+
 ## MODIFIED Requirements
 
 ### Requirement: Saving an AI import
@@ -33,22 +53,25 @@ Health Connect like any item, and SHALL show a line "<N> annosta lisätty · Kum
 remove the added items and restore the products as they were. An import SHALL only add: it SHALL
 NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the
 food log. The JSON's values SHALL win over the app's:
-- Each item SHALL be logged under the own product of its JSON name (names compared as for typed
-  names), created under the JSON name (cleaned like a typed name) when there is none, and SHALL be
+- Each item SHALL be logged under the own product of its JSON name (compared ignoring case, extra
+  spaces and ä/a, ö/o; base names and aliases do not match), created under the JSON name (cleaned like a typed name) when there is none, and SHALL be
   a treat exactly when its `herkku` is true. A base product SHALL NOT rename it or make it a
   treat.
 - An item with both amount and kcal SHALL set its product's energy from the item (kcal per 100 g
   for grams, per piece for kpl) and its usual amount to the item's amount, also when the product
-  already exists. When several items of one product carry both, the last one SHALL win.
-- An item without kcal SHALL take its kcal from its own product's energy as before; when there is
-  no own product of that name and "Valmiit tuotteet" is on, from the base product of that name or
-  alias. The new own product SHALL then take that base product's energy and usual amount, and the
-  item's name and category.
+  already exists. When several items of one product carry both, the last one SHALL win, unless
+  the import's `products` list holds that product: then the list's energy wins and the items only
+  log their own kcal.
+- An item without kcal SHALL take its kcal from its product's final energy in this import (after
+  all items and the `products` list); when there is no own product of that name and "Valmiit
+  tuotteet" is on, from the base product of that name or alias. The new own product SHALL then take
+  that base product's energy and usual amount, and the item's name and category. The item SHALL
+  keep its own amount; when its unit differs from the energy's unit it SHALL be logged without
+  kcal. An item without amount SHALL use the product's usual amount.
 - An existing product's category SHALL NOT change by an item; a new product SHALL take the item's
   category.
 - A product in the `products` list SHALL be saved as given: created when new, its energy, usual
-  amount and category replaced when it exists. An item of the same name after it SHALL still set
-  the energy when it has amount and kcal.
+  amount and category replaced when it exists.
 Earlier logged items of a changed product SHALL keep their kcal.
 
 #### Scenario: Undo the import
@@ -68,7 +91,18 @@ Earlier logged items of a changed product SHALL keep their kcal.
 #### Scenario: Item keeps a known product's values
 - **GIVEN** a product Rahka 65 kcal / 100 g
 - **WHEN** an item Rahka 200 g 130 kcal is added
-- **THEN** the item reads 130 kcal and the product stays 65 kcal / 100 g, with no change line
+- **THEN** the item reads 130 kcal and the product stays 65 kcal / 100 g (usually 200 g from
+  then on), with no change line
+
+#### Scenario: Filled with the import's energy
+- **GIVEN** a product Rahka 65 kcal / 100 g
+- **WHEN** an import holds Rahka 100 g without kcal, then Rahka 200 g 160 kcal
+- **THEN** the first item reads 80 kcal and the second 160 kcal
+
+#### Scenario: Product list wins
+- **WHEN** an import holds the product Lohikeitto 380 kcal per annos and an item Lohikeitto 400 g
+  320 kcal
+- **THEN** the item reads 320 kcal and Lohikeitto is 380 kcal / kpl
 
 #### Scenario: Item updates a known product
 - **GIVEN** a product Rahka 65 kcal / 100 g, usually 250 g

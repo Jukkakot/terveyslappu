@@ -10,35 +10,44 @@ knows no ids); what changes is which side wins.
 
 ## Decisions
 
-1. **Plan per item** (in `AiImport.plan`):
-   - `key = FoodNames.key(ai.name)`; product = `working[key]` (own or earlier in this import).
-   - None and `ai.kcal == null` and base enabled: look up the base product by name/alias
-     (`resolveName` with an empty own list) and copy its energy and usual amount into a new
-     `Product(FoodNames.clean(ai.name), treat = ai.treat, ...)`.
-   - None otherwise: `Product(FoodNames.clean(ai.name), treat = ai.treat)`.
-   - `ai.amount != null && ai.kcal != null`: set energy from the item (existing formula) and
-     `lastAmount = ai.amount`, whether or not the product had energy.
-   - Item: `name` = the own product's stored name (so case variants keep one spelling), which for
-     a new product is the cleaned JSON name; the base name is never used. `treat = ai.treat`
-     only. An existing own product's `treat` is untouched.
-   - Missing kcal fill stays as today (`energy.kcalOf`).
+1. **Plan** (`AiImport.plan`), in three passes:
+   - The `products` list first, as today.
+   - Energy pass over the items: product = `working[FoodNames.key(ai.name)]` (own or made earlier
+     in this import); none → new `Product(FoodNames.clean(ai.name), treat = ai.treat)`, or, when
+     the item has no kcal, base is on and a base product matches by name or alias, a new own
+     product under the JSON name with the base energy and usual amount (`treat = ai.treat`). An
+     item with amount and kcal sets energy (existing formula) and `lastAmount = ai.amount`, unless
+     its key is in the `products` list. Last item wins.
+   - Item pass: `name` = the product's stored name (case variants keep one spelling; the base name
+     is never used), `treat = ai.treat` only; missing kcal filled from the product's final energy
+     only when the item's unit (or, without amount, the usual amount's unit) matches the energy's
+     unit; the item keeps its own amount.
+   - An existing own product's `treat` is untouched (see the open Herkku question).
    The `before`/`changed` bookkeeping stays, so Kumoa restores updated products for free.
-2. **Changed-product lines** come from the plan: add `energyChanges: List<EnergyChange(name, old:
-   Energy, new: Energy)>` to `AiImportPlan`, for keys whose `before` product existed with energy
-   and whose final energy differs (unit differs or `round(kcal)` differs). An own product without
-   energy that learns one is not a change (it is new knowledge, nothing is overwritten). Preview
-   rebuilds the plan on every edit already (dry-run for the card in `ClipOffers.offer`), so the
-   lines follow edits. The card carries them in `ClipOffer.changes`.
+2. **Changed-product lines**: `AiImportPlan.energyChanges: List<EnergyChange(name, old, new)>` for
+   keys whose `before` product had energy and whose final energy differs (unit, or `round(kcal)`).
+   The preview does not run the plan today (it shows raw `AiItem`s): `FoodViewModel` runs
+   `AiImport.plan` (own, base when on, chosen day) when the preview opens and on every `setAi` or
+   day change and keeps it in the preview state; the sum and the lines come from it.
+   `ClipOffers.offer` runs the plan also for products-only JSON; the card carries the lines in
+   `ClipOffer.changes`. `ClipOffers.step` recomputes the offer from the cached parsed clip on every
+   check (not `cached.offer`), so lines follow the switch and product edits.
 3. **Base products switch**: `FoodPrefs` = prefs file `food`, key `baseProducts` (default true),
-   singleton in `TerveysApp`; included in cloud backup and device transfer (update
-   `data_extraction_rules.xml` and `DataTransferRulesTest`). `FoodViewModel.base` returns
-   `emptyList()` when off, and the sheet takes `base` from the view model's state so a switch takes
-   effect at once (not `TerveysApp.baseProducts` directly in `MainActivity`/`FoodAddActivity`).
-   With an empty base list the existing `Suggestions.typing`, `EnterRow.of`, `resolveName`,
+   StateFlow, singleton in `TerveysApp`; in cloud backup and device transfer
+   (`data_extraction_rules.xml`, `DataTransferRulesTest`). `FoodUiState.baseOn` carries it;
+   `FoodViewModel.base` is empty when off; the sheet takes base from the view model (not
+   `TerveysApp.baseProducts` in `MainActivity`/`FoodAddActivity`), and `base` is in the `remember`
+   keys of `TypedList`. With an empty base list `Suggestions.typing`, `EnterRow.of`, `resolveName`,
    `FoodEdits` and the import already behave as "no base products".
-4. **Herkku**: the reader's `flag` stays boolean (absent = false); the import instruction already
-   says "Jätä pois tavalliselta ruualta", so absent means "not a treat". No prompt change.
-5. **Log**: `food.import ok ... changed=<count>` (counts only) and `food.base set on=true|false`.
+4. **Herkku in JSON** stays boolean (absent = not a treat), as the import instruction says. No
+   prompt change, `ClipOffers.key` unchanged.
+5. **Typed alias** (`food/FoodRules.kt`): `resolveTyped(name, own, base)`: own by key; base by exact
+   name → `Suggestion.Base` as today; base by alias only → `Suggestion.Own(Product(clean(name),
+   treat = false, energy = base energy, lastAmount = base usual))`. Used by Enter, `EnterRow.of`
+   and the renames in `FoodEdits.edit`/`addEdited`.
+6. **Log**: `changed=<count>` on `food.import.save ok` (every save path writes it) and
+   `food.base set on=true|false`.
+7. **Old data**: no migration.
 
 ## Risks
 
