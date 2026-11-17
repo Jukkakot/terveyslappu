@@ -16,7 +16,7 @@ the source. No configuration, versions or other things that go stale.
 | Body weight data | daily fluctuation size and causes, trend vs single readings, rate per week |
 | Derived body values | BMI and its limits, waist-to-height, BMR (Mifflin-St Jeor), body fat from impedance, Health Connect record types |
 | Android | background work on Samsung, Health Connect from the background, widget updates, chart libraries |
-| Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference |
+| Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference, daily weighing harm, scale avoidance, food logging decline, feedback messages, fresh starts, small goals, missed days, red colour |
 | Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps, total calories estimate fill, Garmin kcal split |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
@@ -124,6 +124,37 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   bar above it reads as an above-average day; Apple's Trends compare a recent 90-day average to
   the 365-day one instead of drawing a moving line.
   ([Vantagefit](https://www.vantagefit.io/en/help/health-tracking/what-are-trends/), [leancrew](https://leancrew.com/all-this/2024/11/apple-health-trends/))
+- **Daily weighing did no measurable harm in a trial.** A 6-month RCT of daily self-weighing
+  (Steinberg et al. 2014, n=91) found no group difference in depressive symptoms or disordered
+  eating thoughts; later reviews say the same of the trials that measured mood.
+  ([PMC4157390](https://pmc.ncbi.nlm.nih.gov/articles/PMC4157390), [PMC4729441](https://pmc.ncbi.nlm.nih.gov/articles/PMC4729441))
+- **Weighing less often goes with regain, and gains may cause the avoidance.** Successful losers
+  who cut down on weighing regained more over a year; one study proposes the reverse arrow too:
+  people who gain stop stepping on the scale (scale avoidance; a hypothesis, not tested).
+  ([IJBNPA 2008 review](https://ijbnpa.biomedcentral.com/track/pdf/10.1186/1479-5868-5-54), [Drexel 2017](https://drexel.edu/coas/faculty-research/news/2017/August/College-Freshman-Self-Weighing/))
+- **Food logging fades in weeks.** In app studies MyFitnessPal logging fell from 5.4 to 1.4 days
+  a week between weeks 4 and 12, and under half of trial participants still tracked after week
+  10; adherence commonly drops after 3-5 weeks. Logging two eating occasions a day is a proposed
+  "adherent day" threshold.
+  ([JMIR mHealth 2026](https://mhealth.jmir.org/2026/1/e64139), [PMC6856872](https://pmc.ncbi.nlm.nih.gov/articles/PMC6856872))
+- **Automatic feedback messages added nothing on average.** The SMARTER RCT (n=502, 12 months):
+  self-monitoring plus up to three tailored messages a day lost no more weight than
+  self-monitoring alone; within the message group, reading more messages went with more loss
+  (association only). ([PubMed 35787516](https://pubmed.ncbi.nlm.nih.gov/35787516/))
+- **Fresh starts:** goal behaviour (diet searches, gym visits, commitments) rises after temporal
+  landmarks: a new week, month or year, a birthday. Landmarks separate the current self from past
+  lapses. ([Dai, Milkman, Riis 2014](https://faculty.wharton.upenn.edu/wp-content/uploads/2014/06/Dai_Fresh_Start_2014_Mgmt_Sci.pdf))
+- **Small moving goals beat one far goal** in Lose It! data (~36 000 users): short-term goals
+  that shift with progress helped reach the long-term one. Working paper, effect sizes unchecked.
+  ([Yale SOM](https://insights.som.yale.edu/insights/to-reach-weight-loss-targets-start-with-small-goals))
+- **One missed day does not undo a habit**; the damage comes from the "what-the-hell" reaction
+  after a perceived failure (dieting research, Polivy and Herman). Streak counters that reset to
+  zero invite it; "never miss twice" is a gentler rule. Sources are secondary summaries.
+  ([Mobbin, 859 streak designs](https://mobbin.com/blog/streaks-are-about-losing-a-study-of-859-streak-designs), [EFPSA](https://more.efpsa.org/rpblog/?p=1172))
+- **"Red lowers performance" did not replicate.** Elliot et al. 2007 found red before a test
+  triggered avoidance; independent replications with the original setup found no effect. Red's
+  real cost in a weight app is meaning (error, failure), not a measured mood effect.
+  ([Elliot 2007](https://www.deepdyve.com/lp/american-psychological-association/color-and-psychological-functioning-the-effect-of-red-on-performance-3gHS1gCx3F), [Steele 2016](https://www.appstate.edu/~steelekm/documents/Psychonomic2016Poster_Steele.pdf))
 
 ## Steps in Health Connect
 
