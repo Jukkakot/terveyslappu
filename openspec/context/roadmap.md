@@ -19,7 +19,7 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
-- **Usability review 2026-11-19** (heuristic audit + competitor research; the 2026-11-09..19 log was mostly feature testing, so log counts are only hypotheses). Not yet chosen by the user; numbers are for picking.
+- **Usability review 2026-11-19** (heuristic audit + competitor research; the 2026-11-09..19 log was mostly feature testing, so log counts are only hypotheses). User 2026-11-19: U1–U6 and U8 go first as one change (everyday-feedback).
   - Everyday paths:
     - U1 weigh-in dialog never closes silently: end state says why (scale not heard / same weight already saved at 7.12), with Valmis and Punnitse uudelleen; no "Astu vaa'alle" while ignoring readings (S).
     - U2 dialog opened soon after an automatic save opens on "Tallennettu automaattisesti 7.12 · 82,5 kg" with Poista and Valmis instead of a new scan (M).
@@ -30,7 +30,7 @@ Phases in order; one OpenSpec change each unless noted.
     - U7 last 2–3 amounts of a ruoka as chips in the editor (MacroFactor, MFP) (S).
     - U8 widget shows ✓ when today's weight is saved (no value, so product rule holds) (S).
     - U9 food card opens Ruoka as a whole (today title/number → Ruoka, bars → Historia is hidden) (S).
-    - U10 front-page daily action reachable by thumb (FAB "Lisää annos"); reverses the 2026-11-16 decision, ask first (S).
+    - ~~U10 front-page FAB "Lisää annos"~~ declined (user 2026-11-19): the Lisää annos home-screen widget covers it.
   - New features from other apps:
     - F1 copy annokset (a day or selected) to today / another day; F2 move an annos to another day (M / S).
     - F3 saved meal: one tap logs several ruuat as separate annokset (M).
