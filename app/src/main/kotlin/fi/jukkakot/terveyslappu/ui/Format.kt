@@ -21,6 +21,9 @@ fun formatDate(time: LocalDateTime): String = dateFormat.format(time)
 
 fun formatTime(time: LocalDateTime): String = timeFormat.format(time)
 
+/** "7.12": the local clock time of [time]. */
+fun formatClock(time: Instant, zone: ZoneId = ZoneId.systemDefault()): String = timeFormat.format(time.atZone(zone))
+
 private val dayFormat = DateTimeFormatter.ofPattern("EEE d.M.", finnish)
 private val dayYearFormat = DateTimeFormatter.ofPattern("EEE d.M.yyyy", finnish)
 

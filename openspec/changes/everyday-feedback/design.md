@@ -134,7 +134,9 @@ except the countdown on Valmis (decision 3). No change to the repeat rules' timi
     `Saved` → saved, `Discarded` → discarded (or `recentdeleted` after the Recent view),
     `Recent` → recent, `NotFound` → its reason, `Preparing`/`BluetoothOff`/`Scanning`/`Live` →
     cancelled, `NoHealthAccess`/`PermissionDenied`/`ScanFailed`/`SaveFailed`/a failed delete →
-    failed (`Saving` cannot be closed). The activity logs it once from `onDestroy` only when
+    failed (`Saving` cannot be closed by the user; if the system ends the dialog meanwhile the
+    save still finishes in the app scope, so it counts as saved). The activity logs it once from
+    `onDestroy` only when
     `isFinishing` (not on a rotation), and before a Punnitse uudelleen restart. Unit tests over
     every `WeighInState`.
 

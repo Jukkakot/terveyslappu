@@ -31,6 +31,13 @@ import fi.jukkakot.terveyslappu.ui.WeighInDialog
 import fi.jukkakot.terveyslappu.ui.WeighInViewModel
 import fi.jukkakot.terveyslappu.ui.closeWhenDue
 import fi.jukkakot.terveyslappu.ui.closesOnRequest
+import fi.jukkakot.terveyslappu.ui.blocksBackground
+import fi.jukkakot.terveyslappu.ui.endReason
+import fi.jukkakot.terveyslappu.a11y.ActionTimeouts
+import android.os.SystemClock
+import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
 
 /**
@@ -58,25 +65,44 @@ class WeighInActivity : ComponentActivity() {
         // home-card-layout design 4: the front page's edit mode ends and drops its draft.
         if (savedInstanceState == null) fi.jukkakot.terveyslappu.home.HomeEditSignal.outsideIntent("weighIn")
         AppLog.i("weighin.open", "", "from" to (intent.getStringExtra(EXTRA_FROM) ?: "unknown"))
+        // The background saves nothing while the dialog could save the weighing itself (design 10).
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collect { WeighInForeground.shown = blocksBackground(it) }
+            }
+        }
         setContent {
             TerveysTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 val secondsLeft by viewModel.secondsLeft.collectAsStateWithLifecycle()
                 var keepOpen by rememberSaveable { mutableStateOf(false) }
-                // Discarded, nothing found, or the saved result's ten seconds: the dialog closes by itself.
-                LaunchedEffect(state, keepOpen) { closeWhenDue(state, keepOpen, ::finish) }
+                var resultLeft by remember { mutableStateOf<Int?>(null) }
+                // Discarded at once; the saved result or the recent automatic weight after the
+                // accessibility-lengthened ten seconds, counted down on Valmis. The end view stays.
+                LaunchedEffect(state, keepOpen) {
+                    resultLeft = null
+                    closeWhenDue(state, keepOpen, ActionTimeouts.millis(ActionTimeouts.RESULT_MS), onSeconds = { resultLeft = it }) {
+                        resultLeft = null
+                        finish()
+                    }
+                }
                 // While saving, Back does nothing (the save finishes in the app scope either way).
                 BackHandler(enabled = !closesOnRequest(state)) {}
                 WeighInDialog(
                     state,
                     secondsLeft = secondsLeft,
+                    resultSecondsLeft = resultLeft,
                     actions = WeighInActions(
                         onClose = { if (closesOnRequest(viewModel.state.value)) finish() },
-                        onKeepOpen = { if (state is WeighInState.Saved) keepOpen = true },
+                        onKeepOpen = { if (state is WeighInState.Saved || state is WeighInState.Recent) keepOpen = true },
                         // Poista stops the auto-close so it cannot cut the delete short.
                         onDiscard = {
                             keepOpen = true
-                            viewModel.discard()
+                            if (viewModel.state.value is WeighInState.Recent) viewModel.discardRecent() else viewModel.discard()
+                        },
+                        onWeighAgain = {
+                            keepOpen = false
+                            weighAgain()
                         },
                         onRetryScan = ::prepare,
                         onRetrySave = viewModel::retrySave,
@@ -96,8 +122,6 @@ class WeighInActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        // The background saves nothing while the dialog is in front (background-weigh-in design 6).
-        WeighInForeground.shown = true
         // Coming back (e.g. from the app settings): scan again unless a weight was already decided.
         val state = viewModel.state.value
         val resume = state is WeighInState.Scanning || state is WeighInState.Live ||
@@ -107,9 +131,41 @@ class WeighInActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        // The collector stops with the lifecycle; the background may save again.
         WeighInForeground.shown = false
         val state = viewModel.state.value
         if (state is WeighInState.Scanning || state is WeighInState.Live) viewModel.stop()
+    }
+
+    override fun onDestroy() {
+        // Closed for good, not recreated (rotation): the weigh-in ends here.
+        if (isFinishing) logEnd()
+        super.onDestroy()
+    }
+
+    /** `weighin.end` once per weigh-in (scale-weigh-in "Weigh-in end in the log"). */
+    private fun logEnd() {
+        if (viewModel.endLogged) return
+        viewModel.endLogged = true
+        val state = viewModel.state.value
+        AppLog.i(
+            "weighin.end", "",
+            "reason" to endReason(state, viewModel.fromRecent),
+            "heard" to viewModel.heard,
+            "ignored" to viewModel.ignored,
+            "ms" to SystemClock.elapsedRealtime() - viewModel.openedMs,
+        )
+    }
+
+    /** Punnitse uudelleen: ends this weigh-in in the log and checks access again before a new scan, without the recent weight. */
+    private fun weighAgain() {
+        logEnd()
+        viewModel.endLogged = false
+        viewModel.fromRecent = false
+        viewModel.recentChecked = true
+        viewModel.openedMs = SystemClock.elapsedRealtime()
+        AppLog.i("weighin.open", "", "from" to "again")
+        prepare()
     }
 
     private fun prepare() {
@@ -120,6 +176,8 @@ class WeighInActivity : ComponentActivity() {
         lifecycleScope.launch {
             when {
                 !viewModel.hasHealthAccess() -> viewModel.show(WeighInState.NoHealthAccess)
+                // Right after an automatic save the dialog shows that weight instead of scanning (once).
+                viewModel.showRecentIfAny() -> Unit
                 !hasNearbyPermission() -> permissionLauncher.launch(NEARBY_PERMISSIONS)
                 !bluetoothOn() -> requestBluetooth()
                 else -> viewModel.start()

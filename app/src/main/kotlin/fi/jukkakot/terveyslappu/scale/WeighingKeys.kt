@@ -40,14 +40,23 @@ class WeighingKeys(private val store: LastWeighInStore, private val now: () -> I
         val at = now()
         val sameScale = last.address == null || address == null || last.address.equals(address, ignoreCase = true)
         val same = sameScale && abs(last.kg - kg) <= SAME_KG + 1e-9 && last.heardAt.plusMillis(SAME_MS).isAfter(at)
+        // Only the hearing slides; the save or delete time stays for the dialog's repeat line.
         if (same) store.saveWeight(last.copy(heardAt = at))
         same
     }
 
-    /** A weight was saved or deleted: its repeats are ignored from now on. [address] defaults to the remembered scale. */
-    fun remember(kg: Double, address: String? = null) = synchronized(LOCK) {
-        store.saveWeight(LastWeight(kg, address ?: store.scale()?.address, now()))
+    /**
+     * A weight was saved ([deleted] false; also a Kumoa that brings it back, and a background
+     * weight still queued) or deleted: its repeats are ignored from now on. [address] defaults to
+     * the remembered scale.
+     */
+    fun remember(kg: Double, address: String? = null, deleted: Boolean = false) = synchronized(LOCK) {
+        val at = now()
+        store.saveWeight(LastWeight(kg, address ?: store.scale()?.address, at, at, deleted))
     }
+
+    /** The last saved or deleted weight, for the dialog's repeat line. */
+    fun lastWeight(): LastWeight? = synchronized(LOCK) { store.weight() }
 
     private fun taken(key: Int, at: Instant): Boolean {
         val (last, lastAt) = store.load() ?: return false

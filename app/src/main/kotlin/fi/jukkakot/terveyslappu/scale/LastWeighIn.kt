@@ -4,8 +4,18 @@ import android.content.Context
 import androidx.core.content.edit
 import java.time.Instant
 
-/** The weight of the latest saved or deleted weighing, its scale and when it was last heard. */
-data class LastWeight(val kg: Double, val address: String?, val heardAt: Instant)
+/**
+ * The weight of the latest saved or deleted weighing, its scale and when it was last heard
+ * ([heardAt], slid by the same-weight rule). [at] is when it was saved or deleted (never slid) and
+ * [deleted] which of the two; the dialog's repeat line shows them (everyday-feedback design 2).
+ */
+data class LastWeight(
+    val kg: Double,
+    val address: String?,
+    val heardAt: Instant,
+    val at: Instant = heardAt,
+    val deleted: Boolean = false,
+)
 
 /** The user's scale as heard in the deciding packet of the latest saved weigh-in (background-weigh-in). */
 data class KnownScale(val address: String, val name: String?)
@@ -59,15 +69,25 @@ class LastWeighInPrefs(context: Context, private val onScale: () -> Unit = {}) :
 
     override fun weight(): LastWeight? {
         if (!prefs.contains(W_KG)) return null
+        val heardAt = Instant.ofEpochMilli(prefs.getLong(W_AT, 0))
+        // Prefs from before everyday-feedback have no save time: the last hearing stands in.
         return LastWeight(
             prefs.getString(W_KG, null)?.toDoubleOrNull() ?: return null,
             prefs.getString(W_ADDRESS, null),
-            Instant.ofEpochMilli(prefs.getLong(W_AT, 0)),
+            heardAt,
+            if (prefs.contains(W_SAVED_AT)) Instant.ofEpochMilli(prefs.getLong(W_SAVED_AT, 0)) else heardAt,
+            prefs.getBoolean(W_DELETED, false),
         )
     }
 
     override fun saveWeight(weight: LastWeight) {
-        prefs.edit { putString(W_KG, weight.kg.toString()).putString(W_ADDRESS, weight.address).putLong(W_AT, weight.heardAt.toEpochMilli()) }
+        prefs.edit {
+            putString(W_KG, weight.kg.toString())
+                .putString(W_ADDRESS, weight.address)
+                .putLong(W_AT, weight.heardAt.toEpochMilli())
+                .putLong(W_SAVED_AT, weight.at.toEpochMilli())
+                .putBoolean(W_DELETED, weight.deleted)
+        }
     }
 
     override fun scale(): KnownScale? = prefs.getString(ADDRESS, null)?.let { KnownScale(it, prefs.getString(NAME, null)) }
@@ -86,5 +106,7 @@ class LastWeighInPrefs(context: Context, private val onScale: () -> Unit = {}) :
         const val W_KG = "weight_kg"
         const val W_ADDRESS = "weight_address"
         const val W_AT = "weight_at"
+        const val W_SAVED_AT = "weight_saved_at"
+        const val W_DELETED = "weight_deleted"
     }
 }

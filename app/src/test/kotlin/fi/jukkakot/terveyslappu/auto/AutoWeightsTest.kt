@@ -55,12 +55,22 @@ class AutoWeightsTest {
     private class FakeNotifier : AutoNotifier {
         val posted = mutableListOf<AutoNote>()
         val cancelled = mutableListOf<String>()
+        val deleted = mutableListOf<DeletedWeight>()
+        val restoreFailed = mutableListOf<DeletedWeight>()
         override fun post(note: AutoNote): Boolean {
             posted += note
             return true
         }
         override fun cancel(id: String) {
             cancelled += id
+        }
+        override fun postDeleted(deleted: DeletedWeight): Boolean {
+            this.deleted += deleted
+            return true
+        }
+        override fun postRestoreFailed(deleted: DeletedWeight): Boolean {
+            restoreFailed += deleted
+            return true
         }
     }
 
@@ -206,7 +216,74 @@ class AutoWeightsTest {
         assertTrue(writer.saved.isEmpty())
         assertNull(raw.get(morning.epochSecond))
         assertTrue(marks.all().isEmpty())
+        // The notification turns into "Paino poistettu" with Kumoa instead of closing.
+        assertEquals(emptyList(), notifier.cancelled)
+        val deleted = notifier.deleted.single()
+        assertEquals(0x61C0, deleted.key)
+        assertTrue(deleted.questioned)
+        assertTrue(keys.lastWeight()!!.deleted)
+    }
+
+    @Test
+    fun `Kumoa writes a deleted weight back with its raw data and reference`() = runTest {
+        reference.seed(listOf(RefPair("r", morning.minusSeconds(86_400).toEpochMilli(), 82.0)))
+        val auto = auto()
+        auto.decided(decided(82.4))
+        auto.flush(AutoWeights.WEIGHIN)
+        val id = scaleClientId(morning)
+        val savedRaw = raw.get(morning.epochSecond)
+        auto.delete(id, morning.toEpochMilli(), 82.4, false)
+        flags.backupDue = false
+        assertTrue(auto.restore(notifier.deleted.single()))
+        assertEquals(mapOf(id to 82.4), writer.saved)
+        assertEquals(savedRaw, raw.get(morning.epochSecond))
+        assertEquals(82.4, (reference.reference(morning.plusSeconds(60).toEpochMilli()) as Reference.Weight).kg)
+        assertTrue(marks.all().isEmpty())
+        assertTrue(flags.backupDue)
+        assertFalse(keys.lastWeight()!!.deleted)
+        val note = notifier.posted.last()
+        assertTrue(note.silent)
+        assertFalse(note.questioned)
+    }
+
+    @Test
+    fun `Kumoa of a questioned weight brings its mark back, a second tap writes once`() = runTest {
+        val auto = auto()
+        auto.decided(decided(61.3))
+        auto.flush(AutoWeights.WEIGHIN)
+        val id = scaleClientId(morning)
+        auto.delete(id, morning.toEpochMilli(), 61.3, true)
+        val deleted = notifier.deleted.single()
+        assertTrue(auto.restore(deleted))
+        assertTrue(auto.restore(deleted))
+        assertEquals(mapOf(id to 61.3), writer.saved)
+        assertEquals(listOf(id), marks.all().map { it.id })
+        assertTrue(notifier.posted.last().questioned)
+    }
+
+    @Test
+    fun `a failed Kumoa says so and queues nothing`() = runTest {
+        val auto = auto()
+        auto.decided(decided(82.4))
+        auto.flush(AutoWeights.WEIGHIN)
+        auto.delete(scaleClientId(morning), morning.toEpochMilli(), 82.4, false)
+        writer.fail = 1
+        assertFalse(auto.restore(notifier.deleted.single()))
+        assertEquals(1, notifier.restoreFailed.size)
+        assertEquals(0, auto.pending())
+        assertTrue(writer.saved.isEmpty())
+    }
+
+    @Test
+    fun `the dialog's Poista closes the notification and restarts the key's ignore time`() = runTest {
+        val auto = auto()
+        auto.decided(decided(82.4))
+        auto.flush(AutoWeights.WEIGHIN)
+        val id = scaleClientId(morning)
+        assertTrue(auto.delete(id, morning.toEpochMilli(), 82.4, false, from = AutoWeights.FROM_DIALOG))
         assertEquals(listOf(id), notifier.cancelled)
+        assertTrue(notifier.deleted.isEmpty())
+        assertEquals(0x61C0, keys.lingering())
     }
 
     @Test

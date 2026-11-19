@@ -2,6 +2,7 @@ package fi.jukkakot.terveyslappu.scale
 
 import java.time.Instant
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -39,6 +40,26 @@ class SameWeightTest {
         assertTrue(keys.sameWeight(82.45, scale))
         assertFalse(keys.sameWeight(82.7, scale))
         assertFalse(keys.sameWeight(81.9, scale))
+    }
+
+    @Test
+    fun `a repeat slides only the hearing, not the save time`() {
+        val savedAt = now
+        keys.remember(82.5, scale)
+        after(20)
+        assertTrue(keys.sameWeight(82.5, scale))
+        val last = keys.lastWeight()!!
+        assertEquals(savedAt, last.at)
+        assertEquals(now, last.heardAt)
+        assertFalse(last.deleted)
+    }
+
+    @Test
+    fun `a delete is remembered as deleted`() {
+        keys.remember(82.5, scale, deleted = true)
+        assertTrue(keys.lastWeight()!!.deleted)
+        keys.remember(82.5, scale)
+        assertFalse(keys.lastWeight()!!.deleted)
     }
 
     @Test

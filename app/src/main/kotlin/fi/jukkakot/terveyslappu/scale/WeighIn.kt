@@ -14,9 +14,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
+import kotlin.math.abs
 
 /** Difference to the latest earlier weight and that weight's time (weigh-in-feedback). */
 data class WeightChange(val deltaKg: Double, val previousTime: Instant)
+
+/**
+ * The dialog's "Vaaka toistaa äskeistä punnitusta" line (everyday-feedback design 1): [last] is the
+ * remembered weight when the ignored packet repeats it (the brackets with kg and time), else null.
+ */
+data class RepeatLine(val last: LastWeight?)
+
+/** Why a weigh-in ended without a saved weight (scale-weigh-in "Weigh-in dialog"). */
+sealed interface EndReason {
+    val key: String
+
+    data object NotHeard : EndReason {
+        override val key = "notheard"
+    }
+
+    data object Unsettled : EndReason {
+        override val key = "unsettled"
+    }
+
+    data class Repeat(val line: RepeatLine) : EndReason {
+        override val key = "repeat"
+    }
+}
 
 /** What the weigh-in dialog shows. */
 sealed interface WeighInState {
@@ -25,19 +49,35 @@ sealed interface WeighInState {
     data object NoHealthAccess : WeighInState
     data object PermissionDenied : WeighInState
     data object BluetoothOff : WeighInState
-    /** Scanning, no scale packet yet: "step on the scale". */
-    data object Scanning : WeighInState
-    data class Live(val kg: Double, val stable: Boolean) : WeighInState
+    /** Scanning, no scale packet yet: "step on the scale", or the repeat line while only repeats are heard. */
+    data class Scanning(val repeat: RepeatLine? = null) : WeighInState
+    /** A changing weight; [repeat] while its stable reading is ignored as a repeat. */
+    data class Live(val kg: Double, val stable: Boolean, val repeat: RepeatLine? = null) : WeighInState
     data class Saving(val kg: Double) : WeighInState
     /** [deleteFailed]: Poista could not delete this weight. */
     data class Saved(val kg: Double, val change: WeightChange? = null, val deleteFailed: Boolean = false) : WeighInState
     data class SaveFailed(val kg: Double) : WeighInState
-    /** Nothing decided within the time limit; [heard] tells whether any scale packet arrived. */
-    data class NotFound(val heard: Boolean) : WeighInState
+    /**
+     * Nothing decided within the time limit: the end view. [heard] tells whether a reading other
+     * than an ignored repeat arrived, [ignored] how many packets were ignored as repeats.
+     */
+    data class NotFound(val reason: EndReason, val heard: Boolean = false, val ignored: Int = 0) : WeighInState
+    /**
+     * The dialog opened right after an automatic save (scale-weigh-in "Open on a recent automatic
+     * weight"): that weight instead of a scan. [id] is its client record id.
+     */
+    data class Recent(
+        val kg: Double,
+        val time: Instant,
+        val id: String,
+        val change: WeightChange? = null,
+        val deleteFailed: Boolean = false,
+    ) : WeighInState
     data class ScanFailed(val code: Int) : WeighInState
     /** Poista deleted the saved weight; the dialog closes. */
     data object Discarded : WeighInState
 }
+
 
 /**
  * One weigh-in: scan, decide the stable weight, save it once (scale-weigh-in spec). Android-free
@@ -85,6 +125,12 @@ class WeighIn(
     /** True once a stable weight is decided: the weigh-in then only saves, shows and maybe discards it. */
     val decidedWeight: Boolean get() = decided != null
 
+    /** The latest scan's counts for `weighin.end`: a reading other than an ignored repeat was heard, packets ignored. */
+    @Volatile var heard: Boolean = false
+        private set
+    @Volatile var ignored: Int = 0
+        private set
+
     /** Shows an access state; ignored once a weight is decided (a recreated dialog keeps the result). */
     fun show(state: WeighInState) {
         if (decided != null) return
@@ -120,17 +166,40 @@ class WeighIn(
             AppLog.i("weighin.discard", "ok", "kg" to weight.first, "time" to weight.second)
             saved = null
             keepRaw("remove") { archive.remove(weight.second.epochSecond) }
-            remember()
+            remember(deleted = true)
             _state.value = WeighInState.Discarded
         }
     }
 
+    /** Shows the recent automatic weight instead of scanning; ignored once a weight is decided. */
+    fun showRecent(recent: WeighInState.Recent) = show(recent)
+
+    /**
+     * Poista on the recent automatic weight: [delete] removes it (the notification's path) and
+     * returns false when that failed; a failed delete stays on the view saying so.
+     */
+    fun discardRecent(scope: CoroutineScope, delete: suspend (WeighInState.Recent) -> Boolean) {
+        val recent = _state.value as? WeighInState.Recent ?: return
+        if (work?.isActive == true) return
+        work = scope.launch {
+            val ok = try {
+                delete(recent)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                AppLog.e("weighin.recent", e, "delete failed")
+                false
+            }
+            _state.value = if (ok) WeighInState.Discarded else recent.copy(deleteFailed = true)
+        }
+    }
+
     /** Records the decided weigh-in's company id so its lingering broadcast is not saved again. */
-    private fun remember() {
+    private fun remember(deleted: Boolean = false) {
         val key = decidedKey ?: return
         try {
             keys.touch(key)
-            decided?.let { keys.remember(it.first, decidedScale?.address) }
+            decided?.let { keys.remember(it.first, decidedScale?.address, deleted) }
         } catch (e: Exception) {
             AppLog.e("weighin.last", e, "save")
         }
@@ -159,12 +228,14 @@ class WeighIn(
         decidedRaw = null
         decidedKey = null
         decidedScale = null
-        val ignored = ignoredKey()
+        val ignoredKey = ignoredKey()
+        heard = false
+        ignored = 0
+        val seen = Seen()
         run {
             val scanStartMs = elapsedMs()
             val scanStartWall = now()
-            var heard = false
-            _state.value = WeighInState.Scanning
+            _state.value = WeighInState.Scanning()
             val result = try {
                 withTimeoutOrNull(timeoutMs) {
                     coroutineScope {
@@ -177,9 +248,9 @@ class WeighIn(
                             }
                         }
                         try {
-                            decide(scanStartMs, ignored) { reading ->
+                            decide(scanStartMs, ignoredKey, seen) { reading ->
                                 heard = true
-                                _state.value = WeighInState.Live(reading.kg, reading.stable)
+                                _state.value = WeighInState.Live(reading.kg, reading.stable, seen.repeatFor(reading.kg))
                             }
                         } finally {
                             ticker.cancel()
@@ -194,8 +265,9 @@ class WeighIn(
             }
             _secondsLeft.value = null
             if (result == null) {
-                AppLog.w("weighin.timeout", "", "heard" to heard, "ms" to timeoutMs)
-                _state.value = WeighInState.NotFound(heard)
+                val reason = seen.reason(heard)
+                AppLog.w("weighin.timeout", "", "heard" to heard, "ignored" to ignored, "reason" to reason.key, "ms" to timeoutMs)
+                _state.value = WeighInState.NotFound(reason, heard, ignored)
                 return
             }
             AppLog.i("scale.stable", "", "kg" to result.kg, "t" to result.atMs)
@@ -248,7 +320,59 @@ class WeighIn(
         }
     }
 
-    private suspend fun decide(scanStartMs: Long, ignored: Int?, onReading: (ScaleReading) -> Unit): StableResult = coroutineScope {
+    /**
+     * What the scan ignored as repeats (everyday-feedback design 1): the newest ignored packet's
+     * line and kg, and whether the newest stable reading heard was an ignored one.
+     */
+    private class Seen {
+        var line: RepeatLine? = null
+        var ignoredKg: Double? = null
+        var newestStableIgnored = false
+
+        /** The repeat line under a live weight while that weight is the ignored one. */
+        fun repeatFor(kg: Double): RepeatLine? =
+            line?.takeIf { ignoredKg?.let { abs(it - kg) <= WeighingKeys.SAME_KG + 1e-9 } == true }
+
+        fun reason(heard: Boolean): EndReason {
+            val repeat = line
+            return when {
+                repeat != null && (!heard || newestStableIgnored) -> EndReason.Repeat(repeat)
+                heard -> EndReason.Unsettled
+                else -> EndReason.NotHeard
+            }
+        }
+    }
+
+    /** An ignored packet: counted, and the dialog shows the repeat line (under the live weight when one shows). */
+    private fun onIgnored(seen: Seen, reading: ScaleReading?, address: String?) {
+        ignored++
+        val last = if (reading?.stable == true) lastWeight()?.takeIf { it.repeats(reading.kg, address) } else null
+        val line = RepeatLine(last)
+        seen.line = line
+        if (reading?.stable == true) {
+            seen.newestStableIgnored = true
+            seen.ignoredKg = reading.kg
+        }
+        when (val current = _state.value) {
+            is WeighInState.Scanning -> _state.value = WeighInState.Scanning(line)
+            is WeighInState.Live -> if (reading?.stable == true) _state.value = current.copy(repeat = line)
+            else -> Unit
+        }
+    }
+
+    private fun LastWeight.repeats(kg: Double, address: String?): Boolean {
+        val sameScale = this.address == null || address == null || this.address.equals(address, ignoreCase = true)
+        return sameScale && abs(this.kg - kg) <= WeighingKeys.SAME_KG + 1e-9
+    }
+
+    private fun lastWeight(): LastWeight? = try {
+        keys.lastWeight()
+    } catch (e: Exception) {
+        AppLog.e("weighin.last", e, "load")
+        null
+    }
+
+    private suspend fun decide(scanStartMs: Long, ignoredKey: Int?, seen: Seen, onReading: (ScaleReading) -> Unit): StableResult = coroutineScope {
         var ignoreLogged = false
         var decision = StableWeight()
         val done = CompletableDeferred<StableResult>()
@@ -263,16 +387,19 @@ class WeighIn(
         val collector = launch {
             source.packets().collect { packet ->
                 if (!ScalePacket.isScale(packet.name, packet.companyId)) return@collect
-                if (packet.companyId == ignored || takenElsewhere(packet.companyId)) {
+                if (packet.companyId == ignoredKey || takenElsewhere(packet.companyId)) {
                     if (!ignoreLogged) AppLog.i("scale.ignore", "", "key" to "%04x".format(packet.companyId and 0xFFFF))
                     ignoreLogged = true
+                    onIgnored(seen, ScalePacket.decode(packet.data), packet.address)
                     return@collect
                 }
                 val reading = ScalePacket.decode(packet.data) ?: return@collect
                 if (reading.stable && sameWeight(reading.kg, packet.address)) {
                     AppLog.i("scale.ignore", "", "reason" to "same", "kg" to reading.kg)
+                    onIgnored(seen, reading, packet.address)
                     return@collect
                 }
+                if (reading.stable) seen.newestStableIgnored = false
                 onReading(reading)
                 decision.onReading(reading, packet.atMs, packet)?.let { result ->
                     // Claimed atomically before saving: the background may have saved this weighing first.

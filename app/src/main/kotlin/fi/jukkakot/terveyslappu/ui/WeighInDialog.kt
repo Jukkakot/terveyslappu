@@ -40,6 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.scale.WeighInState
+import fi.jukkakot.terveyslappu.scale.EndReason
+import fi.jukkakot.terveyslappu.scale.RepeatLine
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
 
 /** What the dialog's buttons do; the activity wires them. */
 class WeighInActions(
@@ -52,11 +56,13 @@ class WeighInActions(
     /** A tap on the card: the saved result stays open instead of closing by itself. */
     val onKeepOpen: () -> Unit = {},
     val onDiscard: () -> Unit = {},
+    /** Punnitse uudelleen on the end view. */
+    val onWeighAgain: () -> Unit = {},
 )
 
 /** The weigh-in card over a dimmed background; tapping outside closes it. */
 @Composable
-fun WeighInDialog(state: WeighInState, actions: WeighInActions, secondsLeft: Int? = null) {
+fun WeighInDialog(state: WeighInState, actions: WeighInActions, secondsLeft: Int? = null, resultSecondsLeft: Int? = null) {
     Box(
         Modifier
             .fillMaxSize()
@@ -81,23 +87,25 @@ fun WeighInDialog(state: WeighInState, actions: WeighInActions, secondsLeft: Int
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(stringResource(R.string.weighin_title), style = MaterialTheme.typography.titleLarge)
-                Content(state, actions, secondsLeft)
+                Content(state, actions, secondsLeft, resultSecondsLeft)
             }
         }
     }
 }
 
 @Composable
-private fun Content(state: WeighInState, actions: WeighInActions, secondsLeft: Int?) {
+private fun Content(state: WeighInState, actions: WeighInActions, secondsLeft: Int?, resultSecondsLeft: Int?) {
     when (state) {
         WeighInState.Preparing -> Progress(stringResource(R.string.weighin_preparing))
-        WeighInState.Scanning -> {
+        is WeighInState.Scanning -> {
             Countdown(secondsLeft)
-            Message(stringResource(R.string.weighin_step_on))
+            val repeat = state.repeat
+            if (repeat != null) Announced(repeatText(repeat, end = false), "repeat") else Message(stringResource(R.string.weighin_step_on))
         }
         is WeighInState.Live -> {
             BigWeight(state.kg, dim = !state.stable)
             Message(stringResource(R.string.weighin_settling))
+            state.repeat?.let { Announced(repeatText(it, end = false), "repeat") }
             secondsLeft?.let { CountdownLine(it) }
             Close(actions)
         }
@@ -123,17 +131,44 @@ private fun Content(state: WeighInState, actions: WeighInActions, secondsLeft: I
                 modifier = Modifier.testTag("saved"),
             )
             if (state.deleteFailed) Message(stringResource(R.string.weighin_delete_failed))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = actions.onDiscard) { Text(stringResource(R.string.weighin_discard)) }
-                Button(onClick = actions.onClose) { Text(stringResource(R.string.weighin_done)) }
+            ResultButtons(actions, resultSecondsLeft)
+        }
+        is WeighInState.Recent -> {
+            BigWeight(state.kg)
+            state.change?.let { change ->
+                Text(
+                    stringResource(R.string.weighin_change, formatChange(change.deltaKg), formatDay(change.previousTime, LocalDate.now())),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.testTag("change"),
+                )
             }
+            Text(
+                stringResource(R.string.weighin_recent, formatClock(state.time)),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("recent"),
+            )
+            if (state.deleteFailed) Message(stringResource(R.string.weighin_delete_failed))
+            ResultButtons(actions, resultSecondsLeft)
         }
         is WeighInState.SaveFailed -> {
             BigWeight(state.kg)
             Choice(stringResource(R.string.weighin_save_failed), stringResource(R.string.weighin_retry), actions.onRetrySave, actions)
         }
-        // The activity closes the dialog when the time runs out.
-        is WeighInState.NotFound -> Unit
+        // The end view: why nothing was saved; it stays until Valmis, Back or a tap outside.
+        is WeighInState.NotFound -> {
+            val text = when (val reason = state.reason) {
+                EndReason.NotHeard -> stringResource(R.string.weighin_not_heard)
+                EndReason.Unsettled -> stringResource(R.string.weighin_unsettled)
+                is EndReason.Repeat -> repeatText(reason.line, end = true)
+            }
+            Announced(text, "endReason")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = actions.onClose) { Text(stringResource(R.string.weighin_done)) }
+                Button(onClick = actions.onWeighAgain, modifier = Modifier.testTag("weighAgain")) { Text(stringResource(R.string.weighin_again)) }
+            }
+        }
         is WeighInState.ScanFailed -> Choice(
             stringResource(R.string.weighin_scan_failed, state.code),
             stringResource(R.string.weighin_retry), actions.onRetryScan, actions,
@@ -152,6 +187,45 @@ private fun Content(state: WeighInState, actions: WeighInActions, secondsLeft: I
             stringResource(R.string.weighin_open_app), actions.onOpenApp, actions,
         )
     }
+}
+
+/** Poista and Valmis on a result; Valmis shows the seconds left while the dialog closes by itself, under a stable name. */
+@Composable
+private fun ResultButtons(actions: WeighInActions, resultSecondsLeft: Int?) {
+    val done = stringResource(R.string.weighin_done)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        TextButton(onClick = actions.onDiscard) { Text(stringResource(R.string.weighin_discard)) }
+        Button(onClick = actions.onClose, modifier = Modifier.testTag("done")) {
+            Text(
+                resultSecondsLeft?.let { stringResource(R.string.weighin_done_seconds, it) } ?: done,
+                modifier = Modifier.clearAndSetSemantics { contentDescription = done },
+            )
+        }
+    }
+}
+
+/** The repeat line (scale-weigh-in "Ignore the scale's lingering broadcast"), with "…, joten sitä ei tallennettu uudelleen." on the end view. */
+@Composable
+private fun repeatText(line: RepeatLine, end: Boolean): String {
+    val last = line.last ?: return stringResource(if (end) R.string.weighin_repeat_end else R.string.weighin_repeat)
+    val res = when {
+        last.deleted && end -> R.string.weighin_repeat_deleted_end
+        last.deleted -> R.string.weighin_repeat_deleted
+        end -> R.string.weighin_repeat_saved_end
+        else -> R.string.weighin_repeat_saved
+    }
+    return stringResource(res, formatKg(last.kg), formatClock(last.at))
+}
+
+/** A message TalkBack announces when it appears or changes (a polite live region). */
+@Composable
+private fun Announced(text: String, tag: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyLarge,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }.testTag(tag),
+    )
 }
 
 @Composable

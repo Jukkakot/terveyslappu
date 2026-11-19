@@ -174,6 +174,18 @@
     <string name="weighin_done">Valmis</string>
     <string name="weighin_delete_failed">Poisto epäonnistui. Syy on lokissa.</string>
     <string name="weighin_change">%1$s kg edellisestä (%2$s)</string>
+    <!-- everyday-feedback: the end view, the repeat line and the recent automatic weight -->
+    <string name="weighin_again">Punnitse uudelleen</string>
+    <string name="weighin_done_seconds">Valmis (%1$d)</string>
+    <string name="weighin_not_heard">Vaakaa ei tunnistettu 30 sekunnissa. Tarkista, että vaa\'an näyttö syttyy ja puhelin on lähellä.</string>
+    <string name="weighin_unsettled">Paino ei vakiintunut 30 sekunnissa.</string>
+    <string name="weighin_repeat">Vaaka toistaa äskeistä punnitusta.</string>
+    <string name="weighin_repeat_saved">Vaaka toistaa äskeistä punnitusta (%1$s kg, tallennettu klo %2$s).</string>
+    <string name="weighin_repeat_deleted">Vaaka toistaa äskeistä punnitusta (%1$s kg, poistettu klo %2$s).</string>
+    <string name="weighin_repeat_end">Vaaka toistaa äskeistä punnitusta, joten sitä ei tallennettu uudelleen.</string>
+    <string name="weighin_repeat_saved_end">Vaaka toistaa äskeistä punnitusta (%1$s kg, tallennettu klo %2$s), joten sitä ei tallennettu uudelleen.</string>
+    <string name="weighin_repeat_deleted_end">Vaaka toistaa äskeistä punnitusta (%1$s kg, poistettu klo %2$s), joten sitä ei tallennettu uudelleen.</string>
+    <string name="weighin_recent">Tallennettu automaattisesti klo %1$s</string>
     <string name="widget_description">Punnitse yhdellä napautuksella</string>
     <string name="widget_food_description">Lisää annos yhdellä napautuksella</string>
 
@@ -278,7 +290,8 @@
     <string name="auto_channel_check">Tarkistettavat painot</string>
     <string name="auto_accept">Hyväksy</string>
     <string name="auto_delete">Poista paino</string>
-    <string name="auto_ok">OK</string>
+    <string name="auto_deleted">Paino poistettu</string>
+    <string name="auto_restore_failed">Painoa ei voitu palauttaa</string>
     <string name="auto_summary">Automaattiset punnitukset</string>
     <string name="widget_state_on">automaattinen punnitus päällä</string>
     <string name="widget_state_blocked">automaattinen punnitus ei toimi</string>

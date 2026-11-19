@@ -543,6 +543,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .onSuccess {
                     AppLog.i("weight.restore", "ok", "kg" to entry.kg, "time" to entry.time, "ms" to msSince(started))
                     raw?.let { keepRaw("restore") { rawArchive.add(it) } }
+                    keepAuto("remember") { terveys.keys.remember(entry.kg) }
                     val id = entry.clientRecordId
                     if (mark != null) {
                         keepAuto("mark") { terveys.marks.add(listOf(mark)) }
@@ -569,7 +570,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     val raw = keepRaw("delete") { rawArchive.remove(entry.time.epochSecond) }
                     val id = entry.clientRecordId
                     val mark = id?.let { keepAuto("mark") { terveys.marks.remove(listOf(it)).firstOrNull() } }
-                    keepAuto("remember") { terveys.keys.remember(entry.kg) }
+                    keepAuto("remember") { terveys.keys.remember(entry.kg, deleted = true) }
                     id?.let { keepAuto("done") { terveys.listen.weightRemoved(it) } }
                     if (id != null) {
                         keepAuto("reference") { terveys.reference.removed(id) }

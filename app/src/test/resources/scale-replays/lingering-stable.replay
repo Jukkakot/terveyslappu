@@ -1,0 +1,8 @@
+# expect kg=82.5
+# Made-up (NFR-1): only the scale's repeated stable packet, as after a weigh-in it still broadcasts.
+# The replay decides it; the dialog ignores it as a repeat when that weight was just saved or
+# deleted and shows the repeat line (WeighInTest, everyday-feedback).
+2026-11-08T07:00:00.000+02:00 I scale.scan start
+2026-11-08T07:00:00.400+02:00 D scale.packet t=400 key=62c0 data=0339138b00000100000000000000 rssi=-60 name=Yoda1
+2026-11-08T07:00:00.700+02:00 D scale.packet t=700 key=62c0 data=0339138b00000100000000000000 rssi=-60 name=Yoda1
+2026-11-08T07:00:01.000+02:00 D scale.packet t=1000 key=62c0 data=0339138b00000100000000000000 rssi=-61 name=Yoda1

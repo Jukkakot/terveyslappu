@@ -10,6 +10,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.scale.WeighInState
+import fi.jukkakot.terveyslappu.scale.EndReason
+import fi.jukkakot.terveyslappu.scale.LastWeight
+import fi.jukkakot.terveyslappu.scale.RepeatLine
+import androidx.compose.ui.test.assertContentDescriptionContains
+import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,16 +49,46 @@ class WeighInDialogTest {
             TerveysTheme { WeighInDialog(WeighInState.Saved(82.5), WeighInActions(onDiscard = { discarded = true }, onClose = { closed = true })) }
         }
         compose.onNodeWithText("Poista").performClick()
-        compose.onNodeWithText("Valmis").performClick()
+        compose.onNodeWithTag("done").performClick()
         assertTrue(discarded && closed)
     }
 
     @Test
     fun `waiting shows the seconds left, also under a changing weight`() {
-        var state by mutableStateOf<WeighInState>(WeighInState.Scanning)
+        var state by mutableStateOf<WeighInState>(WeighInState.Scanning())
         compose.setContent { TerveysTheme { WeighInDialog(state, WeighInActions(), secondsLeft = 28) } }
         compose.onNodeWithContentDescription("Sulkeutuu 28 sekunnin kuluttua").assertExists()
         state = WeighInState.Live(82.4, stable = false)
         compose.onNodeWithTag("countdownLine", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `the end view gives the reason with two buttons and weighs again`() {
+        var again = false
+        compose.setContent {
+            TerveysTheme { WeighInDialog(WeighInState.NotFound(EndReason.NotHeard), WeighInActions(onWeighAgain = { again = true })) }
+        }
+        compose.onNodeWithTag("endReason", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("weighAgain").performClick()
+        assertTrue(again)
+    }
+
+    @Test
+    fun `the repeat line replaces the step-on text while scanning`() {
+        val last = LastWeight(82.5, null, Instant.now(), Instant.now())
+        compose.setContent { TerveysTheme { WeighInDialog(WeighInState.Scanning(RepeatLine(last)), WeighInActions(), secondsLeft = 30) } }
+        compose.onNodeWithTag("repeat", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("countdown", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `the recent automatic weight shows its line and both buttons`() {
+        compose.setContent {
+            TerveysTheme { WeighInDialog(WeighInState.Recent(82.5, Instant.now(), "id"), WeighInActions(), resultSecondsLeft = 8) }
+        }
+        compose.onNodeWithTag("recent", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("weight", useUnmergedTree = true).assertExists()
+        // Valmis keeps a stable name for TalkBack while its seconds change.
+        compose.onNodeWithTag("done").assertContentDescriptionContains("Valmis")
     }
 }

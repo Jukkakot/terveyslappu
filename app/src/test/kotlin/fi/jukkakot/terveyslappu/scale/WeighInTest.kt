@@ -6,6 +6,8 @@ import fi.jukkakot.terveyslappu.ui.CLOSE_AFTER_SAVED_MS
 import fi.jukkakot.terveyslappu.ui.autoCloseDelayMs
 import fi.jukkakot.terveyslappu.ui.closeWhenDue
 import fi.jukkakot.terveyslappu.ui.closesOnRequest
+import fi.jukkakot.terveyslappu.ui.blocksBackground
+import fi.jukkakot.terveyslappu.ui.endReason
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -101,7 +103,7 @@ class WeighInTest {
         val w = weighIn(source()) { _, _ -> error("must not save") }
         w.start(backgroundScope)
         settle()
-        assertEquals(WeighInState.NotFound(heard = false), w.state.value)
+        assertEquals(WeighInState.NotFound(EndReason.NotHeard), w.state.value)
     }
 
     @Test
@@ -120,7 +122,7 @@ class WeighInTest {
         val w = weighIn(source(Triple(100, 800, false))) { _, _ -> error("must not save") }
         w.start(backgroundScope)
         settle()
-        assertEquals(WeighInState.NotFound(heard = true), w.state.value)
+        assertEquals(WeighInState.NotFound(EndReason.Unsettled, heard = true), w.state.value)
     }
 
     @Test
@@ -223,7 +225,86 @@ class WeighInTest {
         w.start(backgroundScope)
         settle()
         assertEquals(emptyMap(), store.weights)
-        assertEquals(WeighInState.NotFound(heard = false), w.state.value)
+        // The weight of that weigh-in is not known here: the repeat line has no brackets.
+        assertEquals(WeighInState.NotFound(EndReason.Repeat(RepeatLine(null)), heard = false, ignored = 2), w.state.value)
+    }
+
+    /** 82.5 kg was saved (or deleted) five seconds before the dialog opened. */
+    private fun rememberedLast(deleted: Boolean = false) = MemoryLastWeighIn().also {
+        WeighingKeys(it) { wallStart.minusSeconds(5) }.remember(82.5, deleted = deleted)
+    }
+
+    @Test
+    fun `only the same weight repeated ends with the repeat line and its save time`() = runTest {
+        val store = Store()
+        val w = storeWeighIn(store, stable(825, key = 0x62C0), rememberedLast(deleted = true))
+        w.start(backgroundScope)
+        testScheduler.advanceTimeBy(150)
+        runCurrent()
+        val scanning = w.state.value as WeighInState.Scanning
+        assertEquals(82.5, scanning.repeat?.last?.kg)
+        settle()
+        val end = w.state.value as WeighInState.NotFound
+        val line = (end.reason as EndReason.Repeat).line
+        assertEquals(wallStart.minusSeconds(5), line.last?.at)
+        assertTrue(line.last!!.deleted)
+        assertFalse(end.heard)
+        assertEquals(2, end.ignored)
+        assertEquals(emptyMap(), store.weights)
+    }
+
+    @Test
+    fun `a live weight that settles on the repeat ends as a repeat`() = runTest {
+        val store = Store()
+        val source = source(Triple(100, 800, false), Triple(300, 822, false), Triple(500, 825, true), Triple(700, 825, true), key = 0x62C0)
+        val w = storeWeighIn(store, source, rememberedLast())
+        w.start(backgroundScope)
+        testScheduler.advanceTimeBy(600)
+        runCurrent()
+        val live = w.state.value as WeighInState.Live
+        assertEquals(82.5, live.repeat?.last?.kg)
+        settle()
+        val end = w.state.value as WeighInState.NotFound
+        assertTrue(end.reason is EndReason.Repeat)
+        assertTrue(end.heard)
+        assertEquals(emptyMap(), store.weights)
+    }
+
+    @Test
+    fun `a stable reading of another weight after an ignored one is not a repeat`() = runTest {
+        val store = Store()
+        // The repeat is ignored, then the user steps on and a new weight settles: it is saved.
+        val source = source(Triple(100, 825, true), Triple(400, 790, false), Triple(600, 818, true), Triple(800, 818, true), key = 0x62C0)
+        val w = storeWeighIn(store, source, rememberedLast())
+        w.start(backgroundScope)
+        settle()
+        assertEquals(listOf(81.8), store.weights.values.toList())
+    }
+
+    @Test
+    fun `discard remembers the weight as deleted`() = runTest {
+        val store = Store()
+        val last = MemoryLastWeighIn()
+        val w = storeWeighIn(store, stable(825), last)
+        w.start(backgroundScope)
+        settle()
+        assertFalse(last.weight()!!.deleted)
+        w.discard(backgroundScope)
+        runCurrent()
+        assertTrue(last.weight()!!.deleted)
+    }
+
+    @Test
+    fun `the recent automatic weight is deleted, a failed delete stays on it`() = runTest {
+        val w = weighIn(source()) { _, _ -> error("must not save") }
+        val recent = WeighInState.Recent(82.5, wallStart.minusSeconds(60), "terveyslappu-scale-1")
+        w.showRecent(recent)
+        w.discardRecent(backgroundScope) { false }
+        runCurrent()
+        assertEquals(recent.copy(deleteFailed = true), w.state.value)
+        w.discardRecent(backgroundScope) { true }
+        runCurrent()
+        assertEquals(WeighInState.Discarded, w.state.value)
     }
 
     @Test
@@ -416,6 +497,62 @@ class WeighInTest {
         assertEquals(WeighInState.Discarded, w.state.value)
         assertEquals(emptyMap(), store.weights)
         assertEquals(savedAt + CLOSE_AFTER_SAVED_MS - 500 + 2_000, closedAt)
+    }
+
+    @Test
+    fun `the end view and the recent weight follow the close rules`() {
+        assertNull(autoCloseDelayMs(WeighInState.NotFound(EndReason.NotHeard), keepOpen = false))
+        val recent = WeighInState.Recent(82.5, wallStart, "id")
+        assertEquals(60_000L, autoCloseDelayMs(recent, keepOpen = false, resultMs = 60_000L))
+        assertNull(autoCloseDelayMs(recent, keepOpen = true))
+    }
+
+    @Test
+    fun `the countdown on Valmis starts from the lengthened time`() = runTest {
+        val seconds = mutableListOf<Int>()
+        var closed = false
+        closeWhenDue(WeighInState.Saved(82.5), keepOpen = false, resultMs = 3_000L, onSeconds = { seconds += it }) { closed = true }
+        assertEquals(listOf(3, 2, 1), seconds)
+        assertTrue(closed)
+    }
+
+    @Test
+    fun `every dialog state has an end reason`() {
+        val repeat = EndReason.Repeat(RepeatLine(null))
+        val cases = mapOf<WeighInState, String>(
+            WeighInState.Preparing to "cancelled",
+            WeighInState.BluetoothOff to "cancelled",
+            WeighInState.Scanning() to "cancelled",
+            WeighInState.Live(82.4, stable = false) to "cancelled",
+            WeighInState.NoHealthAccess to "failed",
+            WeighInState.PermissionDenied to "failed",
+            WeighInState.ScanFailed(2) to "failed",
+            WeighInState.SaveFailed(82.5) to "failed",
+            WeighInState.Saved(82.5, deleteFailed = true) to "failed",
+            WeighInState.Saving(82.5) to "saved",
+            WeighInState.Saved(82.5) to "saved",
+            WeighInState.Discarded to "discarded",
+            WeighInState.NotFound(EndReason.NotHeard) to "notheard",
+            WeighInState.NotFound(EndReason.Unsettled, heard = true) to "unsettled",
+            WeighInState.NotFound(repeat, ignored = 4) to "repeat",
+            WeighInState.Recent(82.5, wallStart, "id") to "recent",
+            WeighInState.Recent(82.5, wallStart, "id", deleteFailed = true) to "failed",
+        )
+        cases.forEach { (state, reason) -> assertEquals(reason, endReason(state, fromRecent = false), state.toString()) }
+        assertEquals("recentdeleted", endReason(WeighInState.Discarded, fromRecent = true))
+    }
+
+    @Test
+    fun `the background is blocked only while the dialog could save itself`() {
+        assertTrue(blocksBackground(WeighInState.Preparing))
+        assertTrue(blocksBackground(WeighInState.Scanning()))
+        assertTrue(blocksBackground(WeighInState.Live(82.4, stable = false)))
+        assertTrue(blocksBackground(WeighInState.Saving(82.5)))
+        assertFalse(blocksBackground(WeighInState.NotFound(EndReason.NotHeard)))
+        assertFalse(blocksBackground(WeighInState.Saved(82.5)))
+        assertFalse(blocksBackground(WeighInState.Recent(82.5, wallStart, "id")))
+        assertFalse(blocksBackground(WeighInState.Discarded))
+        assertFalse(blocksBackground(WeighInState.BluetoothOff))
     }
 
     @Test
