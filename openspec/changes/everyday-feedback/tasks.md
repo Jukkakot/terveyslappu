@@ -86,15 +86,16 @@
 
 ## 7. Context, docs and version
 
-- [ ] 7.1 `openspec/context/product.md`: weigh-in decision paragraph (end view with Punnitse
+- [x] 7.1 `openspec/context/product.md`: weigh-in decision paragraph (end view with Punnitse
   uudelleen when nothing was saved; the recent automatic weight; dialog Poista after its own save
   still without Kumoa), the notification's Poista paino with Kumoa and no OK, the widget ✓, and
   the values rule narrowed to the home screen (widgets, tile, shortcut labels; notifications may
   show the weight, user 2026-11-19). `roadmap.md`: U1–U6 and U8 done as everyday-feedback.
-- [ ] 7.2 `.claude/CLAUDE.md` log lines: `weighin.end reason= heard= ignored= ms=`,
+- [ ] 7.2 (left to the master session: a subagent may not edit CLAUDE.md; the ready patch is in
+  the implementer's report) `.claude/CLAUDE.md` log lines: `weighin.end reason= heard= ignored= ms=`,
   `weighin.open from=again`, `weighin.recent`, `auto.action delete ok from= ageS=`,
   `auto.action undo ok|failed`, OK gone from `auto.action`, `food.search.end added= via= ms=`;
   map notes (`LastWeight` at/deleted, `AddedSummary`, `RecentAuto`, timeout helper,
   `WeighInForeground` only while scanning or saving).
-- [ ] 7.3 Bump `appVersion` in `gradle.properties` to 1.64 and run
+- [x] 7.3 Bump `appVersion` in `gradle.properties` to 1.64 and run
   `./gradlew test lint assembleDebug`.

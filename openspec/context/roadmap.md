@@ -21,14 +21,9 @@ Phases in order; one OpenSpec change each unless noted.
 
 - **Usability review 2026-11-19** (heuristic audit + competitor research; the 2026-11-09..19 log was mostly feature testing, so log counts are only hypotheses). User 2026-11-19: U1–U6 and U8 go first as one change (everyday-feedback).
   - Everyday paths:
-    - U1 weigh-in dialog never closes silently: end state says why (scale not heard / same weight already saved at 7.12), with Valmis and Punnitse uudelleen; no "Astu vaa'alle" while ignoring readings (S).
-    - U2 dialog opened soon after an automatic save opens on "Tallennettu automaattisesti 7.12 · 82,5 kg" with Poista and Valmis instead of a new scan (M).
-    - U3 notification Poista paino becomes undoable ("Paino poistettu · Kumoa" ~10 s); drop the no-op OK next to it (S–M).
-    - U4 undo bars follow Android's "Time to take action" (`calculateRecommendedTimeoutMillis`) instead of a fixed 4 s (S).
-    - U5 add search keeps its adds visible: ✓/×N on added rows, bottom line "2 lisätty · 465 kcal · Valmis" (S–M).
-    - U6 the add bar names the amount ("Rahka 200 g lisätty"); tapping an added row's mark opens its editor (S/M).
+    - ~~U1–U6 and U8~~ done as everyday-feedback (v1.64): end view with Punnitse uudelleen and the repeat line, the recent automatic weight (2 min), notification Kumoa without OK, accessibility timeouts, the search's marks and strip, the bar with the amount, the widget ✓. Left from U6: tapping an added row's mark opens its editor.
     - U7 last 2–3 amounts of a ruoka as chips in the editor (MacroFactor, MFP) (S).
-    - U8 widget shows ✓ when today's weight is saved (no value, so product rule holds) (S).
+
     - U9 food card opens Ruoka as a whole (today title/number → Ruoka, bars → Historia is hidden) (S).
     - ~~U10 front-page FAB "Lisää annos"~~ declined (user 2026-11-19): the Lisää annos home-screen widget covers it.
   - New features from other apps:

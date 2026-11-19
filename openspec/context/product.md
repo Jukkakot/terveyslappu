@@ -111,6 +111,15 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   clearer). The scale repeats its last stable packet for 10+ s and its company id is a
   per-weighing counter (5fc0, 60c0, 61c0 seen), so a weigh-in ignores the previous weigh-in's id
   for two minutes.
+- **Every weigh-in end says why** (user 2026-11-19, everyday-feedback): when nothing was saved in
+  30 s the dialog stays on an end view (scale not heard / weight not settled / the scale repeats
+  the last weigh-in, with its weight and time) with Valmis and Punnitse uudelleen; "Punnitse
+  uudelleen" is back for this case only (the result still has just Poista and Valmis). Opened
+  within 2 minutes of an automatic save, the dialog shows that weight instead of scanning; its
+  Poista, like the result's, has no Kumoa. The notification's Poista paino turns into "Paino
+  poistettu" with Kumoa for ~10 s (no OK next to it). While automatic weigh-in is on, the widget
+  shows a ✓ from the window's save until the next window start ("Punnittu" after midnight); it
+  never shows the value.
 - **Version `MAJOR.MINOR.BUILD`** (user 2026-11-09, app-version-numbers): SemVer-style name with a
   never-resetting build number instead of PATCH, because every green push is a release; the
   Android version code stays the total commit count so updates always install.
