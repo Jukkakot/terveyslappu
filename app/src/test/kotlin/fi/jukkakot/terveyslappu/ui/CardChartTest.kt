@@ -95,7 +95,7 @@ class CardChartTest {
     fun `a tap on each feature card's chart opens its target`() {
         show(HomeLayout(listOf(HomeCard(HomeLayout.WEIGHT, CardSize.WIDE), HomeCard(HomeLayout.FOOD, CardSize.SMALL), HomeCard(HomeLayout.STEPS, CardSize.SMALL), HomeCard(HomeLayout.BURN, CardSize.SMALL))))
         tap(node("foodToday"), "ruoka")
-        tap(chart(R.string.home_food_bars), "energy")
+        tap(chart(R.string.home_food_bars), "ruoka")
         tap(chart(R.string.home_steps_bars), "steps")
         tap(chart(R.string.home_burn_bars), "burn")
         tap(chart(R.string.home_spark), "screen:${Screen.HISTORY}")

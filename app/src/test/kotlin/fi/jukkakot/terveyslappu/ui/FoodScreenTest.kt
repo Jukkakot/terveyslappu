@@ -102,7 +102,7 @@ class FoodScreenTest {
     @Test
     fun `front page menu's Lisää annos opens the add search where a row adds and its menu edits`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
-        compose.onNodeWithTag("foodToday").assertExists()
+        compose.onNodeWithTag("foodToday", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("appMenu").performClick()
         compose.onNodeWithTag("menuFood").performClick()
         compose.onNodeWithTag("addField").assertExists()
@@ -141,16 +141,16 @@ class FoodScreenTest {
     }
 
     @Test
-    fun `front page food card shows bars, its own period, and opens Energia`() {
+    fun `front page food card shows bars, its own period, and opens Ruoka from any part`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
         compose.onNodeWithTag("foodCard").assertExists()
         compose.onNodeWithTag("foodPeriod").performScrollTo().performClick()
         compose.onNodeWithTag("foodPeriod-30").performClick()
         compose.onNodeWithTag("homePeriod").assertDoesNotExist()
-        compose.onNodeWithTag("foodBars").performScrollTo().performClick()
-        compose.onNodeWithTag("energyChart").assertExists()
+        compose.onNodeWithTag("foodBars", useUnmergedTree = true).performScrollTo().performClick()
+        compose.onNodeWithTag("foodDay").assertExists()
         compose.onNodeWithTag("back").performClick()
-        compose.onNodeWithTag("foodToday").performScrollTo().performClick()
+        compose.onNodeWithTag("foodToday", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithTag("foodDay").assertExists()
     }
 
@@ -222,14 +222,14 @@ class FoodScreenTest {
     @Test
     fun `Ruoka shows the day's items and the total`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
-        compose.onNodeWithTag("foodToday").performScrollTo().performClick()
+        compose.onNodeWithTag("foodToday", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithTag("food-a").assertExists()
         compose.onNodeWithTag("food-c").assertExists()
         compose.onNodeWithTag("food-d").assertDoesNotExist()
         compose.onNodeWithTag("foodSum").assertExists()
         compose.onNodeWithTag("prevDay").performClick()
         compose.onNodeWithTag("back").performClick()
-        compose.onNodeWithTag("foodToday").assertExists()
+        compose.onNodeWithTag("foodToday", useUnmergedTree = true).assertExists()
     }
 
     @Test

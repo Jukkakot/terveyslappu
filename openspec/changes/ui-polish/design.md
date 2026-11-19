@@ -26,7 +26,7 @@ any new screen or term (no glossary change needed).
    card's bottom row is a `FlowRow` of the period label and the average. Small card: the average
    is always a Column of two non-wrapping lines ("keskiarvo", value), end-aligned; the no-average
    text ("ei annoksia") is one wrapping line. Wide and big: one non-wrapping line in the long form.
-   FlowRow moves the average under the label when it does not fit, at every size (new split
+   The layout moves the average under the label when it does not fit, at every size (new split
    string resources as needed). Alternative: measuring with
    `SubcomposeLayout` (more code, same result).
 2. **One decimal for Viikossa, unit "kg/vk".** The scale and the shown weights have 0.1 kg

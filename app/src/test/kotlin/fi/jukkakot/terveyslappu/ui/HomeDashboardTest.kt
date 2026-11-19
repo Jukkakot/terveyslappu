@@ -41,6 +41,7 @@ import kotlin.test.assertTrue
 /** The dashboard front page (home-dashboard-menu): plots at least 56 dp, no card buttons; made-up data. */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], qualifiers = "w360dp-h640dp")
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 class HomeDashboardTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
@@ -84,13 +85,13 @@ class HomeDashboardTest {
         else -> listOf("plot-OVERLAID") .plus(SeriesKind.entries.map { "plot-${it.name}" }).filter(::exists).sumOf { height(it).value.toDouble() }.toFloat().dp
     }
 
-    private fun measureAll(scale: Float) {
+    private fun measureAll(scale: Float, sizes: List<CardSize> = CardSize.entries) {
         val stacked = addChart("Kaikki", ChartLayout.STACKED, *SeriesKind.entries.toTypedArray())
         val overlaid = addChart("Päällekkäin", ChartLayout.OVERLAID, SeriesKind.WEIGHT, SeriesKind.ENERGY, SeriesKind.STEPS)
         cells()
         val shorts = mutableListOf<String>()
         val ids = listOf(HomeLayout.WEIGHT, HomeLayout.FOOD, HomeLayout.STEPS, HomeLayout.BURN, stacked.cardId, overlaid.cardId)
-        for (id in ids) for (size in CardSize.entries) {
+        for (id in ids) for (size in sizes) {
             cell = HomeCard(id, size)
             compose.waitForIdle()
             val dp = plot(id)
@@ -106,6 +107,11 @@ class HomeDashboardTest {
     @Test
     @Config(fontScale = 1.3f)
     fun `every card chart has a 56 dp plot at 130 percent text`() = measureAll(1.3f)
+
+    /** Above 130 % small cards are drawn wide (home-screen "Cards at large text"), so only wide and big are measured. */
+    @Test
+    @Config(fontScale = 2f)
+    fun `every card chart has a 56 dp plot at 200 percent text`() = measureAll(2f, listOf(CardSize.WIDE, CardSize.BIG))
 
     @Test
     fun `a week's spike shows in the wide weight card`() {

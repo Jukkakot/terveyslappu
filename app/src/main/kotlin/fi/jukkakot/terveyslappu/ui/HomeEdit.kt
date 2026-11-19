@@ -225,6 +225,7 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
         edit.draft?.let { edit.update(it.moveById(from.key as String, to.key as String)) }
     }
     val unit = rowUnit()
+    val reflow = reflowsAtLargeText()
     val context = LocalContext.current
     val view = LocalView.current
     val haptic = LocalHapticFeedback.current
@@ -256,9 +257,11 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
             if (state.newestQuestioned != null) item(key = "checkNotice", span = full) { CheckNotice(data.actions.onOpenQuestioned) }
             data.food.clipOffer?.let { offer -> item(key = "clipOffer", span = full) { ClipOfferCard(offer, LocalDate.now(), data.foodActions) } }
         }
-        items(layout.shown, key = { it.id }, span = { GridItemSpan(it.size.span) }) { card ->
+        // Above 130 % text a small card is drawn wide; the stored size stays (home-screen "Cards at large text").
+        fun drawn(card: HomeCard) = if (reflow && card.size == CardSize.SMALL) CardSize.WIDE else card.size
+        items(layout.shown, key = { it.id }, span = { GridItemSpan(drawn(it).span) }) { card ->
             ReorderableItem(reorder, key = card.id) { dragging ->
-                CardSlot(card, layout, data, unit, editing, dragging, edit, onLongPress, announce)
+                CardSlot(card, drawn(card), layout, data, unit, editing, dragging, edit, onLongPress, announce)
             }
         }
         if (draft != null) item(key = "editTools", span = full) { EditTools(draft, edit, data.state.charts, data.actions) }
@@ -273,6 +276,7 @@ private fun HomeGrid(data: HomeCardsData, backup: BackupStatus, edit: HomeEditor
 @Composable
 private fun ReorderableCollectionItemScope.CardSlot(
     card: HomeCard,
+    drawn: CardSize,
     layout: HomeLayout,
     data: HomeCardsData,
     unit: Dp,
@@ -297,7 +301,7 @@ private fun ReorderableCollectionItemScope.CardSlot(
                 dragGestureDetector = LongPressEntry,
             )
             .fillMaxWidth()
-            .height(cardHeight(card.size, unit))
+            .height(cardHeight(drawn, unit))
             .shadow(if (dragging) 8.dp else 0.dp, homeCardShape)
             .semantics {
                 if (editing) {
@@ -310,7 +314,7 @@ private fun ReorderableCollectionItemScope.CardSlot(
             .testTag("homeSlot-${card.id}"),
     ) {
         val content = if (editing) Modifier.alpha(if (dragging) 1f else 0.55f).clearAndSetSemantics {} else Modifier
-        HomeCardView(card, data, Modifier.fillMaxSize().then(content))
+        HomeCardView(if (drawn == card.size) card else card.copy(size = drawn), data, Modifier.fillMaxSize().then(content))
         if (editing) {
             // Swallows only taps: drags and long-presses go on to the card's own drag (design 6).
             Box(

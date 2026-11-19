@@ -11,13 +11,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.printToLog
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.home.CardSize
@@ -34,6 +39,7 @@ import kotlin.test.assertTrue
 /** The front page grid and the cards at their sizes (home-screen "Card grid", "Card sizes"); made-up data. */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], qualifiers = "w360dp-h760dp")
+@org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
 class HomeCardsTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
@@ -111,6 +117,110 @@ class HomeCardsTest {
         assertInside(node("stepsAverage"), node("homeSlot-steps"), "stepsAverage")
     }
 
+
+    private fun scrollTo(tag: String) {
+        compose.onNodeWithTag("homeGrid").performScrollToNode(androidx.compose.ui.test.hasTestTag(tag))
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun `at 200 percent text every card takes a full row and keeps its parts inside`() {
+        home()
+        val keys = mapOf(
+            "weight" to listOf("latestKg", "homePeriod", "sparkRange"),
+            "food" to listOf("foodTodayValue", "foodPeriod", "foodAverage"),
+            "steps" to listOf("stepsTodayValue", "stepsPeriod", "stepsAverage"),
+        )
+        for ((id, tags) in keys) {
+            scrollTo("homeSlot-$id")
+            val slot = bounds("homeSlot-$id")
+            assertEquals(328.dp, slot.right - slot.left, "$id is a full-width card")
+            for (tag in tags) assertInside(node(tag), node("homeSlot-$id"), "$id: $tag")
+        }
+    }
+
+    @Test
+    @Config(fontScale = 1.3f)
+    fun `at exactly 130 percent food and steps still share a row`() {
+        home()
+        val food = bounds("homeSlot-food")
+        val steps = bounds("homeSlot-steps")
+        assertEquals(food.top, steps.top, "food and steps share a row")
+        assertTrue(food.right <= steps.left, "food left, steps right")
+    }
+
+    @Test
+    fun `a small steps card's average is two whole lines beside or under the period label`() {
+        cell = HomeCard(HomeLayout.STEPS, CardSize.SMALL)
+        cells()
+        val box = bounds("stepsAverage")
+        assertTrue(box.bottom - box.top < 36.dp, "two lines, not letters stacked: $box")
+        assertTrue(box.right - box.left > 60.dp, "the value keeps its width: $box")
+        assertInside(node("stepsAverage"), node("cell"), "stepsAverage")
+    }
+
+    @Test
+    @Config(fontScale = 1.3f)
+    fun `at 130 percent a small card's average sits under the period label`() {
+        cell = HomeCard(HomeLayout.STEPS, CardSize.SMALL)
+        cells()
+        assertTrue(bounds("stepsAverage").top >= bounds("stepsPeriod").bottom - 4.dp, "under the label")
+        assertInside(node("stepsAverage"), node("cell"), "stepsAverage")
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun `a wide steps card's long average stays whole at 200 percent`() {
+        cell = HomeCard(HomeLayout.STEPS, CardSize.WIDE)
+        cells()
+        val long = node("stepsAverage").fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text].first().text
+        assertTrue(long.startsWith(compose.activity.getString(R.string.home_average_word)), long)
+        val box = node("stepsAverage").getUnclippedBoundsInRoot()
+        assertInside(node("stepsAverage"), node("cell"), "stepsAverage")
+        assertTrue(box.bottom - box.top < 40.dp, "one line: $box")
+    }
+
+    @Test
+    fun `the food card opens Ruoka from any part and asks for the permission when it can`() {
+        var days = 0
+        var grants = 0
+        val actions = FoodActions(onOpenDay = { days++ }, onGrant = { grants++ })
+        fun show(food: FoodUiState) {
+            compose.setContent {
+                TerveysTheme {
+                    Box(Modifier.width(160.dp).height(cardHeight(CardSize.SMALL, rowUnit()))) {
+                        HomeCardView(HomeCard(HomeLayout.FOOD, CardSize.SMALL), HomeCardsData(MainUiState(access = Access.GRANTED, weights = HomeFixtures.weights), MainActions(), food, actions, HomeFixtures.steps, StepsActions()), Modifier.fillMaxSize())
+                    }
+                }
+            }
+        }
+        show(HomeFixtures.food)
+        for (tag in listOf("foodToday", "foodBars", "foodAverage")) node(tag).performClick()
+        assertEquals(3, days)
+        assertEquals(0, grants)
+    }
+
+    @Test
+    fun `the food card asks when the permission can be asked, opens Ruoka when it was denied`() {
+        var days = 0
+        var grants = 0
+        var food by mutableStateOf(FoodUiState(access = FoodAccess.NEEDS))
+        compose.setContent {
+            TerveysTheme {
+                Box(Modifier.width(160.dp).height(cardHeight(CardSize.SMALL, rowUnit()))) {
+                    HomeCardView(HomeCard(HomeLayout.FOOD, CardSize.SMALL), HomeCardsData(MainUiState(access = Access.GRANTED, weights = HomeFixtures.weights), MainActions(), food, FoodActions(onOpenDay = { days++ }, onGrant = { grants++ }), HomeFixtures.steps, StepsActions()), Modifier.fillMaxSize())
+                }
+            }
+        }
+        node("foodCard").performClick()
+        assertEquals(1, grants)
+        assertEquals(0, days)
+        food = FoodUiState(access = FoodAccess.DENIED)
+        compose.waitForIdle()
+        node("foodCard").performClick()
+        assertEquals(1, days)
+    }
+
     private var cell by mutableStateOf(HomeCard(HomeLayout.WEIGHT, CardSize.WIDE))
 
     /** One card at its grid size on a 360 dp screen (16 dp sides, 8 dp gap). */
@@ -156,12 +266,12 @@ class HomeCardsTest {
     }
 
     @Test
-    fun `Kulutus card shows today, aktiivinen, the short average and opens Kulutus`() {
+    fun `Kulutus card shows today, aktiivinen, the two-line average and opens Kulutus`() {
         cell = HomeCard(HomeLayout.BURN, CardSize.SMALL)
         cells()
         node("burnTodayValue").assertTextEquals(formatKcal(900))
         node("burnTodayActive").assertTextEquals(compose.activity.getString(R.string.burn_active_line, formatKcal(100)))
-        node("burnAverage").assertTextEquals(compose.activity.getString(R.string.home_burn_average, formatKcal(2250)))
+        node("burnAverage").assertContentDescriptionEquals(compose.activity.getString(R.string.home_burn_average_long, formatKcal(2250)))
         node("burnScaleTop").assertDoesNotExist()
         node("burnCard").performClick()
         assertEquals(1, burnOpened)

@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
+import fi.jukkakot.terveyslappu.R
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -172,12 +173,12 @@ class MainScreenTest {
     @Test
     fun `home period label switches the chart and does not open Historia`() {
         show(MainUiState(access = Access.GRANTED, weights = weights))
-        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals("82,9 → 82,4 kg")
+        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals(compose.activity.getString(R.string.home_spark_range, "82,9", "82,4"))
         compose.onNodeWithTag("homePeriod").performClick()
         compose.onNodeWithTag("homePeriod-30").performClick()
         compose.onNodeWithTag("latestCard").assertExists()
         compose.onNodeWithTag("chart").assertDoesNotExist()
-        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals("83,6 → 82,4 kg")
+        compose.onNodeWithTag("sparkRange", useUnmergedTree = true).assertTextEquals(compose.activity.getString(R.string.home_spark_range, "83,6", "82,4"))
     }
 
     @Test
@@ -304,7 +305,7 @@ class MainScreenTest {
         compose.onNodeWithTag("weight-1-delete").performClick()
         assertEquals("1", deleted)
         deleted = null
-        compose.onNode(hasText("82,4 kg") and hasAnyAncestor(hasTestTag("weights")) and !hasAnyAncestor(hasTestTag("stats")))
+        compose.onNode(hasText(compose.activity.getString(R.string.kg_value, "82,4")) and hasAnyAncestor(hasTestTag("weights")) and !hasAnyAncestor(hasTestTag("stats")))
             .performTouchInput { longClick() }
         assertEquals(null, deleted)
     }

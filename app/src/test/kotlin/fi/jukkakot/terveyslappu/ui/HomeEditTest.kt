@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.home.CardSize
 import fi.jukkakot.terveyslappu.home.HomeEditSignal
@@ -126,6 +127,19 @@ class HomeEditTest {
         node("editDone").assertIsEnabled()
         node("appMenu").assertDoesNotExist()
         node("help").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(fontScale = 2f)
+    fun `edit mode at 200 percent text draws the reflowed grid and keeps the stored size`() {
+        show()
+        enter()
+        val food = bounds("homeSlot-food")
+        assertTrue(food.right - food.left > 300.dp, "a small food card is drawn full width at 200 %")
+        compose.onNodeWithTag("homeGrid").performScrollToNode(androidx.compose.ui.test.hasTestTag("homeSlot-steps"))
+        val steps = bounds("homeSlot-steps")
+        assertTrue(steps.right - steps.left > 300.dp, "a small steps card is drawn full width too")
+        assertEquals(CardSize.SMALL, state.homeLayout.shown.first { it.id == FOOD }.size, "the stored size is untouched")
     }
 
     @Test

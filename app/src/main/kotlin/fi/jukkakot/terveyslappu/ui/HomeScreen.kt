@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -77,7 +78,7 @@ import java.time.ZoneId
 
 /**
  * One row unit of the front page grid (home-card-layout design 2): small and wide cards are one unit
- * high, big cards two units and the gap. Grows with the text up to 130 %. 268 dp (user decision 2026-11-16; was a 248 dp
+ * high, big cards two units and the gap. Grows with the text without an upper limit (small cards reflow above 130 %, see `reflowsAtLargeText`). 268 dp (user decision 2026-11-16; was a 248 dp
  * estimate); the plot-height matrix in `HomeDashboardTest` guards it.
  */
 internal val ROW_UNIT = 268.dp
@@ -86,7 +87,11 @@ internal val ROW_UNIT = 268.dp
 internal val GRID_GAP = 8.dp
 
 @Composable
-internal fun rowUnit(): Dp = ROW_UNIT * LocalDensity.current.fontScale.coerceIn(1f, 1.3f)
+internal fun rowUnit(): Dp = ROW_UNIT * maxOf(1f, LocalDensity.current.fontScale)
+
+/** Above 130 % text every small card is drawn wide (home-screen "Cards at large text"); at exactly 1.3 nothing reflows. */
+@Composable
+internal fun reflowsAtLargeText(): Boolean = LocalDensity.current.fontScale > 1.3f
 
 internal fun cardHeight(size: CardSize, unit: Dp): Dp = if (size == CardSize.BIG) unit * 2 + GRID_GAP else unit
 
@@ -115,7 +120,7 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
             }
             LatestCard(state, summary, today, card.size, data.actions.onHomePeriod, { data.actions.onScreen(Screen.HISTORY) }, modifier)
         }
-        HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.actions.onOpenEnergy, data.foodActions, modifier)
+        HomeLayout.FOOD -> FoodCard(data.food, state.foodDays, today, card.size, data.actions.onFoodPeriod, data.foodActions, modifier)
         HomeLayout.STEPS -> StepsCard(data.steps, state.stepsDays, today, card.size, data.stepsActions, modifier)
         HomeLayout.BURN -> BurnCard(data.burn, state.burnDays, today, card.size, data.burnActions, modifier)
         else -> state.charts.firstOrNull { it.cardId == card.id }?.let { ChartCard(it, data, card.size, modifier) }
@@ -125,13 +130,13 @@ internal fun HomeCardView(card: HomeCard, data: HomeCardsData, modifier: Modifie
 /**
  * The food card (home-screen "Food row on the home screen", "Card sizes"), built like the weight
  * card: today's kcal, daily bars of its own period, the period's dates and average; no button
- * (adding is in the App menu). The title and today's number open Ruoka on today; the bars and what is under them
- * open Historia on Energia; the period label keeps its menu. Nothing on it is filled. Today is read
+ * (adding is in the App menu). One tap target: a tap anywhere but the period label opens Ruoka on
+ * today (without the permission still to be asked: asks for it); the period label keeps its menu. Nothing on it is filled. Today is read
  * at every composition, so a resume after midnight shows the new day.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: CardSize, onPeriod: (Long) -> Unit, onOpenEnergy: () -> Unit, actions: FoodActions, modifier: Modifier = Modifier) {
+private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: CardSize, onPeriod: (Long) -> Unit, actions: FoodActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val needsPermission = food.access == FoodAccess.NEEDS || food.access == FoodAccess.DENIED
     val summary = remember(food.items, days, today) { HomeFood.of(food.items.orEmpty(), days, today) }
@@ -141,18 +146,12 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
         modifier
             .clip(cardShape)
             .background(cardColour())
+            .clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)
             .padding(8.dp)
             .testTag("foodCard"),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(innerShape)
-                .clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)
-                .padding(horizontal = 8.dp)
-                .testTag("foodToday"),
-        ) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).testTag("foodToday")) {
             CardTitle(R.drawable.ic_restaurant, stringResource(R.string.home_food_title), chevron = true, tone = QuantityTone.FOOD)
             when {
                 needsPermission -> PermissionValue()
@@ -173,20 +172,12 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
         }
         if (needsPermission) {
             // Gated: the same text as before, centred in the free space, with the same tap (design 9).
-            GatedBox(Modifier.clip(innerShape).clickable(onClickLabel = stringResource(R.string.home_open_food), onClick = onTop)) {}
+            GatedBox {}
             return@Column
         }
         val small = MaterialTheme.typography.labelSmall
         val big = size == CardSize.BIG
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .clip(innerShape)
-                .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
-                .padding(horizontal = 8.dp)
-                .testTag("foodBars"),
-        ) {
+        Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp).testTag("foodBars")) {
             Box(Modifier.fillMaxWidth().weight(1f).heightIn(min = MIN_CHART)) {
                 val spec = remember(summary, size) { CardCharts.food(summary, size) }
                 if (spec != null) {
@@ -200,27 +191,7 @@ private fun FoodCard(food: FoodUiState, days: Long, today: LocalDate, size: Card
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
-        val average = summary.averageKcal?.let {
-            stringResource(if (size == CardSize.SMALL) R.string.home_food_average else R.string.home_food_average_long, formatKcal(it))
-        } ?: stringResource(R.string.home_food_no_average)
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            HomePeriodLabel(days, onPeriod, "foodPeriod")
-            Text(
-                average,
-                maxLines = 3,
-                style = averageStyle(),
-                color = colors.onSurfaceVariant,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 4.dp)
-                    .clip(innerShape)
-                    .clickable(onClickLabel = stringResource(R.string.home_open_energy), onClick = onOpenEnergy)
-                    .heightIn(min = 44.dp)
-                    .wrapContentHeight(Alignment.CenterVertically)
-                    .padding(end = 2.dp)
-                    .testTag("foodAverage"),
-            )
-        }
+        CardFooter(days, onPeriod, "foodPeriod", "foodAverage", size, summary.averageKcal?.let { formatKcal(it) }, R.string.energy_per_day, R.string.home_food_average_long)
     }
 }
 
@@ -353,18 +324,7 @@ private fun StepsCard(steps: StepsUiState, days: Long, today: LocalDate, size: C
                 Text(formatShortDay(summary.to), style = small, color = colors.onSurfaceVariant)
             }
         }
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            HomePeriodLabel(days, actions.onPeriod, "stepsPeriod")
-            Text(
-                summary.averageSteps?.let {
-                    stringResource(if (size == CardSize.SMALL) R.string.home_steps_average else R.string.home_steps_average_long, formatSteps(it))
-                } ?: stringResource(R.string.home_food_no_average),
-                maxLines = 3,
-                style = averageStyle(),
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(end = 2.dp).testTag("stepsAverage"),
-            )
-        }
+        CardFooter(days, actions.onPeriod, "stepsPeriod", "stepsAverage", size, summary.averageSteps?.let { formatSteps(it) }, R.string.steps_per_day, R.string.home_steps_average_long)
         if (steps.stale) {
             Text(
                 stringResource(R.string.steps_stale),
@@ -452,24 +412,61 @@ private fun BurnCard(burn: BurnUiState, days: Long, today: LocalDate, size: Card
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            HomePeriodLabel(days, actions.onPeriod, "burnPeriod")
-            Text(
-                summary.averageTotal?.let {
-                    stringResource(if (size == CardSize.SMALL) R.string.home_burn_average else R.string.home_burn_average_long, formatKcal(it.toDouble()))
-                } ?: stringResource(R.string.home_food_no_average),
-                maxLines = 3,
-                style = averageStyle(),
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(start = 4.dp).heightIn(min = 44.dp).wrapContentHeight(Alignment.CenterVertically).padding(end = 2.dp).testTag("burnAverage"),
-            )
-        }
+        CardFooter(days, actions.onPeriod, "burnPeriod", "burnAverage", size, summary.averageTotal?.let { formatKcal(it.toDouble()) }, R.string.energy_per_day, R.string.home_burn_average_long)
         if (burn.stale) {
             Text(stringResource(R.string.steps_stale), style = small, color = colors.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp).testTag("burnStale"))
         }
     }
 }
 
+
+/**
+ * A card's bottom row (home-screen "Units on the cards"): the period label and the average. The
+ * average sits end-aligned beside the label when both fit; otherwise it moves whole under the label
+ * (what a FlowRow would do, measured here because FlowRow does not break before a non-wrapping
+ * text). A small card's average is two lines ("keskiarvo", the value with its unit), a wide or big
+ * card's one line; neither wraps inside. [value] null = the one wrapping "ei vielä keskiarvoa". The
+ * average is no tap target of its own (the card is one).
+ */
+@Composable
+internal fun CardFooter(days: Long, onPeriod: (Long) -> Unit, periodTag: String, averageTag: String, size: CardSize, value: String?, unitRes: Int, longRes: Int) {
+    val colors = MaterialTheme.colorScheme
+    val gap = with(LocalDensity.current) { 4.dp.roundToPx() }
+    Layout(
+        content = {
+            HomePeriodLabel(days, onPeriod, periodTag)
+            val average = Modifier.padding(start = 4.dp, end = 2.dp).testTag(averageTag)
+            when {
+                value == null -> Text(stringResource(R.string.home_food_no_average), style = averageStyle(), color = colors.onSurfaceVariant, modifier = average)
+                size == CardSize.SMALL -> {
+                    val spoken = stringResource(longRes, value)
+                    Column(average.clearAndSetSemantics { contentDescription = spoken }, horizontalAlignment = Alignment.End) {
+                        Text(stringResource(R.string.home_average_word), style = averageStyle(), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false)
+                        Text(stringResource(unitRes, value), style = averageStyle(), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    }
+                }
+                else -> Text(stringResource(longRes, value), style = averageStyle(), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, modifier = average)
+            }
+        },
+        modifier = Modifier.fillMaxWidth().padding(start = 4.dp),
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val label = measurables[0].measure(loose)
+        val average = measurables[1].measure(loose)
+        val width = constraints.maxWidth
+        val beside = label.width + gap + average.width <= width
+        val height = if (beside) maxOf(label.height, average.height) else label.height + average.height
+        layout(width, height) {
+            if (beside) {
+                label.placeRelative(0, (height - label.height) / 2)
+                average.placeRelative(width - average.width, (height - average.height) / 2)
+            } else {
+                label.placeRelative(0, 0)
+                average.placeRelative(0, label.height)
+            }
+        }
+    }
+}
 
 private val cardShape = RoundedCornerShape(24.dp)
 internal val homeCardShape get() = cardShape

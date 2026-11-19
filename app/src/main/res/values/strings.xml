@@ -9,10 +9,10 @@
     <string name="home_empty_hint_cd">Punnitse Lisää toimintoja -valikosta tai widgetistä</string>
     <string name="app_menu">Lisää toimintoja</string>
     <string name="home_spark">Painon kehitys jaksolla, %1$s → %2$s kg</string>
-    <string name="home_spark_range">%1$s → %2$s kg</string>
+    <string name="home_spark_range">%1$s → %2$s kg</string>
     <string name="home_backup_failed">Varmuuskopio epäonnistui</string>
     <string name="home_backup_stale">Varmuuskopio on vanha</string>
-    <string name="kg_value">%1$s kg</string>
+    <string name="kg_value">%1$s kg</string>
 
     <string name="history_title">Historia</string>
     <string name="entry_title">Lisää paino käsin</string>
@@ -314,7 +314,7 @@
     <string name="home_food_title">Syöty</string>
     <string name="home_food_none">ei annoksia</string>
     <string name="home_food_bars">Päivittäin syödyt kilokalorit jaksolla, %1$d päivää</string>
-    <string name="home_food_average">keskiarvo %1$s kcal/pv</string>
+    <string name="home_average_word">keskiarvo</string>
     <string name="home_food_no_average">ei vielä keskiarvoa</string>
     <string name="home_open_energy">Avaa Syöty</string>
     <string name="home_open_food">Avaa päivän annokset</string>
@@ -325,7 +325,7 @@
     <string name="food_permission_grant">Anna lupa</string>
     <string name="food_permission_settings">Avaa Health Connect</string>
     <string name="food_read_failed">Annoksia ei voitu lukea. Syy on lokissa.</string>
-    <string name="food_kcal">%1$s kcal</string>
+    <string name="food_kcal">%1$s kcal</string>
     <string name="food_day_treats">herkkuja %1$s kcal</string>
     <string name="food_day_without">%1$d ilman kcal</string>
     <string name="food_day_empty">Tälle päivälle ei ole annoksia. Lisää annos alta, myös jälkikäteen.</string>
@@ -460,7 +460,6 @@
     <string name="home_steps_title">Askeleet</string>
     <string name="home_open_steps">Avaa askeleet</string>
     <string name="home_steps_bars">Päivittäiset askeleet jaksolla, %1$d askelpäivää</string>
-    <string name="home_steps_average">keskiarvo %1$s askelta/pv</string>
     <string name="steps_no_data">ei tietoa</string>
     <string name="home_steps_today">tänään</string>
     <string name="steps_unavailable">Askeleet: ei saatavilla</string>
@@ -473,8 +472,8 @@
     <string name="steps_chart_description">Askeleet, %1$d palkkia</string>
     <string name="steps_stat_average">Keskiarvo</string>
     <string name="steps_stat_days">Päiviä</string>
-    <string name="steps_per_day">%1$s askelta/⁠pv</string>
-    <string name="steps_value">%1$s askelta</string>
+    <string name="steps_per_day">%1$s askelta/⁠pv</string>
+    <string name="steps_value">%1$s askelta</string>
     <string name="steps_legend">askeleet</string>
     <string name="legend_weight">paino</string>
     <string name="legend_bmi">BMI</string>
@@ -509,7 +508,7 @@
     <string name="energy_stat_average">Keskiarvo</string>
     <string name="energy_stat_treats">Herkut</string>
     <string name="energy_stat_days">Päiviä</string>
-    <string name="energy_per_day">%1$s kcal/⁠pv</string>
+    <string name="energy_per_day">%1$s kcal/⁠pv</string>
     <string name="energy_days">%1$d / %2$d päivää</string>
     <string name="energy_legend_food">syöty</string>
     <string name="energy_legend_treat">herkut</string>
@@ -521,9 +520,9 @@
     <string name="import_done_foods">Tuotu %1$d painoa, %2$d annosta ja %3$d ruokaa</string>
     <string name="import_foods_not_written">Tuotu %1$d painoa. %2$d annosta jäi tallentamatta: ravintotietojen lupa puuttuu.</string>
     <string name="help_food_title">Ruoka</string>
-    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-sivulta, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin Lisää annos -ikkuna aukeaa suoraan kotinäytön päälle; kortin luku avaa päivän annokset ja pylväät Historian Syöty-välilehden. Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, rivin ⋮ → Muokkaa avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja ⋮ → Poista poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruokassa ja Lisää annos -ikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten, ruokien ja painojen riveillä ⋮ avaa valikon: Muokkaa ja Poista (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia (pidempään, jos puhelimen esteettömyysasetus pyytää), ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
-    <string name="home_food_average_long">keskiarvo %1$s kcal/pv</string>
-    <string name="home_steps_average_long">keskiarvo %1$s askelta/pv</string>
+    <string name="help_food_body">Lisää annos ⋮-valikosta, Ruoka-sivulta, kotinäytön Lisää annos -widgetistä tai sovelluksen kuvakkeen pikakuvakkeesta, jolloin Lisää annos -ikkuna aukeaa suoraan kotinäytön päälle; kortin napautus avaa päivän annokset (Ruoka-sivun Viikko avaa Historian Syöty-välilehden). Ehdotukset muistavat, mitä yleensä syöt tähän aikaan, ja näyttävät tavallisen määrän ja kcal: rivin napautus lisää annoksen heti, rivin ⋮ → Muokkaa avaa ensin muokkauksen, jossa voit muuttaa määrän ennen lisäystä, ja ⋮ → Poista poistaa oman ruoan (lisätyt annokset jäävät, Kumoa palauttaa). Kirjoittaessa viimeinen rivi kertoo, mitä Enter lisää. Jokaisesta nimestä tulee ruoka, jonka kalorit voi täydentää myöhemmin; kun korjaat ruoan kalorit, sovellus voi päivittää myös aiemmat annokset niiltä päiviltä, jotka se pystyy lukemaan; herkut näkyvät omana osuutenaan, ja Historian Syöty-välilehti näyttää päivät. Annokset voi tuoda JSON-tekstinä (esim. tekoälyltä) jakamalla tekstin sovellukselle tai Lisää annos -ikkunan Tuo annokset -napilla; Kopioi tuontiohje (ikkunan ⋮-valikossa) antaa kirjoittajalle oikean muodon. Leikepöydälle kopioidut annokset näkyvät Leikepöydällä-kortissa etusivulla, Ruokassa ja Lisää annos -ikkunassa joka kerta, kunnes tuot ne tai suljet kortin ✕:llä: Lisää kaikki lisää ne heti näytettävälle päivälle, Muokkaa avaa esikatselun. Annosten, ruokien ja painojen riveillä ⋮ avaa valikon: Muokkaa ja Poista (Kumoa palauttaa). Kumoa-ilmoitukset näkyvät noin 4 sekuntia (pidempään, jos puhelimen esteettömyysasetus pyytää), ja ne voi pyyhkäistä pois sivulle. Valmiit ruuat ovat yleisiä keskiarvoja avoimesta Open Food Facts -aineistosta (ODbL) ja yleisiä arvioita; ne voi piilottaa kokonaan kohdassa Asetukset → Omat ruuat.</string>
+    <string name="home_food_average_long">keskiarvo %1$s kcal/⁠pv</string>
+    <string name="home_steps_average_long">keskiarvo %1$s askelta/⁠pv</string>
     <!-- home-card-layout: the front page's edit mode -->
     <string name="home_card_weight">Paino</string>
     <string name="home_card_food">Syöty</string>
@@ -616,8 +615,7 @@
     <string name="burn_stat_days">Päiviä</string>
     <string name="burn_active_line">aktiivinen %1$s kcal</string>
     <string name="home_burn_title">Kulutus</string>
-    <string name="home_burn_average">keskiarvo %1$s kcal/pv</string>
-    <string name="home_burn_average_long">keskiarvo %1$s kcal/pv</string>
+    <string name="home_burn_average_long">keskiarvo %1$s kcal/⁠pv</string>
     <string name="home_burn_bars">Päivittäinen kulutus jaksolla, %1$d päivää</string>
     <string name="home_open_burn">Avaa Kulutus</string>
     <string name="home_card_burn">Kulutus</string>
