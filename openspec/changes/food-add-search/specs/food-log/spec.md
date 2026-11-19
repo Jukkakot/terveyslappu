@@ -3,60 +3,50 @@
 ### Requirement: Adding from the search
 "Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open
 the add search over the whole screen, adding to the day shown (today from the front page and
-Historia). The add search SHALL show only what can be added: no day list, no day total, no
-summary line and no eaten annos.
+Historia). It SHALL show only what can be added: no day list, no day total, no summary line and
+no eaten annos. Tapping a ruoka row SHALL add that ruoka at once at the end of the day with its
+usual amount; the field is then cleared and the search stays open for the next annos.
 
-From the top the add search SHALL show:
-- a top bar with a back arrow ("Takaisin"), the field with a search icon and the hint "Hae ruokaa
-  tai kirjoita kcal", a ✕ button ("Tyhjennä") while the field has text, and a ⋮ menu holding
-  Kopioi tuontiohje and Tuo ruoka-annokset. The field has focus and the keyboard is up when the
-  search opens;
-- the line "Lisätään: <day>" (Eilen or the date, bodyMedium, onSurfaceVariant) only when the
-  search's day is not the current date;
-- the clipboard card when it is offered ("Clipboard offer"), hidden while typing;
-- with the field empty: the heading "Usein tähän aikaan" and up to eight ruoka rows: the ruuat
-  most often logged within two hours of the current clock time in the last 30 days, then the
-  most often logged ruuat. With none, the heading is left out and a quiet line "Kirjoita ruuan
-  nimi tai pelkkä kcal-määrä" shows instead;
-- while typing: up to ten matching ruuat (own before Valmiit ruuat, best match first, directly
-  under the top bar) and as the last row "Lisää ”<text>” uutena" with a line telling what it adds
-  (for a bare number "Lisää pelkkä <N> kcal"; for other text "ilman kcal" or the known ruoka's
-  kcal). Clearing the field (✕ or deleting the text) SHALL bring the empty-field content back.
-The list scrolls when it does not fit; scrolling it hides the keyboard.
-
-Every ruoka row (empty field and typing alike) SHALL start with a + icon in the primary colour and
-show the ruoka's name (one line, "…" when it does not fit) with the herkku sign for a Herkku ruoka,
-under it the usual amount and the kcal that amount gives ("200 g · 130 kcal"; with no usual amount
-the Kalorit "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when unknown), and end with a ⋮
-button (see "Removing a product from the search"). Rows have no dividers. The "Lisää … uutena" row
-starts with the same + icon and has no ⋮.
-
-Tapping a ruoka row SHALL add that ruoka at once at the end of the day with its usual amount.
-Tapping the "Lisää … uutena" row SHALL do what Enter does. Pressing Enter SHALL add exactly the
-typed text: a bare number as an annos "Pikalisäys" with that many kcal, any other text as an annos
-of that name (its ruoka's kcal when the name is a known ruoka, otherwise without kcal). After any
-add the field SHALL be cleared, the keyboard SHALL stay as it was, the search SHALL stay open for
-the next annos, and a bar "<name> lisätty · Kumoa" SHALL show at the bottom (above the keyboard
-when it is up) for as long as the app's Kumoa bars last; Kumoa SHALL remove that annos. A new add
-replaces the bar.
-
-The ⋮ menu's "Muokkaa" SHALL open the editor for a new annos: the same editor and rules as an
-annos's Muokkaa (name, amount and unit, Kalorit, Herkku; changes reach the ruoka as after
-Tallenna), filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and Poista.
-Lisää SHALL add the annos as edited (with the same bar) and return to the search; Peruuta, or
-closing the editor, SHALL return to the search and add nothing. The search returns with the field
-as it was and the keyboard up only if it was up before.
-
-Leaving the search (the back arrow, or system back when the keyboard is down; back with the
-keyboard up first hides it) SHALL:
-- when at least one annos added in this search is still logged (not undone): show the Ruoka screen
-  on the search's day, wherever the search was opened, with every annos added in this search
-  highlighted with a tonal background and the list scrolled so the last of them is visible. The
-  highlight stays until the user leaves the Ruoka screen or opens Lisää annos again; deleting a
-  highlighted annos removes its highlight;
-- otherwise: return to the screen it was opened from, as it was.
-Back from that Ruoka screen follows Ruoka's own back rule. The search cannot be opened from
-Järjestä, and Ruoka's own clipboard card is not shown while the search is open.
+Details:
+- Top bar: a back arrow ("Takaisin"), the field with a search icon and the hint "Hae ruokaa tai
+  kirjoita kcal", a ✕ button ("Tyhjennä") while the field has text, and a ⋮ menu holding Kopioi
+  tuontiohje and Tuo ruoka-annokset. The field has focus and the keyboard is up when the search
+  opens, from every entry, once the permission is confirmed granted ("Search without permission").
+- The line "Lisätään: <day>" (the day's title as elsewhere: Eilen, else the date like "Su 15.11.";
+  bodyMedium, onSurfaceVariant) shows only when the search's day is not the current date, from the
+  start (also when opened from Ruoka on a past day).
+- The clipboard card, when offered ("Clipboard offer"), hidden while typing.
+- Empty field: the heading "Usein tähän aikaan" and up to eight ruoka rows: the ruuat most often
+  logged within two hours of the current clock time in the last 30 days, then the most often
+  logged ruuat. With none, the heading is left out and a quiet line "Kirjoita ruuan nimi tai
+  pelkkä kcal-määrä" shows, but only when the day and history were read successfully (see
+  "Search messages and loading"). The ranking is computed when the search opens and stays fixed
+  while it is open: adds do not reshuffle the rows; only a removed ruoka drops out, and Kumoa of
+  its removal brings it back in its place.
+- Typing: up to ten matching ruuat (own before Valmiit ruuat, best match first, directly under
+  the top bar) and as the last row "Lisää ”<text>” uutena" with a line telling what it adds (for a
+  bare number "Lisää pelkkä <N> kcal"; for other text "ilman kcal" or the known ruoka's kcal).
+  Clearing the field (✕ or deleting the text) brings the empty-field content back. The list
+  scrolls when it does not fit; scrolling it hides the keyboard.
+- Every ruoka row starts with a + icon in the primary colour (TalkBack click label "Lisää <name>")
+  and shows the ruoka's name (one line, "…" when it does not fit) with the herkku sign for a
+  Herkku ruoka, under it the usual amount and its kcal ("200 g · 130 kcal"; with no usual amount
+  the Kalorit "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when unknown), and ends with a ⋮
+  button ("Removing a product from the search"). Rows have no dividers. The "Lisää … uutena" row
+  starts with the same + icon and has no ⋮.
+- Tapping "Lisää … uutena" does what Enter does. Enter adds exactly the typed text: a bare number
+  as an annos "Pikalisäys" with that many kcal, any other text as an annos of that name (its
+  ruoka's kcal when the name is a known ruoka, otherwise without kcal).
+- After any add the keyboard stays as it was and the bar "<name> lisätty · Kumoa" shows ("Search
+  messages and loading"); Kumoa removes that annos.
+- The ⋮ menu's "Muokkaa" opens the editor for a new annos: the same editor and rules as an annos's
+  Muokkaa (name, amount and unit, Kalorit, Herkku; changes reach the ruoka as after Tallenna),
+  filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and Poista. Lisää adds
+  the annos as edited (with the same bar) and returns to the search; Peruuta, or closing the
+  editor, returns to the search and adds nothing. The search returns with the field as it was and
+  the keyboard up only if it was up before.
+- The search cannot be opened from Järjestä, and Ruoka's own clipboard card is not shown while the
+  search is open.
 
 #### Scenario: Only addable things
 - **GIVEN** today has Rahka and Lumipallo logged
@@ -70,22 +60,19 @@ Järjestä, and Ruoka's own clipboard card is not shown while the search is open
 - **THEN** among the first rows is "Rahka" with "200 g · 130 kcal", and one tap logs Rahka 200 g,
   clears nothing else and shows "Rahka lisätty · Kumoa"
 
-#### Scenario: A meal of several annokset
-- **WHEN** the user taps Rahka, types "kahvi" and presses Enter, then taps back
-- **THEN** both are logged in that order, the Ruoka screen shows the day with Rahka and kahvi
-  highlighted and kahvi visible
+#### Scenario: Rows stay put
+- **GIVEN** the empty field lists Rahka first and Kahvi second
+- **WHEN** the user taps Kahvi
+- **THEN** the rows keep their order, and a ruoka removed with Poista drops out while Kumoa
+  brings it back in its place
 
-#### Scenario: Undo in the search
-- **WHEN** the user taps Rahka and then Kumoa on its bar
-- **THEN** Rahka is not logged, and back with nothing else added returns where the search was opened
+#### Scenario: Past day from Ruoka
+- **WHEN** the user opens Lisää annos on Ruoka showing yesterday
+- **THEN** the line "Lisätään: Eilen" shows from the start
 
-#### Scenario: Nothing added
-- **WHEN** the user opens Lisää annos from the front page and taps back without adding
-- **THEN** the front page is shown as before
-
-#### Scenario: From the front page
-- **WHEN** the user opens Lisää annos from the front page's ⋮ menu, adds Pulla and taps back
-- **THEN** the Ruoka screen shows today with Pulla highlighted
+#### Scenario: Tap target label
+- **WHEN** TalkBack reads a ruoka row
+- **THEN** its click action is named "Lisää Rahka"
 
 #### Scenario: Set the amount before adding
 - **GIVEN** a ruoka Jauhelihakastike 140 kcal / 100 g, usually 250 g
@@ -131,31 +118,146 @@ Järjestä, and Ruoka's own clipboard card is not shown while the search is open
 - **THEN** the row shows the name on one line shortened with "…", the amount and kcal under it,
   and the ⋮ button in full
 
+### Requirement: Leaving the search
+Leaving the search (the back arrow, or system back when the keyboard is down; back with the
+keyboard up first hides it) SHALL, when at least one annos added in this search is counted as added
+(below), show the Ruoka screen on the search's day with those annokset highlighted ("Highlight on
+Ruoka") and the list scrolled so the last of them is visible; otherwise it SHALL return to the
+screen it was opened from, as it was.
+
+An annos counts as added in this search from the moment its add is queued (also before the day has
+been read or while it is being written). It stops counting when its write fails, when Kumoa removes
+it and when it is deleted. Back with only failed adds therefore adds nothing.
+
+Ruoka keeps its own back rule and origin. When the search was opened from Ruoka, leaving stays on
+Ruoka and Ruoka's origin is unchanged. When it was opened from Historia, back from that Ruoka
+returns to Historia on the tab that was open; when from the front page, back returns to the front
+page.
+
+Only the back arrow and system back apply this rule. Home and the recents button only send the
+search to the background. When the process was killed or the screen was recreated so that the
+search session is lost, the next open is a new search and nothing is highlighted.
+
+A bar showing when the user leaves the search SHALL be dropped, so its Kumoa is gone; the annos
+can still be deleted on Ruoka.
+
+#### Scenario: A meal of several annokset
+- **WHEN** the user taps Rahka, types "kahvi" and presses Enter, then taps back
+- **THEN** both are logged in that order, the Ruoka screen shows the day with Rahka and kahvi
+  highlighted and kahvi visible
+
+#### Scenario: Undo in the search
+- **WHEN** the user taps Rahka and then Kumoa on its bar
+- **THEN** Rahka is not logged, and back with nothing else added returns where the search was opened
+
+#### Scenario: Failed add only
+- **WHEN** the user's only add fails with "Tallennus epäonnistui" and the user taps back
+- **THEN** nothing is highlighted and the user returns where the search was opened
+
+#### Scenario: Nothing added
+- **WHEN** the user opens Lisää annos from the front page and taps back without adding
+- **THEN** the front page is shown as before
+
+#### Scenario: From the front page
+- **WHEN** the user opens Lisää annos from the front page's ⋮ menu, adds Pulla and taps back
+- **THEN** the Ruoka screen shows today with Pulla highlighted, and back from Ruoka returns to the
+  front page
+
+#### Scenario: From Historia
+- **GIVEN** Historia is on its Syöty tab
+- **WHEN** the user opens Lisää annos from its menu, adds Pulla, taps back and then back again on Ruoka
+- **THEN** Ruoka showed Pulla highlighted and the second back shows Historia on the Syöty tab
+
+#### Scenario: From Ruoka
+- **GIVEN** the user opened Ruoka from the front page and Lisää annos from Ruoka
+- **WHEN** the user adds Pulla and taps back, and then back again
+- **THEN** Ruoka is shown with Pulla highlighted and the second back returns to the front page
+
+#### Scenario: Home button
+- **WHEN** the user adds Pulla in the search and presses the home button
+- **THEN** the search is only sent to the background and no Ruoka screen is opened
+
+#### Scenario: Session lost
+- **GIVEN** the search was in the background and the system ended the app's process
+- **WHEN** the user opens Lisää annos again
+- **THEN** it is a new search and nothing is highlighted on Ruoka
+
+#### Scenario: Bar dropped on leaving
+- **WHEN** the user taps Pulla and leaves the search while "Pulla lisätty · Kumoa" shows
+- **THEN** the bar is gone and Pulla can be deleted on Ruoka
+
+### Requirement: Highlight on Ruoka
+The annokset added in a search SHALL be shown on Ruoka with a tonal background (the highlight).
+The highlight SHALL be cleared by changing the day, by leaving Ruoka (to the front page, Historia
+including Viikko, or Asetukset) and by opening Lisää annos again. It SHALL stay while an annos
+editor or Järjestä is open and when the app goes to the background and returns. Editing a
+highlighted annos keeps its highlight; deleting it drops it, and Kumoa of the delete brings the
+annos back without the highlight.
+
+#### Scenario: Cleared by leaving
+- **GIVEN** Ruoka shows Pulla highlighted
+- **WHEN** the user opens Historia and returns to Ruoka
+- **THEN** Pulla is no longer highlighted
+
+#### Scenario: Cleared by changing the day
+- **WHEN** the user moves from the highlighted day to the previous day and back
+- **THEN** nothing is highlighted
+
+#### Scenario: Kept while editing
+- **WHEN** the user opens a highlighted annos's editor, saves, and the app goes to the background and returns
+- **THEN** the annos is still highlighted
+
+#### Scenario: Delete and Kumoa
+- **WHEN** the user deletes a highlighted annos and taps Kumoa
+- **THEN** it is back in its place without the highlight
+
 ### Requirement: Search messages and loading
-A failed write SHALL show the bar "Tallennus epäonnistui" (without Kumoa) and keep the search open.
-The field SHALL be usable at once. The day SHALL be read in the background when the search opens;
-an add made before the day is read SHALL be placed at the end of the day once it has been read. A
-failed read SHALL show the bar "Päivän annoksia ei voitu lukea" once, typing and adding SHALL
-still work, and the day SHALL be read again when the search resumes and before the next write.
+Every message of the add search SHALL be shown as the app's bar at the search's bottom (above the
+keyboard when it is up): "<name> lisätty · Kumoa", "<N> annosta lisätty · Kumoa",
+"<name> poistettu · Kumoa", "Ohitettu · Kumoa", "Päivitetty <N> annosta · Kumoa",
+"Päivitettiin <X>/<N> annosta · Yritä uudelleen", the clipboard-changed notice, the energy read
+failure, "Tallennus epäonnistui" and "Päivän annoksia ei voitu lukea". The newest replaces the
+previous one. A bar with Kumoa or Yritä uudelleen lasts as the app's Kumoa bars (about 4 seconds,
+swipe away); a bar without an action lasts the app's normal short message length.
+
+A failed write SHALL show "Tallennus epäonnistui" and keep the search open. The field SHALL be
+usable at once. The day SHALL be read in the background when the search opens; an add made before
+the day is read SHALL be placed at the end of the day once it has been read. A failed read SHALL
+show "Päivän annoksia ei voitu lukea" once, typing and adding SHALL still work, and the day SHALL
+be read again when the search resumes and before the next write.
+
+While the day or history is loading, with the field empty, nothing SHALL show below the field
+except a quiet line "Ladataan…". After a failed read the bar shows and no rows are shown. The line
+"Kirjoita ruuan nimi tai pelkkä kcal-määrä" shows only when the read succeeded and there are no
+suggestion rows.
 
 #### Scenario: Add before the day is read
 - **WHEN** the user types a name and presses Enter before the day has loaded
-- **THEN** the annos is added at the end of the day once it has loaded
+- **THEN** the annos is added at the end of the day once it has loaded, and counts as added from the tap
 
 #### Scenario: Failed write
 - **WHEN** Health Connect refuses a write
-- **THEN** the bar "Tallennus epäonnistui" is shown and the search stays open
+- **THEN** the bar "Tallennus epäonnistui" is shown, the search stays open and the annos no longer counts as added
 
 #### Scenario: Day cannot be read
 - **WHEN** reading the day fails
-- **THEN** a bar says so, typing still works, and an added annos is placed at the end after the
-  day has been read again
+- **THEN** the bar "Päivän annoksia ei voitu lukea" is shown with no rows, typing still works, and an
+  added annos is placed at the end after the day has been read again
+
+#### Scenario: Loading
+- **WHEN** the search opens and the day is still being read
+- **THEN** only the line "Ladataan…" shows below the empty field
+
+#### Scenario: Newest bar wins
+- **WHEN** the user adds Pulla and then removes a ruoka with Poista
+- **THEN** only "… poistettu · Kumoa" shows
 
 ### Requirement: Search without permission
 The add search SHALL check the nutrition permission before showing its rows and focusing the field:
 while checking it SHALL show only the top bar, without the keyboard. Without the permission it
 SHALL show the explanation and a Salli button requesting it, and show the rows, focus the field
-and raise the keyboard once granted.
+and raise the keyboard once granted. From every entry (the app, the widget and the shortcut) the
+field gets focus and the keyboard comes up once the permission is confirmed granted.
 
 #### Scenario: Permission missing
 - **GIVEN** the nutrition permission is not granted
@@ -174,9 +276,11 @@ is not available it SHALL show the existing text; the back arrow closes the sear
 - **THEN** the search offers a button to Health Connect's permissions and checks again on return
 
 ### Requirement: Search over midnight
-The add search SHALL add to the day it was opened on. After midnight the line "Lisätään: Eilen"
-SHALL show, and leaving after an add SHALL show that day on Ruoka. A new open SHALL use the new
-today.
+The add search SHALL add to the day it was opened on. The date SHALL be re-checked when the search
+resumes and on each add (there is no live ticker); when the day is then no longer the current
+date, the line "Lisätään: Eilen" SHALL show, and leaving after an add SHALL show that day on
+Ruoka. The "Usein tähän aikaan" ranking stays as computed when the search opened. A new open SHALL
+use the new today.
 
 #### Scenario: Open past midnight
 - **GIVEN** the search was opened at 23.55
@@ -313,19 +417,29 @@ There SHALL be no Quick Settings tile for food.
 - **THEN** the same search opens
 
 ### Requirement: Adding from the home screen
-A tap on the widget or the shortcut SHALL open the add search (as in "Adding from the search") over the
-whole screen, adding to today, in the app's theme, quickly and without first showing the app's
-front page. It SHALL work as in the app: suggestions, search, Enter, the bar with Kumoa, and it
-SHALL stay open for the next annos. Leaving it SHALL:
-- when at least one annos added in it is still logged: open the app on the Ruoka screen of that
-  day with those annokset highlighted, as "Adding from the search" says; back from there follows the
-  app's own back rules;
+A tap on the widget or the shortcut SHALL open the add search (as in "Adding from the search") over
+the whole screen, adding to today, in the app's theme and without first showing the app's front
+page, logging its NFR-8 timings (food.sheet.timing) as before. It SHALL work as in the app:
+suggestions, search, Enter, the bars with Kumoa, and it SHALL stay open for the next annos.
+Leaving it SHALL:
+- when at least one annos added in it counts as added ("Leaving the search"): open the app on the
+  Ruoka screen of that day. The app's Ruoka SHALL read the day only after the search's pending
+  writes have finished, and the highlight SHALL match annokset by the added item's own client id
+  and apply as they appear. Back from there follows the app's own back rules;
 - otherwise: close it and show what was behind it, normally the home screen.
+
+A tap on the widget or the shortcut while a search is open SHALL leave it as it was when its day is
+the same date; when the date has changed it SHALL start a fresh search for today. Adds are already
+saved, so nothing is lost.
 
 #### Scenario: Breakfast from the home screen
 - **GIVEN** on most mornings around 7 the user logged Rahka 200 g
 - **WHEN** they tap the Lisää annos widget at 7.20, tap Rahka and tap back
 - **THEN** Rahka 200 g is added to today and the app shows Ruoka with Rahka highlighted
+
+#### Scenario: Back right after an add
+- **WHEN** the user taps a suggestion in the search opened from the widget and taps back at once
+- **THEN** the app shows Ruoka with that annos present and highlighted
 
 #### Scenario: Several items in a row
 - **WHEN** the user types "kahvi", presses Enter, then taps Pulla, then taps back
@@ -340,8 +454,12 @@ SHALL stay open for the next annos. Leaving it SHALL:
 - **THEN** the annos is still in Health Connect
 
 #### Scenario: Opened again while open
-- **WHEN** the user taps the widget again while the search is open
+- **WHEN** the user taps the widget again while the search is open on the same date
 - **THEN** the search stays as it was
+
+#### Scenario: Opened again after midnight
+- **WHEN** the user taps the widget while a search from yesterday is open
+- **THEN** a fresh search for today opens
 
 ### Requirement: Food only inside the app
 Food and kcal SHALL be shown only inside the app, its add search opened from the widget or
@@ -428,7 +546,7 @@ with only their own move buttons (no ⓘ or ⋮).
 
 ### Requirement: Undoing a correction
 After Päivitä kaikki a bar "Päivitetty <N> annosta · Kumoa" SHALL show where the edit was made
-(in the add search as its bar, replacing the "lisätty" bar; the app bar on Ruoka and in Omat
+(in the add search as its bar, replacing the previous one; the app bar on Ruoka and in Omat
 ruuat) for as long as such bars last. Kumoa SHALL undo the whole save: the ruoka's old energy, the
 edited item as it was, and every recalculated item whose kcal is still amount × new energy (an
 item changed again since stays). When the bar is gone Kumoa is gone. When writing the recalculated

@@ -1,5 +1,8 @@
 # Tasks
 
+Note: the Lisää annos sheet's day list is removed by `food-add-search`, so this change covers
+Ruoka and Järjestä only (its spec's sheet wording is superseded there).
+
 ## 1. Info lines (pure)
 
 - [ ] 1.1 A pure function (e.g. `food/FoodInfo.kt`) that builds the ⓘ bubble's lines from a
@@ -17,16 +20,15 @@
 - [ ] 2.2 An `ItemInfoButton` (ⓘ, 48 dp target, content description "Tiedot: <name>") built on
   Material 3 `TooltipBox` + `RichTooltip` (title = name, lines from 1.1), opened on tap
   (`rememberTooltipState(isPersistent = true)`), closed by outside tap, back or a second tap.
-  Placed before the ⋮ button on the Ruoka screen's rows and the sheet's day list rows; not in
+  Placed before the ⋮ button on the Ruoka screen's rows; not in
   Järjestä. Row tap elsewhere still opens the editor. The own product comes from the view
   model's product list (no new reads).
   Implementation notes from the review: `enableUserInput = false` on `TooltipBox`; the ⓘ click
   toggles (`if (visible) dismiss() else show()`) so a second tap closes instead of reopening;
   `TooltipDefaults.rememberRichTooltipPositionProvider()` without a caret; if the popup is
-  focusable, back must not reach the `ModalBottomSheet` and focus/keyboard are restored (else a
-  `BackHandler` while open); outside taps are consumed (a full-screen transparent catcher while
-  open, or the Popup's own dismiss consuming); close on list scroll (`isScrollInProgress`) and
-  sheet drag; announce via `liveRegion` or accessibility focus. Icon: Material Symbols "info"
+  focusable, a `BackHandler` while open closes it only; outside taps are consumed (a full-screen transparent catcher while
+  open, or the Popup's own dismiss consuming); close on list scroll (`isScrollInProgress`);
+  announce via `liveRegion` or accessibility focus. Icon: Material Symbols "info"
   outlined as a new drawable, tinted like ⋮; ⓘ and ⋮ the same size (match `RowMenu`). Name keeps
   at least ~24 dp; the herkku sign never shrinks; the row may grow taller at big fonts but its
   text stays one line. Time from `item.time.atOffset(item.zoneOffset)` with `formatTime`; drop

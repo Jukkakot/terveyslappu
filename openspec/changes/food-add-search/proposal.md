@@ -15,10 +15,14 @@ that shows only search content and returns to the list.
 - Empty field: "Usein tähän aikaan" as up to eight rows (the chips' ranking). Typing: matching
   ruuat top-down, best first, then "Lisää ”<text>” uutena". Every row starts with a + icon and
   reads as something to add, not as an eaten annos.
-- Adding keeps the search open (field cleared) with a bar "<name> lisätty · Kumoa". Back returns
-  to the Ruoka screen of that day with the added annokset highlighted; with nothing added back
-  returns where the search was opened.
+- Adding keeps the search open (field cleared) with a bar "<name> lisätty · Kumoa". Every message
+  of the search is such a bar (the newest replaces the previous one). Back returns to the Ruoka
+  screen of that day with the added annokset highlighted; with nothing added back returns where
+  the search was opened. Ruoka keeps its own back rule and origin.
 - From the front page and Historia the search also returns to Ruoka after an add.
+- The keyboard comes up from every entry once the permission is granted. This reverses the old
+  widget behaviour (keyboard down until tapped) on purpose.
+- The empty-field ranking is fixed while the search is open.
 - Widget and launcher shortcut open the same search full screen; back after an add opens the app
   on Ruoka, back with nothing added returns to the home screen.
 - A line "Lisätään: <day>" shows only when the search adds to another day than today.
@@ -35,7 +39,9 @@ shortcut's entry. No Health Connect, data file, log format or widget face change
 - `food-log`: "Adding an item", "Clipboard offer", "Widget and shortcut for adding", "Adding from
   the home screen", "Food only inside the app", "Item row buttons", "Undoing a correction", and
   the sheet requirements renamed for the search (messages and loading, permission, denied
-  permission, midnight, import, removing a ruoka).
+  permission, midnight, import, removing a ruoka); new "Leaving the search", "Highlight on Ruoka".
+- `app-appearance`: "Undo messages", "Delete and Kumoa", "List rows" (the add search's bar and
+  rows replace the sheet's line and rows).
 
 ## Impact
 
