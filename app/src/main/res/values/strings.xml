@@ -106,6 +106,7 @@
     <string name="chart_description">Painokaavio, %1$d painoa</string>
     <string name="stats_change">Muutos</string>
     <string name="stats_rate">Viikossa</string>
+    <string name="unit_kg_per_week">kg/⁠vk</string>
     <string name="stats_average">Keskiarvo</string>
     <string name="stats_min">Alin</string>
     <string name="stats_max">Ylin</string>

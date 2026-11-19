@@ -4,9 +4,9 @@ Test data is made up. `everyday-feedback` is merged; the weigh-in dialog and `au
 
 ## 1. Changes from shown weights
 
-- [ ] 1.1 Add the pure helper `derived/ShownChange.kt` (design 3: `shownTenths(value): Long` rounded like `%.1f`, `shownDelta` in whole tenths); make `formatKg`, `formatChange` and `shownDirection` use it; use it in `HomeSummary.sparkChange`, `PeriodStats.change`/`perWeek` and `ListGroups` (row and group change); unit tests: 82.34 → 81.76 gives −0.5, 82.04 → 81.76 gives −0.2, BMI 27.049999999999997 shows and counts as 27.0; existing `HomeSummary`/`PeriodStats`/`ListGroups` tests still pass.
-- [ ] 1.2 Viikossa: `formatRate` one decimal (half away from zero, "±0,0" and no arrow when it rounds to 0), unit "kg/vk" (string resource), exact span as today and null under one day; update `FormatTest` and add tests: −0,6 kg over 6 days reads −0,7 kg/vk, −0.05 reads −0,1, −0.0049 reads ±0,0 without an arrow.
-- [ ] 1.3 Use the helper for the weigh-in dialog's change (`scale/WeighIn.kt` `WeightChange`, `WeighInViewModel`) and the notification (`AutoText.change` and "Poikkeaa"); tests: 82.34 → 81.76 reads −0,5 in both; existing weigh-in and `AutoText` tests still pass.
+- [x] 1.1 Add the pure helper `derived/ShownChange.kt` (design 3: `shownTenths(value): Long` rounded like `%.1f`, `shownDelta` in whole tenths); make `formatKg`, `formatChange` and `shownDirection` use it; use it in `HomeSummary.sparkChange`, `PeriodStats.change`/`perWeek` and `ListGroups` (row and group change); unit tests: 82.34 → 81.76 gives −0.5, 82.04 → 81.76 gives −0.2, BMI 27.049999999999997 shows and counts as 27.0; existing `HomeSummary`/`PeriodStats`/`ListGroups` tests still pass.
+- [x] 1.2 Viikossa: `formatRate` one decimal (half away from zero, "±0,0" and no arrow when it rounds to 0), unit "kg/vk" (string resource), exact span as today and null under one day; update `FormatTest` and add tests: −0,6 kg over 6 days reads −0,7 kg/vk, −0.05 reads −0,1, −0.0049 reads ±0,0 without an arrow.
+- [x] 1.3 Use the helper for the weigh-in dialog's change (`scale/WeighIn.kt` `WeightChange`, `WeighInViewModel`) and the notification (`AutoText.change` and "Poikkeaa"); tests: 82.34 → 81.76 reads −0,5 in both; existing weigh-in and `AutoText` tests still pass.
 
 ## 2. Front page cards
 

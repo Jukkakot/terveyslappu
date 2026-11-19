@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Duration
 
@@ -12,7 +13,7 @@ fun changesFromPrevious(entries: List<WeightEntry>): Map<String, Double> =
     entries.sortedBy { it.time }
         .zipWithNext { before, after ->
             val days = Duration.between(before.time, after.time).seconds / 86_400.0
-            if (days > ChartData.MAX_GAP_DAYS) null else after.id to after.kg - before.kg
+            if (days > ChartData.MAX_GAP_DAYS) null else after.id to shownDelta(before.kg, after.kg)
         }
         .filterNotNull()
         .toMap()

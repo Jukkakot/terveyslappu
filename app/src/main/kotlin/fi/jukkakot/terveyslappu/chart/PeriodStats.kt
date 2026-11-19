@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Duration
 
@@ -28,7 +29,7 @@ fun periodStats(entries: List<WeightEntry>, value: (WeightEntry) -> Double? = { 
     val (firstTime, first) = points.first()
     val (latestTime, latest) = points.last()
     val values = points.map { it.second }
-    val change = if (points.size > 1) latest - first else null
+    val change = if (points.size > 1) shownDelta(first, latest) else null
     val days = Duration.between(firstTime, latestTime).seconds / DAY_SECONDS
     val perWeek = if (rate && change != null && days >= 1.0) change / days * 7 else null
     return PeriodStats(

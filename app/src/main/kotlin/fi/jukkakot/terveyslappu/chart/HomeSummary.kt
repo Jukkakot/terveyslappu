@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.Duration
 import java.time.Instant
@@ -39,7 +40,7 @@ data class HomeSummary(
             return HomeSummary(
                 latest = latest,
                 spark = spark,
-                sparkChange = if (spark.size > 1) spark.last().kg - spark.first().kg else null,
+                sparkChange = if (spark.size > 1) shownDelta(spark.first().kg, spark.last().kg) else null,
                 sparkFrom = since,
                 sparkTo = maxOf(now, latest.time),
                 sparkScale = if (spark.isEmpty()) null else WeightScale.of(spark.map { it.kg }),

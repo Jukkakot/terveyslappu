@@ -1,11 +1,12 @@
 package fi.jukkakot.terveyslappu.auto
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
+import fi.jukkakot.terveyslappu.derived.shownTenths
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.roundToLong
 
 /** A weigh-in notification's two lines; [text] null = title only. */
 data class NoteText(val title: String, val text: String?)
@@ -18,12 +19,12 @@ object AutoText {
     private val finnish = Locale.forLanguageTag("fi")
     private val clock = DateTimeFormatter.ofPattern("H.mm", finnish)
 
-    fun kg(value: Double): String = String.format(finnish, "%.1f", value)
+    fun kg(value: Double): String = shownTenths(value).let { "${it / 10},${it % 10}" }
 
     /** "+0,4", "−0,3", "±0,0" (the list's change format). */
     fun change(delta: Double): String {
-        val tenths = (delta * 10).roundToLong()
-        val text = String.format(finnish, "%.1f", abs(tenths) / 10.0)
+        val tenths = shownTenths(delta)
+        val text = "${abs(tenths) / 10},${abs(tenths) % 10}"
         return when {
             tenths < 0 -> "−$text"
             tenths > 0 -> "+$text"
@@ -39,10 +40,10 @@ object AutoText {
         val at = late?.let { " klo ${clock.format(it.atZone(zone))}" } ?: ""
         val ref = reference as? Reference.Weight
         if (questioned && ref != null) {
-            return NoteText("${kg(kg)} kg$at – tarkista", "Poikkeaa ${kg(abs(kg - ref.kg))} kg edellisestä hyväksytystä")
+            return NoteText("${kg(kg)} kg$at – tarkista", "Poikkeaa ${kg(abs(shownDelta(ref.kg, kg)))} kg edellisestä hyväksytystä")
         }
         val title = "${kg(kg)} kg tallennettu$at"
-        return NoteText(title, ref?.let { "${change(kg - it.kg)} kg edellisestä" })
+        return NoteText(title, ref?.let { "${change(shownDelta(it.kg, kg))} kg edellisestä" })
     }
 
     const val DELETE_FAILED = "Poisto epäonnistui"

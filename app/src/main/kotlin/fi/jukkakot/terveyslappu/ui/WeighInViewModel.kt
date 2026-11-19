@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import android.app.Application
 import android.os.SystemClock
 import androidx.health.connect.client.permission.HealthPermission
@@ -110,7 +111,7 @@ class WeighInViewModel(app: Application) : AndroidViewModel(app) {
                 val isAuto = { second: Long -> terveys.rawArchive.get(second)?.fields?.get(AutoWeights.VIA) == AutoWeights.AUTO }
                 val entry = RecentAuto.pick(entries, now, isAuto, marked) ?: return@withTimeoutOrNull Result.success(null)
                 val change = runCatching { weights.latestBefore(entry.time) }.getOrNull()
-                    ?.let { (kg, time) -> WeightChange(entry.kg - kg, time) }
+                    ?.let { (kg, time) -> WeightChange(shownDelta(kg, entry.kg), time) }
                 Result.success(WeighInState.Recent(entry.kg, entry.time, entry.clientRecordId!!, change))
             } ?: Result.failure(java.util.concurrent.TimeoutException("recent"))
         } catch (e: kotlinx.coroutines.CancellationException) {

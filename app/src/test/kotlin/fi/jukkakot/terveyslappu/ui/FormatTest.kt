@@ -21,8 +21,12 @@ class FormatTest {
     @Test
     fun `chart dot and weekly rate`() {
         assertEquals("8.11. 7.05 82,6 kg", formatPoint(Instant.parse("2026-11-08T05:05:00Z"), 82.6, zone, today))
-        assertEquals("−0,25", formatRate(-0.25))
-        assertEquals("±0,00", formatRate(0.001))
+        assertEquals("−0,3", formatRate(-0.25))
+        assertEquals("±0,0", formatRate(0.001))
+        assertEquals("−0,1", formatRate(-0.05))
+        assertEquals("±0,0", formatRate(-0.0049))
+        assertEquals(0, shownDirection(-0.0049, 1))
+        assertEquals(-1, shownDirection(-0.05, 1))
     }
 
     @Test

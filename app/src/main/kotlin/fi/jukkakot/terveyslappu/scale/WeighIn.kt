@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.scale
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import fi.jukkakot.terveyslappu.log.AppLog
 import fi.jukkakot.terveyslappu.raw.MemoryRawStore
 import fi.jukkakot.terveyslappu.raw.RawEntry
@@ -302,7 +303,7 @@ class WeighIn(
             AppLog.i("weighin.total", "", "ms" to elapsedMs() - openedMs)
             decidedRaw?.let { raw -> keepRaw("add") { archive.add(raw) } }
             val change = try {
-                previous(time)?.let { (prevKg, prevTime) -> WeightChange(kg - prevKg, prevTime) }
+                previous(time)?.let { (prevKg, prevTime) -> WeightChange(shownDelta(prevKg, kg), prevTime) }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {

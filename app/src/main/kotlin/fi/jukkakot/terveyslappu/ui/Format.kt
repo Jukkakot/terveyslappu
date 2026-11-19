@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.ui
 
+import fi.jukkakot.terveyslappu.derived.shownTenths
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,7 +14,13 @@ private val dateFormat = DateTimeFormatter.ofPattern("EEE d.M.yyyy", finnish)
 private val timeFormat = DateTimeFormatter.ofPattern("H.mm", finnish)
 
 /** 82.4 → "82,4". */
-fun formatKg(kg: Double): String = String.format(finnish, "%.1f", kg)
+fun formatKg(kg: Double): String = formatTenths(shownTenths(kg))
+
+/** Whole tenths as "82,4" (a real minus sign for a negative). */
+private fun formatTenths(tenths: Long): String {
+    val abs = kotlin.math.abs(tenths)
+    return (if (tenths < 0) "−" else "") + "${abs / 10},${abs % 10}"
+}
 
 fun formatDateTime(time: Instant, zone: ZoneId = ZoneId.systemDefault()): String = dateTimeFormat.format(time.atZone(zone))
 
@@ -29,8 +36,8 @@ private val dayYearFormat = DateTimeFormatter.ofPattern("EEE d.M.yyyy", finnish)
 
 /** Change between two weights: −0,3 / +0,3 / ±0,0 (one decimal, real minus sign). */
 fun formatChange(deltaKg: Double): String {
-    val tenths = Math.round(deltaKg * 10)
-    val abs = String.format(finnish, "%.1f", kotlin.math.abs(tenths) / 10.0)
+    val tenths = shownTenths(deltaKg)
+    val abs = formatTenths(kotlin.math.abs(tenths))
     return when {
         tenths < 0 -> "−$abs"
         tenths > 0 -> "+$abs"
@@ -80,18 +87,11 @@ fun formatPoint(time: Instant, value: String, zone: ZoneId = ZoneId.systemDefaul
 
 /** Direction of a change as shown with [decimals] decimals: −1 down, 1 up, 0 when it shows as ±0. */
 fun shownDirection(value: Double, decimals: Int): Int {
+    if (decimals == 1) return java.lang.Long.signum(shownTenths(value))
     var scale = 1.0
     repeat(decimals) { scale *= 10 }
     return java.lang.Long.signum(Math.round(value * scale))
 }
 
-/** Change per week with two decimals: −0,25 / +0,10 / ±0,00. */
-fun formatRate(kgPerWeek: Double): String {
-    val hundredths = Math.round(kgPerWeek * 100)
-    val abs = String.format(finnish, "%.2f", kotlin.math.abs(hundredths) / 100.0)
-    return when {
-        hundredths < 0 -> "−$abs"
-        hundredths > 0 -> "+$abs"
-        else -> "±$abs"
-    }
-}
+/** Change per week with one decimal (half away from zero): −0,3 / +0,1 / ±0,0, never "−0,0". */
+fun formatRate(kgPerWeek: Double): String = formatChange(kgPerWeek)

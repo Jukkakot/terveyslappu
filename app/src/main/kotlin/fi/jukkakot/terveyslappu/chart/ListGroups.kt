@@ -1,5 +1,6 @@
 package fi.jukkakot.terveyslappu.chart
 
+import fi.jukkakot.terveyslappu.derived.shownDelta
 import fi.jukkakot.terveyslappu.weight.WeightEntry
 import java.time.DayOfWeek
 import java.time.Duration
@@ -37,7 +38,7 @@ sealed interface ListNode {
         /** How many of [count] are not marked "?" (first → last span them). */
         val acceptedCount: Int = count,
     ) : ListNode {
-        val change: Double get() = if (first != null && last != null) last.kg - first.kg else 0.0
+        val change: Double get() = if (first != null && last != null) shownDelta(first.kg, last.kg) else 0.0
     }
 
     /**

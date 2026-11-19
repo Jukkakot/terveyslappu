@@ -562,7 +562,7 @@ private fun StatsTiles(stats: PeriodStats, quantity: Quantity = Quantity.WEIGHT,
         put(StatsLayout.Key.CHANGE, change)
         put(
             StatsLayout.Key.RATE,
-            Stat(stringResource(R.string.stats_rate), stats.perWeek?.let { formatRate(it) } ?: none, "kg".takeIf { stats.perWeek != null }, stats.perWeek?.let { shownDirection(it, 2) } ?: 0),
+            Stat(stringResource(R.string.stats_rate), stats.perWeek?.let { formatRate(it) } ?: none, stringResource(R.string.unit_kg_per_week).takeIf { stats.perWeek != null }, stats.perWeek?.let { shownDirection(it, 1) } ?: 0),
         )
         val minor = latestTime != null && Derived.minor(profile, latestTime.atZone(ZoneId.systemDefault()).year)
         val latest = if (quantity == Quantity.BMI && !minor) {
