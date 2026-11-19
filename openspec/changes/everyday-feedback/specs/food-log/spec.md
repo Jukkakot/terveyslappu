@@ -1,5 +1,190 @@
 ## MODIFIED Requirements
 
+### Requirement: Clipboard offer
+When the front page, the Ruoka screen or the add search (in the app or opened from the widget or
+shortcut) opens or the app resumes on one of them, and the clipboard holds usable food JSON that
+has not been imported or skipped, the app SHALL offer it. In the add search (under the top bar,
+above the rows) and on the Ruoka screen (at the top of the day) the offer SHALL be a card: a title
+"Leikepöydällä" with the kcal total the preview would show, then each item on its own line with
+name, amount, treat sign and kcal (at most five lines, then "+<N> muuta"), then a filled primary
+button "Lisää kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL save the
+content as the preview's Lisää would, to the day the search or Ruoka shows, without opening the
+preview, and show "Lisättiin <N> annosta · Kumoa"; in the search those annokset count as added in
+this search. "Muokkaa" SHALL open the preview. When the JSON holds only products the card SHALL
+list the products with their energy and its button SHALL read "Tallenna ruuat". On the front page
+the same card SHALL be shown above the cards, adding to today. The offer SHALL be shown again on
+every open and resume while the same content is on the clipboard, until the user saves that
+content (Lisää kaikki or the preview's Lisää) or taps Ohita or ✕; after either, that content
+SHALL NOT be offered again, on any screen, also when it is copied again; Kumoa of the import SHALL
+NOT bring it back. The example JSON that Kopioi tuontiohje puts on the clipboard SHALL NOT be
+offered. Content counts as the same when its JSON is the same, whatever text surrounds it. Content
+imported by sharing it to the app or by Tuo ruoka-annokset SHALL count as imported too. Peruuta on
+the preview SHALL leave the content offered. Clipboard text without food JSON SHALL show nothing.
+In the search opened from the widget or shortcut the clipboard SHALL be read when its window gains
+focus. The app SHALL read the clipboard's text only when the clipboard has changed since the app
+last read it (Android may then show its own "pasted" notice once per new copy) and when the offer
+is used, and SHALL NOT read it anywhere else or in the background. The offer SHALL NOT be shown on
+Ruoka without the food permission, before the day is read or in Järjestä, nor in the front page's
+edit mode.
+
+#### Scenario: Copied in the chat
+- **GIVEN** the user copied the chat's answer with food JSON of 3 items
+- **WHEN** they open Lisää annos
+- **THEN** the card lists the 3 items and the total under the top bar, and one tap on Lisää kaikki
+  adds them to today with "Lisättiin 3 annosta · Kumoa"
+
+#### Scenario: Fix before adding
+- **WHEN** the user taps Muokkaa on the card
+- **THEN** the preview opens with the same items
+
+#### Scenario: Offered on the front page
+- **GIVEN** the user copied food JSON with 4 items
+- **WHEN** they open the app on the front page
+- **THEN** the card with the 4 items is shown above the cards, and Lisää kaikki adds them to today
+
+#### Scenario: Still offered after looking elsewhere
+- **GIVEN** the user copied food JSON and the front page already offered it
+- **WHEN** they open Lisää annos from the widget
+- **THEN** the search offers the same content
+
+#### Scenario: Not offered after import
+- **GIVEN** the user added the offered content with Lisää kaikki
+- **WHEN** they open Lisää annos without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Cancelled preview
+- **WHEN** the user opens the preview from the offer and taps Peruuta
+- **THEN** the offer is shown again on the next open
+
+#### Scenario: Offered once
+- **GIVEN** the user tapped ✕ on the card
+- **WHEN** they open Lisää annos without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Import undone
+- **GIVEN** the user saved the offered content and tapped Kumoa
+- **WHEN** they open the Ruoka screen without copying anything new
+- **THEN** no offer is shown
+
+#### Scenario: Import instructions copied
+- **WHEN** the user taps Kopioi tuontiohje and opens the Ruoka screen
+- **THEN** no offer is shown
+
+#### Scenario: Other text
+- **GIVEN** the clipboard holds a web address
+- **WHEN** the Ruoka screen opens
+- **THEN** no offer is shown
+
+### Requirement: Saving an AI import
+"Lisää" SHALL add the items in their order at the end of the chosen day, as logged items written to
+Health Connect like any item, and SHALL show a line "Lisättiin <N> annosta · Kumoa"; Kumoa SHALL
+remove the added items and restore the products as they were. An import SHALL only add: it SHALL
+NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the
+food log. The JSON's values SHALL win over the app's:
+- Each item SHALL be logged under the own product of its JSON name (compared ignoring case, extra
+  spaces and ä/a, ö/o; base names and aliases do not match), created under the JSON name (cleaned like a typed name) when there is none, and SHALL be
+  its category follows the JSON (below). A base product SHALL NOT rename it or make it a treat.
+- An item with both amount and kcal SHALL set its product's energy from the item (kcal per 100 g
+  for grams, per piece for kpl) and its usual amount to the item's amount, also when the product
+  already exists. When several items of one product carry both, the last one SHALL win, unless
+  the import's `products` list holds that product: then the list's energy wins and the items only
+  log their own kcal.
+- An item without kcal SHALL take its kcal from its product's final energy in this import (after
+  all items and the `products` list); when there is no own product of that name and "Valmiit
+  ruuat" is on, from the base product of that name or alias. The new own product SHALL then take
+  that base product's energy and usual amount, and the item's name and category. The item SHALL
+  keep its own amount; when its unit differs from the energy's unit it SHALL be logged without
+  kcal. An item without amount SHALL use the product's usual amount.
+- A product is always a treat or never (Herkku belongs to the product): every item SHALL set its
+  product's category to its `herkku`, also for an existing product, under the same last-wins and
+  `products`-list rules as the energy; the item is a treat exactly when its product ends up Herkku.
+  The import stays append-only: earlier logged items of the product keep their sign, as they keep
+  their kcal (switching Herkku by hand still changes them all).
+- A product in the `products` list SHALL be saved as given: created when new, its energy, usual
+  amount and category replaced when it exists.
+Earlier logged items of a changed product SHALL keep their kcal.
+
+#### Scenario: Undo the import
+- **WHEN** the user taps Kumoa on "Lisättiin 2 annosta"
+- **THEN** both items are gone and the products are as before
+
+#### Scenario: Earlier items untouched
+- **GIVEN** today already holds Rahka 200 g
+- **WHEN** an import with Kaurapuuro is added to today
+- **THEN** Rahka stays as it was and Kaurapuuro is the last item
+
+#### Scenario: New product learns its energy
+- **GIVEN** no product Kaurapuuro
+- **WHEN** Kaurapuuro 300 g 210 kcal is added
+- **THEN** a product Kaurapuuro 70 kcal / 100 g, usually 300 g, is suggested next time
+
+#### Scenario: Item keeps a known product's values
+- **GIVEN** a product Rahka 65 kcal / 100 g
+- **WHEN** an item Rahka 200 g 130 kcal is added
+- **THEN** the item reads 130 kcal and the product stays 65 kcal / 100 g (usually 200 g from
+  then on), with no change line
+
+#### Scenario: Filled with the import's energy
+- **GIVEN** a product Rahka 65 kcal / 100 g
+- **WHEN** an import holds Rahka 100 g without kcal, then Rahka 200 g 160 kcal
+- **THEN** the first item reads 80 kcal and the second 160 kcal
+
+#### Scenario: Product list wins
+- **WHEN** an import holds the product Lohikeitto 380 kcal per annos and an item Lohikeitto 400 g
+  320 kcal
+- **THEN** the item reads 320 kcal and Lohikeitto is 380 kcal / kpl
+
+#### Scenario: Item updates a known product
+- **GIVEN** a product Rahka 65 kcal / 100 g, usually 250 g
+- **WHEN** an item Rahka 200 g 160 kcal is added
+- **THEN** the item reads 160 kcal and Rahka is 80 kcal / 100 g, usually 200 g, from then on;
+  earlier Rahka items keep their kcal
+
+#### Scenario: Base product does not take over
+- **GIVEN** no own product Ranskalaiset, and a base product Ranskalaiset perunat 290 kcal / 100 g,
+  Herkku, with the alias Ranskalaiset
+- **WHEN** an item Ranskalaiset 200 g 300 kcal without herkku is added
+- **THEN** the item is Ranskalaiset 200 g 300 kcal, not a treat, and an own product Ranskalaiset
+  150 kcal / 100 g is suggested next time
+
+#### Scenario: Base product fills a missing kcal
+- **GIVEN** no own product Uuniranskalaiset, the base product Uuniranskalaiset 130 kcal / 100 g,
+  and Valmiit ruuat on
+- **WHEN** an item Uuniranskalaiset 200 g without kcal is added
+- **THEN** the item reads 260 kcal and an own product Uuniranskalaiset 130 kcal / 100 g is created
+
+#### Scenario: Category from the JSON
+- **GIVEN** an own product Lakritsi in category Herkku
+- **WHEN** an item Lakritsi 50 g 180 kcal without herkku is added
+- **THEN** the preview shows "Lakritsi: ei herkku" among its lines (with the energy change), and
+  after Lisää Lakritsi and its items are not treats
+
+#### Scenario: Product list updates
+- **GIVEN** a product Lohikeitto 300 kcal / kpl
+- **WHEN** an import with product Lohikeitto 380 kcal per annos is added
+- **THEN** Lohikeitto is 380 kcal / kpl from then on; earlier logged items keep their kcal
+
+### Requirement: Import from the home-screen search
+"Tuo ruoka-annokset" and the card's "Muokkaa" in the search opened from the widget or the shortcut
+SHALL close that search and open the app on the import preview over the front page, as when the
+estimate is shared to the app. Any search or editor open in the app SHALL close. After Lisää or
+Peruuta the user SHALL stay in the app. The card's "Lisää kaikki" SHALL save in the search itself
+and keep it open.
+
+#### Scenario: Import from the search
+- **WHEN** the user taps Tuo ruoka-annokset in the search opened from the widget
+- **THEN** the app opens on the import preview, as when the estimate is shared to the app
+
+#### Scenario: After the import
+- **WHEN** the user taps Lisää or Peruuta on the preview
+- **THEN** the app stays open
+
+#### Scenario: Offer in the search
+- **GIVEN** the user copied food JSON with 4 items
+- **WHEN** they open the search from the widget and tap Lisää kaikki
+- **THEN** the 4 annokset are added to today, the search stays open and shows
+  "Lisättiin 4 annosta · Kumoa"
+
 ### Requirement: Adding from the search
 "Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open
 the add search over the whole screen, adding to the day shown (today from the front page and
@@ -43,12 +228,16 @@ Details:
   search") shows a mark at its end, just before its ⋮: "✓" for one annos, "×2", "×3" … for more,
   in the primary colour. The mark is not a control (a tap on it is a tap on the row, which adds
   again); TalkBack reads it as part of the row ("lisätty", "lisätty 2 kertaa"). An annos counts
-  for the ruoka it was logged as (a row tap, Muokkaa → Lisää, Enter on a known name, the
-  clipboard's Lisää kaikki). Kumoa, a failed write or a delete lowers the count; at zero the mark
-  goes. The "Lisää … uutena" row has no mark.
+  for the ruoka it was logged as, after the typed name was resolved to a ruoka (a row tap,
+  Muokkaa → Lisää, Enter on a known name, the clipboard's Lisää kaikki), and names are compared
+  as the search compares them (case and ä/a, ö/o do not matter). A Valmiit ruuat row whose alias
+  became an own ruoka under the typed name is marked too. Annokset of ruuat not listed in the
+  rows count only in the strip. Kumoa, a failed write or a delete lowers the count; at zero the
+  mark goes. The "Lisää … uutena" row has no mark.
 - Added strip: while at least one annos counts as added in this search, a strip at the search's
   bottom (above the keyboard when it is up, the bar above the strip) reads "1 annos lisätty ·
-  130 kcal" or "2 annosta lisätty · 465 kcal" (the counted annokset's known kcal), with
+  130 kcal" or "2 annosta lisätty · 465 kcal" (every annos counted as added in this whole search,
+  also the clipboard's and Pikalisäys, with their known kcal), with
   "· 1 ilman kcal" added when some have no kcal and "· ei kcal" when none has any, and ends with
   a filled "Valmis" button that leaves the search as back does ("Leaving the search"). Numbers
   and their units do not break apart. The strip goes when the count drops to zero.
@@ -233,7 +422,8 @@ search opened; never names or kcal).
 
 ### Requirement: Search messages and loading
 Every message of the add search SHALL be shown as the app's bar at the search's bottom (above the
-keyboard when it is up): "<name> <amount> lisätty · Kumoa", "<N> annosta lisätty · Kumoa",
+keyboard when it is up): "<name> <amount> lisätty · Kumoa", "Lisättiin <N> annosta · Kumoa"
+(the clipboard's Lisää kaikki: what that tap added, unlike the strip's count of the whole search),
 "<name> poistettu · Kumoa", "Ohitettu · Kumoa", "Päivitetty <N> annosta · Kumoa",
 "Päivitettiin <X>/<N> annosta · Yritä uudelleen", the clipboard-changed notice, the energy read
 failure, "Tallennus epäonnistui" and "Päivän annoksia ei voitu lukea". The newest replaces the

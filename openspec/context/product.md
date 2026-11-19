@@ -267,9 +267,10 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
   - Food widget (food-widget, user 2026-11-14): a 1x1 "Lisää annos" button and a launcher
     shortcut open the add search (full screen, food-add-search, user 2026-11-19); adding the day's meals is as quick as
     weighing. Add-only: the widget never shows food, kcal, a count or a state; no food tile.
-  - Food, kcal and weight are never *shown* on always-visible surfaces (widget face, tile,
-    shortcut label, notification): the user looks at them only when they choose to open the app
-    or its own dialog.
+  - Food, kcal and weight are never *shown* on the phone's home screen (widget faces, the tile,
+    shortcut labels): the user looks at them only when they choose to open the app or its own
+    dialog. Notifications may show the weight ("82,5 kg tallennettu" after an automatic
+    weigh-in; user 2026-11-19, everyday-feedback).
   - Order kept (helps recall and spot what was forgotten); the logging time is saved for free and
     shown small; it also feeds "usually eaten at this time" suggestions, which replace day
     templates. No "eat now or later" switch: Järjestä fixes the rare advance entry.
