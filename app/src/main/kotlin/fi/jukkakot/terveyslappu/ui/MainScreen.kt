@@ -110,6 +110,10 @@ class MainActions(
     val onOpenChart: (Int) -> Unit = {},
     /** Historia opened on the chart of a card. */
     val onChartShown: () -> Unit = {},
+    /** Historia's tab changed (page index). */
+    val onHistoryPage: (Int) -> Unit = {},
+    /** Historia opened on the page it was left on (back from Ruoka after the add search). */
+    val onStartPageShown: () -> Unit = {},
 )
 
 /** Home, Historia or Asetukset (home-screen spec); back from the other two returns Home. */
@@ -146,7 +150,8 @@ fun MainScreen(
         Screen.FOOD -> FoodScreen(food, foodActions, state.history, actions.onGrantHistory, actions.onBack, snackbar, actions.onOpenWeek)
     }
     if (state.entryOpen) ManualEntryDialog(state, actions)
-    if (food.sheetDay != null) AddFoodSheet(food, baseProducts, foodActions)
+    // The add search covers whatever screen it was opened from; leaving it without adds just closes it.
+    AddFoodSearch(food, baseProducts, foodActions, FoodDialogActions(onGrant = foodActions.onGrant, onOpenSettings = foodActions.onGrant))
     food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), foodActions, draft = food.draft != null) }
     food.energyAsk?.let { EnergyDialog(it, foodActions.onEnergyChoice) }
     food.ai?.let { AiImportPreview(it, foodActions, food.aiPlan) }

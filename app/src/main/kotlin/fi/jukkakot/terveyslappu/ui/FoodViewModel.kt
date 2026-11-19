@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.TerveysApp
 import fi.jukkakot.terveyslappu.food.AddInput
+import fi.jukkakot.terveyslappu.food.AddSearchExit
+import fi.jukkakot.terveyslappu.food.AddSearchTarget
+import fi.jukkakot.terveyslappu.food.Suggestions
 import fi.jukkakot.terveyslappu.food.AiFailure
 import fi.jukkakot.terveyslappu.food.AiItem
 import fi.jukkakot.terveyslappu.food.AiParsed
@@ -44,21 +47,22 @@ import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 
 /** Whether the food log may read and write nutrition records (design 8). */
 enum class FoodAccess { CHECKING, UNAVAILABLE, NEEDS, DENIED, GRANTED }
 
-/** The line under the add field (food-widget design 7): the latest add, a delete's Kumoa, or a failed write. */
+/** The add search's current bar (food-add-search design 3): the latest add, an import, a removed ruoka, a failed write ... */
 sealed interface SheetLine {
-    /** "<name> <amount> · <kcal> · Muuta · Kumoa". */
+    /** "<name> lisätty · Kumoa". */
     data class Added(val item: FoodItem) : SheetLine
-
-    /** "<name> poistettu · Kumoa", after Poista in the editor opened from the sheet. */
-    data class Deleted(val item: FoodItem) : SheetLine
 
     /** "Tallennus epäonnistui". */
     data object Failed : SheetLine
+
+    /** A plain notice (no action), e.g. the import text had no usable JSON. */
+    data class Message(val text: Int) : SheetLine
 
     /** "<N> annosta lisätty · Kumoa" (or "<N> tuotetta tallennettu · Kumoa") after an import in an open sheet. */
     data class Imported(val plan: AiImportPlan) : SheetLine
@@ -115,8 +119,8 @@ data class FoodUiState(
     val loadFailed: Boolean = false,
     /** The Ruoka screen's day. */
     val day: LocalDate = LocalDate.now(),
-    /** The add sheet adds to this day; null = closed. */
-    val sheetDay: LocalDate? = null,
+    /** The add search adds to this day; null = closed. */
+    val searchDay: LocalDate? = null,
     val query: String = "",
     /** The sheet's line, until the next add or the sheet closes. */
     val line: SheetLine? = null,
@@ -132,8 +136,14 @@ data class FoodUiState(
     val ai: AiPreview? = null,
     /** The clipboard line (food-ai-import), null = none. */
     val clipOffer: ClipOffer? = null,
-    /** The keyboard was up when an editor replaced the sheet: it comes back with the sheet (food-log "Adding an item", Keyboard). */
-    val sheetKeyboard: Boolean = false,
+    /** The keyboard comes up when the search shows its field: set on open, and on return from an editor only if it was up before. */
+    val keyboardBack: Boolean = false,
+    /** The uuids counted as added in this search, in order (queued adds minus failed writes, Kumoa and deletes). */
+    val addedIds: Set<String> = emptySet(),
+    /** The annokset shown highlighted on Ruoka after leaving the search (the items' own client ids). */
+    val highlight: Set<String> = emptySet(),
+    /** The empty-field ranking, fixed while the search is open; null until the day has been read. */
+    val picks: List<Product>? = null,
     /** The correction dialog over the editor, null = none. */
     val energyAsk: EnergyAsk? = null,
     /** Counts Ruokakirjaus product saves that finished after a correction check: the product editor closes on each. */
@@ -200,13 +210,17 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** The Lisää annos dialog (food-widget): adds go to today's sheet, writes tell the app. */
+    /**
+     * The Lisää annos activity (food-add-search design 5): adds go to today's search, writes tell the
+     * app. A second tap leaves an open search of the same date as it is; a new date starts afresh.
+     */
     fun startDialog(from: String) {
         source = from
         notifyApp = true
-        if (dialogStarted) return
+        val today = LocalDate.now()
+        if (dialogStarted && _state.value.searchDay == today) return
         dialogStarted = true
-        openSheet(LocalDate.now())
+        openSearch(today)
     }
 
     /** On every resume: the permission may have changed in Health Connect's settings. */
@@ -241,6 +255,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             .onSuccess { items ->
                 AppLog.i("food.read", "ok", "count" to items.size, "ms" to msSince(started))
                 _state.update { it.copy(items = items, products = store.all(), loadFailed = false) }
+                fixPicks()
             }
             .onFailure { e ->
                 AppLog.e("food.read", e, "failed", "ms" to msSince(started))
@@ -248,15 +263,73 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             }
     }
 
-    fun setDay(day: LocalDate) = _state.update { it.copy(day = minOf(day, LocalDate.now()), ordering = null) }
+    /** Changing the day clears the highlight (food-log "Highlight on Ruoka"). */
+    fun setDay(day: LocalDate) = _state.update { it.copy(day = minOf(day, LocalDate.now()), ordering = null, highlight = emptySet()) }
 
-    fun openSheet(day: LocalDate) = _state.update { it.copy(sheetDay = day, query = "", line = null, editReturn = null, sheetKeyboard = false) }
+    /** Leaving Ruoka (the front page, Historia, Asetukset) clears the highlight. */
+    fun clearHighlight() = _state.update { if (it.highlight.isEmpty()) it else it.copy(highlight = emptySet()) }
 
-    /** Remembers whether the keyboard was up as an editor replaces the sheet; cleared once the sheet has used it. */
-    fun setSheetKeyboard(up: Boolean) = _state.update { it.copy(sheetKeyboard = up) }
+    /** A new search: nothing counted as added, no highlight, the keyboard up once the field shows (design 3, 6). */
+    fun openSearch(day: LocalDate) {
+        _state.update {
+            it.copy(searchDay = day, query = "", line = null, editReturn = null, keyboardBack = true, addedIds = emptySet(), highlight = emptySet(), picks = null)
+        }
+        fixPicks()
+    }
 
-    /** Closing drops the line, a pending delete Kumoa included (design 7). */
-    fun closeSheet() = _state.update { it.copy(sheetDay = null, query = "", line = null, editReturn = null) }
+    /** The empty-field ranking is computed once, as soon as the day has been read, and then kept (design 3). */
+    private fun fixPicks() = _state.update { s ->
+        val items = s.items
+        if (s.searchDay == null || s.picks != null || items == null) s
+        else s.copy(picks = Suggestions.atEmpty(items, s.products, ZonedDateTime.now()))
+    }
+
+    /** Remembers whether the keyboard was up as an editor replaces the search; cleared once the search has used it. */
+    fun setKeyboardBack(up: Boolean) = _state.update { it.copy(keyboardBack = up) }
+
+    /** Closes the search without the exit rule (import hand-over): drops the bar, a pending Kumoa included. */
+    fun closeSearch() = _state.update { it.copy(searchDay = null, query = "", line = null, editReturn = null, keyboardBack = false, addedIds = emptySet(), picks = null) }
+
+    /**
+     * Back arrow and system back (food-log "Leaving the search"): the search closes and the bar goes.
+     * With annokset counted as added, Ruoka's day becomes the search's day and they are highlighted;
+     * the caller then shows Ruoka. Returns the target.
+     */
+    fun leaveSearch(): AddSearchTarget {
+        val s = _state.value
+        val day = s.searchDay ?: return AddSearchTarget.Origin
+        val target = AddSearchExit.target(day, s.addedIds)
+        _state.update {
+            val left = it.copy(searchDay = null, query = "", line = null, editReturn = null, keyboardBack = false, addedIds = emptySet(), picks = null)
+            if (target is AddSearchTarget.Ruoka) left.copy(day = minOf(day, LocalDate.now()), ordering = null, highlight = target.uuids.toSet()) else left
+        }
+        return target
+    }
+
+    /**
+     * The widget activity's exit with adds: the app shows Ruoka on [day] with [uuids] highlighted. Any
+     * search or editor open in the app closes; the day is read only after the pending writes (the
+     * activity's, queued earlier under the same lock) have finished.
+     */
+    fun showRuoka(day: LocalDate, uuids: Set<String>) {
+        _state.update {
+            it.copy(
+                searchDay = null, query = "", line = null, editing = null, draft = null, editReturn = null, keyboardBack = false,
+                addedIds = emptySet(), picks = null, day = minOf(day, LocalDate.now()), ordering = null, highlight = uuids,
+            )
+        }
+        // Waits for the writes queued before this (the activity's adds), then reads the day.
+        terveys.appScope.launch {
+            writes.withLock { }
+            refresh()
+        }
+    }
+
+    /** The bar [line] ended without its action (timeout, swipe): the search no longer holds it. */
+    fun clearLine(line: SheetLine) = _state.update { if (it.line == line) it.copy(line = null) else it }
+
+    /** Drops an add from the count (failed write, Kumoa, delete) and from the highlight. */
+    private fun uncount(vararg uuids: String) = _state.update { it.copy(addedIds = it.addedIds - uuids.toSet(), highlight = it.highlight - uuids.toSet()) }
 
     fun onQuery(text: String) = _state.update { it.copy(query = text) }
 
@@ -280,15 +353,18 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
      * add waits for a read in the write queue, so it still lands at the end (food-widget design 8).
      */
     private fun add(pick: Suggestion?, quickKcal: Int?, kind: String) {
-        val day = _state.value.sheetDay ?: LocalDate.now()
+        val day = _state.value.searchDay ?: LocalDate.now()
         val now = Instant.now()
         val uuid = UUID.randomUUID().toString()
         val fields = arrayOf<Pair<String, Any?>>("from" to source, "kind" to kind)
+        // Counted as added from the moment the add is queued (food-log "Leaving the search").
+        _state.update { if (it.searchDay != null) it.copy(addedIds = it.addedIds + uuid) else it }
         terveys.appScope.launch {
             writes.withLock {
                 if (_state.value.items == null) load()
                 if (_state.value.items == null) {
                     AppLog.w("food.add", "failed", *fields, "reason" to "read")
+                    uncount(uuid)
                     failed()
                     return@withLock
                 }
@@ -296,15 +372,16 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 // The product is learnt even when the write fails (review decision).
                 product?.let { p -> if (store.find(p.name) == null) store.put(p) }
                 _state.update { it.copy(items = it.items.orEmpty() + item, line = SheetLine.Added(item), products = store.all()) }
-                runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) { foods.insert(listOf(item)) }
+                if (!runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) { foods.insert(listOf(item)) }) uncount(uuid)
             }
         }
     }
 
-    /** Kumoa of the latest add. */
+    /** Kumoa of the latest add: the annos no longer counts as added. */
     fun undoAdd() {
         val added = _state.value.lastAdded ?: return
         _state.update { it.copy(line = null) }
+        uncount(added.uuid)
         terveys.appScope.launch {
             writes.withLock {
                 val record = _state.value.items.orEmpty().firstOrNull { it.uuid == added.uuid }?.recordId
@@ -327,13 +404,14 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.i("food.import", "ok", "from" to from, "count" to p.items.size, "products" to p.products.size, "skipped" to p.skipped)
                 // Any open sheet or editor closes (food-widget design 5).
                 _state.update {
-                    it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now(), ClipOffers.key(p)), sheetDay = null, query = "", line = null, editing = null, draft = null, editReturn = null)
+                    it.copy(ai = AiPreview(p.items, p.products, p.skipped, LocalDate.now(), ClipOffers.key(p)), searchDay = null, query = "", line = null, editing = null, draft = null, editReturn = null)
                 }
                 replan()
             }
             is AiResult.Failed -> {
                 AppLog.i("food.import", "failed", "from" to from, "reason" to r.reason.name.lowercase())
-                _messages.tryEmit(UiMessage(if (r.reason == AiFailure.NO_JSON) R.string.ai_no_json else R.string.ai_empty))
+                val text = if (r.reason == AiFailure.NO_JSON) R.string.ai_no_json else R.string.ai_empty
+                if (_state.value.searchDay != null) _state.update { it.copy(line = SheetLine.Message(text)) } else _messages.tryEmit(UiMessage(text))
             }
         }
     }
@@ -425,8 +503,8 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         if (parsed != null && ClipOffers.key(parsed) == offer.key) return true
         val found = ClipOffers.shown(parsed?.let { ClipOffers.offer(it, store.all(), base) }, doneKeys())
         AppLog.i("food.import.offer", "changed", "json" to (parsed != null))
-        _state.update { it.copy(clipOffer = found, line = if (it.sheetDay != null) SheetLine.ClipChanged else it.line) }
-        if (_state.value.sheetDay == null) _messages.tryEmit(UiMessage(R.string.ai_clip_changed))
+        _state.update { it.copy(clipOffer = found, line = if (it.searchDay != null) SheetLine.ClipChanged else it.line) }
+        if (_state.value.searchDay == null) _messages.tryEmit(UiMessage(R.string.ai_clip_changed))
         return false
     }
 
@@ -447,7 +525,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val offer = _state.value.clipOffer ?: return
         AppLog.i("food.import.offer", "skip", "count" to offer.count)
         markDone(offer.key)
-        if (_state.value.sheetDay != null) {
+        if (_state.value.searchDay != null) {
             _state.update { it.copy(line = SheetLine.ClipSkipped(offer)) }
         } else {
             _messages.tryEmit(UiMessage(R.string.ai_clip_skipped, action = UiAction(R.string.undo) { unskip(offer) }))
@@ -520,11 +598,15 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                     items, products, day, _state.value.dayItems(day), store.all(), base, Instant.now(), ZoneId.systemDefault(),
                 ) { UUID.randomUUID().toString() }
                 val started = System.nanoTime()
+                // In the search the imported annokset count as added (food-log "Clipboard offer").
+                val counted = plan.items.map { it.uuid }.toTypedArray()
+                _state.update { if (it.searchDay != null) it.copy(addedIds = it.addedIds + counted) else it }
                 val fields = arrayOf<Pair<String, Any?>>("count" to plan.items.size, "products" to plan.products.size, "changed" to plan.changes.size)
                 val written = plan.items.isEmpty() || runCatching { foods.insert(plan.items) }
                     .onFailure { AppLog.e("food.import.save", it, "failed", *fields, "ms" to msSince(started)) }
                     .isSuccess
                 if (!written) {
+                    uncount(*counted)
                     failed()
                     load()
                     return@withLock
@@ -543,7 +625,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The import's Kumoa: the sheet's line while a sheet is open, else the snackbar. */
     private fun imported(plan: AiImportPlan) {
-        if (_state.value.sheetDay != null) {
+        if (_state.value.searchDay != null) {
             _state.update { it.copy(line = SheetLine.Imported(plan)) }
             return
         }
@@ -565,7 +647,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteProduct(product: Product) {
         store.remove(product.key)
         AppLog.i("food.product.delete", "ok", "from" to source)
-        _state.update { it.copy(products = store.all(), line = if (it.sheetDay != null) SheetLine.ProductRemoved(product) else it.line) }
+        _state.update { it.copy(products = store.all(), line = if (it.searchDay != null) SheetLine.ProductRemoved(product) else it.line) }
     }
 
     /** The sheet line's Kumoa of a product delete: the product back as it was. */
@@ -577,6 +659,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun undoAi(plan: AiImportPlan) {
+        uncount(*plan.items.map { it.uuid }.toTypedArray())
         terveys.appScope.launch {
             writes.withLock {
                 val records = _state.value.items.orEmpty().filter { i -> plan.items.any { it.uuid == i.uuid } }.mapNotNull { it.recordId }
@@ -592,21 +675,21 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Muuta: from the sheet's line the editor replaces the sheet and leaving it reopens the sheet (design 4). */
-    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, draft = null, editReturn = it.sheetDay, sheetDay = null) }
+    fun openEditor(item: FoodItem) = _state.update { it.copy(editing = item, draft = null, editReturn = it.searchDay, searchDay = null) }
 
     /** A row's edit button: the editor opens on the item a tap would add; nothing is written yet. */
     fun editDraft(pick: Suggestion) {
         val s = _state.value
-        val day = s.sheetDay ?: LocalDate.now()
+        val day = s.searchDay ?: LocalDate.now()
         val (item, _) = FoodEdits.add(day, s.dayItems(day), pick, null, Instant.now(), ZoneId.systemDefault(), "draft")
-        _state.update { it.copy(editing = item, draft = pick, editReturn = it.sheetDay, sheetDay = null) }
+        _state.update { it.copy(editing = item, draft = pick, editReturn = it.searchDay, searchDay = null) }
     }
 
-    /** Lisää of the draft editor: the item as edited at the end of the day; back to the field with the Muuta · Kumoa line. */
+    /** Lisää of the draft editor: the item as edited at the end of the day; back to the field with the "lisätty · Kumoa" bar. */
     fun addDraft(input: EditInput) {
         val current = _state.value
         val pick = current.draft ?: return
-        val day = current.editReturn ?: current.sheetDay ?: LocalDate.now()
+        val day = current.editReturn ?: current.searchDay ?: LocalDate.now()
         val now = Instant.now()
         val uuid = UUID.randomUUID().toString()
         val preview = FoodEdits.addEdited(day, current.items.orEmpty(), pick, input, store.all(), base, now, ZoneId.systemDefault(), uuid).others.product
@@ -614,13 +697,14 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             correct(Correction(SaveKind.DRAFT, p.name, p.key, p.key, before, p.energy!!, uuid, input = input, pick = pick, day = day, now = now, uuid = uuid))
             return
         }
-        _state.update { leaveEditor(it, it.line).copy(query = "") }
+        _state.update { s -> leaveEditor(s, s.line).let { left -> left.copy(query = "", addedIds = if (left.searchDay != null) left.addedIds + uuid else left.addedIds) } }
         val fields = arrayOf<Pair<String, Any?>>("from" to source, "kind" to "edited")
         terveys.appScope.launch {
             writes.withLock {
                 if (_state.value.items == null) load()
                 if (_state.value.items == null) {
                     AppLog.w("food.add", "failed", *fields, "reason" to "read")
+                    uncount(uuid)
                     failed()
                     return@withLock
                 }
@@ -634,10 +718,11 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                     s.copy(items = s.items.orEmpty().map { byUuid[it.uuid] ?: it } + item, line = SheetLine.Added(item), products = store.all())
                 }
                 val old = withRecordIds(others.old)
-                runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) {
+                val ok = runWrite("food.add", *fields, "kcal" to (item.kcal != null), "past" to !item.timed) {
                     foods.insert(listOf(item))
                     if (others.new.isNotEmpty()) foods.replace(old, others.new)
                 }
+                if (!ok) uncount(uuid)
             }
         }
     }
@@ -655,35 +740,23 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         }
         val edited = plan.new.firstOrNull { it.uuid == item.uuid } ?: item
         // Only the line's own item moves the line; editing another item leaves it as it was.
-        _state.update { s -> leaveEditor(s, if (s.lastAdded?.uuid == item.uuid) SheetLine.Added(edited) else s.line) }
+        _state.update { s -> leaveEditor(s, s.line) }
         apply(plan, "food.edit", oldKey = null)
     }
 
+    /** Poista on Ruoka (row menu or editor): at once, Ruoka's Kumoa bar brings the item back without its highlight. */
     fun delete(item: FoodItem) {
-        // From the editor opened in the sheet, or the trash of a sheet row (the sheet is open then).
-        val toSheet = _state.value.editReturn != null || _state.value.sheetDay != null
-        // The record id before the item leaves the list (the Muuta line's item has none of its own).
+        // The record id before the item leaves the list (a just-added item has none of its own).
         val known = withRecordIds(listOf(item)).single()
-        _state.update {
-            val left = leaveEditor(it, SheetLine.Deleted(item))
-            (if (it.sheetDay != null) left.copy(line = SheetLine.Deleted(item)) else left).copy(items = it.items?.filter { i -> i.uuid != item.uuid })
-        }
-        // In the sheet the Kumoa is its line (design 7); elsewhere a snackbar as before.
-        if (!toSheet) _messages.tryEmit(UiMessage(R.string.food_deleted, listOf(item.name), UiAction(R.string.undo) { restore(item) }))
+        _state.update { leaveEditor(it, it.line).copy(items = it.items?.filter { i -> i.uuid != item.uuid }, addedIds = it.addedIds - item.uuid, highlight = it.highlight - item.uuid) }
+        _messages.tryEmit(UiMessage(R.string.food_deleted, listOf(item.name), UiAction(R.string.undo) { restore(item) }))
         write("food.delete") { (known.recordId ?: withRecordIds(listOf(item)).single().recordId)?.let { foods.delete(listOf(it)) } }
     }
 
-    /** The sheet line's Kumoa of a delete. */
-    fun undoDelete() {
-        val deleted = (_state.value.line as? SheetLine.Deleted)?.item ?: return
-        _state.update { it.copy(line = null) }
-        restore(deleted)
-    }
-
-    /** The editor closes; it reopens the sheet with [line] when it came from there, else the list stays. */
+    /** The editor closes; it returns to the search with [line] when it came from there, else the list stays. */
     private fun leaveEditor(s: FoodUiState, line: SheetLine?): FoodUiState {
         val back = s.editReturn
-        return s.copy(editing = null, draft = null, editReturn = null, sheetDay = back ?: s.sheetDay, line = if (back != null) line else s.line)
+        return s.copy(editing = null, draft = null, editReturn = null, searchDay = back ?: s.searchDay, line = if (back != null) line else s.line)
     }
 
     /** Undo of a delete: the old record id back, so its place and values return. */
@@ -830,8 +903,10 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { s ->
             val byUuid = merged.new.associateBy { it.uuid }
             val left = when (c.kind) {
-                SaveKind.EDIT -> leaveEditor(s, if (s.lastAdded?.uuid == c.item!!.uuid) SheetLine.Added(edited!!) else s.line)
-                SaveKind.DRAFT -> leaveEditor(s, s.line).copy(query = "", line = SheetLine.Added(added!!))
+                SaveKind.EDIT -> leaveEditor(s, s.line)
+                SaveKind.DRAFT -> leaveEditor(s, s.line).let { left ->
+                    left.copy(query = "", line = SheetLine.Added(added!!), addedIds = if (left.searchDay != null) left.addedIds + added!!.uuid else left.addedIds)
+                }
                 SaveKind.PRODUCT -> s.copy(productSaves = s.productSaves + 1)
             }
             left.copy(items = s.items.orEmpty().map { byUuid[it.uuid] ?: it } + listOfNotNull(added), products = store.all())
@@ -851,6 +926,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
             .onFailure { AppLog.e(event, it, "failed", *fields, "ms" to msSince(started)) }
             .isSuccess
         if (!wrote) {
+            added?.let { uncount(it.uuid) }
             failed()
             load()
             return
@@ -894,7 +970,7 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The bar where the edit was made: the sheet's line while a sheet is open, else the app bar. */
     private fun energyBar(line: SheetLine, message: UiMessage) {
-        if (_state.value.sheetDay != null) _state.update { it.copy(line = line) } else _messages.tryEmit(message)
+        if (_state.value.searchDay != null) _state.update { it.copy(line = line) } else _messages.tryEmit(message)
     }
 
     /** The sheet line's Kumoa of a correction. */
@@ -1008,9 +1084,9 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** A write under the lock; a failure says so (the sheet's line when the sheet is open) and reads the day back. */
-    private suspend fun runWrite(event: String, vararg fields: Pair<String, Any?>, block: suspend () -> Unit) {
+    private suspend fun runWrite(event: String, vararg fields: Pair<String, Any?>, block: suspend () -> Unit): Boolean {
         val started = System.nanoTime()
-        runCatching { block() }
+        val ok = runCatching { block() }
             .onSuccess {
                 AppLog.i(event, "ok", *fields, "ms" to msSince(started))
                 terveys.backup.request("food")
@@ -1020,14 +1096,16 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
                 AppLog.e(event, e, "failed", *fields, "ms" to msSince(started))
                 failed()
             }
+            .isSuccess
         load()
+        return ok
     }
 
-    /** A failed write: the line in an open sheet (which stays open), else the snackbar. */
+    /** A failed write: the bar of an open search (which stays open), else the snackbar. */
     private fun failed() {
-        val inSheet = _state.value.sheetDay != null
-        _state.update { it.copy(line = if (inSheet) SheetLine.Failed else null) }
-        if (!inSheet) _messages.tryEmit(UiMessage(R.string.food_write_failed))
+        val inSearch = _state.value.searchDay != null
+        _state.update { it.copy(line = if (inSearch) SheetLine.Failed else null) }
+        if (!inSearch) _messages.tryEmit(UiMessage(R.string.food_write_failed))
     }
 
     /** The dialog's writes reach the app's screens (food-widget design 14). */

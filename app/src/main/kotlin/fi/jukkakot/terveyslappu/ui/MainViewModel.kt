@@ -111,6 +111,12 @@ data class MainUiState(
     val historyTarget: String? = null,
     /** Where Ruoka was opened from (HOME or HISTORY). */
     val foodOrigin: Screen = Screen.HOME,
+    /** Historia's tab (page index) as last shown, reported by Historia. */
+    val historyPage: Int = 0,
+    /** Ruoka opened after an add search from Historia: back returns to this Historia page, not Energia. */
+    val foodReturnPage: Int? = null,
+    /** Historia opens on this page (back from that Ruoka); like [historyOnSteps]. */
+    val historyStartPage: Int? = null,
     /** Historia opens on Energia (back from Ruoka opened from the Energia tab); otherwise on Paino. */
     val historyOnEnergy: Boolean = false,
     /** Historia opens on Askeleet (the front page steps card). */
@@ -138,7 +144,14 @@ data class MainUiState(
     fun back(): MainUiState = when {
         screen == Screen.HOME -> this
         screen == Screen.HELP -> copy(screen = helpOrigin, helpOrigin = Screen.HOME)
-        screen == Screen.FOOD -> copy(screen = foodOrigin, historyOnEnergy = foodOrigin == Screen.HISTORY, foodOrigin = Screen.HOME, historyChart = null)
+        screen == Screen.FOOD -> copy(
+            screen = foodOrigin,
+            historyOnEnergy = foodOrigin == Screen.HISTORY && foodReturnPage == null,
+            historyStartPage = if (foodOrigin == Screen.HISTORY) foodReturnPage else null,
+            foodReturnPage = null,
+            foodOrigin = Screen.HOME,
+            historyChart = null,
+        )
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyTarget = null, historyOnEnergy = false, historyOrigin = Screen.HOME, historyChart = null)
         screen != Screen.SETTINGS -> copy(screen = Screen.HOME, historyTarget = null, historyOnEnergy = false, historyOnSteps = false, historyOnBurn = false, historyChart = null)
         settingsPage == SettingsPage.LIST -> copy(screen = settingsListOrigin, settingsListOrigin = Screen.HOME)
@@ -151,9 +164,20 @@ data class MainUiState(
      * screens); from Historia otherwise back returns to Historia; else home.
      */
     fun openFood(): MainUiState = when {
+        // Already on Ruoka (e.g. leaving the add search there): stays, its origin unchanged.
+        screen == Screen.FOOD -> this
         screen == Screen.HISTORY && historyOrigin == Screen.FOOD -> copy(screen = Screen.FOOD, historyOrigin = Screen.HOME, historyChart = null)
-        screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY, historyChart = null)
+        screen == Screen.HISTORY -> copy(screen = Screen.FOOD, foodOrigin = Screen.HISTORY, foodReturnPage = null, historyChart = null)
         else -> copy(screen = Screen.FOOD, foodOrigin = Screen.HOME, historyChart = null)
+    }
+
+    /**
+     * Ruoka after leaving the add search with adds. From Historia back returns to the tab that was
+     * open ([historyPage]); from the front page to it; from Ruoka the origin stays.
+     */
+    fun openFoodAfterSearch(): MainUiState {
+        val next = openFood()
+        return if (screen == Screen.HISTORY && historyOrigin != Screen.FOOD) next.copy(foodReturnPage = historyPage) else next
     }
 
     /** A top-level screen; Ohje and Asetukset opened from Historia return to Historia (home-screen "App menu"). */
@@ -405,6 +429,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Ruoka, opened from the front page or from Historia's Energia tab. */
     fun openFood() = _state.update { it.openFood() }
+
+    /** Ruoka after the add search was left with adds (food-log "Leaving the search"). */
+    fun openFoodAfterSearch() = _state.update { it.openFoodAfterSearch() }
+
+    /** Historia reports its tab, so Ruoka opened by the add search can return to it. */
+    fun historyPage(page: Int) = _state.update { if (it.historyPage == page) it else it.copy(historyPage = page) }
+
+    /** Historia has opened its start page. */
+    fun startPageShown() = _state.update { it.copy(historyStartPage = null) }
 
     /** Ruoka's Viikko: Historia on Energia with 1 vk; back returns to Ruoka. */
     fun openWeek() {

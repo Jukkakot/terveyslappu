@@ -2,6 +2,9 @@ package fi.jukkakot.terveyslappu.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,7 +81,7 @@ class FoodActions(
     val onOpenDay: (LocalDate) -> Unit = {},
     /** Lisää annos for a day. */
     val onAdd: (LocalDate) -> Unit = {},
-    val onCloseSheet: () -> Unit = {},
+    val onLeaveSearch: () -> Unit = {},
     val onQuery: (String) -> Unit = {},
     val onPick: (Suggestion) -> Unit = {},
     /** A suggestion row's edit button: the editor on a new item of that product (Lisää / Peruuta). */
@@ -89,8 +92,6 @@ class FoodActions(
     /** The Valmiit ruuat switch in Ruokakirjaus. */
     val onBaseProducts: (Boolean) -> Unit = {},
     val onUndoAdd: () -> Unit = {},
-    /** The sheet line's Kumoa of a delete made in the editor opened from the sheet. */
-    val onUndoDelete: () -> Unit = {},
     val onEdit: (FoodItem) -> Unit = {},
     val onCloseEditor: () -> Unit = {},
     val onSave: (FoodItem, EditInput) -> Unit = { _, _ -> },
@@ -115,11 +116,13 @@ class FoodActions(
     val onClipAddAll: (LocalDate) -> Unit = {},
     /** The sheet line's Kumoa of an import. */
     val onUndoImport: () -> Unit = {},
+    /** The search's bar ended without its action (timeout, swipe). */
+    val onClearLine: (SheetLine) -> Unit = {},
     /** A sheet row's delete button on an own product, and its Kumoa. */
     val onDeleteProduct: (Product) -> Unit = {},
     val onUndoDeleteProduct: () -> Unit = {},
     /** The sheet gives way to an editor: whether the keyboard was up (it returns with the sheet), and its reset. */
-    val onSheetKeyboard: (Boolean) -> Unit = {},
+    val onKeyboardBack: (Boolean) -> Unit = {},
     /** The correction dialog's answer, and the sheet line's Kumoa and Yritä uudelleen of a correction (product-energy-fix). */
     val onEnergyChoice: (EnergyChoice) -> Unit = {},
     val onUndoEnergy: () -> Unit = {},
@@ -248,7 +251,7 @@ internal fun FoodScreen(
                 food.items == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 else -> Column(Modifier.fillMaxSize().verticalScroll(scroll).testTag("foodDay")) {
                     DayBar(food.day, today, enabled = ordering == null, actions.onDay, Modifier.padding(horizontal = 16.dp))
-                    if (ordering == null) food.clipOffer?.let { ClipOfferCard(it, food.day, actions, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) }
+                    if (ordering == null && food.searchDay == null) food.clipOffer?.let { ClipOfferCard(it, food.day, actions, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) }
                     if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) Box(Modifier.padding(horizontal = 16.dp)) { HistoryNotice(onGrantHistory) }
                     val items = ordering ?: food.dayItems(food.day)
                     if (items.isEmpty()) {
@@ -268,14 +271,19 @@ internal fun FoodScreen(
                             Text(stringResource(R.string.food_order_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
                             OrderList(ordering, actions.onMove)
                         } else {
+                            // The annokset added in the last search carry the highlight; the last of them is scrolled into view.
+                            val lastMarked = items.lastOrNull { it.uuid in food.highlight }?.uuid
                             Column(Modifier.fillMaxWidth()) {
-                                items.forEachIndexed { i, item ->
+                                items.forEachIndexed { i, item -> key(item.uuid) {
                                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    FoodRow(item, Modifier.clickable { actions.onEdit(item) }) {
+                                    val requester = remember { BringIntoViewRequester() }
+                                    if (item.uuid == lastMarked) LaunchedEffect(item.uuid, items.size) { requester.bringIntoView() }
+                                    val tint = if (item.uuid in food.highlight) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+                                    FoodRow(item, Modifier.bringIntoViewRequester(requester).background(tint).clickable { actions.onEdit(item) }) {
                                         ItemInfoButton(item, food.products, "food-${item.uuid}", scroll.isScrollInProgress)
                                         RowMenu(item.name, "food-${item.uuid}", { actions.onEdit(item) }, { actions.onDelete(item) })
                                     }
-                                }
+                                } }
                             }
                         }
                     }

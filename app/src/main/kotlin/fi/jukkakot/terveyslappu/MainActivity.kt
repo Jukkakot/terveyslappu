@@ -49,6 +49,7 @@ import fi.jukkakot.terveyslappu.ui.MainActions
 import kotlinx.coroutines.delay
 import fi.jukkakot.terveyslappu.ui.MainScreen
 import fi.jukkakot.terveyslappu.ui.MainViewModel
+import fi.jukkakot.terveyslappu.food.AddSearchTarget
 import fi.jukkakot.terveyslappu.ui.FoodAccess
 import fi.jukkakot.terveyslappu.ui.FoodActions
 import fi.jukkakot.terveyslappu.ui.FoodClipboard
@@ -231,7 +232,7 @@ class MainActivity : ComponentActivity() {
                     onPauseOrDispose {}
                 }
                 // Clipboard offer: only while the front page, Ruoka or Lisää annos is shown, on open and on every resume.
-                val clipShown = state.screen == Screen.HOME || state.screen == Screen.FOOD || food.sheetDay != null
+                val clipShown = state.screen == Screen.HOME || state.screen == Screen.FOOD || food.searchDay != null
                 LifecycleResumeEffect(clipShown) {
                     if (clipShown) checkClipOffer()
                     onPauseOrDispose {}
@@ -249,10 +250,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                // No bar over an open sheet (its messages are the sheet's line), none left from another screen.
+                // No bar over an open search (its messages are its own bars), none left from another screen.
                 LaunchedEffect(state.screen, state.settingsPage) { snackbar.currentSnackbarData?.dismiss() }
-                val sheetOpen = food.sheetDay != null
+                val sheetOpen = food.searchDay != null
                 LaunchedEffect(sheetOpen) { if (sheetOpen) snackbar.currentSnackbarData?.dismiss() }
+                // The highlight of the annokset added in a search ends when Ruoka is left (food-log "Highlight on Ruoka").
+                LaunchedEffect(state.screen) { if (state.screen != Screen.FOOD) foodModel.clearHighlight() }
 
                 MainScreen(
                     state = state,
@@ -293,15 +296,19 @@ class MainActivity : ComponentActivity() {
                         onOpenDay = ::openFoodDay,
                         onAdd = { day ->
                             if (foodModel.state.value.access == FoodAccess.GRANTED) {
-                                foodModel.openSheet(day)
+                                foodModel.openSearch(day)
                             } else if (foodModel.state.value.access == FoodAccess.NEEDS) {
-                                grantFood { foodModel.openSheet(day) }
+                                grantFood { foodModel.openSearch(day) }
                             } else {
                                 // Denied: Ruoka explains why and offers the grant (food-log "Permission denied").
                                 openFoodDay(day)
                             }
                         },
-                        onCloseSheet = foodModel::closeSheet,
+                        onLeaveSearch = {
+                            // Back arrow / system back: with adds, Ruoka on that day with them highlighted (food-add-search).
+                            if (foodModel.leaveSearch() is AddSearchTarget.Ruoka) viewModel.openFoodAfterSearch()
+                        },
+                        onClearLine = foodModel::clearLine,
                         onQuery = foodModel::onQuery,
                         onPick = foodModel::addSuggestion,
                         onEditPick = foodModel::editDraft,
@@ -309,7 +316,6 @@ class MainActivity : ComponentActivity() {
                         onEnter = foodModel::addTyped,
                         onBaseProducts = foodModel::setBaseProducts,
                         onUndoAdd = foodModel::undoAdd,
-                        onUndoDelete = foodModel::undoDelete,
                         onEdit = foodModel::openEditor,
                         onCloseEditor = foodModel::closeEditor,
                         onSave = foodModel::saveEdit,
@@ -333,7 +339,7 @@ class MainActivity : ComponentActivity() {
                         onUndoImport = foodModel::undoImport,
                         onDeleteProduct = foodModel::deleteProduct,
                         onUndoDeleteProduct = foodModel::undoDeleteProduct,
-                        onSheetKeyboard = foodModel::setSheetKeyboard,
+                        onKeyboardBack = foodModel::setKeyboardBack,
                         onEnergyChoice = foodModel::chooseEnergy,
                         onUndoEnergy = foodModel::undoEnergyLine,
                         onRetryEnergy = foodModel::retryEnergyLine,
@@ -446,6 +452,8 @@ class MainActivity : ComponentActivity() {
                         onChartPeriod = viewModel::onChartPeriod,
                         onOpenChart = viewModel::openChart,
                         onChartShown = viewModel::chartShown,
+                        onHistoryPage = viewModel::historyPage,
+                        onStartPageShown = viewModel::startPageShown,
                         onGrantHistory = {
                             viewModel.afterHistory = AfterHistory.RELOAD
                             launchSafely("export.history") { historyLauncher.launch(setOf(HISTORY_PERMISSION)) }
@@ -466,6 +474,13 @@ class MainActivity : ComponentActivity() {
     /** A weigh-in notification's tap opens Historia (background-weigh-in). */
     private fun openFrom(intent: Intent?) {
         if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HISTORY) viewModel.onScreen(Screen.HISTORY)
+        // food-add-search design 5: the Lisää annos activity left with adds: Ruoka on that day, the annokset highlighted.
+        intent?.getStringExtra(EXTRA_RUOKA_DAY)?.let { day ->
+            runCatching { LocalDate.parse(day) }.getOrNull()?.let { d ->
+                foodModel.showRuoka(d, intent.getStringArrayExtra(EXTRA_RUOKA_IDS).orEmpty().toSet())
+                viewModel.openFoodAfterSearch()
+            }
+        }
         // food-widget design 5: the Lisää annos dialog's import shows the preview over the front page.
         if (intent?.getStringExtra(EXTRA_SCREEN) == SCREEN_HOME) viewModel.onScreen(Screen.HOME)
         // food-ai-import: text shared from an AI chat (or handed over by the dialog) opens the import preview.
@@ -476,7 +491,7 @@ class MainActivity : ComponentActivity() {
 
     /** Liitä tekoälyltä: the clipboard text goes to the import preview. */
     private fun pasteAiFood() {
-        foodModel.closeSheet()
+        foodModel.closeSearch()
         foodModel.openAi(FoodClipboard.text(this), "paste")
     }
 
@@ -533,6 +548,17 @@ class MainActivity : ComponentActivity() {
         private const val SCREEN_HISTORY = "history"
         private const val SCREEN_HOME = "home"
         private const val EXTRA_IMPORT_FROM = "importFrom"
+        private const val EXTRA_RUOKA_DAY = "ruokaDay"
+        private const val EXTRA_RUOKA_IDS = "ruokaIds"
+
+        /**
+         * The Lisää annos activity's exit with adds (food-add-search design 5): the app on Ruoka for
+         * [day] with [uuids] highlighted; a running main screen is reused and its search or editor closes.
+         */
+        fun ruokaIntent(context: android.content.Context, day: LocalDate, uuids: List<String>): Intent = Intent(context, MainActivity::class.java)
+            .putExtra(EXTRA_RUOKA_DAY, day.toString())
+            .putExtra(EXTRA_RUOKA_IDS, uuids.toTypedArray())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
         /**
          * The Lisää annos dialog's import (food-widget design 5): the app on the preview over the

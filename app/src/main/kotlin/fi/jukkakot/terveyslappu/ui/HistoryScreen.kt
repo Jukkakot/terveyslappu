@@ -187,6 +187,7 @@ private fun PeriodList(
     val pages = remember(state.charts) { HistoryPages.of(state.charts) }
     val pageCount by rememberUpdatedState(pages.size)
     val initialPage = when {
+        state.historyStartPage != null -> state.historyStartPage.coerceIn(0, pages.size - 1)
         state.historyChart != null -> pages.indexOfChart(state.historyChart).coerceAtLeast(0)
         state.historyOnSteps -> STEPS_PAGE
         state.historyOnBurn -> BURN_PAGE
@@ -195,11 +196,14 @@ private fun PeriodList(
     }
     val pager = rememberPagerState(initialPage = initialPage) { pageCount }
     LaunchedEffect(Unit) {
+        if (state.historyStartPage != null) actions.onStartPageShown()
         if (state.historyOnEnergy) actions.onEnergyShown()
         if (state.historyOnSteps) actions.onStepsShown()
         if (state.historyOnBurn) actions.onBurnShown()
         if (state.historyChart != null) actions.onChartShown()
     }
+    // The add search opened from here returns to this tab through Ruoka.
+    LaunchedEffect(pager.currentPage) { actions.onHistoryPage(pager.currentPage) }
     val page = pages[pager.currentPage]
     val onEnergy = page == HistoryPage.Energy
     val onSteps = page == HistoryPage.Steps

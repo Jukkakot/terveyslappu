@@ -432,7 +432,7 @@ or Health Connect access is lost, edit mode SHALL end first and its edits SHALL 
 #### Scenario: Outside intent
 - **GIVEN** edit mode with unsaved edits
 - **WHEN** the user taps the "Lisää annos" widget
-- **THEN** edit mode has ended with its edits discarded and the add sheet opens
+- **THEN** edit mode has ended with its edits discarded and the add search opens
 
 #### Scenario: Cards inert while editing
 - **GIVEN** edit mode
@@ -602,13 +602,13 @@ toimintoja" for TalkBack.
 
 #### Scenario: Back to where it was opened
 - **GIVEN** Historia is shown
-- **WHEN** the user opens Asetukset, Ohje, the weigh-in dialog or the add sheet from its top bar
+- **WHEN** the user opens Asetukset, Ohje, the weigh-in dialog or the add search from its top bar
 - **THEN** back or closing returns to Historia
 
 #### Scenario: Food always for today
 - **GIVEN** Historia on Syöty with a past day chosen
 - **WHEN** the user taps ⋮ and then Lisää annos
-- **THEN** the add sheet opens for today
+- **THEN** the add search opens for today
 
 #### Scenario: Without Health Connect
 - **GIVEN** Health Connect access is missing
@@ -631,7 +631,7 @@ toimintoja" for TalkBack.
 
 #### Scenario: Add food from the menu
 - **WHEN** the user taps ⋮ on the front page and then Lisää annos
-- **THEN** the add sheet opens for today with the keyboard up
+- **THEN** the add search opens for today with the keyboard up
 
 #### Scenario: Settings from the menu
 - **WHEN** the user taps ⋮ and then Asetukset

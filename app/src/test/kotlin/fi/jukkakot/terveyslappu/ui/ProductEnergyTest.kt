@@ -129,7 +129,7 @@ class ProductEnergyTest {
 
     @Test
     fun `Kumoa restores the product and the items, an item changed again stays`() {
-        model.openSheet(today)
+        model.openSearch(today)
         val edited = records.items.single { it.uuid == "l1" }
         model.openEditor(edited)
         model.saveEdit(edited, EditInput("Lakritsi", EditMode.KPL, 5.0, 12.0, false))
@@ -152,7 +152,7 @@ class ProductEnergyTest {
 
     @Test
     fun `a failed write offers a retry that finishes the update`() {
-        model.openSheet(today)
+        model.openSearch(today)
         correctInSettings()
         records.failInsert = true
         model.chooseEnergy(EnergyChoice.ALL)

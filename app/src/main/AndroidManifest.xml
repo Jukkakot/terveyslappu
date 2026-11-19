@@ -88,8 +88,8 @@
             android:taskAffinity=""
             android:theme="@style/Theme.Terveyslappu.WeighIn" />
 
-        <!-- Lisää annos dialog (food-widget): the add sheet over the home screen, in its own task,
-             not in recents; singleTask so a second widget tap keeps the open sheet. -->
+        <!-- Lisää annos (food-add-search): the add search full screen in the app's theme, in its own task,
+             not in recents; singleTask so a second widget tap keeps the open search. -->
         <activity
             android:name=".FoodAddActivity"
             android:excludeFromRecents="true"
@@ -97,7 +97,7 @@
             android:label="@string/food_add"
             android:launchMode="singleTask"
             android:taskAffinity="fi.jukkakot.terveyslappu.foodadd"
-            android:theme="@style/Theme.Terveyslappu.WeighIn"
+            android:theme="@style/Theme.Terveyslappu"
             android:windowSoftInputMode="adjustResize" />
 
         <service

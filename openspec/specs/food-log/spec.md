@@ -280,7 +280,7 @@ a warning. There SHALL be no other categories.
 
 The treat share text ("herkkuja 230 kcal", "herkkuja keskiarvo 230 kcal/pv", the Energia statistics'
 Herkut value) SHALL be drawn in the treat tone of the Energia bars wherever it is shown: the Ruoka
-summary line, the add sheet's line under its header, the home food card, the Energia list's day and
+summary line, the home food card, the Energia list's day and
 group rows and the Energia statistics. Only the treat part takes the tone; the other parts of the
 same line keep their present colour, and size and weight stay unchanged. A zero or missing
 value ("0 kcal/pv", "–") keeps the normal colour. The chart marker card and legends keep their
@@ -350,12 +350,12 @@ own products.
 
 #### Scenario: Turn base products off
 - **WHEN** the user turns Valmiit ruuat off
-- **THEN** typing in the Lisää annos sheet suggests only own products, and the setting is kept
+- **THEN** typing in the Lisää annos search suggests only own products, and the setting is kept
   after restarting the app
 
 ### Requirement: Food from an AI chat
 The app SHALL take a day's food as JSON text, whatever app wrote it, in two ways: "Tuo
-ruoka-annokset" in the Lisää annos sheet reads the clipboard, and sharing text from another app
+ruoka-annokset" in the Lisää annos search reads the clipboard, and sharing text from another app
 (such as an AI chat) to the app opens the same preview, titled "Tuo ruoka-annokset". The JSON SHALL
 be found also inside a code block or surrounded by other text. Text with no usable JSON SHALL show
 a short reason and add nothing. The import's buttons, titles and messages SHALL NOT name an AI as
@@ -456,7 +456,7 @@ have `name` and MAY have `amount` (> 0), `unit` (`g` or `kpl`, default `g` with 
 have `per` (`100g`, `kpl` or `annos`; `annos` is kept as a piece), `amount`/`unit` (its usual
 amount) and `herkku`. Unknown keys (also a date) SHALL be ignored; an item or product without a name or with
 unusable numbers SHALL be skipped and counted in the preview. "Kopioi tuontiohje" in the
-Lisää annos sheet SHALL copy the Finnish instruction for the writer of the JSON (such as an AI
+Lisää annos search SHALL copy the Finnish instruction for the writer of the JSON (such as an AI
 chat), which states this shape, the purpose of every field and an example. The instruction SHALL
 ask a product's energy for the dish alone, without side dishes, so the product can be logged later
 with other sides.
@@ -897,7 +897,7 @@ changes). When the category of an existing own product would change, its line SH
 a block after all its other lines.
 Details:
 - Card: at most three change lines, then "+<N> muuta muutosta"; also for products-only JSON.
-- Style: bodyMedium in onSurfaceVariant, no icon, same in the sheet, Ruoka and the front page.
+- Style: bodyMedium in onSurfaceVariant, no icon, same in the add search, Ruoka and the front page.
 - Changed means the unit differs or the kcal rounded to whole numbers differs; smaller drifts and
   the usual amount are saved without a line. New products and products without energy before get
   no line.

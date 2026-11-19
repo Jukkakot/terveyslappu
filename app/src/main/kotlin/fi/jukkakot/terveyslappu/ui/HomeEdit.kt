@@ -127,7 +127,7 @@ internal fun HomeScreen(
     BackHandler(enabled = editing) { edit.cancel() }
     // Any outside intent ends edit mode first and drops the draft (design 4).
     val outside = state.access != Access.GRANTED || state.screen != Screen.HOME || state.entryOpen || state.import != null ||
-        food.sheetDay != null || food.editing != null || food.ai != null
+        food.searchDay != null || food.editing != null || food.ai != null
     LaunchedEffect(outside) { if (outside) edit.cancel() }
     LaunchedEffect(edit) { HomeEditSignal.outside.collect { edit.cancel() } }
     Scaffold(

@@ -81,12 +81,12 @@ class FoodScreenTest {
                             food = food.copy(day = it)
                             state = state.copy(screen = Screen.FOOD, foodOrigin = state.screen)
                         },
-                        onAdd = { food = food.copy(sheetDay = it) },
+                        onAdd = { food = food.copy(searchDay = it) },
                         onPick = { picked = it },
                         onEditPick = { editPicked = it },
                         onEdit = { editedItem = it.name },
                         onDelete = { deletedItem = it.name },
-                        onCloseSheet = { food = food.copy(sheetDay = null) },
+                        onLeaveSearch = { food = food.copy(searchDay = null) },
                         onClipSkip = { food = food.copy(clipOffer = null) },
                     ),
                 )
@@ -94,50 +94,50 @@ class FoodScreenTest {
         }
     }
 
-    private val granted = FoodUiState(access = FoodAccess.GRANTED, items = items, products = listOf(Product("Rahka"), Product("Pullo", treat = true)), day = today)
+    private val granted = FoodUiState(
+        access = FoodAccess.GRANTED, items = items, products = listOf(Product("Rahka"), Product("Pullo", treat = true)), day = today,
+        picks = listOf(Product("Rahka"), Product("Pullo", treat = true)),
+    )
 
     @Test
-    fun `front page shows today's total and the menu's Lisää annos opens the add sheet, where a suggestion adds`() {
+    fun `front page menu's Lisää annos opens the add search where a row adds and its menu edits`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted)
         compose.onNodeWithTag("foodToday").assertExists()
         compose.onNodeWithTag("appMenu").performClick()
         compose.onNodeWithTag("menuFood").performClick()
         compose.onNodeWithTag("addField").assertExists()
-        // The sheet shows the day's items, the header total and the chips apart from them.
-        compose.onNodeWithTag("food-a").assertExists()
-        compose.onNodeWithTag("sheetTitle").assertTextContains("Tänään · 360 kcal")
-        compose.onNodeWithTag("chip-Rahka").performClick()
+        // Only addable things: no eaten annos, no day total.
+        compose.onNodeWithTag("food-a").assertDoesNotExist()
+        compose.onNodeWithTag("sheetTitle").assertDoesNotExist()
+        compose.onNodeWithTag("addHeading").assertExists()
+        compose.onNodeWithTag("pick-Rahka").performClick()
         assertEquals("Rahka", picked?.name)
-        compose.onNodeWithTag("chip-Pullo").performTouchInput { longClick() }
+        compose.onNodeWithTag("pick-Pullo-menu").performClick()
+        compose.onNodeWithTag("pick-Pullo-edit").performClick()
         assertEquals("Pullo", editPicked?.name)
     }
 
     @Test
-    fun `typing in the sheet shows Tuotteet instead of the day list and the chips`() {
-        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today, query = "rah"))
-        compose.onNodeWithTag("addMatches").assertExists()
-        compose.onNodeWithTag("addSuggestions").assertDoesNotExist()
-        compose.onNodeWithTag("sheetDayList").assertDoesNotExist()
+    fun `typing in the search shows matches then the Enter row and no usual rows`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(searchDay = today, query = "rah"))
+        compose.onNodeWithTag("match-Rahka").assertExists()
+        compose.onNodeWithTag("enterRow").assertExists()
+        compose.onNodeWithTag("addHeading").assertDoesNotExist()
+        compose.onNodeWithTag("searchClear").assertExists()
     }
 
     @Test
-    fun `the handle folds and unfolds the add panel`() {
-        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today))
-        compose.onNodeWithTag("addSuggestions").assertExists()
-        compose.onNodeWithTag("addField").assertExists()
-        compose.onNodeWithTag("addPanelHandle").performClick()
-        compose.waitUntil(3000) { compose.onAllNodesWithTag("addField").fetchSemanticsNodes().isEmpty() }
-        compose.onNodeWithTag("addSuggestions").assertDoesNotExist()
-        compose.onNodeWithTag("addPanelHandle").performClick()
-        compose.waitUntil(3000) { compose.onAllNodesWithTag("addField").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("addSuggestions").assertExists()
+    fun `the day line shows only when the search adds to another day than today`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(searchDay = today))
+        compose.onNodeWithTag("addingTo").assertDoesNotExist()
     }
 
     @Test
-    fun `a food row shows no logging time`() {
-        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(sheetDay = today))
-        compose.onNodeWithTag("food-a").assertExists()
-        compose.onAllNodesWithText("8.00", substring = true).assertCountEquals(0)
+    fun `a past day shows Lisätään and tapping a row shows the bar with Kumoa`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList()), granted.copy(searchDay = today.minusDays(1), line = SheetLine.Added(items.first())))
+        compose.onNodeWithTag("addingTo").assertExists()
+        compose.waitForIdle()
+        compose.onNodeWithTag("snackbar").assertExists()
     }
 
     @Test

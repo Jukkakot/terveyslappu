@@ -9,6 +9,8 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import fi.jukkakot.terveyslappu.food.AddSearchTarget
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +44,7 @@ class FoodAddActivity : ComponentActivity() {
     private var timingLogged = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         logOpen(intent)
         // home-card-layout design 4: the front page's edit mode ends and drops its draft.
@@ -52,9 +55,9 @@ class FoodAddActivity : ComponentActivity() {
         setContent {
             TerveysTheme {
                 val food by model.state.collectAsStateWithLifecycle()
-                // Closing the sheet (back, a tap outside, a swipe) finishes the dialog; the editor replaces the sheet without closing it.
-                LaunchedEffect(food.sheetDay == null && food.editing == null) {
-                    if (food.sheetDay == null && food.editing == null) finish()
+                // The search closed by something other than back (import hand-over) finishes the activity; the editor keeps it.
+                LaunchedEffect(food.searchDay == null && food.editReturn == null && food.editing == null) {
+                    if (food.searchDay == null && food.editReturn == null && food.editing == null) finish()
                 }
                 LaunchedEffect(food.access) {
                     if (food.access == FoodAccess.GRANTED && fieldMs < 0) fieldMs = elapsed()
@@ -69,14 +72,14 @@ class FoodAddActivity : ComponentActivity() {
                     food,
                     model.base,
                     FoodActions(
-                        onCloseSheet = model::closeSheet,
+                        onLeaveSearch = ::leave,
+                        onClearLine = model::clearLine,
                         onQuery = model::onQuery,
                         onPick = model::addSuggestion,
                         onEditPick = model::editDraft,
                         onAddDraft = model::addDraft,
                         onEnter = model::addTyped,
                         onUndoAdd = model::undoAdd,
-                        onUndoDelete = model::undoDelete,
                         onEdit = model::openEditor,
                         onCloseEditor = model::closeEditor,
                         onSave = model::saveEdit,
@@ -97,7 +100,7 @@ class FoodAddActivity : ComponentActivity() {
                         onUndoImport = model::undoImport,
                         onDeleteProduct = model::deleteProduct,
                         onUndoDeleteProduct = model::undoDeleteProduct,
-                        onSheetKeyboard = model::setSheetKeyboard,
+                        onKeyboardBack = model::setKeyboardBack,
                         onEnergyChoice = model::chooseEnergy,
                         onUndoEnergy = model::undoEnergyLine,
                         onRetryEnergy = model::retryEnergyLine,
@@ -138,10 +141,25 @@ class FoodAddActivity : ComponentActivity() {
     /** The clipboard is checked on every focus gain (Android 10+ allows the read only then); text is read only for a changed clip. */
     private fun checkClip() = FoodClipboard.checkOffer(this, model)
 
+    /**
+     * Back arrow and system back (food-add-search): with adds the app opens on Ruoka for the day with
+     * them highlighted (it reads the day after the pending writes); without, this closes and shows what
+     * was behind it. The writes run in the app scope, so finishing at once loses nothing.
+     */
+    private fun leave() {
+        val day = model.state.value.searchDay
+        when (val target = model.leaveSearch()) {
+            is AddSearchTarget.Ruoka -> launchSafely { startActivity(MainActivity.ruokaIntent(this, target.day, target.uuids)) }
+            AddSearchTarget.Origin -> Unit
+        }
+        if (day == null) return
+        finish()
+    }
+
     /** Tuo ruoka-annokset and Näytä: the app opens on the preview over the front page (design 5). */
     private fun handOver(text: String, from: String) {
         launchSafely { startActivity(MainActivity.importIntent(this, text, from)) }
-        model.closeSheet()
+        model.closeSearch()
         finish()
     }
 

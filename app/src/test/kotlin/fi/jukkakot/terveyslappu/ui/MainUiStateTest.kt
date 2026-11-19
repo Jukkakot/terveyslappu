@@ -49,6 +49,32 @@ class SettingsBackRuleTest {
     }
 
     @Test
+    fun `Ruoka after the add search stays on Ruoka from Ruoka, and goes back to where Ruoka came from`() {
+        val fromHome = MainUiState().openFoodAfterSearch()
+        assertEquals(Screen.FOOD, fromHome.screen)
+        assertEquals(Screen.HOME, fromHome.back().screen)
+        // From Ruoka the origin is unchanged (Historia stays its origin).
+        val onRuoka = MainUiState(screen = Screen.FOOD, foodOrigin = Screen.HISTORY, historyPage = 4)
+        assertEquals(Screen.FOOD, onRuoka.openFoodAfterSearch().screen)
+        assertEquals(Screen.HISTORY, onRuoka.openFoodAfterSearch().foodOrigin)
+    }
+
+    @Test
+    fun `Ruoka after the add search from Historia returns to the tab that was open`() {
+        val history = MainUiState(screen = Screen.HISTORY, historyPage = 1)
+        val ruoka = history.openFoodAfterSearch()
+        assertEquals(Screen.FOOD, ruoka.screen)
+        val back = ruoka.back()
+        assertEquals(Screen.HISTORY, back.screen)
+        assertEquals(1, back.historyStartPage)
+        assertFalse(back.historyOnEnergy)
+        // Ruoka opened from the Energia tab as before still returns to Energia.
+        val plain = history.openFood().back()
+        assertEquals(true, plain.historyOnEnergy)
+        assertNull(plain.historyStartPage)
+    }
+
+    @Test
     fun `a sub-screen opened from the list returns to the list`() {
         val back = MainUiState().withSettings(SettingsPage.DATA, Screen.SETTINGS).back()
         assertEquals(Screen.SETTINGS, back.screen)

@@ -4,8 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Looper
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsNotFocused
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -33,7 +31,7 @@ import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.Energy
 import fi.jukkakot.terveyslappu.food.Product
 
-/** Smoke test of the Lisää annos dialog (food-widget), against a fake Health Connect; made-up foods only. */
+/** Smoke test of the Lisää annos search opened from the widget (food-add-search), against a fake Health Connect; made-up foods only. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp")
@@ -106,22 +104,22 @@ class FoodAddDialogTest {
     }
 
     @Test
-    fun `the keyboard stays down on open, the field has no focus`() {
+    fun `the field is there on open and no day list or total`() {
         open().use {
             compose.waitForIdle()
-            compose.onNodeWithTag("addField").assertIsNotFocused()
+            compose.onNodeWithTag("addField").assertExists()
+            compose.onNodeWithTag("sheetTitle").assertDoesNotExist()
             compose.onNodeWithTag("clipOffer").assertDoesNotExist()
         }
     }
 
     @Test
-    fun `the card shows without the keyboard and Lisaa kaikki adds in the sheet`() {
+    fun `the card shows and Lisaa kaikki adds in the search, which stays open with its bar`() {
         copy("""Arvio: {"items":[{"name":"Testikeitto","amount":300,"unit":"g","kcal":180},{"name":"Testileipa","kcal":90}]}""")
         open().use {
             compose.waitUntilAtLeastOneExists(hasTestTag("clipOffer"), 5_000)
-            compose.onNodeWithTag("addField").assertIsNotFocused()
             compose.onNodeWithTag("clipAddAll").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("sheetImported"), 5_000)
+            compose.waitUntilAtLeastOneExists(hasTestTag("snackbar"), 5_000)
             assertEquals(listOf("Testikeitto", "Testileipa"), records.items.sortedBy { it.pos }.map { it.name })
             compose.onNodeWithTag("clipOffer").assertDoesNotExist()
             compose.onNodeWithTag("addField").assertExists()
@@ -129,17 +127,42 @@ class FoodAddDialogTest {
     }
 
     @Test
-    fun `a chip tap adds the product and it appears in the day list`() {
+    fun `a usual row tap adds the product and shows the bar`() {
         val app = ApplicationProvider.getApplicationContext<TerveysApp>()
         app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
         open().use {
-            compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
-            compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
+            compose.waitUntilAtLeastOneExists(hasTestTag("pick-Kaurapuuro testi"), 5_000)
+            compose.onNodeWithTag("pick-Kaurapuuro testi").performClick()
             compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             shadowOf(Looper.getMainLooper()).idle()
             assertEquals(listOf("Kaurapuuro testi"), records.items.map { it.name })
-            compose.onNodeWithTag("sheetTitle").assertTextContains("Tänään · 210 kcal")
-            compose.onNodeWithTag("sheetDayList").assertExists()
+            compose.waitUntilAtLeastOneExists(hasTestTag("snackbar"), 5_000)
+            compose.onNodeWithTag("sheetTitle").assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun `back after an add opens the app on Ruoka with the annos`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        open().use {
+            enter("Tomaattikeitto")
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
+            compose.onNodeWithTag("back").performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            val started = shadowOf(app).nextStartedActivity
+            assertNotNull(started)
+            assertEquals(LocalDate.now().toString(), started.getStringExtra("ruokaDay"))
+            assertEquals(records.items.map { it.uuid }, started.getStringArrayExtra("ruokaIds")?.toList())
+        }
+    }
+
+    @Test
+    fun `back with nothing added opens no app screen`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        open().use {
+            compose.onNodeWithTag("back").performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            assertNull(shadowOf(app).nextStartedActivity)
         }
     }
 
@@ -184,28 +207,8 @@ class FoodAddDialogTest {
             compose.waitForIdle()
             compose.onNodeWithTag("match-Kaurapuuro testi-menu").performClick()
             compose.onNodeWithTag("match-Kaurapuuro testi-delete").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("sheetProductRemoved"), 5_000)
+            compose.waitUntilAtLeastOneExists(hasTestTag("snackbar"), 5_000)
             assertNull(app.products.find("Kaurapuuro testi"))
-        }
-    }
-
-    @Test
-    fun `the menu in the sheet's day list deletes and Kumoa restores`() {
-        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
-        app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
-        open().use {
-            compose.waitUntilAtLeastOneExists(hasTestTag("chip-Kaurapuuro testi"), 5_000)
-            compose.onNodeWithTag("chip-Kaurapuuro testi").performClick()
-            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
-            shadowOf(Looper.getMainLooper()).idle()
-            val uuid = records.items.single().uuid
-            compose.onNodeWithTag("sheet-$uuid-menu").performClick()
-            compose.onNodeWithTag("sheet-$uuid-delete").performClick()
-            compose.waitUntilAtLeastOneExists(hasTestTag("sheetDeleted"), 5_000)
-            shadowOf(Looper.getMainLooper()).idle()
-            assertEquals(0, records.items.size)
-            compose.onNodeWithTag("deletedUndo").performClick()
-            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.size == 1 }
         }
     }
 }

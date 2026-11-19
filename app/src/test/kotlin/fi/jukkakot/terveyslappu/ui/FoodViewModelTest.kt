@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fi.jukkakot.terveyslappu.TerveysApp
+import fi.jukkakot.terveyslappu.food.AddSearchTarget
 import fi.jukkakot.terveyslappu.food.Amount
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.EditInput
@@ -57,7 +58,7 @@ class FoodViewModelTest {
     private fun ready() {
         model.refresh()
         idle()
-        model.openSheet(today)
+        model.openSearch(today)
     }
 
     private fun type(text: String) {
@@ -82,55 +83,165 @@ class FoodViewModelTest {
     }
 
     @Test
-    fun `Tallenna in the editor returns to the sheet with the edited item`() {
+    fun `Tallenna on Ruoka edits an item added in the search and leaves no search open`() {
         ready()
         type("Rahka")
         val added = assertNotNull(state.lastAdded)
+        model.leaveSearch()
         model.openEditor(added)
-        assertNull(state.sheetDay)
+        assertNull(state.searchDay)
         model.saveEdit(added, EditInput("Rahka", EditMode.G, 200.0, 65.0, false))
         idle()
-        assertEquals(today, state.sheetDay)
+        assertNull(state.searchDay)
         assertNull(state.editing)
-        assertEquals(Amount(200.0, AmountUnit.G), state.lastAdded?.amount)
         assertEquals(130.0, records.items.single().kcal)
+        // An edit keeps the highlight.
+        assertEquals(setOf(added.uuid), state.highlight)
     }
 
     @Test
-    fun `Peruuta returns to the sheet with the same line`() {
+    fun `Poista on Ruoka drops the annos from the highlight and the count`() {
         ready()
         type("Rahka")
         val added = assertNotNull(state.lastAdded)
-        model.openEditor(added)
-        model.closeEditor()
-        assertEquals(today, state.sheetDay)
-        assertEquals(added, state.lastAdded)
+        model.leaveSearch()
+        model.delete(added)
+        idle()
+        assertTrue(records.items.isEmpty())
+        assertTrue(state.highlight.isEmpty())
     }
 
     @Test
-    fun `Poista returns to the sheet with a Kumoa line and no item line`() {
+    fun `adds are counted from the tap and Kumoa takes the latest back out`() {
         ready()
         type("Rahka")
-        model.openEditor(assertNotNull(state.lastAdded))
-        model.delete(state.editing!!)
+        type("kahvi")
+        assertEquals(2, state.addedIds.size)
+        model.undoAdd()
         idle()
-        assertEquals(today, state.sheetDay)
-        assertNull(state.lastAdded)
-        assertIs<SheetLine.Deleted>(state.line)
-        assertTrue(records.items.isEmpty())
-        model.undoDelete()
-        idle()
+        assertEquals(1, state.addedIds.size)
         assertEquals(listOf("Rahka"), records.items.map { it.name })
     }
 
     @Test
-    fun `closing the sheet drops a pending Kumoa`() {
+    fun `an add is counted before the day has been read`() {
+        val gate = CompletableDeferred<Unit>()
+        records.readGate = gate
+        model.refresh()
+        idle()
+        model.openSearch(today)
+        model.onQuery("kahvi")
+        model.addTyped()
+        assertEquals(1, state.addedIds.size)
+        gate.complete(Unit)
+        idle()
+        assertEquals(1, state.addedIds.size)
+    }
+
+    @Test
+    fun `a failed write no longer counts as added and back adds nothing`() {
+        ready()
+        records.failInsert = true
+        type("kahvi")
+        assertTrue(state.addedIds.isEmpty())
+        assertEquals(AddSearchTarget.Origin, model.leaveSearch())
+        assertNull(state.searchDay)
+        assertTrue(state.highlight.isEmpty())
+    }
+
+    @Test
+    fun `leaving with adds shows that day on Ruoka with them highlighted and drops the bar`() {
+        model.refresh()
+        idle()
+        val yesterday = today.minusDays(1)
+        model.openSearch(yesterday)
+        type("kahvi")
+        type("pulla")
+        val ids = records.items.sortedBy { it.pos }.map { it.uuid }
+        val target = assertIs<AddSearchTarget.Ruoka>(model.leaveSearch())
+        assertEquals(yesterday, target.day)
+        assertEquals(ids, target.uuids)
+        assertEquals(ids.toSet(), state.highlight)
+        assertEquals(yesterday, state.day)
+        assertNull(state.searchDay)
+        assertNull(state.line)
+    }
+
+    @Test
+    fun `leaving without adds returns to the origin and keeps Ruoka as it was`() {
+        ready()
+        assertEquals(AddSearchTarget.Origin, model.leaveSearch())
+        assertEquals(today, state.day)
+        assertTrue(state.highlight.isEmpty())
+    }
+
+    @Test
+    fun `the highlight ends with a new search, a day change or leaving Ruoka`() {
         ready()
         type("Rahka")
-        model.openEditor(state.lastAdded!!)
-        model.delete(state.editing!!)
-        model.closeSheet()
-        assertNull(state.line)
+        model.leaveSearch()
+        assertEquals(1, state.highlight.size)
+        model.setDay(today.minusDays(1))
+        assertTrue(state.highlight.isEmpty())
+        model.openSearch(today)
+        type("kahvi")
+        model.leaveSearch()
+        model.openSearch(today)
+        assertTrue(state.highlight.isEmpty())
+        model.leaveSearch()
+        model.showRuoka(today, setOf("x"))
+        model.clearHighlight()
+        assertTrue(state.highlight.isEmpty())
+    }
+
+    @Test
+    fun `the widget exit shows Ruoka with the highlight and reads the day after the writes`() {
+        records.stored["x"] = earlier("Puuro", 1).copy(recordId = "rec:x")
+        model.refresh()
+        idle()
+        model.openSearch(today)
+        model.showRuoka(today, setOf("x"))
+        idle()
+        assertNull(state.searchDay)
+        assertEquals(setOf("x"), state.highlight)
+        assertEquals(1, state.items?.size)
+    }
+
+    @Test
+    fun `the empty field ranking is fixed while the search is open`() {
+        app.products.put(Product("Testipuuro", false, Energy(100.0, AmountUnit.KPL), Amount(1.0, AmountUnit.KPL)))
+        app.products.put(Product("Testikahvi", false, Energy(5.0, AmountUnit.KPL), Amount(1.0, AmountUnit.KPL)))
+        ready()
+        val before = assertNotNull(state.picks).map { it.name }
+        type("Testikahvi")
+        type("Testikahvi")
+        assertEquals(before, state.picks?.map { it.name })
+    }
+
+    @Test
+    fun `an edited add from the draft editor counts as added and Peruuta does not`() {
+        app.products.put(Product("Testikastike", false, Energy(140.0, AmountUnit.G), Amount(250.0, AmountUnit.G)))
+        ready()
+        val pick = Suggestion.Own(app.products.find("Testikastike")!!)
+        model.editDraft(pick)
+        model.closeEditor()
+        assertTrue(state.addedIds.isEmpty())
+        model.editDraft(pick)
+        model.addDraft(EditInput("Testikastike", EditMode.G, 350.0, 140.0, false))
+        idle()
+        assertEquals(1, state.addedIds.size)
+    }
+
+    @Test
+    fun `Lisaa kaikki counts the imported annokset as added and Kumoa removes them`() {
+        ready()
+        check(100)
+        model.addAllFromClip(clipJson, today)
+        idle()
+        assertEquals(2, state.addedIds.size)
+        model.undoImport()
+        idle()
+        assertTrue(state.addedIds.isEmpty())
     }
 
     @Test
@@ -140,7 +251,7 @@ class FoodViewModelTest {
         idle()
         model.openEditor(state.items!!.single())
         model.closeEditor()
-        assertNull(state.sheetDay)
+        assertNull(state.searchDay)
         assertNull(state.editing)
     }
 
@@ -151,7 +262,7 @@ class FoodViewModelTest {
         records.readGate = gate
         model.refresh()
         idle()
-        model.openSheet(today)
+        model.openSearch(today)
         assertNull(state.items)
         model.onQuery("kahvi")
         model.addTyped()
@@ -179,7 +290,7 @@ class FoodViewModelTest {
         records.failInsert = true
         type("kahvi")
         assertEquals(SheetLine.Failed, state.line)
-        assertEquals(today, state.sheetDay)
+        assertEquals(today, state.searchDay)
     }
 
     @Test
@@ -187,7 +298,7 @@ class FoodViewModelTest {
         ready()
         model.onQuery("kahvi")
         model.addTyped()
-        model.closeSheet()
+        model.closeSearch()
         store.clear()
         idle()
         assertEquals(listOf("Kahvi"), records.items.map { it.name })
@@ -198,7 +309,7 @@ class FoodViewModelTest {
         model.refresh()
         idle()
         val yesterday = today.minusDays(1)
-        model.openSheet(yesterday)
+        model.openSearch(yesterday)
         type("kahvi")
         assertEquals(yesterday, records.items.single().day)
     }
@@ -295,13 +406,13 @@ class FoodViewModelTest {
         model.editDraft(Suggestion.Own(kastike))
         assertNotNull(state.editing)
         assertNotNull(state.draft)
-        assertNull(state.sheetDay)
+        assertNull(state.searchDay)
         model.addDraft(EditInput("Testikastike", EditMode.G, 350.0, 140.0, false))
         idle()
         val item = records.items.single()
         assertEquals(350.0, item.amount?.value)
         assertEquals(490.0, item.kcal)
-        assertEquals(today, state.sheetDay)
+        assertEquals(today, state.searchDay)
         assertNull(state.editing)
         assertNull(state.draft)
         assertEquals(item.uuid, assertIs<SheetLine.Added>(state.line).item.uuid)
@@ -316,7 +427,7 @@ class FoodViewModelTest {
         model.closeEditor()
         idle()
         assertTrue(records.items.isEmpty())
-        assertEquals(today, state.sheetDay)
+        assertEquals(today, state.searchDay)
         assertNull(state.draft)
         assertNull(state.line)
     }

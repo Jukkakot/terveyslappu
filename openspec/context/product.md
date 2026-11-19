@@ -27,6 +27,9 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
 - **keskiarvo**: the average of a period (labels, legends, tiles); never "keskimäärin", "keskim." or "ka.".
 - **Värit**: the colour choice in Asetukset → Ulkoasu, next to **Teema**: **Terveyslappu** (the
   app's own mint/graphite palette, default) or **Puhelimen värit** (Material You).
+- **Lisää annos -haku**: the full-screen search that adds annokset (opened by Lisää annos in the
+  app, the widget and the shortcut); shows only what can be added, never the day's annokset.
+  Never "sheet", "ikkuna" or "paneeli" in UI texts.
 - **ⓘ (Tiedot)**: a food row's info button; shows the annos's details (amount, kcal, Kalorit,
   Herkku, logging time) in a small bubble, no actions.
 - **⋮ (Toiminnot)**: a list row's one action button; its menu holds **Muokkaa** and a red
@@ -262,7 +265,7 @@ Garmin watch -> Garmin Connect -> Health Connect (steps, read only since v1.28)
     treats in their own colours show whether the excess comes from ordinary meals or from treats.
     No other categories until one has a reason (user: "everything needs a reason").
   - Food widget (food-widget, user 2026-11-14): a 1x1 "Lisää annos" button and a launcher
-    shortcut open the add sheet over the home screen; adding the day's meals is as quick as
+    shortcut open the add search (full screen, food-add-search, user 2026-11-19); adding the day's meals is as quick as
     weighing. Add-only: the widget never shows food, kcal, a count or a state; no food tile.
   - Food, kcal and weight are never *shown* on always-visible surfaces (widget face, tile,
     shortcut label, notification): the user looks at them only when they choose to open the app
