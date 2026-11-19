@@ -91,8 +91,7 @@
   still without Kumoa), the notification's Poista paino with Kumoa and no OK, the widget ✓, and
   the values rule narrowed to the home screen (widgets, tile, shortcut labels; notifications may
   show the weight, user 2026-11-19). `roadmap.md`: U1–U6 and U8 done as everyday-feedback.
-- [ ] 7.2 (left to the master session: a subagent may not edit CLAUDE.md; the ready patch is in
-  the implementer's report) `.claude/CLAUDE.md` log lines: `weighin.end reason= heard= ignored= ms=`,
+- [x] 7.2 `.claude/CLAUDE.md` log lines: `weighin.end reason= heard= ignored= ms=`,
   `weighin.open from=again`, `weighin.recent`, `auto.action delete ok from= ageS=`,
   `auto.action undo ok|failed`, OK gone from `auto.action`, `food.search.end added= via= ms=`;
   map notes (`LastWeight` at/deleted, `AddedSummary`, `RecentAuto`, timeout helper,
