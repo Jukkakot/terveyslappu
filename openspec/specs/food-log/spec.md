@@ -210,7 +210,7 @@ above the rows) and on the Ruoka screen (at the top of the day) the offer SHALL 
 name, amount, treat sign and kcal (at most five lines, then "+<N> muuta"), then a filled primary
 button "Lisää kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL save the
 content as the preview's Lisää would, to the day the search or Ruoka shows, without opening the
-preview, and show "<N> annosta lisätty · Kumoa"; in the search those annokset count as added in
+preview, and show "Lisättiin <N> annosta · Kumoa"; in the search those annokset count as added in
 this search. "Muokkaa" SHALL open the preview. When the JSON holds only products the card SHALL
 list the products with their energy and its button SHALL read "Tallenna ruuat". On the front page
 the same card SHALL be shown above the cards, adding to today. The offer SHALL be shown again on
@@ -232,7 +232,7 @@ edit mode.
 - **GIVEN** the user copied the chat's answer with food JSON of 3 items
 - **WHEN** they open Lisää annos
 - **THEN** the card lists the 3 items and the total under the top bar, and one tap on Lisää kaikki
-  adds them to today with "3 annosta lisätty · Kumoa"
+  adds them to today with "Lisättiin 3 annosta · Kumoa"
 
 #### Scenario: Fix before adding
 - **WHEN** the user taps Muokkaa on the card
@@ -330,7 +330,7 @@ Peruuta SHALL save nothing.
 
 ### Requirement: Saving an AI import
 "Lisää" SHALL add the items in their order at the end of the chosen day, as logged items written to
-Health Connect like any item, and SHALL show a line "<N> annosta lisätty · Kumoa"; Kumoa SHALL
+Health Connect like any item, and SHALL show a line "Lisättiin <N> annosta · Kumoa"; Kumoa SHALL
 remove the added items and restore the products as they were. An import SHALL only add: it SHALL
 NOT change or delete items already logged, and SHALL NOT touch weights or anything outside the
 food log. The JSON's values SHALL win over the app's:
@@ -358,7 +358,7 @@ food log. The JSON's values SHALL win over the app's:
 Earlier logged items of a changed product SHALL keep their kcal.
 
 #### Scenario: Undo the import
-- **WHEN** the user taps Kumoa on "2 annosta lisätty"
+- **WHEN** the user taps Kumoa on "Lisättiin 2 annosta"
 - **THEN** both items are gone and the products are as before
 
 #### Scenario: Earlier items untouched
@@ -695,8 +695,8 @@ and category. While Valmiit ruuat is off no base product is consulted.
 ### Requirement: Adding from the search
 "Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open
 the add search over the whole screen, adding to the day shown (today from the front page and
-Historia). It SHALL show only what can be added: no day list, no day total, no summary line and
-no eaten annos. Tapping a ruoka row SHALL add that ruoka at once at the end of the day with its
+Historia). It SHALL show only what can be added and this search's own adds (the marks and the
+added strip below): no day list, no day total and no eaten annos. Tapping a ruoka row SHALL add that ruoka at once at the end of the day with its
 usual amount; the field is then cleared and the search stays open for the next annos.
 
 Details:
@@ -729,8 +729,25 @@ Details:
 - Tapping "Lisää … uutena" does what Enter does. Enter adds exactly the typed text: a bare number
   as an annos "Pikalisäys" with that many kcal, any other text as an annos of that name (its
   ruoka's kcal when the name is a known ruoka, otherwise without kcal).
-- After any add the keyboard stays as it was and the bar "<name> lisätty · Kumoa" shows ("Search
-  messages and loading"); Kumoa removes that annos.
+- After any add the keyboard stays as it was and the bar "<name> <amount> lisätty · Kumoa" shows
+  ("Search messages and loading"); Kumoa removes that annos.
+- Added mark: a ruoka row whose ruoka has annokset counted as added in this search ("Leaving the
+  search") shows a mark at its end, just before its ⋮: "✓" for one annos, "×2", "×3" … for more,
+  in the primary colour. The mark is not a control (a tap on it is a tap on the row, which adds
+  again); TalkBack reads it as part of the row ("lisätty", "lisätty 2 kertaa"). An annos counts
+  for the ruoka it was logged as, after the typed name was resolved to a ruoka (a row tap,
+  Muokkaa → Lisää, Enter on a known name, the clipboard's Lisää kaikki), and names are compared
+  as ruoka names are (case and surrounding spaces do not matter). A Valmiit ruuat row whose alias
+  became an own ruoka under the typed name is marked too. Annokset of ruuat not listed in the
+  rows count only in the strip. Kumoa, a failed write or a delete lowers the count; at zero the
+  mark goes. The "Lisää … uutena" row has no mark.
+- Added strip: while at least one annos counts as added in this search, a strip at the search's
+  bottom (above the keyboard when it is up, the bar above the strip) reads "1 annos lisätty ·
+  130 kcal" or "2 annosta lisätty · 465 kcal" (every annos counted as added in this whole search,
+  also the clipboard's and Pikalisäys, with their known kcal), with
+  "· 1 ilman kcal" added when some have no kcal and "· ei kcal" when none has any, and ends with
+  a filled "Valmis" button that leaves the search as back does ("Leaving the search"). Numbers
+  and their units do not break apart. The strip goes when the count drops to zero.
 - The ⋮ menu's "Muokkaa" opens the editor for a new annos: the same editor and rules as an annos's
   Muokkaa (name, amount and unit, Kalorit, Herkku; changes reach the ruoka as after Tallenna),
   filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and Poista. Lisää adds
@@ -750,7 +767,31 @@ Details:
 - **GIVEN** on most mornings around 7 the user logged Rahka 200 g
 - **WHEN** the user opens Lisää annos at 7.20
 - **THEN** among the first rows is "Rahka" with "200 g · 130 kcal", and one tap logs Rahka 200 g,
-  clears nothing else and shows "Rahka lisätty · Kumoa"
+  clears nothing else and shows "Rahka 200 g lisätty · Kumoa"
+
+#### Scenario: Adds stay visible
+- **GIVEN** the search is open with Rahka (200 g, 130 kcal) and Kahvi (1 kpl, 5 kcal) among the rows
+- **WHEN** the user taps Rahka, Kahvi and Kahvi again and the bars have faded
+- **THEN** the Rahka row shows ✓, the Kahvi row shows ×2, and the strip reads "3 annosta lisätty ·
+  140 kcal" with Valmis
+
+#### Scenario: Undo lowers the count
+- **GIVEN** the Kahvi row shows ×2
+- **WHEN** the user taps Kumoa on the latest Kahvi bar
+- **THEN** the Kahvi row shows ✓ and the strip counts one annos fewer
+
+#### Scenario: Without kcal
+- **WHEN** the user adds Rahka 130 kcal and "työpaikan pizza" without kcal
+- **THEN** the strip reads "2 annosta lisätty · 130 kcal · 1 ilman kcal"
+
+#### Scenario: Nothing added yet
+- **WHEN** the search opens
+- **THEN** no row has a mark and no strip shows
+
+#### Scenario: Valmis
+- **GIVEN** the user added Rahka from the front page's Lisää annos
+- **WHEN** the user taps Valmis on the strip
+- **THEN** the Ruoka screen shows today with Rahka highlighted, as back would
 
 #### Scenario: Rows stay put
 - **GIVEN** the empty field lists Rahka first and Kahvi second
@@ -811,8 +852,8 @@ Details:
   and the ⋮ button in full
 
 ### Requirement: Leaving the search
-Leaving the search (the back arrow, or system back when the keyboard is down; back with the
-keyboard up first hides it) SHALL, when at least one annos added in this search is counted as added
+Leaving the search (the back arrow, the added strip's Valmis, or system back when the keyboard is
+down; back with the keyboard up first hides it) SHALL, when at least one annos added in this search is counted as added
 (below), show the Ruoka screen on the search's day with those annokset highlighted ("Highlight on
 Ruoka") and the list scrolled so the last of them is visible; otherwise it SHALL return to the
 screen it was opened from, as it was.
@@ -826,12 +867,16 @@ Ruoka and Ruoka's origin is unchanged. When it was opened from Historia, back fr
 returns to Historia on the tab that was open; when from the front page, back returns to the front
 page.
 
-Only the back arrow and system back apply this rule. Home and the recents button only send the
-search to the background. When the process was killed or the screen was recreated so that the
-search session is lost, the next open is a new search and nothing is highlighted.
+Only the back arrow, Valmis and system back apply this rule (also in the search opened from the
+home-screen widget or shortcut, "Adding from the home screen"). Home and the recents button only
+send the search to the background. When the process was killed or the screen was recreated so that
+the search session is lost, the next open is a new search and nothing is highlighted.
 
 A bar showing when the user leaves the search SHALL be dropped, so its Kumoa is gone; the annos
 can still be deleted on Ruoka.
+
+Each leaving SHALL be logged as `food.search.end added=<count> via=back|done ms=` (ms since the
+search opened; never names or kcal).
 
 #### Scenario: A meal of several annokset
 - **WHEN** the user taps Rahka, types "kahvi" and presses Enter, then taps back
@@ -875,8 +920,12 @@ can still be deleted on Ruoka.
 - **THEN** it is a new search and nothing is highlighted on Ruoka
 
 #### Scenario: Bar dropped on leaving
-- **WHEN** the user taps Pulla and leaves the search while "Pulla lisätty · Kumoa" shows
+- **WHEN** the user taps Pulla and leaves the search while "Pulla 1 kpl lisätty · Kumoa" shows
 - **THEN** the bar is gone and Pulla can be deleted on Ruoka
+
+#### Scenario: Leaving logged
+- **WHEN** the user adds two annokset and taps Valmis
+- **THEN** the log has `food.search.end added=2 via=done ms=…`
 
 ### Requirement: Highlight on Ruoka
 The annokset added in a search SHALL be shown on Ruoka with a tonal background (the highlight).
@@ -905,12 +954,18 @@ annos back without the highlight.
 
 ### Requirement: Search messages and loading
 Every message of the add search SHALL be shown as the app's bar at the search's bottom (above the
-keyboard when it is up): "<name> lisätty · Kumoa", "<N> annosta lisätty · Kumoa",
+keyboard when it is up): "<name> <amount> lisätty · Kumoa", "Lisättiin <N> annosta · Kumoa"
+(the clipboard's Lisää kaikki: what that tap added, unlike the strip's count of the whole search),
 "<name> poistettu · Kumoa", "Ohitettu · Kumoa", "Päivitetty <N> annosta · Kumoa",
 "Päivitettiin <X>/<N> annosta · Yritä uudelleen", the clipboard-changed notice, the energy read
 failure, "Tallennus epäonnistui" and "Päivän annoksia ei voitu lukea". The newest replaces the
 previous one. A bar with Kumoa or Yritä uudelleen lasts as the app's Kumoa bars (about 4 seconds,
 swipe away); a bar without an action lasts the app's normal short message length.
+
+The add bar SHALL name what was added with its amount as the ruoka rows write it: "Rahka 200 g
+lisätty", "Pulla 1 kpl lisätty"; a Pikalisäys with its kcal ("Pikalisäys 350 kcal lisätty"); an
+annos without an amount with its name only ("työpaikan pizza lisätty"). A long name wraps to a
+second line rather than cutting the amount off.
 
 A failed write SHALL show "Tallennus epäonnistui" and keep the search open. The field SHALL be
 usable at once. The day SHALL be read in the background when the search opens; an add made before
@@ -943,6 +998,14 @@ suggestion rows.
 #### Scenario: Newest bar wins
 - **WHEN** the user adds Pulla and then removes a ruoka with Poista
 - **THEN** only "… poistettu · Kumoa" shows
+
+#### Scenario: Bar names the amount
+- **WHEN** the user taps Rahka, whose usual amount is 200 g
+- **THEN** the bar reads "Rahka 200 g lisätty · Kumoa"
+
+#### Scenario: Bar for a bare number
+- **WHEN** the user types 350 and presses Enter
+- **THEN** the bar reads "Pikalisäys 350 kcal lisätty · Kumoa"
 
 ### Requirement: Search without permission
 The add search SHALL check the nutrition permission before showing its rows and focusing the field:
@@ -998,7 +1061,7 @@ and keep it open.
 - **GIVEN** the user copied food JSON with 4 items
 - **WHEN** they open the search from the widget and tap Lisää kaikki
 - **THEN** the 4 annokset are added to today, the search stays open and shows
-  "4 annosta lisätty · Kumoa"
+  "Lisättiin 4 annosta · Kumoa"
 
 ### Requirement: Removing a product from the search
 Each ruoka row in the add search SHALL end with a ⋮ button ("Toiminnot: <name>") whose menu offers
