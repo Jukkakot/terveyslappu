@@ -1,5 +1,8 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -105,6 +108,46 @@ class LargeTextTest {
         compose.onNodeWithTag("backupEnable").performScrollTo().assertIsDisplayed()
         page = SettingsPage.SUPPORT
         compose.onNodeWithTag("shareLog").performScrollTo().assertIsDisplayed()
+    }
+
+    /** food-log "Top bar at large text": back, Viikko and the ⋮ stay on screen beside the title at 200 %. */
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun `Ruoka keeps back, Viikko and the more menu visible`() {
+        val today = java.time.LocalDate.now()
+        val zone = java.time.ZoneId.systemDefault()
+        fun annos(uuid: String, pos: Int, name: String): fi.jukkakot.terveyslappu.food.FoodItem {
+            val at = today.atTime(8 + pos, 0).atZone(zone).toInstant()
+            return fi.jukkakot.terveyslappu.food.FoodItem(uuid, today, pos, name, 130.0, fi.jukkakot.terveyslappu.food.Amount(1.0, fi.jukkakot.terveyslappu.food.AmountUnit.KPL), false, at, zone.rules.getOffset(at), true)
+        }
+        val food = FoodUiState(access = FoodAccess.GRANTED, items = listOf(annos("a", 1, "Rahka"), annos("b", 2, "Pulla")), day = today)
+        compose.setContent {
+            TerveysTheme {
+                MainScreen(MainUiState(access = Access.GRANTED, weights = weights, screen = Screen.FOOD), "0.1.1-test", MainActions(), food = food)
+            }
+        }
+        for (tag in listOf("back", "foodWeek", "foodMore")) compose.onNodeWithTag(tag).assertIsDisplayed()
+        val screen = compose.onRoot().getUnclippedBoundsInRoot()
+        for (tag in listOf("back", "foodWeek", "foodMore")) {
+            val box = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+            kotlin.test.assertTrue(box.left >= 0.dp && box.right <= screen.right, "$tag $box is cut off")
+        }
+    }
+
+    /** app-appearance "Options on one line each": every theme and colour option sits whole on one row at 200 %. */
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun `Ulkoasu shows every option on one line`() {
+        compose.setContent {
+            TerveysTheme {
+                SettingsScreen(SettingsPage.APPEARANCE, true, ThemeMode.SYSTEM, fi.jukkakot.terveyslappu.profile.OwnerProfile(), false, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState())
+            }
+        }
+        for (tag in listOf("theme-SYSTEM", "theme-LIGHT", "theme-DARK", "colours-BRAND", "colours-PHONE")) {
+            compose.onNodeWithTag(tag).performScrollTo().assertIsDisplayed()
+            val box = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+            kotlin.test.assertTrue(box.bottom - box.top < 64.dp, "$tag wraps to two lines: $box")
+        }
     }
 
     @Test

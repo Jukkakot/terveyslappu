@@ -1,5 +1,8 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.unit.dp
+import fi.jukkakot.terveyslappu.R
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -113,6 +116,19 @@ class HistoryChartsTest {
         tags.forEach { assertTrue(exists(it), it) }
         val lefts = tags.map { node(it).getUnclippedBoundsInRoot().left.value }
         assertEquals(lefts.sorted(), lefts)
+    }
+
+    @Test
+    fun `the last tab is a plus icon named Uusi kaavio, at least 48 dp wide`() {
+        show()
+        val tab = node("tab-NEW")
+        compose.onNode(androidx.compose.ui.test.hasContentDescription(compose.activity.getString(R.string.chart_new)) and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("tab-NEW")), useUnmergedTree = true).assertExists()
+        tab.assertHasClickAction()
+        val box = tab.getUnclippedBoundsInRoot()
+        assertTrue(box.right - box.left >= 48.dp && box.bottom - box.top >= 48.dp, "touch target: $box")
+        assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasText(compose.activity.getString(R.string.chart_new)) and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("tab-NEW")), useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "no text on the tab")
+        openTab("tab-NEW")
+        node("page-newChart").assertIsDisplayed()
     }
 
     @Test

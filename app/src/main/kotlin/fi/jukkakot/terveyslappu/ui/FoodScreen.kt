@@ -30,6 +30,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,6 +41,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
@@ -221,8 +224,21 @@ internal fun FoodScreen(
                     if (ordering != null) {
                         TextButton(onClick = actions.onFinishOrder, modifier = Modifier.testTag("orderDone")) { Text(stringResource(R.string.food_order_done)) }
                     } else if (food.dayItems(food.day).size > 1) {
-                        IconButton(onClick = actions.onStartOrder, modifier = Modifier.testTag("order")) {
-                            Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.food_order))
+                        // Järjestä is rare: a named ⋮ menu instead of an unlabelled icon (food-log "Editing, order and delete").
+                        var menu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menu = true }, modifier = Modifier.testTag("foodMore")) {
+                            Icon(painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.app_menu))
+                        }
+                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.food_order_menu)) },
+                                leadingIcon = { Icon(painterResource(R.drawable.ic_sort), contentDescription = null) },
+                                onClick = {
+                                    menu = false
+                                    actions.onStartOrder()
+                                },
+                                modifier = Modifier.testTag("order"),
+                            )
                         }
                     }
                 }

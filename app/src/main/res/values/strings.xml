@@ -333,7 +333,7 @@
     <string name="food_yesterday">Eilen</string>
     <string name="food_prev_day">Edellinen päivä</string>
     <string name="food_next_day">Seuraava päivä</string>
-    <string name="food_order">Järjestä</string>
+    <string name="food_order_menu">Järjestä annokset</string>
     <string name="food_order_done">Valmis</string>
     <string name="food_order_hint">Raahaa riviä kahvasta tai siirrä nuolilla.</string>
     <string name="food_move_up">Siirrä %1$s ylös</string>

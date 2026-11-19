@@ -1,5 +1,10 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -329,28 +334,12 @@ private fun ThemeMode.label(): Int = when (this) {
 }
 
 /**
- * Filter chips like Historia's period choice: a segmented button broke "Järjestelmä" mid-word on a
- * 360 dp phone, chips wrap whole at any text size.
+ * Teema as a radio list (app-appearance "Theme choice"): a segmented button broke "Järjestelmä"
+ * mid-word on a 360 dp phone and chips wrapped, a radio row never does.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ThemeChoice(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ThemeMode.entries.forEach { option ->
-            val selected = option == mode
-            FilterChip(
-                selected = selected,
-                onClick = { onTheme(option) },
-                label = { Text(stringResource(option.label())) },
-                leadingIcon = if (selected) {
-                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else {
-                    null
-                },
-                modifier = Modifier.testTag("theme-${option.name}"),
-            )
-        }
-    }
+    RadioChoice(ThemeMode.entries, mode, onTheme, { it.label() }, "theme")
 }
 
 private fun ColourChoice.label(): Int = when (this) {
@@ -358,24 +347,32 @@ private fun ColourChoice.label(): Int = when (this) {
     ColourChoice.PHONE -> R.string.colours_phone
 }
 
-/** Värit: Terveyslappu or Puhelimen värit, the same chips as [ThemeChoice]. */
-@OptIn(ExperimentalLayoutApi::class)
+/** Värit: Terveyslappu or Puhelimen värit, a radio list like [ThemeChoice]. */
 @Composable
 private fun ColourChoiceChips(choice: ColourChoice, onColours: (ColourChoice) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        ColourChoice.entries.forEach { option ->
-            val selected = option == choice
-            FilterChip(
-                selected = selected,
-                onClick = { onColours(option) },
-                label = { Text(stringResource(option.label())) },
-                leadingIcon = if (selected) {
-                    { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else {
-                    null
-                },
-                modifier = Modifier.testTag("colours-${option.name}"),
-            )
+    RadioChoice(ColourChoice.entries, choice, onColours, { it.label() }, "colours")
+}
+
+/**
+ * A single-choice list: one full-width row per option with a radio button, the whole row tappable
+ * at least 48 dp high, announced as a radio button with its state. Test tags `<tag>-<NAME>` sit on the rows.
+ */
+@Composable
+private fun <T : Enum<T>> RadioChoice(options: List<T>, selected: T, onSelect: (T) -> Unit, label: (T) -> Int, tag: String) {
+    Column(Modifier.selectableGroup()) {
+        options.forEach { option ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .selectable(selected = option == selected, onClick = { onSelect(option) }, role = Role.RadioButton)
+                    .testTag("$tag-${option.name}"),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = option == selected, onClick = null)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(label(option)), style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }

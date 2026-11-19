@@ -327,11 +327,14 @@ private fun PeriodList(
                         modifier = Modifier.testTag("tab-chart-${c.id}"),
                     )
                 }
-                CompactTab(
+                // A "+" icon tab (weight-chart "Custom chart tabs"): never shortened, reads as adding.
+                Tab(
                     selected = page == HistoryPage.NewChart,
                     onClick = { scope.launch { pager.animateScrollToPage(pages.size - 1) } },
-                    text = { Text(stringResource(R.string.chart_new), maxLines = 1) },
-                    modifier = Modifier.testTag("tab-NEW"),
+                    modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp).testTag("tab-NEW"),
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.chart_new)) },
                 )
             }
         }

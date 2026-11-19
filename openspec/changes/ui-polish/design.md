@@ -23,7 +23,7 @@ any new screen or term (no glossary change needed).
    `steps_per_day` already does). Every card string is listed (`kg_value`, `home_spark_range` with
    no break before "kg" and around "→", `food_kcal` in the big card's scale label, the average
    strings, `steps_value`, the Kulutus equivalents), and one unit test runs over that list. The
-   card's bottom row is a `FlowRow` of the period label and the average. Small card: the average
+   card's bottom row is a small custom `Layout` (a FlowRow did not break before a non-wrapping text) of the period label and the average. Small card: the average
    is always a Column of two non-wrapping lines ("keskiarvo", value), end-aligned; the no-average
    text ("ei annoksia") is one wrapping line. Wide and big: one non-wrapping line in the long form.
    The layout moves the average under the label when it does not fit, at every size (new split

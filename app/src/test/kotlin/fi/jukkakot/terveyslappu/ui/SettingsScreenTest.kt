@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.collectAsState
@@ -299,6 +301,20 @@ class SettingsScreenTest {
         assertTrue(background.luminance() < 0.5f)
         assertEquals(ThemeMode.DARK, app.appearance.mode.value)
         app.appearance.set(ThemeMode.SYSTEM)
+    }
+
+    @Test
+    fun `theme and colour options are radio rows with their state`() {
+        compose.setContent {
+            TerveysTheme {
+                SettingsScreen(SettingsPage.APPEARANCE, true, ThemeMode.DARK, OwnerProfile(), true, BackupStatus(), "0.1.1-test", MainActions(), SnackbarHostState())
+            }
+        }
+        for (tag in listOf("theme-SYSTEM", "theme-LIGHT", "theme-DARK", "colours-BRAND", "colours-PHONE")) {
+            compose.onNodeWithTag(tag).assert(androidx.compose.ui.test.SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Role, androidx.compose.ui.semantics.Role.RadioButton))
+        }
+        compose.onNodeWithTag("theme-DARK").assertIsSelected()
+        compose.onNodeWithTag("theme-LIGHT").assertIsNotSelected()
     }
 
     @Test

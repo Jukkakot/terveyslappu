@@ -17,17 +17,17 @@ Test data is made up. `everyday-feedback` is merged; the weigh-in dialog and `au
 
 ## 3. Historia
 
-- [ ] 3.1 "Uusi kaavio" tab as `Tab(icon = …)` "+" (design 5), Icon contentDescription "Uusi kaavio", min 48 dp, tag `tab-NEW` kept; update the tab tests (assert by tag): the tab has no text, its content description is "Uusi kaavio", tapping it shows the Uusi kaavio page; TalkBack shows a tab with selected state.
+- [x] 3.1 "Uusi kaavio" tab as `Tab(icon = …)` "+" (design 5), Icon contentDescription "Uusi kaavio", min 48 dp, tag `tab-NEW` kept; update the tab tests (assert by tag): the tab has no text, its content description is "Uusi kaavio", tapping it shows the Uusi kaavio page; TalkBack shows a tab with selected state.
 
 ## 4. Ruoka and the item editor
 
-- [ ] 4.1 Ruoka top bar: replace the sort icon with a ⋮ "Lisää toimintoja" menu holding "Järjestä annokset" (design 7), shown under the old sort icon's rule (granted, loaded, more than one annos that day); order mode keeps Valmis; update `FoodScreenTest` (menu item starts Järjestä) and add Ruoka to `LargeTextTest` at 200 % with a fixture of at least two annokset (back, title, Viikko and ⋮ displayed).
+- [x] 4.1 Ruoka top bar: replace the sort icon with a ⋮ "Lisää toimintoja" menu holding "Järjestä annokset" (design 7), shown under the old sort icon's rule (granted, loaded, more than one annos that day); order mode keeps Valmis; update `FoodScreenTest` (menu item starts Järjestä) and add Ruoka to `LargeTextTest` at 200 % with a fixture of at least two annokset (back, title, Viikko and ⋮ displayed).
 - [ ] 4.2 Pure recent-amounts rule in `food/` (design 9) with unit tests: matched by `FoodItem.key`, day-then-time newest first over all days, distinct by shown text, same unit only, edited annos and Yhteensä annokset excluded, at most three, empty for no history.
 - [ ] 4.3 `FoodEditor` chips under the amount field from both callers (`MainScreen`, `FoodAddDialog`); hidden for Yhteensä, when empty and while loading; chip equal to the field selected; the field keeps its number on a kpl/g switch; smoke test: tapping "200 g" sets the amount field and the result line.
 
 ## 5. Ulkoasu
 
-- [ ] 5.1 Teema and Värit as radio rows (design 6): `selectableGroup`, one 48 dp `selectable(role = RadioButton)` row per option, existing test tags kept on the rows; update `SettingsScreenTest` (choosing Vaalea still calls the action) and add Ulkoasu to `LargeTextTest` at 200 % (all five options displayed, none wrapped to two lines).
+- [x] 5.1 Teema and Värit as radio rows (design 6): `selectableGroup`, one 48 dp `selectable(role = RadioButton)` row per option, existing test tags kept on the rows; update `SettingsScreenTest` (choosing Vaalea still calls the action) and add Ulkoasu to `LargeTextTest` at 200 % (all five options displayed, none wrapped to two lines).
 
 ## 6. Screenshot tour and checks
 

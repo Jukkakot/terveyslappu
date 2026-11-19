@@ -56,6 +56,7 @@ class FoodScreenTest {
     )
 
     private var picked: Suggestion? = null
+    private var orderStarted = false
     private var editPicked: Suggestion? = null
     private var editedItem: String? = null
     private var deletedItem: String? = null
@@ -82,6 +83,7 @@ class FoodScreenTest {
                             state = state.copy(screen = Screen.FOOD, foodOrigin = state.screen)
                         },
                         onAdd = { food = food.copy(searchDay = it) },
+                        onStartOrder = { orderStarted = true },
                         onPick = { picked = it },
                         onEditPick = { editPicked = it },
                         onEdit = { editedItem = it.name },
@@ -152,6 +154,21 @@ class FoodScreenTest {
         compose.onNodeWithTag("back").performClick()
         compose.onNodeWithTag("foodToday", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithTag("foodDay").assertExists()
+    }
+
+    @Test
+    fun `Järjestä is a named menu item in the top bar's more menu`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
+        compose.onNodeWithTag("order").assertDoesNotExist()
+        compose.onNodeWithTag("foodMore").performClick()
+        compose.onNodeWithTag("order").assertExists().performClick()
+        assertTrue(orderStarted)
+    }
+
+    @Test
+    fun `no more menu for a day with a single annos`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted.copy(day = today.minusDays(1)))
+        compose.onNodeWithTag("foodMore").assertDoesNotExist()
     }
 
     @Test
