@@ -289,7 +289,7 @@ internal fun ListenState(line: ListenLine, status: ListenStatus?) {
         ListenLine.Notifications -> StateLine(stringResource(R.string.listen_notifications_warning), warn = true)
         is ListenLine.On -> StateLine(
             stringResource(R.string.settings_listen_on, clockFormat.format(line.start), clockFormat.format(line.end)),
-            symbol = status?.symbol(),
+            symbol = status?.statusSymbol(),
         )
     }
 }

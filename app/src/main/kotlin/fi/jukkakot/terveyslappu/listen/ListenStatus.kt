@@ -43,17 +43,18 @@ data class ListenFacts(
 object ListenStatusRule {
     /**
      * The first status that applies, or null while the trial is off (the section then shows no
-     * status). Order: blocked reasons, power saving pause, done, listening, resting.
+     * status). Order: done (until the next window start, so a blocker shows again from then;
+     * everyday-feedback design 9), blocked reasons, power saving pause, listening, resting.
      */
     fun status(f: ListenFacts): ListenStatus? = when {
         !f.enabled -> null
+        f.done -> ListenStatus.Done(f.nextStart, f.nextStartTomorrow)
         !f.hasScale -> ListenStatus.NoScale
         !f.permission -> ListenStatus.PermissionMissing
         !f.healthWrite -> ListenStatus.HealthMissing
         !f.bluetoothOn -> ListenStatus.BluetoothOff
         !f.armed -> ListenStatus.Stopped
         f.powerSave && !f.listenInPowerSave -> ListenStatus.PowerSavePause
-        f.done -> ListenStatus.Done(f.nextStart, f.nextStartTomorrow)
         f.inside -> ListenStatus.Listening(f.windowEnd, f.windowEndTomorrow)
         else -> ListenStatus.Resting(f.nextStart, f.nextStartTomorrow)
     }

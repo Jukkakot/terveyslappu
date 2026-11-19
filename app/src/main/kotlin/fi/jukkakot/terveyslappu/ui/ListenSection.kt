@@ -46,6 +46,8 @@ import fi.jukkakot.terveyslappu.listen.ListenMode
 import fi.jukkakot.terveyslappu.listen.ListenStatus
 import fi.jukkakot.terveyslappu.listen.ListenUi
 import fi.jukkakot.terveyslappu.listen.ListenWindow
+import fi.jukkakot.terveyslappu.listen.StateSymbol
+import fi.jukkakot.terveyslappu.listen.symbol
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -78,7 +80,7 @@ internal fun ListenGroup(ui: ListenUi, actions: MainActions, snackbar: SnackbarH
     )
     ui.status?.let { status ->
         val (text, fix) = statusText(status)
-        ListenNotice(text, warn = status.isBlocked(), fix = fix, tag = "listenStatus", actions = actions, symbol = status.symbol())
+        ListenNotice(text, warn = status.isBlocked(), fix = fix, tag = "listenStatus", actions = actions, symbol = status.statusSymbol())
     }
     if (ui.batteryRestricted) {
         ListenNotice(stringResource(R.string.listen_battery_warning), warn = true, fix = ListenFix.BATTERY, tag = "listenBattery", actions = actions)
@@ -147,15 +149,14 @@ internal fun statusText(status: ListenStatus): Pair<String, ListenFix?> = when (
     ) to null
 }
 
-/** The status symbol: the green dot, or the amber triangle for every "Ei toimi" line (decorative, the line carries the meaning). */
+/** The status symbol: the green dot, the green ✓ while weighed, or the amber triangle for every "Ei toimi" line (decorative, the line carries the meaning). */
 internal class StatusSymbol(val icon: Int, val color: Int)
 
-internal fun ListenStatus.symbol(): StatusSymbol =
-    if (isBlocked()) {
-        StatusSymbol(R.drawable.ic_state_blocked, R.color.widget_state_blocked)
-    } else {
-        StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on)
-    }
+internal fun ListenStatus.statusSymbol(): StatusSymbol = when (symbol()) {
+    StateSymbol.TRIANGLE -> StatusSymbol(R.drawable.ic_state_blocked, R.color.widget_state_blocked)
+    StateSymbol.CHECK -> StatusSymbol(R.drawable.ic_state_done, R.color.widget_state_on)
+    StateSymbol.DOT -> StatusSymbol(R.drawable.ic_state_on, R.color.widget_state_on)
+}
 
 private fun ListenFix.label(): Int = when (this) {
     ListenFix.PERMISSION -> R.string.listen_fix_permission

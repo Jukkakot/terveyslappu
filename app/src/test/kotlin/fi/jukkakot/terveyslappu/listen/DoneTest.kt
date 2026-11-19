@@ -40,12 +40,15 @@ class DoneTest {
     )
 
     @Test
-    fun `done comes after the blocked reasons and before listening and resting`() {
+    fun `done comes before the blocked reasons, listening and resting`() {
         val done = ListenStatus.Done(LocalTime.of(6, 0), true)
         assertEquals(done, ListenStatusRule.status(facts))
         assertEquals(done, ListenStatusRule.status(facts.copy(inside = false)))
-        assertEquals(ListenStatus.BluetoothOff, ListenStatusRule.status(facts.copy(bluetoothOn = false)))
-        assertEquals(ListenStatus.PowerSavePause, ListenStatusRule.status(facts.copy(powerSave = true, listenInPowerSave = false)))
+        assertEquals(done, ListenStatusRule.status(facts.copy(bluetoothOn = false)))
+        assertEquals(done, ListenStatusRule.status(facts.copy(powerSave = true, listenInPowerSave = false)))
+        // From the next window start (done no longer holds) the blocker shows again.
+        assertEquals(ListenStatus.BluetoothOff, ListenStatusRule.status(facts.copy(done = false, bluetoothOn = false)))
+        assertEquals(ListenStatus.PowerSavePause, ListenStatusRule.status(facts.copy(done = false, powerSave = true, listenInPowerSave = false)))
         assertIs<ListenStatus.Listening>(ListenStatusRule.status(facts.copy(done = false)))
         assertNull(ListenStatusRule.status(facts.copy(enabled = false)))
     }
@@ -60,5 +63,18 @@ class DoneTest {
         assertEquals(WidgetState.BLOCKED, WidgetStateRule.of(ListenStatus.BluetoothOff, inside = true))
         assertNull(WidgetStateRule.of(null, inside = true))
         assertEquals(WidgetState.DONE, WidgetStateRule.shown(WidgetState.DONE, 1, 10))
+    }
+
+    @Test
+    fun `the widget and Asetukset draw the check while weighed`() {
+        assertEquals(StateSymbol.CHECK, WidgetState.DONE.symbol())
+        assertEquals(StateSymbol.TRIANGLE, WidgetState.BLOCKED.symbol())
+        assertEquals(StateSymbol.DOT, WidgetState.ON.symbol())
+        assertEquals(StateSymbol.DOT, WidgetState.RESTING.symbol())
+        assertEquals(StateSymbol.CHECK, ListenStatus.Done(LocalTime.of(6, 0), true).symbol())
+        assertEquals(StateSymbol.TRIANGLE, ListenStatus.BluetoothOff.symbol())
+        assertEquals(StateSymbol.DOT, ListenStatus.Listening(LocalTime.of(10, 0)).symbol())
+        // Bluetooth off after weighing: the check stays on the widget too.
+        assertEquals(WidgetState.DONE, WidgetStateRule.of(ListenStatusRule.status(facts.copy(bluetoothOn = false)), inside = true))
     }
 }

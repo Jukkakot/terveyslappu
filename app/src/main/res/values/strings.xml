@@ -261,7 +261,7 @@
     <string name="listen_status_stopped">Ei toimi: avaa sovellus kerran</string>
     <string name="listen_status_power_save">Ei toimi: virransäästötila päällä</string>
     <string name="listen_status_listening">Odottaa vaakaa klo %1$s asti</string>
-    <string name="listen_status_done">Tänään punnittu, seuraavan kerran klo %1$s</string>
+    <string name="listen_status_done">Punnittu, seuraavan kerran klo %1$s</string>
     <string name="listen_status_done_tomorrow">Tänään punnittu, seuraavan kerran huomenna klo %1$s</string>
     <string name="listen_status_listening_tomorrow">Odottaa vaakaa huomenna klo %1$s asti</string>
     <string name="listen_status_resting">Alkaa klo %1$s</string>
@@ -295,6 +295,8 @@
     <string name="auto_summary">Automaattiset punnitukset</string>
     <string name="widget_state_on">automaattinen punnitus päällä</string>
     <string name="widget_state_blocked">automaattinen punnitus ei toimi</string>
+    <string name="widget_state_done_today">tänään punnittu</string>
+    <string name="widget_state_done">punnittu</string>
     <string name="widget_state_description">%1$s, %2$s</string>
     <!-- "?" weights in Historia and on the home screen (weight-entry, home-screen). -->
     <string name="check_mark">?</string>

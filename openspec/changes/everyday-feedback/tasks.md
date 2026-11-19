@@ -62,7 +62,7 @@
 
 ## 5. Widget ✓ (U8)
 
-- [ ] 5.1 `ic_state_done` vector (check glyph) in the dot's colour; `WeighInWidget.views` maps
+- [x] 5.1 `ic_state_done` vector (check glyph) in the dot's colour; `WeighInWidget.views` maps
   `DONE` to it, TalkBack "tänään punnittu" or, after midnight / from the stored state,
   "punnittu"; `ListenStatus.symbol()` gives the ✓ for the Done line; `ListenStatusRule` puts
   `Done` before the "Ei toimi" reasons; the Done line reads "Punnittu, seuraavan kerran klo …"

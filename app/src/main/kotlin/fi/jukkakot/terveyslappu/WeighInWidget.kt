@@ -11,6 +11,8 @@ import android.widget.RemoteViews
 import androidx.core.content.edit
 import fi.jukkakot.terveyslappu.listen.WidgetState
 import fi.jukkakot.terveyslappu.listen.WidgetStateRule
+import fi.jukkakot.terveyslappu.listen.StateSymbol
+import fi.jukkakot.terveyslappu.listen.symbol
 import fi.jukkakot.terveyslappu.log.AppLog
 
 /**
@@ -45,8 +47,8 @@ class WeighInWidget : AppWidgetProvider() {
                 val manager = AppWidgetManager.getInstance(context) ?: return
                 val ids = manager.getAppWidgetIds(ComponentName(context, WeighInWidget::class.java))
                 if (ids.isEmpty()) return
-                val state = state(context)
-                manager.updateAppWidget(ids, views(context, state))
+                val (state, today) = state(context)
+                manager.updateAppWidget(ids, views(context, state, today))
             } catch (e: Exception) {
                 AppLog.e("widget.state", e, "update")
             }
@@ -54,9 +56,11 @@ class WeighInWidget : AppWidgetProvider() {
 
         /**
          * The state from the Asetukset status; stored with the window end so a redraw after the end
-         * (from the stored value, e.g. when the status cannot be read) shows Lepää.
+         * (from the stored value, e.g. when the status cannot be read) shows Lepää. The second value:
+         * the ✓ is today's ("tänään punnittu"); false after midnight and from the stored state
+         * ("punnittu", never wrong).
          */
-        private fun state(context: Context): WidgetState? {
+        private fun state(context: Context): Pair<WidgetState?, Boolean> {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             val now = System.currentTimeMillis()
             val fresh = runCatching { (context.applicationContext as TerveysApp).listen.ui() }
@@ -75,10 +79,11 @@ class WeighInWidget : AppWidgetProvider() {
                 }
             }
             if (state != old) AppLog.i("widget.state", "", "state" to (state?.key ?: "off"))
-            return state
+            val today = (fresh?.status as? fi.jukkakot.terveyslappu.listen.ListenStatus.Done)?.tomorrow == true
+            return state to today
         }
 
-        private fun views(context: Context, state: WidgetState?): RemoteViews {
+        private fun views(context: Context, state: WidgetState?, today: Boolean): RemoteViews {
             val pending = PendingIntent.getActivity(
                 context, 1, WeighInActivity.intent(context, "widget"),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
@@ -89,11 +94,14 @@ class WeighInWidget : AppWidgetProvider() {
                     setViewVisibility(R.id.widget_state, View.GONE)
                     setContentDescription(R.id.widget_root, context.getString(R.string.weighin_action))
                 } else {
-                    // Two symbols only: the triangle for BLOCKED, the dot for ON, DONE and RESTING.
-                    val (icon, color, label) = if (state == WidgetState.BLOCKED) {
-                        Triple(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
-                    } else {
-                        Triple(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
+                    // The triangle for BLOCKED, the ✓ for DONE, the dot for ON and RESTING; never a weight.
+                    val (icon, color, label) = when (state.symbol()) {
+                        StateSymbol.TRIANGLE -> Triple(R.drawable.ic_state_blocked, R.color.widget_state_blocked, R.string.widget_state_blocked)
+                        StateSymbol.CHECK -> Triple(
+                            R.drawable.ic_state_done, R.color.widget_state_on,
+                            if (today) R.string.widget_state_done_today else R.string.widget_state_done,
+                        )
+                        StateSymbol.DOT -> Triple(R.drawable.ic_state_on, R.color.widget_state_on, R.string.widget_state_on)
                     }
                     setViewVisibility(R.id.widget_state, View.VISIBLE)
                     setImageViewResource(R.id.widget_state, icon)
