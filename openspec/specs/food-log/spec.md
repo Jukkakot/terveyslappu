@@ -31,179 +31,6 @@ Historia on Energia for 1 vk; back from there SHALL return to the Ruoka screen.
 - **THEN** Historia opens on Energia with 1 vk, and tapping a day in the Energia day list opens that
   day on Ruoka
 
-### Requirement: Adding an item
-"Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open the add sheet, adding to the
-day shown (today from the front page). The sheet SHALL take the full height and show the day it
-adds to, with adding kept apart at the bottom.
-
-From the top the sheet SHALL show: a header "<day> · <total> kcal" (Tänään, Eilen or the date;
-"<day>" alone while the day is unread or empty) with a ⋮ menu holding Kopioi tuontiohje and Tuo
-ruoka-annokset; under it the Ruoka screen's summary line without the total ("herkkuja 230 kcal · 1 ilman
-kcal", parts with zero left out, the line left out when both are zero); the clipboard card when it
-is offered ("Clipboard offer"); then the day's items in eating order as compact rows (name on one line, shortened with "…" when it does not fit, treat sign, amount, kcal; no logging time), scrolling, with "Ei vielä annoksia" when the day
-has none. Tapping an item SHALL open its editor ("Editing, order and delete"). The item added last
-in this sheet SHALL be highlighted with a tonal background, and the list SHALL scroll to show it.
-
-At the bottom the sheet SHALL show the add panel on a surface of its own tone (surfaceContainerHigh,
-with a 1 dp outlineVariant line along its top edge), so it reads apart from the day list. A small
-handle centred on the panel's top edge SHALL fold and unfold the panel ("Folding the add panel"
-below). Unfolded, the panel shows: a message
-line only when "Sheet messages and loading" has one, then with
-the field empty the heading "Lisää – usein tähän aikaan" and up to eight chips, one per product:
-the products most often logged within two hours of the current clock time in the last 30 days,
-then the most often logged products, in at most three wrapped rows (chips that do not fit are left
-out). A chip SHALL read "+ <name> <kcal> kcal" with the kcal of its usual amount, in a slightly smaller type than the other labels (labelMedium), or "+ <name>" when the
-energy is unknown; it SHALL show no treat sign. Last, the field with a search icon and the hint
-"Hae ruokaa tai kirjoita kcal".
-
-Tapping a chip SHALL add that product at once at the end of the day with its usual amount, show it
-in the day list, highlighted and scrolled into view; no confirmation line is shown (the row's ⋮ menu replaces Muuta and
-Kumoa). A long press on a chip SHALL open the editor for a new item
-of that product (below); the chip's accessibility actions SHALL offer the same.
-
-While typing, the list "Omat ruuat" SHALL cover the day list and the chips, directly above the field:
-up to five matching products, own products before base products, each row with the product's name
-and under it its usual amount and the kcal that amount gives ("200 g · 130 kcal"; with no usual
-amount the energy, "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when the energy is unknown),
-the treat sign for a Herkku product, and a ⋮ button (see "Removing a product from the sheet"); and as the last row "Lisää ”<text>”
-uutena" with a line telling what it adds (for a bare number "Lisää pelkkä <N> kcal"; for other text
-"ilman kcal" or the known product's kcal); tapping it SHALL do what Enter does. Tapping a product
-row SHALL add it as a chip does. Clearing the field SHALL bring the day list and the chips back.
-
-The editor for a new item (a match row's ⋮ → Muokkaa or a chip's long press) SHALL be the same
-editor and rules as Muuta (name, amount and unit, energy, Herkku; changes reach the product as
-after Tallenna), filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and
-Poista: Lisää SHALL add the item as edited, show it highlighted in the day list and return to the
-sheet; Peruuta SHALL return to the sheet and add nothing (as does closing the editor). Leaving the
-item editor by Tallenna, Peruuta or Poista SHALL return to the sheet with the field as it was, and
-the line SHALL then show the edited item (none after Poista). Pressing enter SHALL add exactly the
-typed text: a bare number as an item "Pikalisäys" with that many kcal, any other text as an item of
-that name (its product's kcal when the name is a known product, otherwise without kcal), then
-clear the field and keep the keyboard up for the next item.
-
-Details:
-- Header: "<day>" is `dayTitle` capitalised (Tänään, Eilen, date) and names the sheet's day
-  relative to the current date (after midnight a sheet opened yesterday reads "Eilen · …"). It
-  shows "· <total> kcal" whenever the day has at least one item, also "· 0 kcal".
-- Layout: the header and summary line stay pinned; the add panel never scrolls and sits directly
-  above the keyboard when it is up; only the day list shrinks. When the day list would be shorter
-  than two rows, the chips drop to fewer rows (down to one). A drag down on the sheet's handle, or on the
-  day list at its top, closes the sheet; the panel and its handle never close the sheet.
-- Clipboard card: the first entry of the scrolling day list (it scrolls away), hidden while typing.
-- While typing, the Omat ruuat rows replace the day list (header and summary stay), bottom-aligned
-  just above the line and the field, best match nearest the field and "Lisää … uutena" closest to
-  it; they scroll when they do not fit.
-- Highlight: only the newest add in this sheet (for Lisää kaikki the last of its items); it stays
-  until the next add or the sheet closes; Kumoa or Poista of it clears it; editing other items does
-  not move it; the list scrolls it into view also with the keyboard up.
-- The line: editing an item from the day list that was not the line's item leaves the line as it
-  was; Poista of any item shows "<name> poistettu · Kumoa", and Kumoa restores it in its place.
-- Chips: filled in rank order, stopping at the first chip that does not fit (no backfill); a long
-  name is ellipsized at about 60 % of the panel width; the kcal carries its unit ("145 kcal"). With no chips the
-  heading and chip area are left out. The accessibility action of a chip is "Muokkaa ennen
-  lisäämistä".
-- Keyboard: a chip tap keeps the keyboard as it was; scrolling the day list hides it; after an
-  editor the keyboard comes back only if it was up before; back first closes the keyboard.
-- From the Ruoka screen the sheet is the same; Ruoka's own clipboard card is not shown while the
-  sheet is open, and the sheet cannot be opened from Järjestä.
-
-Folding the add panel:
-- A drag down on the panel's handle, or on the panel's heading and chip area, folds the panel: the
-  heading, chips and field go, the keyboard goes down, and only the handle (with the message line
-  above it when there is one, so Kumoa stays reachable) is left, so the day list grows. A drag up
-  on the handle, or a tap on it, unfolds the panel without opening the keyboard; a tap on the
-  handle of an unfolded panel folds it. The change animates briefly.
-- Folded or not lasts until the sheet closes; every open starts unfolded. Adding, deleting and
-  editing do not change it. A drag down on a folded panel does nothing.
-- The handle shows whenever the field is empty (with or without chips) and is hidden while typing;
-  with the keyboard up it works the same.
-- The handle is at least 48 dp tall as a touch target; TalkBack names it "Piilota lisäys" or
-  "Näytä lisäys" and its click toggles.
-
-#### Scenario: The day first
-- **GIVEN** today the user logged Rahka 250 g at 7.10 and Jäätelö 130 g (Herkku, 260 kcal) at 19.05
-- **WHEN** they open the sheet from the widget
-- **THEN** the header reads "Tänään · 405 kcal", the line under it "herkkuja 260 kcal", both items are
-  listed without their times, the keyboard is down, and the chips sit above the field at the bottom
-
-#### Scenario: Usual breakfast in one tap
-- **GIVEN** on most mornings around 7 the user logged Rahka 200 g
-- **WHEN** the user taps Lisää annos at 7.20
-- **THEN** among the first chips is "+ Rahka 130 kcal", and one tap logs Rahka 200 g with its kcal,
-  shows it highlighted at the end of the day list and raises the header total by 130
-
-#### Scenario: Set the amount before adding
-- **GIVEN** a product Jauhelihakastike 140 kcal / 100 g, usually 250 g
-- **WHEN** the user long-presses its chip (or types "jauh" and taps ⋮ → Muokkaa on its row),
-  changes the amount to 350 g and taps Lisää
-- **THEN** Jauhelihakastike 350 g, 490 kcal is added and highlighted in the day list, and
-  the next Jauhelihakastike starts at 350 g
-
-#### Scenario: Edit and cancel
-- **WHEN** the user opens the new-item editor and then taps Peruuta
-- **THEN** nothing is added and the sheet is as before
-
-#### Scenario: Edit a typed match
-- **WHEN** the user types "kaurapuu" and taps ⋮ → Muokkaa on Kaurapuuro
-- **THEN** the editor opens with Kaurapuuro's typical portion, and Lisää adds it as edited
-
-#### Scenario: What enter does
-- **WHEN** the user types "kana"
-- **THEN** the Omat ruuat rows replace the day list and the chips above the field, the last row reads
-  "Lisää ”kana” uutena", and tapping it adds what Enter would
-
-#### Scenario: Only a number
-- **WHEN** the user types 350 and presses enter
-- **THEN** an item "Pikalisäys" with 350 kcal is added, the field is cleared and the day list shows it
-
-#### Scenario: A whole day as one number
-- **GIVEN** the user estimated yesterday at 2 200 kcal with an AI chat
-- **WHEN** they move to yesterday on Ruoka, tap Lisää annos, type 2200 and press enter
-- **THEN** yesterday has an item "Pikalisäys" 2 200 kcal next to any other items, counted in
-  Energia like any item, and the sheet's header reads "Eilen · …"
-
-#### Scenario: Only a name
-- **WHEN** the user types "työpaikan pizza", which is no product yet, and presses enter
-- **THEN** an item "työpaikan pizza" without kcal is added and the line under the header counts
-  "1 ilman kcal"
-
-#### Scenario: Forgiving search
-- **WHEN** the user types "jaulihak"
-- **THEN** Jauhelihakastike is suggested (letters ä/a and ö/o equal, parts of compound words and
-  one wrong letter from four typed letters match)
-
-#### Scenario: Edit an eaten item in the sheet
-- **WHEN** the user taps Banaani in the sheet's day list, changes it to 2 kpl and taps Tallenna
-- **THEN** the sheet shows Banaani 2 kpl with the new kcal and the new total
-
-#### Scenario: Back to the field after editing
-- **WHEN** the user taps Muuta, changes the amount and taps Tallenna
-- **THEN** the sheet is shown again and the line shows the edited item
-
-#### Scenario: Back to the field after cancelling or deleting
-- **WHEN** the user taps Muuta and then Peruuta, or Poista
-- **THEN** the sheet is shown again; after Poista no item line is shown
-
-#### Scenario: Fold to look at the day
-- **GIVEN** the sheet is open with chips showing and the day has eight items
-- **WHEN** the user drags the panel's handle down
-- **THEN** the heading, chips and field go, only the handle stays at the bottom, more day rows
-  show, and the sheet stays open
-
-#### Scenario: Unfold again
-- **WHEN** the user taps the handle of a folded panel
-- **THEN** the heading, chips and field come back, with the keyboard down
-
-#### Scenario: Next open starts unfolded
-- **GIVEN** the user folded the panel and closed the sheet
-- **WHEN** they open the sheet again
-- **THEN** the chips and the field show
-
-#### Scenario: Long name on one line
-- **WHEN** the day holds "Keitetty täysjyvämakaroni" 200 g, 300 kcal on a narrow phone
-- **THEN** the row shows the name on one line shortened with "…", "200 g" under it, and the kcal
-  and the ⋮ button in full
-
 ### Requirement: Products
 Every distinct name the user logs SHALL become one product (names compared ignoring case and extra
 spaces), with: the name, a category Ruoka or Herkku (Ruoka by default), and, once known, its energy
@@ -318,17 +145,17 @@ log SHALL show the reason and a button to grant them, and the rest of the app SH
 - **THEN** the app explains why the permission is needed and offers to grant it; weighing still works
 
 ### Requirement: Food only inside the app
-Food and kcal SHALL be shown only inside the app, the app's own dialog included: no widget face,
-tile, shortcut label or notification SHALL show what was eaten, how many items or how many kcal. A
-widget or shortcut that only opens the add field is allowed.
+Food and kcal SHALL be shown only inside the app, its add search opened from the widget or
+shortcut included: no widget face, tile, shortcut label or notification SHALL show what was eaten,
+how many items or how many kcal. A widget or shortcut that only opens the add search is allowed.
 
 #### Scenario: Nothing outside
 - **WHEN** the user logs food
 - **THEN** no notification appears and no widget changes
 
 #### Scenario: Dialog is inside
-- **WHEN** the user adds an item in the sheet opened from the widget
-- **THEN** the sheet shows the item, and the widget itself shows nothing about it
+- **WHEN** the user adds an annos in the search opened from the widget
+- **THEN** the search shows its bar, and the widget itself shows nothing about it
 
 ### Requirement: Omat ruuat in Asetukset
 Asetukset's Omat ruuat sub-screen SHALL start with a switch "Valmiit ruuat" (on by default)
@@ -375,36 +202,37 @@ the source.
 - **THEN** a short reason is shown and nothing is added
 
 ### Requirement: Clipboard offer
-When the front page, the Ruoka screen or the Lisää annos sheet (in the app or opened from the
-widget or shortcut) opens or the app resumes on one of them, and the clipboard holds usable food
-JSON that has not been imported or skipped, the app SHALL offer it. In the sheet (above the field)
-and on the Ruoka screen (at the top of the day) the offer SHALL be a card: a title "Leikepöydällä"
-with the kcal total the preview would show, then each item on its own line with name, amount,
-treat sign and kcal (at most five lines, then "+<N> muuta"), then a filled primary button "Lisää
-kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL save the content as
-the preview's Lisää would, to the day the sheet or Ruoka shows, without opening the preview, and
-show "<N> annosta lisätty · Kumoa". "Muokkaa" SHALL open the preview. When the JSON holds only
-products the card SHALL list the products with their energy and its button SHALL read "Tallenna
-ruuat". On the front page the same card SHALL be shown above the cards, adding to today. The
-offer SHALL be shown again on every open and resume while the same content is on the clipboard,
-until the user saves that content (Lisää kaikki or the preview's Lisää) or taps Ohita or ✕; after
-either, that content SHALL NOT be offered again, on any screen, also when it is copied again; Kumoa
-of the import SHALL NOT bring it back. The example JSON that Kopioi tuontiohje puts on the
-clipboard SHALL NOT be offered. Content counts as the same when its JSON is the same, whatever text
-surrounds it. Content imported by sharing it to the app or by Tuo ruoka-annokset SHALL count as
-imported too. Peruuta on the preview SHALL leave the content offered. Clipboard text without food
-JSON SHALL show nothing. In the sheet opened from the widget or shortcut the clipboard SHALL be
-read when its window gains focus. The app SHALL read the clipboard's text only when the clipboard
-has changed since the app last read it (Android may then show its own "pasted" notice once per new
-copy) and when the offer is used, and SHALL NOT read it anywhere else or in the background. The
-offer SHALL NOT be shown on Ruoka without the food permission, before the day is read or in
-Järjestä, nor in the front page's edit mode.
+When the front page, the Ruoka screen or the add search (in the app or opened from the widget or
+shortcut) opens or the app resumes on one of them, and the clipboard holds usable food JSON that
+has not been imported or skipped, the app SHALL offer it. In the add search (under the top bar,
+above the rows) and on the Ruoka screen (at the top of the day) the offer SHALL be a card: a title
+"Leikepöydällä" with the kcal total the preview would show, then each item on its own line with
+name, amount, treat sign and kcal (at most five lines, then "+<N> muuta"), then a filled primary
+button "Lisää kaikki", an outlined "Muokkaa" and a ✕ button (Ohita). "Lisää kaikki" SHALL save the
+content as the preview's Lisää would, to the day the search or Ruoka shows, without opening the
+preview, and show "<N> annosta lisätty · Kumoa"; in the search those annokset count as added in
+this search. "Muokkaa" SHALL open the preview. When the JSON holds only products the card SHALL
+list the products with their energy and its button SHALL read "Tallenna ruuat". On the front page
+the same card SHALL be shown above the cards, adding to today. The offer SHALL be shown again on
+every open and resume while the same content is on the clipboard, until the user saves that
+content (Lisää kaikki or the preview's Lisää) or taps Ohita or ✕; after either, that content
+SHALL NOT be offered again, on any screen, also when it is copied again; Kumoa of the import SHALL
+NOT bring it back. The example JSON that Kopioi tuontiohje puts on the clipboard SHALL NOT be
+offered. Content counts as the same when its JSON is the same, whatever text surrounds it. Content
+imported by sharing it to the app or by Tuo ruoka-annokset SHALL count as imported too. Peruuta on
+the preview SHALL leave the content offered. Clipboard text without food JSON SHALL show nothing.
+In the search opened from the widget or shortcut the clipboard SHALL be read when its window gains
+focus. The app SHALL read the clipboard's text only when the clipboard has changed since the app
+last read it (Android may then show its own "pasted" notice once per new copy) and when the offer
+is used, and SHALL NOT read it anywhere else or in the background. The offer SHALL NOT be shown on
+Ruoka without the food permission, before the day is read or in Järjestä, nor in the front page's
+edit mode.
 
 #### Scenario: Copied in the chat
 - **GIVEN** the user copied the chat's answer with food JSON of 3 items
-- **WHEN** they open the Lisää annos sheet
-- **THEN** the card lists the 3 items and the total, the keyboard is down, and one tap on Lisää
-  kaikki adds them to today with "3 annosta lisätty · Kumoa"
+- **WHEN** they open Lisää annos
+- **THEN** the card lists the 3 items and the total under the top bar, and one tap on Lisää kaikki
+  adds them to today with "3 annosta lisätty · Kumoa"
 
 #### Scenario: Fix before adding
 - **WHEN** the user taps Muokkaa on the card
@@ -417,12 +245,12 @@ Järjestä, nor in the front page's edit mode.
 
 #### Scenario: Still offered after looking elsewhere
 - **GIVEN** the user copied food JSON and the front page already offered it
-- **WHEN** they open the Lisää annos sheet from the widget
-- **THEN** the sheet offers the same content
+- **WHEN** they open Lisää annos from the widget
+- **THEN** the search offers the same content
 
 #### Scenario: Not offered after import
 - **GIVEN** the user added the offered content with Lisää kaikki
-- **WHEN** they open the Lisää annos sheet without copying anything new
+- **WHEN** they open Lisää annos without copying anything new
 - **THEN** no offer is shown
 
 #### Scenario: Cancelled preview
@@ -431,7 +259,7 @@ Järjestä, nor in the front page's edit mode.
 
 #### Scenario: Offered once
 - **GIVEN** the user tapped ✕ on the card
-- **WHEN** they open the Lisää annos sheet without copying anything new
+- **WHEN** they open Lisää annos without copying anything new
 - **THEN** no offer is shown
 
 #### Scenario: Import undone
@@ -597,124 +425,56 @@ There SHALL be no Quick Settings tile for food.
 
 #### Scenario: From the widget
 - **WHEN** the user taps the Lisää annos widget
-- **THEN** the add field opens as a sheet over the home screen
+- **THEN** the add search opens over the whole screen with the keyboard up
 
 #### Scenario: From the shortcut
 - **WHEN** the user long-presses the app icon and taps Lisää annos
-- **THEN** the same sheet opens over the home screen
+- **THEN** the same search opens
 
 ### Requirement: Adding from the home screen
-A tap on the widget or the shortcut SHALL open the add field (as in "Adding an item") as a sheet
-over whatever is on screen, without the app's main screen behind it, adding to today, in the app's
-theme. The sheet SHALL work as on Ruoka: suggestions, search, enter, the highlighted new row, and it SHALL stay open for the next item. Closing the sheet (back, a tap outside or swiping
-it down) SHALL show what was behind it, normally the home screen.
+A tap on the widget or the shortcut SHALL open the add search (as in "Adding from the search") over
+the whole screen, adding to today, in the app's theme and without first showing the app's front
+page, logging its NFR-8 timings (food.sheet.timing) as before. It SHALL work as in the app:
+suggestions, search, Enter, the bars with Kumoa, and it SHALL stay open for the next annos.
+Leaving it SHALL:
+- when at least one annos added in it counts as added ("Leaving the search"): open the app on the
+  Ruoka screen of that day. The app's Ruoka SHALL read the day only after the search's pending
+  writes have finished, and the highlight SHALL match annokset by the added item's own client id
+  and apply as they appear. Back from there follows the app's own back rules;
+- otherwise: close it and show what was behind it, normally the home screen.
+
+A tap on the widget or the shortcut while a search is open SHALL leave it as it was when its day is
+the same date; when the date has changed it SHALL start a fresh search for today. Adds are already
+saved, so nothing is lost.
 
 #### Scenario: Breakfast from the home screen
 - **GIVEN** on most mornings around 7 the user logged Rahka 200 g
-- **WHEN** they tap the Lisää annos widget at 7.20 and tap Rahka
-- **THEN** Rahka 200 g is added to today, the sheet stays open with the Rahka row highlighted, and closing it shows the home screen again
+- **WHEN** they tap the Lisää annos widget at 7.20, tap Rahka and tap back
+- **THEN** Rahka 200 g is added to today and the app shows Ruoka with Rahka highlighted
+
+#### Scenario: Back right after an add
+- **WHEN** the user taps a suggestion in the search opened from the widget and taps back at once
+- **THEN** the app shows Ruoka with that annos present and highlighted
 
 #### Scenario: Several items in a row
-- **WHEN** the user types "kahvi", presses enter, then taps Pulla
-- **THEN** both are added to today in that order, and the app's Ruoka screen shows them when opened
+- **WHEN** the user types "kahvi", presses Enter, then taps Pulla, then taps back
+- **THEN** both are added to today in that order and Ruoka shows both highlighted
+
+#### Scenario: Nothing added
+- **WHEN** the user opens the search from the widget and taps back without adding
+- **THEN** the home screen is shown again and the app does not open
 
 #### Scenario: Closing at once
-- **WHEN** the user taps a suggestion and closes the sheet immediately
-- **THEN** the item is still in Health Connect
+- **WHEN** the user taps a suggestion and leaves the search immediately
+- **THEN** the annos is still in Health Connect
 
 #### Scenario: Opened again while open
-- **WHEN** the user taps the widget again while the sheet is open
-- **THEN** the sheet stays as it was
+- **WHEN** the user taps the widget again while the search is open on the same date
+- **THEN** the search stays as it was
 
-### Requirement: Sheet messages and loading
-A failed write SHALL show "Tallennus epäonnistui" as a line at the top of the add panel and keep the sheet open. A delete SHALL show "<name> poistettu · Kumoa" in the same place;
-closing the sheet drops it. With no message the line is left out. The field SHALL be usable at once, but the keyboard SHALL stay down
-until the user taps the field. Until the day has been read the day list's place SHALL show one
-quiet "Ladataan…" (onSurfaceVariant, bodyMedium), with no empty text, the chip area left out and
-the header "<day>" alone; a failed read SHALL show its line there instead, with no chips, and the
-day SHALL be read again when the sheet resumes and before the next write.
-
-#### Scenario: Add before the day is read
-- **WHEN** the user types a name and presses enter before the day has loaded
-- **THEN** the item is added at the end of the day once it has loaded
-
-#### Scenario: Failed write
-- **WHEN** Health Connect refuses a write
-- **THEN** the line "Tallennus epäonnistui" is shown and the sheet stays open
-
-#### Scenario: Day cannot be read
-- **WHEN** reading the day fails
-- **THEN** a short line in the day list's place says so, typing still works, and an added item is
-  placed at the end after the day has been read again
-
-### Requirement: Sheet without permission
-The sheet SHALL check the nutrition permission before showing the day and the add panel: while
-checking it SHALL show only the sheet frame, without the keyboard. Without the permission it SHALL
-show the explanation and a Salli button requesting it in the sheet, and show the day and the add
-panel once granted.
-
-#### Scenario: Permission missing
-- **GIVEN** the nutrition permission is not granted
-- **WHEN** the user taps the widget
-- **THEN** the sheet explains why the permission is needed and offers Salli; once granted the day
-  and the add panel are shown
-
-### Requirement: Sheet with permission denied or Health Connect missing
-When the permission has been denied the sheet SHALL show the same text and a button that opens
-Health Connect's app permissions, and check again when the user returns. When Health Connect is
-not available it SHALL show the existing text and a close button.
-
-#### Scenario: Permission denied
-- **GIVEN** the permission was denied
-- **WHEN** the user taps the widget
-- **THEN** the sheet offers a button to Health Connect's permissions and checks again on return
-
-### Requirement: Sheet over midnight
-The sheet SHALL add to the day it was opened on. After midnight its header SHALL name that day
-relative to the new date ("Eilen · <total> kcal"), and no separate label is shown. A new open SHALL
-use the new today.
-
-#### Scenario: Open past midnight
-- **GIVEN** the sheet was opened at 23.55
-- **WHEN** the user adds an item at 00.05
-- **THEN** the item goes to the earlier day and the header reads "Eilen · …"
-
-### Requirement: Import from the home-screen sheet
-"Tuo ruoka-annokset" and the card's "Muokkaa" in the sheet opened from the widget or the shortcut
-SHALL finish the sheet and open the app on the import preview over the front page, as when the
-estimate is shared to the app. Any sheet or editor open in the app SHALL close. After Lisää or
-Peruuta the user SHALL stay in the app. The card's "Lisää kaikki" SHALL save in the sheet itself
-and keep the sheet open.
-
-#### Scenario: Import from the sheet
-- **WHEN** the user taps Tuo ruoka-annokset in the sheet opened from the widget
-- **THEN** the app opens on the import preview, as when the estimate is shared to the app
-
-#### Scenario: After the import
-- **WHEN** the user taps Lisää or Peruuta on the preview
-- **THEN** the app stays open
-
-#### Scenario: Offer in the sheet
-- **GIVEN** the user copied food JSON with 4 items
-- **WHEN** they open the sheet from the widget and tap Lisää kaikki
-- **THEN** the 4 items are added to today, the sheet stays open over the home screen and shows
-  "4 annosta lisätty · Kumoa"
-
-### Requirement: Removing a product from the sheet
-Each Omat ruuat row (shown while typing) SHALL end with a ⋮ button whose menu offers "Muokkaa" (the
-editor for a new item, as above) and, for an own product only, "Poista" (in the theme's error
-colour). Poista SHALL remove the product (as removing it under Omat ruuat in Asetukset does: logged
-items keep their values) and show "<name> poistettu · Kumoa" in the sheet's line; Kumoa SHALL bring
-the product back as it was. Base products SHALL have no Poista. Chips SHALL have no delete.
-
-#### Scenario: Remove a one-off
-- **WHEN** the user types "lumi" and taps ⋮ → Poista on Lumipallo
-- **THEN** Lumipallo is gone from the list and the chips, earlier Lumipallo items stay on their days,
-  and Kumoa brings it back
-
-#### Scenario: Base product
-- **WHEN** the user types "kaurapuu" and Kaurapuuro is a base product not yet used
-- **THEN** its ⋮ menu offers Muokkaa but no Poista
+#### Scenario: Opened again after midnight
+- **WHEN** the user taps the widget while a search from yesterday is open
+- **THEN** a fresh search for today opens
 
 ### Requirement: Undoing Ohita
 Tapping ✕ (Ohita) on the clipboard card SHALL show "Ohitettu · Kumoa"; Kumoa SHALL make the content
@@ -725,9 +485,9 @@ offered again, as if it had never been skipped.
 - **THEN** the card is shown again with the same items
 
 ### Requirement: Item row buttons
-Every logged item row in the add sheet's day list and on the Ruoka screen SHALL be one line: the
-name with its herkku sign, the kcal ("ilman kcal" when missing), an ⓘ button and one ⋮ button, in
-that order. The row keeps the 56 dp minimum height of the app's list rows.
+Every logged item row on the Ruoka screen SHALL be one line: the name with its herkku sign, the
+kcal ("ilman kcal" when missing), an ⓘ button and one ⋮ button, in that order. The row keeps the
+56 dp minimum height of the app's list rows.
 
 The ⓘ button (named "Tiedot: <name>") SHALL open an info bubble (Material 3 rich tooltip) anchored
 to the button, with the name as its title and these lines, each only when known:
@@ -746,20 +506,18 @@ shortened. The bubble has no caret, sits above ⓘ (below when there is no room)
 window, and may cover other parts of the screen.
 
 Tapping outside the bubble, back, tapping ⓘ again, or scrolling or dragging the list SHALL close
-it, and only close it: that tap or back opens no editor, presses nothing and does not close the
-sheet. The bubble also closes when its item disappears; if the item changes while open, its lines
-follow. The bubble has no buttons and changes nothing; opening or closing it SHALL leave the
-sheet's field focus, keyboard and highlight as they were. Long-press on ⓘ does nothing extra.
-TalkBack SHALL announce the bubble's title and lines once when it opens. ⓘ appears only on annos
-rows (Ruoka and the sheet's day list), not on Omat ruuat or paino rows.
+it, and only close it: that tap or back opens no editor and presses nothing. The bubble also
+closes when its item disappears; if the item changes while open, its lines follow. The bubble has
+no buttons and changes nothing; opening or closing it SHALL leave the highlight as it was.
+Long-press on ⓘ does nothing extra. TalkBack SHALL announce the bubble's title and lines once when
+it opens. ⓘ appears only on annos rows on Ruoka, not on ruoka rows or paino rows.
 
 The ⋮ button (named "Toiminnot: <name>") opens a menu with "Muokkaa" (opens the item's editor) and
 "Poista" (in the theme's error colour) that deletes the item at once and shows "<name> poistettu ·
-Kumoa" (in the sheet in its line, on Ruoka as its Kumoa bar); Kumoa SHALL bring the item back in its
-place. Poista SHALL act exactly as the editor's Poista (in the sheet it clears the highlight of that
-item, replaces the line and keeps the keyboard as it was). On a narrow row the name SHALL be
-shortened first; kcal, ⓘ and ⋮ never shrink. Tapping elsewhere on the row SHALL still open
-the editor. Järjestä rows are one line too, with only their own move buttons (no ⓘ or ⋮).
+Kumoa" as Ruoka's Kumoa bar; Kumoa SHALL bring the item back in its place. Poista SHALL act exactly
+as the editor's Poista. On a narrow row the name SHALL be shortened first; kcal, ⓘ and ⋮ never
+shrink. Tapping elsewhere on the row SHALL still open the editor. Järjestä rows are one line too,
+with only their own move buttons (no ⓘ or ⋮).
 
 #### Scenario: Amount from the info button
 - **GIVEN** today has Rahka 200 g, 180 kcal, logged at 7.10, and the own ruoka Rahka has 90 kcal / 100 g
@@ -778,14 +536,15 @@ the editor. Järjestä rows are one line too, with only their own move buttons (
 - **THEN** the bubble has no "kirjattu" line
 
 #### Scenario: Bubble open in the sheet
-- **GIVEN** the sheet's field has focus and the keyboard is up
-- **WHEN** the user taps ⓘ on Tomaatti and then back
-- **THEN** the bubble closes, the sheet stays open and the keyboard and field are as before
+- **GIVEN** an ⓘ bubble is open on Ruoka (the add search no longer lists annokset)
+- **WHEN** the user presses back
+- **THEN** the bubble closes and Ruoka stays as it was
 
 #### Scenario: Delete from the sheet
-- **WHEN** the user taps ⋮ on Tomaatti in the sheet's day list and then Poista
-- **THEN** Tomaatti is gone from the day, the header total drops, the line reads "Tomaatti poistettu
-  · Kumoa", and Kumoa brings it back in its place
+- **GIVEN** the user came back from the add search with Tomaatti highlighted on Ruoka
+- **WHEN** they tap ⋮ on Tomaatti and then Poista
+- **THEN** Tomaatti is gone, the bar reads "Tomaatti poistettu · Kumoa", and Kumoa brings it back
+  in its place without the highlight
 
 #### Scenario: Edit from Ruoka
 - **WHEN** the user taps ⋮ on Kurkku on the Ruoka screen and then Muokkaa
@@ -864,13 +623,12 @@ no dialog.
 
 ### Requirement: Undoing a correction
 After Päivitä kaikki a bar "Päivitetty <N> annosta · Kumoa" SHALL show where the edit was made
-(in the add sheet and the Lisää annos dialog on the sheet's line, in place of the edited item
-"Adding an item" shows there; the app bar on Ruoka and in
-Omat ruuat) for as long as such bars last. Kumoa SHALL undo the whole save: the product's old
-energy, the edited item as it was, and every recalculated item whose kcal is still amount × new
-energy (an item changed again since stays). When the bar is gone Kumoa is gone. When writing the
-recalculated items fails, the bar SHALL read "Päivitettiin <X>/<N> annosta · Yritä uudelleen";
-a retry SHALL recalculate from the items as they are now.
+(in the add search as its bar, replacing the previous one; the app bar on Ruoka and in Omat
+ruuat) for as long as such bars last. Kumoa SHALL undo the whole save: the ruoka's old energy, the
+edited item as it was, and every recalculated item whose kcal is still amount × new energy (an
+item changed again since stays). When the bar is gone Kumoa is gone. When writing the recalculated
+items fails, the bar SHALL read "Päivitettiin <X>/<N> annosta · Yritä uudelleen"; a retry SHALL
+recalculate from the items as they are now.
 
 #### Scenario: Undo
 - **WHEN** the user taps Kumoa on "Päivitetty 3 annosta"
@@ -933,3 +691,328 @@ and category. While Valmiit ruuat is off no base product is consulted.
 - **WHEN** the user types "Ranskalaiset" and presses enter
 - **THEN** an item Ranskalaiset with 290 kcal / 100 g at its usual amount is added, not a treat,
   and Ranskalaiset is an own product
+
+### Requirement: Adding from the search
+"Lisää annos" (in the ⋮ menu of the front page and Historia, and on the Ruoka screen) SHALL open
+the add search over the whole screen, adding to the day shown (today from the front page and
+Historia). It SHALL show only what can be added: no day list, no day total, no summary line and
+no eaten annos. Tapping a ruoka row SHALL add that ruoka at once at the end of the day with its
+usual amount; the field is then cleared and the search stays open for the next annos.
+
+Details:
+- Top bar: a back arrow ("Takaisin"), the field with a search icon and the hint "Hae ruokaa tai
+  kirjoita kcal", a ✕ button ("Tyhjennä") while the field has text, and a ⋮ menu holding Kopioi
+  tuontiohje and Tuo ruoka-annokset. The field has focus and the keyboard is up when the search
+  opens, from every entry, once the permission is confirmed granted ("Search without permission").
+- The line "Lisätään: <day>" (the day's title as elsewhere: Eilen, else the date like "Su 15.11.";
+  bodyMedium, onSurfaceVariant) shows only when the search's day is not the current date, from the
+  start (also when opened from Ruoka on a past day).
+- The clipboard card, when offered ("Clipboard offer"), hidden while typing.
+- Empty field: the heading "Usein tähän aikaan" and up to eight ruoka rows: the ruuat most often
+  logged within two hours of the current clock time in the last 30 days, then the most often
+  logged ruuat. With none, the heading is left out and a quiet line "Kirjoita ruuan nimi tai
+  pelkkä kcal-määrä" shows, but only when the day and history were read successfully (see
+  "Search messages and loading"). The ranking is computed when the search opens and stays fixed
+  while it is open: adds do not reshuffle the rows; only a removed ruoka drops out, and Kumoa of
+  its removal brings it back in its place.
+- Typing: up to ten matching ruuat (own before Valmiit ruuat, best match first, directly under
+  the top bar) and as the last row "Lisää ”<text>” uutena" with a line telling what it adds (for a
+  bare number "Lisää pelkkä <N> kcal"; for other text "ilman kcal" or the known ruoka's kcal).
+  Clearing the field (✕ or deleting the text) brings the empty-field content back. The list
+  scrolls when it does not fit; scrolling it hides the keyboard.
+- Every ruoka row starts with a + icon in the primary colour (TalkBack click label "Lisää <name>")
+  and shows the ruoka's name (one line, "…" when it does not fit) with the herkku sign for a
+  Herkku ruoka, under it the usual amount and its kcal ("200 g · 130 kcal"; with no usual amount
+  the Kalorit "140 kcal / 100 g"; "200 g · ei kcal" or "ei kcal" when unknown), and ends with a ⋮
+  button ("Removing a product from the search"). Rows have no dividers. The "Lisää … uutena" row
+  starts with the same + icon and has no ⋮.
+- Tapping "Lisää … uutena" does what Enter does. Enter adds exactly the typed text: a bare number
+  as an annos "Pikalisäys" with that many kcal, any other text as an annos of that name (its
+  ruoka's kcal when the name is a known ruoka, otherwise without kcal).
+- After any add the keyboard stays as it was and the bar "<name> lisätty · Kumoa" shows ("Search
+  messages and loading"); Kumoa removes that annos.
+- The ⋮ menu's "Muokkaa" opens the editor for a new annos: the same editor and rules as an annos's
+  Muokkaa (name, amount and unit, Kalorit, Herkku; changes reach the ruoka as after Tallenna),
+  filled as a tap would add it, with Lisää and Peruuta instead of Tallenna and Poista. Lisää adds
+  the annos as edited (with the same bar) and returns to the search; Peruuta, or closing the
+  editor, returns to the search and adds nothing. The search returns with the field as it was and
+  the keyboard up only if it was up before.
+- The search cannot be opened from Järjestä, and Ruoka's own clipboard card is not shown while the
+  search is open.
+
+#### Scenario: Only addable things
+- **GIVEN** today has Rahka and Lumipallo logged
+- **WHEN** the user taps Lisää annos on Ruoka
+- **THEN** the search opens over the whole screen with the keyboard up, "Usein tähän aikaan" rows
+  each starting with +, and neither Rahka nor Lumipallo as an eaten annos or the day's total
+
+#### Scenario: Usual breakfast in one tap
+- **GIVEN** on most mornings around 7 the user logged Rahka 200 g
+- **WHEN** the user opens Lisää annos at 7.20
+- **THEN** among the first rows is "Rahka" with "200 g · 130 kcal", and one tap logs Rahka 200 g,
+  clears nothing else and shows "Rahka lisätty · Kumoa"
+
+#### Scenario: Rows stay put
+- **GIVEN** the empty field lists Rahka first and Kahvi second
+- **WHEN** the user taps Kahvi
+- **THEN** the rows keep their order, and a ruoka removed with Poista drops out while Kumoa
+  brings it back in its place
+
+#### Scenario: Past day from Ruoka
+- **WHEN** the user opens Lisää annos on Ruoka showing yesterday
+- **THEN** the line "Lisätään: Eilen" shows from the start
+
+#### Scenario: Tap target label
+- **WHEN** TalkBack reads a ruoka row
+- **THEN** its click action is named "Lisää Rahka"
+
+#### Scenario: Set the amount before adding
+- **GIVEN** a ruoka Jauhelihakastike 140 kcal / 100 g, usually 250 g
+- **WHEN** the user types "jauh", taps ⋮ → Muokkaa on its row, changes the amount to 350 g and taps
+  Lisää
+- **THEN** Jauhelihakastike 350 g, 490 kcal is logged, the search is shown again with the bar, and
+  the next Jauhelihakastike starts at 350 g
+
+#### Scenario: Edit and cancel
+- **WHEN** the user opens the new-annos editor and then taps Peruuta
+- **THEN** nothing is added and the search is as before
+
+#### Scenario: What Enter does
+- **WHEN** the user types "kana"
+- **THEN** matching ruuat are listed under the field, the last row reads "Lisää ”kana” uutena",
+  and tapping it adds what Enter would
+
+#### Scenario: Only a number
+- **WHEN** the user types 350 and presses Enter
+- **THEN** an annos "Pikalisäys" with 350 kcal is logged, the field is cleared and the bar shows
+
+#### Scenario: A whole day as one number
+- **GIVEN** the user estimated yesterday at 2 200 kcal with an AI chat
+- **WHEN** they move to yesterday on Ruoka, tap Lisää annos, type 2200 and press Enter
+- **THEN** the search reads "Lisätään: Eilen", yesterday gets an annos "Pikalisäys" 2 200 kcal,
+  and back shows yesterday on Ruoka with it highlighted
+
+#### Scenario: Only a name
+- **WHEN** the user types "työpaikan pizza", which is no ruoka yet, and presses Enter
+- **THEN** an annos "työpaikan pizza" without kcal is logged
+
+#### Scenario: Forgiving search
+- **WHEN** the user types "jaulihak"
+- **THEN** Jauhelihakastike is suggested (letters ä/a and ö/o equal, parts of compound words and
+  one wrong letter from four typed letters match)
+
+#### Scenario: Back with the keyboard up
+- **WHEN** the keyboard is up and the user presses system back
+- **THEN** the keyboard hides and the search stays open
+
+#### Scenario: Long name on one line
+- **WHEN** a ruoka "Keitetty täysjyvämakaroni" is listed on a narrow phone
+- **THEN** the row shows the name on one line shortened with "…", the amount and kcal under it,
+  and the ⋮ button in full
+
+### Requirement: Leaving the search
+Leaving the search (the back arrow, or system back when the keyboard is down; back with the
+keyboard up first hides it) SHALL, when at least one annos added in this search is counted as added
+(below), show the Ruoka screen on the search's day with those annokset highlighted ("Highlight on
+Ruoka") and the list scrolled so the last of them is visible; otherwise it SHALL return to the
+screen it was opened from, as it was.
+
+An annos counts as added in this search from the moment its add is queued (also before the day has
+been read or while it is being written). It stops counting when its write fails, when Kumoa removes
+it and when it is deleted. Back with only failed adds therefore adds nothing.
+
+Ruoka keeps its own back rule and origin. When the search was opened from Ruoka, leaving stays on
+Ruoka and Ruoka's origin is unchanged. When it was opened from Historia, back from that Ruoka
+returns to Historia on the tab that was open; when from the front page, back returns to the front
+page.
+
+Only the back arrow and system back apply this rule. Home and the recents button only send the
+search to the background. When the process was killed or the screen was recreated so that the
+search session is lost, the next open is a new search and nothing is highlighted.
+
+A bar showing when the user leaves the search SHALL be dropped, so its Kumoa is gone; the annos
+can still be deleted on Ruoka.
+
+#### Scenario: A meal of several annokset
+- **WHEN** the user taps Rahka, types "kahvi" and presses Enter, then taps back
+- **THEN** both are logged in that order, the Ruoka screen shows the day with Rahka and kahvi
+  highlighted and kahvi visible
+
+#### Scenario: Undo in the search
+- **WHEN** the user taps Rahka and then Kumoa on its bar
+- **THEN** Rahka is not logged, and back with nothing else added returns where the search was opened
+
+#### Scenario: Failed add only
+- **WHEN** the user's only add fails with "Tallennus epäonnistui" and the user taps back
+- **THEN** nothing is highlighted and the user returns where the search was opened
+
+#### Scenario: Nothing added
+- **WHEN** the user opens Lisää annos from the front page and taps back without adding
+- **THEN** the front page is shown as before
+
+#### Scenario: From the front page
+- **WHEN** the user opens Lisää annos from the front page's ⋮ menu, adds Pulla and taps back
+- **THEN** the Ruoka screen shows today with Pulla highlighted, and back from Ruoka returns to the
+  front page
+
+#### Scenario: From Historia
+- **GIVEN** Historia is on its Syöty tab
+- **WHEN** the user opens Lisää annos from its menu, adds Pulla, taps back and then back again on Ruoka
+- **THEN** Ruoka showed Pulla highlighted and the second back shows Historia on the Syöty tab
+
+#### Scenario: From Ruoka
+- **GIVEN** the user opened Ruoka from the front page and Lisää annos from Ruoka
+- **WHEN** the user adds Pulla and taps back, and then back again
+- **THEN** Ruoka is shown with Pulla highlighted and the second back returns to the front page
+
+#### Scenario: Home button
+- **WHEN** the user adds Pulla in the search and presses the home button
+- **THEN** the search is only sent to the background and no Ruoka screen is opened
+
+#### Scenario: Session lost
+- **GIVEN** the search was in the background and the system ended the app's process
+- **WHEN** the user opens Lisää annos again
+- **THEN** it is a new search and nothing is highlighted on Ruoka
+
+#### Scenario: Bar dropped on leaving
+- **WHEN** the user taps Pulla and leaves the search while "Pulla lisätty · Kumoa" shows
+- **THEN** the bar is gone and Pulla can be deleted on Ruoka
+
+### Requirement: Highlight on Ruoka
+The annokset added in a search SHALL be shown on Ruoka with a tonal background (the highlight).
+The highlight SHALL be cleared by changing the day, by leaving Ruoka (to the front page, Historia
+including Viikko, or Asetukset) and by opening Lisää annos again. It SHALL stay while an annos
+editor or Järjestä is open and when the app goes to the background and returns. Editing a
+highlighted annos keeps its highlight; deleting it drops it, and Kumoa of the delete brings the
+annos back without the highlight.
+
+#### Scenario: Cleared by leaving
+- **GIVEN** Ruoka shows Pulla highlighted
+- **WHEN** the user opens Historia and returns to Ruoka
+- **THEN** Pulla is no longer highlighted
+
+#### Scenario: Cleared by changing the day
+- **WHEN** the user moves from the highlighted day to the previous day and back
+- **THEN** nothing is highlighted
+
+#### Scenario: Kept while editing
+- **WHEN** the user opens a highlighted annos's editor, saves, and the app goes to the background and returns
+- **THEN** the annos is still highlighted
+
+#### Scenario: Delete and Kumoa
+- **WHEN** the user deletes a highlighted annos and taps Kumoa
+- **THEN** it is back in its place without the highlight
+
+### Requirement: Search messages and loading
+Every message of the add search SHALL be shown as the app's bar at the search's bottom (above the
+keyboard when it is up): "<name> lisätty · Kumoa", "<N> annosta lisätty · Kumoa",
+"<name> poistettu · Kumoa", "Ohitettu · Kumoa", "Päivitetty <N> annosta · Kumoa",
+"Päivitettiin <X>/<N> annosta · Yritä uudelleen", the clipboard-changed notice, the energy read
+failure, "Tallennus epäonnistui" and "Päivän annoksia ei voitu lukea". The newest replaces the
+previous one. A bar with Kumoa or Yritä uudelleen lasts as the app's Kumoa bars (about 4 seconds,
+swipe away); a bar without an action lasts the app's normal short message length.
+
+A failed write SHALL show "Tallennus epäonnistui" and keep the search open. The field SHALL be
+usable at once. The day SHALL be read in the background when the search opens; an add made before
+the day is read SHALL be placed at the end of the day once it has been read. A failed read SHALL
+show "Päivän annoksia ei voitu lukea" once, typing and adding SHALL still work, and the day SHALL
+be read again when the search resumes and before the next write.
+
+While the day or history is loading, with the field empty, nothing SHALL show below the field
+except a quiet line "Ladataan…". After a failed read the bar shows and no rows are shown. The line
+"Kirjoita ruuan nimi tai pelkkä kcal-määrä" shows only when the read succeeded and there are no
+suggestion rows.
+
+#### Scenario: Add before the day is read
+- **WHEN** the user types a name and presses Enter before the day has loaded
+- **THEN** the annos is added at the end of the day once it has loaded, and counts as added from the tap
+
+#### Scenario: Failed write
+- **WHEN** Health Connect refuses a write
+- **THEN** the bar "Tallennus epäonnistui" is shown, the search stays open and the annos no longer counts as added
+
+#### Scenario: Day cannot be read
+- **WHEN** reading the day fails
+- **THEN** the bar "Päivän annoksia ei voitu lukea" is shown with no rows, typing still works, and an
+  added annos is placed at the end after the day has been read again
+
+#### Scenario: Loading
+- **WHEN** the search opens and the day is still being read
+- **THEN** only the line "Ladataan…" shows below the empty field
+
+#### Scenario: Newest bar wins
+- **WHEN** the user adds Pulla and then removes a ruoka with Poista
+- **THEN** only "… poistettu · Kumoa" shows
+
+### Requirement: Search without permission
+The add search SHALL check the nutrition permission before showing its rows and focusing the field:
+while checking it SHALL show only the top bar, without the keyboard. Without the permission it
+SHALL show the explanation and a Salli button requesting it, and show the rows, focus the field
+and raise the keyboard once granted. From every entry (the app, the widget and the shortcut) the
+field gets focus and the keyboard comes up once the permission is confirmed granted.
+
+#### Scenario: Permission missing
+- **GIVEN** the nutrition permission is not granted
+- **WHEN** the user taps the widget
+- **THEN** the search explains why the permission is needed and offers Salli; once granted the
+  rows show and the keyboard comes up
+
+### Requirement: Search with permission denied or Health Connect missing
+When the permission has been denied the add search SHALL show the same text and a button that
+opens Health Connect's app permissions, and check again when the user returns. When Health Connect
+is not available it SHALL show the existing text; the back arrow closes the search.
+
+#### Scenario: Permission denied
+- **GIVEN** the permission was denied
+- **WHEN** the user taps the widget
+- **THEN** the search offers a button to Health Connect's permissions and checks again on return
+
+### Requirement: Search over midnight
+The add search SHALL add to the day it was opened on. The date SHALL be re-checked when the search
+resumes and on each add (there is no live ticker); when the day is then no longer the current
+date, the line "Lisätään: Eilen" SHALL show, and leaving after an add SHALL show that day on
+Ruoka. The "Usein tähän aikaan" ranking stays as computed when the search opened. A new open SHALL
+use the new today.
+
+#### Scenario: Open past midnight
+- **GIVEN** the search was opened at 23.55
+- **WHEN** the user adds an annos at 00.05
+- **THEN** the annos goes to the earlier day and the search reads "Lisätään: Eilen"
+
+### Requirement: Import from the home-screen search
+"Tuo ruoka-annokset" and the card's "Muokkaa" in the search opened from the widget or the shortcut
+SHALL close that search and open the app on the import preview over the front page, as when the
+estimate is shared to the app. Any search or editor open in the app SHALL close. After Lisää or
+Peruuta the user SHALL stay in the app. The card's "Lisää kaikki" SHALL save in the search itself
+and keep it open.
+
+#### Scenario: Import from the search
+- **WHEN** the user taps Tuo ruoka-annokset in the search opened from the widget
+- **THEN** the app opens on the import preview, as when the estimate is shared to the app
+
+#### Scenario: After the import
+- **WHEN** the user taps Lisää or Peruuta on the preview
+- **THEN** the app stays open
+
+#### Scenario: Offer in the search
+- **GIVEN** the user copied food JSON with 4 items
+- **WHEN** they open the search from the widget and tap Lisää kaikki
+- **THEN** the 4 annokset are added to today, the search stays open and shows
+  "4 annosta lisätty · Kumoa"
+
+### Requirement: Removing a product from the search
+Each ruoka row in the add search SHALL end with a ⋮ button ("Toiminnot: <name>") whose menu offers
+"Muokkaa" (the editor for a new annos, see "Adding from the search") and, for an own ruoka only, "Poista"
+(in the theme's error colour). Poista SHALL remove the ruoka (as removing it under Omat ruuat in
+Asetukset does: logged annokset keep their values), take it off the rows and show the bar
+"<name> poistettu · Kumoa"; Kumoa SHALL bring the ruoka back as it was. Valmiit ruuat SHALL have
+no Poista.
+
+#### Scenario: Remove a one-off
+- **WHEN** the user types "lumi" and taps ⋮ → Poista on Lumipallo
+- **THEN** Lumipallo is gone from the rows, earlier Lumipallo annokset stay on their days, and
+  Kumoa brings it back
+
+#### Scenario: Valmis ruoka
+- **WHEN** the user types "kaurapuu" and Kaurapuuro is a Valmis ruoka not yet used
+- **THEN** its ⋮ menu offers Muokkaa but no Poista
