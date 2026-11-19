@@ -56,6 +56,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.BaseProduct
+import fi.jukkakot.terveyslappu.food.AddedSummary
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.Button
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
 import fi.jukkakot.terveyslappu.food.EnterRow
 import fi.jukkakot.terveyslappu.food.FoodNames
 import fi.jukkakot.terveyslappu.food.Product
@@ -120,9 +128,19 @@ internal fun AddFoodSearch(food: FoodUiState, base: List<BaseProduct>, actions: 
         if (food.loadFailed) snackbar.showTimed(readFailed, null)
     }
 
+    val added = remember(food.addedIds, food.items) { AddedSummary.of(food.addedIds, food.items) }
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding().testTag("addSearch"),
         topBar = { SearchTopBar(food, granted, focus, actions, dialog) },
+        // The session's adds stay visible after the bar fades; the bar sits above the strip.
+        bottomBar = {
+            if (granted && added.count > 0) {
+                AddedStrip(added) {
+                    actions.onSearchDone()
+                    actions.onLeaveSearch()
+                }
+            }
+        },
         snackbarHost = { AppSnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
@@ -130,7 +148,7 @@ internal fun AddFoodSearch(food: FoodUiState, base: List<BaseProduct>, actions: 
             when (food.access) {
                 // Checking: the top bar only, no keyboard yet.
                 FoodAccess.CHECKING -> Box(Modifier.fillMaxSize().testTag("sheetChecking"))
-                FoodAccess.GRANTED -> SearchBody(food, day, base, actions, focus)
+                FoodAccess.GRANTED -> SearchBody(food, day, base, actions, focus, added)
                 FoodAccess.NEEDS -> SearchNotice(stringResource(R.string.food_permission_reason), stringResource(R.string.food_sheet_allow), dialog.onGrant, "sheetGrant")
                 FoodAccess.DENIED -> SearchNotice(stringResource(R.string.food_permission_reason), stringResource(R.string.food_permission_settings), dialog.onOpenSettings, "sheetSettings")
                 FoodAccess.UNAVAILABLE -> SearchNotice(stringResource(R.string.hc_unavailable), stringResource(R.string.close), actions.onLeaveSearch, "sheetClose")
@@ -143,7 +161,7 @@ internal fun AddFoodSearch(food: FoodUiState, base: List<BaseProduct>, actions: 
 private fun barOf(line: SheetLine, actions: FoodActions): Bar? {
     val undo = stringResource(R.string.undo)
     return when (line) {
-        is SheetLine.Added -> Bar(stringResource(R.string.food_added, line.item.name), undo, actions.onUndoAdd)
+        is SheetLine.Added -> Bar(stringResource(R.string.food_added, addedSubject(line.item)), undo, actions.onUndoAdd)
         is SheetLine.ProductRemoved -> Bar(stringResource(R.string.food_deleted, line.product.name), undo, actions.onUndoDeleteProduct)
         is SheetLine.Imported -> {
             val plan = line.plan
@@ -220,7 +238,7 @@ private fun SearchTopBar(food: FoodUiState, granted: Boolean, focus: FocusReques
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 /** The list under the top bar: the day line, the clipboard card, then the usual ruuat or the typed matches. */
 @Composable
-private fun SearchBody(food: FoodUiState, day: LocalDate, base: List<BaseProduct>, actions: FoodActions, focus: FocusRequester) {
+private fun SearchBody(food: FoodUiState, day: LocalDate, base: List<BaseProduct>, actions: FoodActions, focus: FocusRequester, added: AddedSummary) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val imeUpNow by rememberUpdatedState(WindowInsets.isImeVisible)
@@ -255,7 +273,7 @@ private fun SearchBody(food: FoodUiState, day: LocalDate, base: List<BaseProduct
         }
         if (!typing) food.clipOffer?.let { o -> item(key = "clip") { ClipOfferCard(o, day, actions, Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)) } }
         if (typing) {
-            items(matches, key = { "m-" + it.name + (it is Suggestion.Own) }) { s -> AddRow(s, "match", actions, beforeEditor) }
+            items(matches, key = { "m-" + it.name + (it is Suggestion.Own) }) { s -> AddRow(s, "match", actions, beforeEditor, added.of(s)) }
             enter?.let { row -> item(key = "enter") { EnterRowView(row, actions) } }
         } else when {
             // Until the day is read: one quiet line (a failed read says so in the bar).
@@ -263,7 +281,7 @@ private fun SearchBody(food: FoodUiState, day: LocalDate, base: List<BaseProduct
             picks.isNullOrEmpty() -> item(key = "state") { QuietLine(stringResource(R.string.food_search_empty), "addEmpty") }
             else -> {
                 item(key = "heading") { ListHeading(stringResource(R.string.food_frequent)) }
-                items(picks, key = { "p-" + it.key }) { p -> AddRow(Suggestion.Own(p), "pick", actions, beforeEditor) }
+                items(picks, key = { "p-" + it.key }) { p -> Suggestion.Own(p).let { s -> AddRow(s, "pick", actions, beforeEditor, added.of(s)) } }
             }
         }
     }
@@ -309,7 +327,7 @@ private fun PlusIcon() {
  * on an own ruoka, Poista. No dividers.
  */
 @Composable
-private fun AddRow(s: Suggestion, tag: String, actions: FoodActions, beforeEditor: () -> Unit) {
+private fun AddRow(s: Suggestion, tag: String, actions: FoodActions, beforeEditor: () -> Unit, addedCount: Int = 0) {
     val addLabel = stringResource(R.string.food_add_row, s.name)
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -324,6 +342,7 @@ private fun AddRow(s: Suggestion, tag: String, actions: FoodActions, beforeEdito
                 }
                 Text(suggestionDetail(s.product), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            if (addedCount > 0) AddedMark(addedCount, "$tag-${s.name}")
         }
         // ⋮: Muokkaa (the editor for a new item) and, on an own product, Poista (removes the product).
         RowMenu(
@@ -338,6 +357,55 @@ private fun AddRow(s: Suggestion, tag: String, actions: FoodActions, beforeEdito
         )
     }
 }
+
+/**
+ * The row's mark of this search's adds: "✓" for one annos, "×2", "×3" … for more, in the primary
+ * colour; not a control (it sits inside the row's tap target), read as part of the row.
+ */
+@Composable
+private fun AddedMark(count: Int, rowTag: String) {
+    val description = if (count == 1) stringResource(R.string.food_added_mark) else stringResource(R.string.food_added_mark_times, count)
+    Text(
+        if (count == 1) "✓" else "×$count",
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 8.dp).testTag("mark-$rowTag").clearAndSetSemantics { contentDescription = description },
+    )
+}
+
+/**
+ * The added strip at the search's bottom (above the keyboard): "2 annosta lisätty · 465 kcal"
+ * with "· 1 ilman kcal" or "· ei kcal", and the filled Valmis that leaves as back does.
+ */
+@Composable
+private fun AddedStrip(added: AddedSummary, onDone: () -> Unit) {
+    val parts = buildList {
+        add(pluralStringResource(R.plurals.food_added_count, added.count, added.count))
+        when {
+            added.withKcal > 0 -> {
+                add(stringResource(R.string.food_kcal, formatKcal(added.kcal)).replace(' ', NBSP))
+                if (added.withoutKcal > 0) add(stringResource(R.string.food_added_without, added.withoutKcal).replace(' ', NBSP))
+            }
+            added.withoutKcal > 0 -> add(stringResource(R.string.food_row_no_kcal).replace(' ', NBSP))
+        }
+    }
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth().testTag("addedStrip")) {
+        Row(
+            Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                parts.joinToString(" · "),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },
+            )
+            Button(onClick = onDone, modifier = Modifier.heightIn(min = 48.dp).testTag("addedDone")) { Text(stringResource(R.string.food_search_done)) }
+        }
+    }
+}
+
+private const val NBSP = ' '
 
 /** The permission or availability text with its one button, in place of the rows. */
 @Composable

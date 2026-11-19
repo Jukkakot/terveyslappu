@@ -425,6 +425,15 @@
     <string name="food_adding_to">Lisätään: %1$s</string>
     <string name="food_search_empty">Kirjoita ruuan nimi tai pelkkä kcal-määrä</string>
     <string name="food_added">%1$s lisätty</string>
+    <!-- everyday-feedback: the add search's marks and added strip -->
+    <string name="food_added_mark">lisätty</string>
+    <string name="food_added_mark_times">lisätty %1$d kertaa</string>
+    <plurals name="food_added_count">
+        <item quantity="one">%1$d annos lisätty</item>
+        <item quantity="other">%1$d annosta lisätty</item>
+    </plurals>
+    <string name="food_added_without">%1$d ilman kcal</string>
+    <string name="food_search_done">Valmis</string>
     <string name="food_search_clear">Tyhjennä</string>
     <string name="food_add_row">Lisää %1$s</string>
     <string name="food_sheet_more">Lisää toimintoja</string>
@@ -439,7 +448,7 @@
     <string name="ai_skipped">%1$d riviä ohitettu (ei nimeä tai luvut käyttökelvottomia)</string>
     <string name="ai_sum">Yhteensä %1$s</string>
     <string name="ai_add">Lisää</string>
-    <string name="ai_added">%1$d annosta lisätty</string>
+    <string name="ai_added">Lisättiin %1$d annosta</string>
     <string name="ai_products_saved">%1$d ruokaa tallennettu</string>
     <string name="ai_product_edit">Muokkaa ruokaa</string>
     <string name="settings_food">Omat ruuat</string>

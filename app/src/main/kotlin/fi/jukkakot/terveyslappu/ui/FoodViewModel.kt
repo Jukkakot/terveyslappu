@@ -269,8 +269,19 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
     /** Leaving Ruoka (the front page, Historia, Asetukset) clears the highlight. */
     fun clearHighlight() = _state.update { if (it.highlight.isEmpty()) it else it.copy(highlight = emptySet()) }
 
+    /** When the search opened (`food.search.end ms=`) and how it is being left (`via=back|done`). */
+    private var searchOpenedMs = 0L
+    private var leaveVia = VIA_BACK
+
+    /** The added strip's Valmis: the next leaving is logged as `via=done`. */
+    fun markSearchDone() {
+        leaveVia = VIA_DONE
+    }
+
     /** A new search: nothing counted as added, no highlight, the keyboard up once the field shows (design 3, 6). */
     fun openSearch(day: LocalDate) {
+        searchOpenedMs = android.os.SystemClock.elapsedRealtime()
+        leaveVia = VIA_BACK
         _state.update {
             it.copy(searchDay = day, query = "", line = null, editReturn = null, keyboardBack = true, addedIds = emptySet(), highlight = emptySet(), picks = null)
         }
@@ -299,6 +310,13 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         val s = _state.value
         val day = s.searchDay ?: return AddSearchTarget.Origin
         val target = AddSearchExit.target(day, s.addedIds)
+        AppLog.i(
+            "food.search.end", "",
+            "added" to s.addedIds.size,
+            "via" to leaveVia,
+            "ms" to android.os.SystemClock.elapsedRealtime() - searchOpenedMs,
+        )
+        leaveVia = VIA_BACK
         _state.update {
             val left = it.copy(searchDay = null, query = "", line = null, editReturn = null, keyboardBack = false, addedIds = emptySet(), picks = null)
             if (target is AddSearchTarget.Ruoka) left.copy(day = minOf(day, LocalDate.now()), ordering = null, highlight = target.uuids.toSet()) else left
@@ -1121,3 +1139,7 @@ private const val RECALC_CHUNK = 500
 
 private val clipJson = Json
 private val doneSerializer = ListSerializer(String.serializer())
+
+/** How the add search was left, for `food.search.end via=`. */
+private const val VIA_BACK = "back"
+private const val VIA_DONE = "done"

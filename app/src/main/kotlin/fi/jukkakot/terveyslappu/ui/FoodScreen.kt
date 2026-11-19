@@ -82,6 +82,8 @@ class FoodActions(
     /** Lisää annos for a day. */
     val onAdd: (LocalDate) -> Unit = {},
     val onLeaveSearch: () -> Unit = {},
+    /** The added strip's Valmis, just before [onLeaveSearch] (the log says `via=done`). */
+    val onSearchDone: () -> Unit = {},
     val onQuery: (String) -> Unit = {},
     val onPick: (Suggestion) -> Unit = {},
     /** A suggestion row's edit button: the editor on a new item of that product (Lisää / Peruuta). */

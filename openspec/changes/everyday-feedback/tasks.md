@@ -71,16 +71,16 @@
 
 ## 6. Add search keeps its adds visible (U5, U6)
 
-- [ ] 6.1 Pure `AddedSummary` (design 7): per-ruoka counts (resolved name, `FoodRules` match,
+- [x] 6.1 Pure `AddedSummary` (design 7): per-ruoka counts (resolved name, `FoodRules` match,
   base alias row) and the strip's count, known kcal and without-kcal count from `addedIds`. Unit
   tests: repeats, Kumoa, failed write, Pikalisäys (no row, counted in the strip), no kcal, import
   adds, alias row.
-- [ ] 6.2 `FoodSearch`: the ✓/×N mark before ⋮ (not clickable, merged into the row's TalkBack
+- [x] 6.2 `FoodSearch`: the ✓/×N mark before ⋮ (not clickable, merged into the row's TalkBack
   text), the bottom strip with filled Valmis wired to the back handler (in-app and
   `FoodAddActivity`), the bar above the strip; numbers with non-breaking spaces.
   `food.search.end added= via=back|done ms=` in `leaveSearch()`. Smoke test: after two taps the
   strip shows and Valmis leaves to Ruoka.
-- [ ] 6.3 Add bar with the amount (design 8): "Rahka 200 g lisätty", "Pikalisäys 350 kcal
+- [x] 6.3 Add bar with the amount (design 8): "Rahka 200 g lisätty", "Pikalisäys 350 kcal
   lisätty", name only without an amount; bulk bar "Lisättiin <N> annosta". Unit test of the bar
   text builder (not exact copy of the whole string: that the amount part is present).
 

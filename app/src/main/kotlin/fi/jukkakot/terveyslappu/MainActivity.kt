@@ -308,6 +308,7 @@ class MainActivity : ComponentActivity() {
                             // Back arrow / system back: with adds, Ruoka on that day with them highlighted (food-add-search).
                             if (foodModel.leaveSearch() is AddSearchTarget.Ruoka) viewModel.openFoodAfterSearch()
                         },
+                        onSearchDone = foodModel::markSearchDone,
                         onClearLine = foodModel::clearLine,
                         onQuery = foodModel::onQuery,
                         onPick = foodModel::addSuggestion,

@@ -157,6 +157,26 @@ class FoodAddDialogTest {
     }
 
     @Test
+    fun `after two taps the row is marked, the strip shows and Valmis leaves to Ruoka`() {
+        val app = ApplicationProvider.getApplicationContext<TerveysApp>()
+        app.products.put(Product("Kaurapuuro testi", false, Energy(70.0, AmountUnit.G), Amount(300.0, AmountUnit.G)))
+        open().use {
+            compose.onNodeWithTag("addedStrip").assertDoesNotExist()
+            compose.waitUntilAtLeastOneExists(hasTestTag("pick-Kaurapuuro testi"), 5_000)
+            compose.onNodeWithTag("pick-Kaurapuuro testi").performClick()
+            compose.onNodeWithTag("pick-Kaurapuuro testi").performClick()
+            compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.size == 2 }
+            compose.waitUntilAtLeastOneExists(hasTestTag("addedStrip"), 5_000)
+            compose.onNodeWithTag("mark-pick-Kaurapuuro testi", useUnmergedTree = true).assertExists()
+            compose.onNodeWithTag("addedDone").performClick()
+            shadowOf(Looper.getMainLooper()).idle()
+            val started = shadowOf(app).nextStartedActivity
+            assertNotNull(started)
+            assertEquals(records.items.map { it.uuid }.toSet(), started.getStringArrayExtra("ruokaIds")?.toSet())
+        }
+    }
+
+    @Test
     fun `back with nothing added opens no app screen`() {
         val app = ApplicationProvider.getApplicationContext<TerveysApp>()
         open().use {

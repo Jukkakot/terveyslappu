@@ -230,7 +230,7 @@ Details:
   again); TalkBack reads it as part of the row ("lisätty", "lisätty 2 kertaa"). An annos counts
   for the ruoka it was logged as, after the typed name was resolved to a ruoka (a row tap,
   Muokkaa → Lisää, Enter on a known name, the clipboard's Lisää kaikki), and names are compared
-  as the search compares them (case and ä/a, ö/o do not matter). A Valmiit ruuat row whose alias
+  as ruoka names are (case and surrounding spaces do not matter). A Valmiit ruuat row whose alias
   became an own ruoka under the typed name is marked too. Annokset of ruuat not listed in the
   rows count only in the strip. Kumoa, a failed write or a delete lowers the count; at zero the
   mark goes. The "Lisää … uutena" row has no mark.

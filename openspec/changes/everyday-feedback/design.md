@@ -98,14 +98,15 @@ except the countdown on Valmis (decision 3). No change to the repeat rules' timi
 7. **Search marks and strip from the session state.** `FoodViewModel` already has `addedIds`;
    a pure `food/AddedSummary.of(addedIds, items, products)` returns per-ruoka counts and the
    strip's count / known kcal / without-kcal count. The mark key is the annos's final ruoka name
-   after `resolveTyped` (what the item was logged as), compared with `FoodRules`' name match
-   (case, ä/a, ö/o); a Valmiit ruuat row whose alias became an own ruoka under the typed name
-   matches through that own ruoka's name, so the base row is marked too. Annokset of ruuat not in
+   after `resolveTyped` (what the item was logged as), compared by `FoodNames.key` (the key own
+   ruuat are matched by: case and surrounding spaces do not matter); a Valmiit ruuat row counts
+   its name and its aliases, so the row of an alias that became an own ruoka under the typed
+   name is marked too. Annokset of ruuat not in
    the rows (Pikalisäys, the clipboard's, unknown names) count only in the strip, which counts the
    whole search. Unit-tested; rows read the count, the strip is a `bottomBar` of the search's
-   Scaffold under the snackbar host. Valmis calls the existing back handler, so widget, shortcut
-   and in-app searches all keep their exit rule. `food.search.end` is logged in `leaveSearch()`
-   with `via`.
+   Scaffold under the snackbar host. Valmis calls `FoodActions.onSearchDone` (the view model
+   notes `via=done`) and then the existing back handler, so widget, shortcut and in-app searches
+   all keep their exit rule. `food.search.end` is logged in `leaveSearch()` with `via`.
 8. **Bar text with the amount** from the same formatter the rows use for "200 g · 130 kcal"
    (amount part only); Pikalisäys shows its kcal. String `food_added` becomes `%1$s lisätty`
    fed with "<name> <amount>" (non-breaking space inside the amount). The bulk bar of Lisää

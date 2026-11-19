@@ -73,6 +73,7 @@ class FoodAddActivity : ComponentActivity() {
                     model.base,
                     FoodActions(
                         onLeaveSearch = ::leave,
+                        onSearchDone = model::markSearchDone,
                         onClearLine = model::clearLine,
                         onQuery = model::onQuery,
                         onPick = model::addSuggestion,
