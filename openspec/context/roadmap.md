@@ -19,6 +19,28 @@ Phases in order; one OpenSpec change each unless noted.
 
 ## Backlog
 
+- **Usability review 2026-11-19** (heuristic audit + competitor research; the 2026-11-09..19 log was mostly feature testing, so log counts are only hypotheses). Not yet chosen by the user; numbers are for picking.
+  - Everyday paths:
+    - U1 weigh-in dialog never closes silently: end state says why (scale not heard / same weight already saved at 7.12), with Valmis and Punnitse uudelleen; no "Astu vaa'alle" while ignoring readings (S).
+    - U2 dialog opened soon after an automatic save opens on "Tallennettu automaattisesti 7.12 · 82,5 kg" with Poista and Valmis instead of a new scan (M).
+    - U3 notification Poista paino becomes undoable ("Paino poistettu · Kumoa" ~10 s); drop the no-op OK next to it (S–M).
+    - U4 undo bars follow Android's "Time to take action" (`calculateRecommendedTimeoutMillis`) instead of a fixed 4 s (S).
+    - U5 add search keeps its adds visible: ✓/×N on added rows, bottom line "2 lisätty · 465 kcal · Valmis" (S–M).
+    - U6 the add bar names the amount ("Rahka 200 g lisätty"); tapping an added row's mark opens its editor (S/M).
+    - U7 last 2–3 amounts of a ruoka as chips in the editor (MacroFactor, MFP) (S).
+    - U8 widget shows ✓ when today's weight is saved (no value, so product rule holds) (S).
+    - U9 food card opens Ruoka as a whole (today title/number → Ruoka, bars → Historia is hidden) (S).
+    - U10 front-page daily action reachable by thumb (FAB "Lisää annos"); reverses the 2026-11-16 decision, ask first (S).
+  - New features from other apps:
+    - F1 copy annokset (a day or selected) to today / another day; F2 move an annos to another day (M / S).
+    - F3 saved meal: one tap logs several ruuat as separate annokset (M).
+    - F4 mark a day incomplete → left out of Syöty averages (user mark, not the rejected automatic flag) (S–M).
+    - F5 week table: average weight and change, Syöty, steps, Kulutus per week (M).
+    - F6 day note shown as a chart marker and kept in the data file (M); F7 calendar dots for days with data (S).
+    - F8 conditional weigh-in reminder, off by default, only when no weight by a set time (S); F9 barcode → new ruoka (Open Food Facts, Finnish coverage unverified) (M).
+  - Polish: "askelta/pv" wraps mid-unit on small cards (non-breaking space); Paino tab "Muutos −0,6" vs "Viikossa −0,68" decimals; cards clamp font scale to 130 % (test 200 %); Historia tab row clips "Uusi kaavio" (make it a + tab or ⋮ item); theme chips wrap (SegmentedButton); Järjestä icon without label; weigh-in result's 10 s auto-close invisible (countdown on Valmis, Poista apart).
+  - Logging to settle hypotheses with normal use: `weighin.end reason= heard= ignored= todaySaved=`, `food.search.end added= typed= ms=`, `food.search.ready ms=`, `auto.action delete ageS=` + re-weigh within 15 min.
+
 - ~~**visual-identity**~~ done 2026-11-17 (v1.61): direction **AC** chosen: A's 24 dp borderless cards, tinted tile icons and one colour per quantity (paino mint, ruoka amber, askeleet blue) on C's graphite (#0E1013 / cards #16191E) with C's glowing mint weight line and today highlight; bigger semibold numbers; Historia header with tabs first and one-row period selector, a big Muutos number, the red row bins replaced by ⋮; plus an Asetukset choice "Puhelimen värit / Terveyslappu" (user 2026-11-17: keep the phone's Material You as an option). Mockups, comparisons and the audit: `openspec/design/visual-identity/`. No gamification (product.md "A plain tool"). Proposed 2026-11-17 as change `visual-identity`.
 - ~~**food-sheet-compact**~~ done 2026-11-16 (v1.54, user 2026-11-16): the add panel folds to a handle, food rows drop the logging time and keep the name on one line.
 - **Later idea: merge two products** (user 2026-11-16, product-energy-fix): join two products (e.g. "Lumipallo" and "lumipallo iso") into one, their items following; not planned yet.

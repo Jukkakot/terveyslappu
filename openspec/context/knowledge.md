@@ -18,6 +18,7 @@ the source. No configuration, versions or other things that go stale.
 | Android | background work on Samsung, Health Connect from the background, widget updates, chart libraries |
 | Motivation and feedback | self-monitoring, negative feedback, visible progress, trend smoothing, streaks, flat average reference, daily weighing harm, scale avoidance, food logging decline, feedback messages, fresh starts, small goals, missed days, red colour |
 | Steps in Health Connect | aggregate dedupe by app priority, gap filling, one-app filter, daily buckets, on-device steps (SPN), history limit, Garmin gaps, total calories estimate fill, Garmin kcal split |
+| Logging apps' UX | what fast food/weight loggers do, what their users complain about |
 
 Charts and Data files: see the global bank `~/.claude/knowledge.md`.
 
@@ -210,3 +211,11 @@ Charts and Data files: see the global bank `~/.claude/knowledge.md`.
   day); days before the watch hold BMR only. What Garmin Connect writes to Health Connect for
   calories (whole-day totals, or active only for workouts) is not known yet; `burn.read` logs the
   split / total-only / active-only day counts. (a real export, 2026-11-15)
+
+## Logging apps' UX
+
+Research 2026-11-19 (competitor apps, reviews).
+
+- Fastest food loggers pre-fill the last amount and offer copy (a day or items, "to today") and saved multi-item meals; MacroFactor's tap benchmark credits pre-filled amounts most (https://macrofactor.com/fastest-food-logger-2025/, https://macrofactor.com/10-macrofactor-features/, https://www.fatsecret.com/fatsecret-app-help/saved-meals).
+- Partly logged days skew averages; Cronometer lets the user mark a day complete and MacroFactor treats partial days separately (https://help.macrofactorapp.com/en/articles/29-how-do-macrofactors-coaching-algorithms-deal-with-partially-logged-days).
+- Complaints: interruptions while logging, redesigns that add taps (MyFitnessPal 2026: https://piunikaweb.com/2026/04/24/myfitnesspal-new-update-complaints/), averages replacing raw readings (Withings, Fitbit forums), shaming reminders and warnings on ordinary food lead to logging avoidance (Sheen et al. 2025, https://doi.org/10.1111/bjhp.70026), silent sync failures, another person's weigh-in saved on a shared scale (Renpho reviews), wrong nutrition values grow with use.
