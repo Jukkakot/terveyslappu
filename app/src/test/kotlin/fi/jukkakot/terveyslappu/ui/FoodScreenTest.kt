@@ -173,6 +173,20 @@ class FoodScreenTest {
     }
 
     @Test
+    fun `Ruoka rows are one line and the info button shows the amount`() {
+        show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
+        compose.onNodeWithTag("food-a").assertExists()
+        assertEquals(0, compose.onAllNodesWithText("1 kpl", useUnmergedTree = true).fetchSemanticsNodes().size)
+        compose.onNodeWithTag("food-a-info").performClick()
+        compose.waitForIdle()
+        assertEquals(1, compose.onAllNodesWithText("1 kpl", useUnmergedTree = true).fetchSemanticsNodes().size)
+        assertEquals(null, editedItem)
+        compose.onNodeWithTag("food-a-info").performClick()
+        compose.waitForIdle()
+        assertEquals(0, compose.onAllNodesWithText("1 kpl", useUnmergedTree = true).fetchSemanticsNodes().size)
+    }
+
+    @Test
     fun `Ruoka rows' menu edits and deletes`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted)
         compose.onNodeWithTag("food-a-menu").performClick()

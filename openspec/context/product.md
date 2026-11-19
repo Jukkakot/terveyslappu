@@ -27,6 +27,8 @@ One word per thing the user sees; two names for one thing is a bug. Every UI tex
 - **keskiarvo**: the average of a period (labels, legends, tiles); never "keskimäärin", "keskim." or "ka.".
 - **Värit**: the colour choice in Asetukset → Ulkoasu, next to **Teema**: **Terveyslappu** (the
   app's own mint/graphite palette, default) or **Puhelimen värit** (Material You).
+- **ⓘ (Tiedot)**: a food row's info button; shows the annos's details (amount, kcal, Kalorit,
+  Herkku, logging time) in a small bubble, no actions.
 - **⋮ (Toiminnot)**: a list row's one action button; its menu holds **Muokkaa** and a red
   **Poista** (a "?" weight: Hyväksy, Poista). Never a pencil or a trash on a row.
 - **trendi**: the smooth line through the daily values on Historia's long periods (legend

@@ -323,6 +323,8 @@
     <string name="food_move_up">Siirrä %1$s ylös</string>
     <string name="food_move_down">Siirrä %1$s alas</string>
     <string name="food_add_field">Hae ruokaa tai kirjoita kcal</string>
+    <string name="food_info">Tiedot: %1$s</string>
+    <string name="food_info_time">kirjattu klo %1$s</string>
     <string name="food_no_kcal">ilman kcal</string>
     <string name="food_treat">Herkku</string>
     <string name="food_treat_sign">herkku</string>

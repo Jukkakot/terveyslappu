@@ -283,7 +283,6 @@ private fun DayList(
     clearHighlight: () -> Unit,
 ) {
     val listState = rememberLazyListState()
-    val zone = remember { ZoneId.systemDefault() }
     val offer = food.clipOffer
     // Scrolling the list by hand puts the keyboard down.
     LaunchedEffect(listState) {
@@ -315,7 +314,7 @@ private fun DayList(
             }
             else -> items(dayItems, key = { it.uuid }) { item ->
                 val tint = if (item.uuid == highlight) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
-                FoodRow(item, zone, Modifier.background(tint).clickable { beforeEditor(); actions.onEdit(item) }) {
+                FoodRow(item, Modifier.background(tint).clickable { beforeEditor(); actions.onEdit(item) }) {
                     RowMenu(item.name, "sheet-${item.uuid}", { beforeEditor(); actions.onEdit(item) }, { if (item.uuid == highlight) clearHighlight(); actions.onDelete(item) })
                 }
             }

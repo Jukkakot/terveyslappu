@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -199,6 +200,7 @@ internal fun FoodScreen(
 ) {
     val today = LocalDate.now()
     val ordering = food.ordering
+    val scroll = rememberScrollState()
     // Leaving Järjestä any other way also saves the order (review decision).
     DisposableEffect(Unit) { onDispose { actions.onFinishOrder() } }
     Scaffold(
@@ -244,7 +246,7 @@ internal fun FoodScreen(
                 food.access != FoodAccess.GRANTED -> FoodPermissionNotice(stringResource(R.string.food_permission_reason), actions.onGrant, Modifier.align(Alignment.Center))
                 food.items == null && food.loadFailed -> Notice(stringResource(R.string.food_read_failed))
                 food.items == null -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("foodDay")) {
+                else -> Column(Modifier.fillMaxSize().verticalScroll(scroll).testTag("foodDay")) {
                     DayBar(food.day, today, enabled = ordering == null, actions.onDay, Modifier.padding(horizontal = 16.dp))
                     if (ordering == null) food.clipOffer?.let { ClipOfferCard(it, food.day, actions, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) }
                     if (history == HistoryAccess.NOT_GRANTED && food.day < today.minusDays(30)) Box(Modifier.padding(horizontal = 16.dp)) { HistoryNotice(onGrantHistory) }
@@ -269,7 +271,8 @@ internal fun FoodScreen(
                             Column(Modifier.fillMaxWidth()) {
                                 items.forEachIndexed { i, item ->
                                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                    FoodRow(item, ZoneId.systemDefault(), Modifier.clickable { actions.onEdit(item) }) {
+                                    FoodRow(item, Modifier.clickable { actions.onEdit(item) }) {
+                                        ItemInfoButton(item, food.products, "food-${item.uuid}", scroll.isScrollInProgress)
                                         RowMenu(item.name, "food-${item.uuid}", { actions.onEdit(item) }, { actions.onDelete(item) })
                                     }
                                 }
@@ -297,22 +300,18 @@ private fun DayBar(day: LocalDate, today: LocalDate, enabled: Boolean, onDay: (L
     }
 }
 
-/** One item: name with the herkku sign, amount and small time; kcal on the right. */
+/** One line per item: name (shortened first) with the herkku sign, kcal, then [trailing] buttons (ⓘ, ⋮). */
 @Composable
-internal fun FoodRow(item: FoodItem, zone: ZoneId, modifier: Modifier = Modifier, trailing: @Composable () -> Unit = {}) {
+internal fun FoodRow(item: FoodItem, modifier: Modifier = Modifier, trailing: @Composable () -> Unit = {}) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 16.dp, end = 6.dp, top = 8.dp, bottom = 8.dp).testTag("food-${item.uuid}"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                if (item.treat) TreatSign()
-            }
-            val details = item.amount?.let(::formatAmount).orEmpty()
-            if (details.isNotEmpty()) Text(details, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(item.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false).widthIn(min = 24.dp))
+            if (item.treat) TreatSign()
         }
         Text(
             item.kcal?.let { stringResource(R.string.food_kcal, formatKcal(it)) } ?: stringResource(R.string.food_no_kcal),
@@ -342,14 +341,12 @@ private fun OrderList(items: List<FoodItem>, onMove: (Int, Int) -> Unit) {
     var dragged by remember { mutableIntStateOf(-1) }
     var offset by remember { mutableFloatStateOf(0f) }
     var rowHeight by remember { mutableIntStateOf(1) }
-    val zone = ZoneId.systemDefault()
     Column(Modifier.fillMaxWidth().testTag("orderList")) {
         items.forEachIndexed { i, item -> key(item.uuid) {
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             val lifted = i == dragged
             FoodRow(
                 item,
-                zone,
                 Modifier
                     .onSizeChanged { rowHeight = it.height.coerceAtLeast(1) }
                     .offset { IntOffset(0, if (lifted) offset.roundToInt() else 0) }
