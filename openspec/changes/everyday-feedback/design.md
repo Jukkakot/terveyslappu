@@ -85,14 +85,15 @@ except the countdown on Valmis (decision 3). No change to the repeat rules' timi
    child, the summary is re-posted with the same `setTimeoutAfter`, so it goes with it.
    Alternative: delay the delete until the undo time ends. Rejected: needs a scheduled job and
    loses the delete when the process dies (product.md: no background jobs).
-6. **One timeout helper.** `a11y/Timeouts.kt`: `recommendedMillis(base, controls)` wraps
+6. **One timeout helper.** `a11y/ActionTimeouts.millis(base)` wraps
    `AccessibilityManager.getRecommendedTimeoutMillis(base, FLAG_CONTENT_TEXT | FLAG_CONTENT_CONTROLS)`
-   (minSdk 34, always available) for the notification and the weigh-in activity; in Compose a
-   CompositionLocal `LocalActionTimeout` set once in `TerveysTheme` from
-   `LocalAccessibilityManager.current?.calculateRecommendedTimeoutMillis(...)` feeds
-   `showTimed`'s default, so callers stay as they are. Bases stay 4 s (bars), 10 s (result,
-   "Paino poistettu"). Plain bars keep Material's Short, which M3 already scales. The unit test
-   covers the wiring (a provided CompositionLocal value reaches `showTimed`'s timer), not
+   (minSdk 34, always available) and never goes below the base. The Android source is installed
+   once in `TerveysApp.onCreate`; JVM tests get the base. `showTimed` is a suspend function, not
+   a composable, so instead of a CompositionLocal its default `actionMillis` reads
+   `ActionTimeouts.millis(4 s)` at each call (the setting is read fresh), and callers stay as
+   they are; the weigh-in activity and the notification use the same helper. Bases stay 4 s
+   (bars), 10 s (result, "Paino poistettu"). Plain bars keep Material's Short, which M3 already
+   scales. The unit test covers the wiring (a replaced source reaches `showTimed`'s timer), not
    Android's own maximum.
 7. **Search marks and strip from the session state.** `FoodViewModel` already has `addedIds`;
    a pure `food/AddedSummary.of(addedIds, items, products)` returns per-ruoka counts and the

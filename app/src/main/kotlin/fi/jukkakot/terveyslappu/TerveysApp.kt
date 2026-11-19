@@ -155,6 +155,7 @@ class TerveysApp : Application() {
             }
         }
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(Thread.getDefaultUncaughtExceptionHandler()))
+        fi.jukkakot.terveyslappu.a11y.ActionTimeouts.install(this)
         val weights = HealthConnectWeights(this)
         backup = WeightBackup(
             PrefsBackupStore(this),

@@ -11,19 +11,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import fi.jukkakot.terveyslappu.a11y.ActionTimeouts
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** How long a message with Kumoa stays (app-appearance "Undo messages"). */
-const val UNDO_MILLIS = 4_000L
+/** How long a message with Kumoa stays at the default accessibility timeout (app-appearance "Undo messages"). */
+const val UNDO_MILLIS = ActionTimeouts.BAR_MS
 
 /**
  * Shows one bar message (app-appearance "Undo messages"): a message with an action stays
- * [actionMillis] (Material's Short drops to indefinite under accessibility services, so a timer
- * keeps it bounded); others keep Material's Short. Whatever is shown first goes away.
+ * [actionMillis], by default 4 s lengthened by Android's accessibility timeout (Material's Short
+ * drops to indefinite under accessibility services, so a timer keeps it bounded); others keep
+ * Material's Short. Whatever is shown first goes away.
  */
-suspend fun SnackbarHostState.showTimed(message: String, actionLabel: String?, actionMillis: Long = UNDO_MILLIS): SnackbarResult {
+suspend fun SnackbarHostState.showTimed(message: String, actionLabel: String?, actionMillis: Long = ActionTimeouts.millis(UNDO_MILLIS)): SnackbarResult {
     currentSnackbarData?.dismiss()
     if (actionLabel == null) return showSnackbar(message, duration = SnackbarDuration.Short)
     return coroutineScope {

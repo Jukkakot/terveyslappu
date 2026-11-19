@@ -2,11 +2,11 @@
 
 ## 1. Timeouts follow accessibility (U4)
 
-- [ ] 1.1 Add the timeout helper (design 6): Android `recommendedMillis(base)` and the
-  CompositionLocal `LocalActionTimeout` set in `TerveysTheme` that feeds `showTimed`'s default,
-  bases 4 s bars, 10 s result and "Paino poistettu". Unit test: a provided CompositionLocal value
-  reaches `showTimed`'s timer (the wiring, not Android's maximum).
-- [ ] 1.2 Ohje text (`help_food_body`): "Kumoa-ilmoitukset näkyvät noin 4 sekuntia (pidempään, jos
+- [x] 1.1 Add the timeout helper (design 6): `ActionTimeouts.millis(base)` installed in
+  `TerveysApp`, feeding `showTimed`'s default, bases 4 s bars, 10 s result and "Paino
+  poistettu". Unit test: a replaced source reaches `showTimed`'s timer (the wiring, not
+  Android's maximum).
+- [x] 1.2 Ohje text (`help_food_body`): "Kumoa-ilmoitukset näkyvät noin 4 sekuntia (pidempään, jos
   puhelimen esteettömyysasetus pyytää)". Check: `./gradlew test`.
 
 ## 2. Weigh-in end view and repeat line (U1)
