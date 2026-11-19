@@ -7,8 +7,8 @@ screenshot tour found small faults that make the app look careless or hide thing
 mid-word on the front page, two roundings of the same change on Paino, clipped text at large text
 sizes, a half-hidden "Uusi kaavio" tab, wrapping theme chips, an unlabelled Järjestä icon, the food
 card's hidden split taps, and typing the same amount again in the editor. None needs a new
-feature; each is a small, uncontroversial fix. The weigh-in dialog, the notification, the undo bar
-timing, the add search and the widget belong to `everyday-feedback` and are left out here.
+feature; each is a small, uncontroversial fix. `everyday-feedback` (v1.64) is merged, so its
+weigh-in dialog and notification change texts join the shown-change rule.
 
 ## What Changes
 
@@ -17,10 +17,11 @@ timing, the add search and the widget belong to `everyday-feedback` and are left
   when it does not fit beside it.
 - **One rounding for weight changes:** Paino's "Viikossa" shows one decimal with its unit
   ("−0,7 kg/vk"), like Muutos. Every weight change (front page card, Muutos, Viikossa, Historia rows
-  and group rows) is the difference of the weights as shown, so "82,3 → 81,8 kg" never sits next
-  to "−0,6 kg" (found in the screenshot tour).
+  and group rows, the weigh-in dialog's change line and the automatic-save notification) is the
+  difference of the weights as shown, with one shared rounding function, so "82,3 → 81,8 kg" never
+  sits next to "−0,6 kg" (found in the screenshot tour).
 - **Front page up to 200 % text:** rows grow with the text without a cap; above 130 % a small card
-  takes the full width so its title, number and unit fit. The screenshot tour adds 200 % shots.
+  takes the full width (also in edit mode) so its title, number and unit fit. The screenshot tour adds 200 % shots.
 - **"Uusi kaavio" as a "+" tab:** the last Historia tab shows a "+" icon (TalkBack "Uusi kaavio"),
   so it no longer clips and reads as "add". Its page is unchanged.
 - **Theme and colours as a radio list:** Ulkoasu's Teema and Värit become lists of radio rows
@@ -28,12 +29,14 @@ timing, the add search and the widget belong to `everyday-feedback` and are left
   mid-word; see design).
 - **Järjestä named:** Ruoka's unlabelled sort icon becomes a ⋮ menu with "Järjestä annokset".
 - **Food card is one tap target:** the whole food card opens Ruoka on today, like the steps card
-  opens Askeleet; Syöty's week stays one tap away (Ruoka → Viikko or Historia).
+  opens Askeleet (a first tap without the permission still asks for it); Syöty's week stays one
+  tap away (Ruoka → Viikko or Historia). Ohje's food text follows.
 - **Recent amounts in the editor:** the annos editor shows up to three earlier amounts of the same
   ruoka as chips ("200 g", "150 g"); a tap fills the amount.
 
-Touches app screens only (front page cards, Historia Paino statistics, lists and tab row, Ruoka top
-bar and item editor, Asetukset → Ulkoasu) and the screenshot tour. No Health Connect, scale, widget,
+Touches app screens and two texts (the weigh-in dialog's and the notification's change line), the
+front page cards, Historia Paino statistics, lists and tab row, Ruoka top bar and item editor,
+Asetukset → Ulkoasu, Ohje's food text and the screenshot tour. No Health Connect, scale, widget,
 data file or build/CI change.
 
 ## Capabilities
@@ -48,6 +51,8 @@ data file or build/CI change.
 - `app-appearance`: "Theme choice" (radio rows).
 - `food-log`: "Editing, order and delete" (Järjestä annokset in a ⋮ menu); new "Recent amounts in
   the editor".
+- `scale-weigh-in`: "Change from the previous weight" (as shown).
+- `background-weigh-in`: "Weigh-in notification" (change as shown).
 
 ## Impact
 
@@ -57,5 +62,6 @@ menu item), `ui/Format.kt` (`formatRate` one decimal), a pure shown-change helpe
 `chart/HomeSummary`, `chart/PeriodStats`, `chart/ListGroups` and the Historia row change,
 `ui/HistoryScreen.kt` (tab row, Viikossa), `ui/SettingsScreen.kt` (`ThemeChoice`,
 `ColourChoiceChips`), `ui/FoodScreen.kt` (top bar), `ui/FoodSheet.kt` (`FoodEditor` chips) and a
-pure recent-amounts rule in `food/`, the screenshot tour and its tests. The weigh-in dialog's own
-change line (`ui/WeighInDialog.kt`) is in `everyday-feedback`'s area and is not touched.
+pure recent-amounts rule in `food/`, `scale/WeighIn.kt` and `ui/WeighInViewModel.kt` (the dialog's
+change), `auto/AutoText.kt` (notification change), `help_food_body`, the screenshot tour and its
+tests.

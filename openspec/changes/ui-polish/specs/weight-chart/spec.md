@@ -4,8 +4,10 @@
 Under the chart the app SHALL show for the chosen period: the latest weight, the change from the
 first to the latest weight in kg, that change per week, the average, the lowest and highest weight,
 and the number of weights. The change per week ("Viikossa") SHALL use the same one decimal as the
-change and carry the unit "kg/vk"; it SHALL be computed from the change as shown (see "Changes from
-shown weights"). The change and the change per week SHALL each show a small arrow up for
+change and carry the unit "kg/vk"; it SHALL be the change as shown (see "Changes from shown
+weights") divided by the period's exact span in weeks (as before), shown only when the span is at
+least one day, rounded half away from zero like the one-decimal weights. A value that rounds to
+zero SHALL read "±0,0 kg/vk" without an arrow, never "−0,0". The change and the change per week SHALL each show a small arrow up for
 a gain and down for a loss next to the number, and no arrow when the shown value is zero. For BMI the
 statistics SHALL show the same values of the BMI except the change per week; the latest BMI SHALL also show its category word and tone.
 
@@ -24,6 +26,10 @@ statistics SHALL show the same values of the BMI except the change per week; the
 - **WHEN** the stats are shown
 - **THEN** Viikossa reads ±0,0 kg/vk without an arrow
 
+#### Scenario: Rounding of the rate
+- **GIVEN** a weekly rate of −0,05 kg/vk (a test value of the rounding rule)
+- **THEN** it reads −0,1 kg/vk with an arrow down; a rate of −0,0049 reads ±0,0 kg/vk with no arrow
+
 #### Scenario: No change
 - **GIVEN** a period whose first and latest weight are both 82.0 kg
 - **WHEN** the stats are shown
@@ -39,7 +45,7 @@ statistics SHALL show the same values of the BMI except the change per week; the
 - **THEN** they show latest 25,3 "ylipaino", change −0,3 with an arrow down, and no rate per week
 
 ### Requirement: Custom chart tabs
-Historia's tab row SHALL show the fixed tabs Paino, BMI, Energia and Askeleet, then one tab per own
+Historia's tab row SHALL show the fixed tabs Paino, BMI, Syöty, Askeleet and Kulutus, then one tab per own
 chart named after it (in the order they were made), then a last tab "Uusi kaavio". Historia SHALL
 open on Paino. An own chart's tab SHALL show the chart for the chart's own period with a "Muokkaa"
 button that opens the chart editor, and SHALL show no statistics and no list under it. On an own
@@ -51,11 +57,12 @@ button "Uusi kaavio" that opens the editor for a new chart. After a new chart is
 SHALL show its tab; after a chart is deleted Historia SHALL show the tab before it. While the
 weights are loading or failed an own chart's tab SHALL show the same spinner or failure notice as
 the other tabs. The "Uusi kaavio" tab itself SHALL show only a "+" icon, at least 48 dp wide, with
-the accessible name "Uusi kaavio", so it is never shortened and reads as adding.
+the accessible name "Uusi kaavio" (TalkBack reads it as a tab, with its selected state), so it is
+never shortened and reads as adding.
 
 #### Scenario: No charts yet
 - **GIVEN** the user has made no charts
-- **WHEN** the user swipes past Askeleet
+- **WHEN** the user swipes past Kulutus
 - **THEN** the "Uusi kaavio" tab shows its line and the Uusi kaavio button
 
 #### Scenario: Plus tab
@@ -85,10 +92,11 @@ the accessible name "Uusi kaavio", so it is never shortened and reads as adding.
 ## ADDED Requirements
 
 ### Requirement: Changes from shown weights
-Every change between two weights or BMI values that the app shows next to those values SHALL be the
-difference of the values as shown (each rounded to its one decimal first): the front page weight
-card's period change, Historia's Muutos and Viikossa, the change on each weight row and on each
-group row. A shown change SHALL never disagree with the two numbers it is computed from.
+Every change between two weights or BMI values shown next to them SHALL be the difference of the
+values as shown, each rounded once to one decimal (a BMI of 27,049999999999997 counts as 27,0):
+the front page weight card, Historia's Muutos and Viikossa, the weight and group rows, the
+weigh-in dialog and the automatic-save notification. A change SHALL never disagree with the two
+numbers it comes from.
 
 #### Scenario: Card range and change agree
 - **GIVEN** a week whose first weight is 82.34 kg and latest 81.76 kg
