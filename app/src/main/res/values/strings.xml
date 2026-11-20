@@ -316,7 +316,6 @@
     <string name="home_food_bars">Päivittäin syödyt kilokalorit jaksolla, %1$d päivää</string>
     <string name="home_average_word">keskiarvo</string>
     <string name="home_food_no_average">ei vielä keskiarvoa</string>
-    <string name="home_open_energy">Avaa Syöty</string>
     <string name="home_open_food">Avaa päivän annokset</string>
     <string name="home_weigh">Punnitse</string>
     <string name="food_week">Viikko</string>
