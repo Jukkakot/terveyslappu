@@ -22,8 +22,8 @@ Test data is made up. `everyday-feedback` is merged; the weigh-in dialog and `au
 ## 4. Ruoka and the item editor
 
 - [x] 4.1 Ruoka top bar: replace the sort icon with a ⋮ "Lisää toimintoja" menu holding "Järjestä annokset" (design 7), shown under the old sort icon's rule (granted, loaded, more than one annos that day); order mode keeps Valmis; update `FoodScreenTest` (menu item starts Järjestä) and add Ruoka to `LargeTextTest` at 200 % with a fixture of at least two annokset (back, title, Viikko and ⋮ displayed).
-- [ ] 4.2 Pure recent-amounts rule in `food/` (design 9) with unit tests: matched by `FoodItem.key`, day-then-time newest first over all days, distinct by shown text, same unit only, edited annos and Yhteensä annokset excluded, at most three, empty for no history.
-- [ ] 4.3 `FoodEditor` chips under the amount field from both callers (`MainScreen`, `FoodAddDialog`); hidden for Yhteensä, when empty and while loading; chip equal to the field selected; the field keeps its number on a kpl/g switch; smoke test: tapping "200 g" sets the amount field and the result line.
+- [x] 4.2 Pure recent-amounts rule in `food/` (design 9) with unit tests: matched by `FoodItem.key`, day-then-time newest first over all days, distinct by shown text, same unit only, edited annos and Yhteensä annokset excluded, at most three, empty for no history.
+- [x] 4.3 `FoodEditor` chips under the amount field from both callers (`MainScreen`, `FoodAddDialog`); hidden for Yhteensä, when empty and while loading; chip equal to the field selected; the field keeps its number on a kpl/g switch; smoke test: tapping "200 g" sets the amount field and the result line. (Done on the extracted `RecentAmountChips`: the editor AlertDialog never idles under Robolectric.)
 
 ## 5. Ulkoasu
 

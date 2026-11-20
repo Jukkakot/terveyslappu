@@ -27,6 +27,35 @@ class FoodRulesTest {
     )
 
     @Test
+    fun `recent amounts are newest first, distinct, in the unit, without the edited annos`() {
+        val g = AmountUnit.G
+        val items = listOf(
+            item("Rahka", today, 1, amount = Amount(150.0, g), uuid = "edited"),
+            item("Rahka", today.minusDays(1), 1, amount = Amount(250.0, g), uuid = "a"),
+            item("Rahka", today.minusDays(2), 1, amount = Amount(200.0, g), uuid = "b"),
+            item("Rahka", today.minusDays(3), 1, amount = Amount(250.0, g), uuid = "c"),
+            item("Rahka", today.minusDays(3), 2, amount = Amount(1.0, AmountUnit.KPL), uuid = "kpl"),
+            item("Rahka", today.minusDays(4), 1, uuid = "total", kcal = 300.0),
+            item("Rahka", today.minusDays(5), 1, amount = Amount(180.0, g), uuid = "d"),
+            item("Rahka", today.minusDays(6), 1, amount = Amount(120.0, g), uuid = "e"),
+            item("Pulla", today.minusDays(1), 1, amount = Amount(90.0, g), uuid = "other"),
+        )
+        val key = FoodNames.key("Rahka")
+        assertEquals(listOf(250.0, 200.0, 180.0), FoodDay.recentAmounts(items, key, g, "edited").map { it.value })
+        assertEquals(listOf(1.0), FoodDay.recentAmounts(items, key, AmountUnit.KPL, "edited").map { it.value })
+        assertEquals(emptyList(), FoodDay.recentAmounts(items, FoodNames.key("Uusi"), g))
+    }
+
+    @Test
+    fun `recent amounts within a day go newest logging time first`() {
+        val items = listOf(
+            item("Puuro", today, 1, amount = Amount(300.0, AmountUnit.G), h = 8, uuid = "morning"),
+            item("Puuro", today, 2, amount = Amount(350.0, AmountUnit.G), h = 18, uuid = "evening"),
+        )
+        assertEquals(listOf(350.0, 300.0), FoodDay.recentAmounts(items, FoodNames.key("Puuro"), AmountUnit.G).map { it.value })
+    }
+
+    @Test
     fun `kcal from per 100 g and per piece, unknown for the wrong unit`() {
         assertEquals(350.0, Energy.per100g(140.0).kcalOf(Amount(250.0, AmountUnit.G)))
         assertEquals(125.0, Energy.perPiece(25.0).kcalOf(Amount(5.0, AmountUnit.KPL)))

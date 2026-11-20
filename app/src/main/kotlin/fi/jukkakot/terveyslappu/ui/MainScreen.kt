@@ -152,7 +152,7 @@ fun MainScreen(
     if (state.entryOpen) ManualEntryDialog(state, actions)
     // The add search covers whatever screen it was opened from; leaving it without adds just closes it.
     AddFoodSearch(food, baseProducts, foodActions, FoodDialogActions(onGrant = foodActions.onGrant, onOpenSettings = foodActions.onGrant))
-    food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), foodActions, draft = food.draft != null) }
+    food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), foodActions, draft = food.draft != null, items = food.items) }
     food.energyAsk?.let { EnergyDialog(it, foodActions.onEnergyChoice) }
     food.ai?.let { AiImportPreview(it, foodActions, food.aiPlan) }
     state.import?.let { ImportDialog(it, actions.onConfirmImport, actions.onDismissImport) }

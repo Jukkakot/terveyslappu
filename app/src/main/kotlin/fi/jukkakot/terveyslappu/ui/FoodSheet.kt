@@ -96,6 +96,7 @@ import fi.jukkakot.terveyslappu.R
 import fi.jukkakot.terveyslappu.food.EditInput
 import fi.jukkakot.terveyslappu.food.EnterRow
 import fi.jukkakot.terveyslappu.food.EditMode
+import fi.jukkakot.terveyslappu.food.FoodDay
 import fi.jukkakot.terveyslappu.food.Energy
 import fi.jukkakot.terveyslappu.food.AmountUnit
 import fi.jukkakot.terveyslappu.food.FoodEdits
@@ -139,7 +140,7 @@ private fun numberText(value: Double?): String = value?.let { if (it % 1.0 == 0.
 /** The item editor (design "Editor"): name, amount with its unit choice, kcal, Herkku, Poista; as a draft Lisää / Peruuta. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodActions, draft: Boolean = false) {
+internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodActions, draft: Boolean = false, items: List<FoodItem>? = null) {
     val start = remember(item) { FoodEdits.editStart(item, products.firstOrNull { it.key == item.key }) }
     var name by remember(item) { mutableStateOf(start.name) }
     var mode by remember(item) { mutableStateOf(start.mode) }
@@ -147,6 +148,15 @@ internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodAc
     var kcal by remember(item) { mutableStateOf(numberText(start.kcal)) }
     var treat by remember(item) { mutableStateOf(start.treat) }
     val input = EditInput(name, mode, number(amount), number(kcal), treat)
+    // The same ruoka's earlier amounts in the chosen unit; none while the annokset load or for Yhteensä.
+    val recent = remember(items, item, mode) {
+        val unit = when (mode) {
+            EditMode.KPL -> AmountUnit.KPL
+            EditMode.G -> AmountUnit.G
+            EditMode.TOTAL -> null
+        }
+        if (items == null || unit == null) emptyList() else FoodDay.recentAmounts(items, item.key, unit, item.uuid)
+    }
     AlertDialog(
         onDismissRequest = actions.onCloseEditor,
         title = { Text(stringResource(R.string.food_edit_title)) },
@@ -166,6 +176,7 @@ internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodAc
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth().testTag("editAmount"),
                     )
+                    RecentAmountChips(recent, number(amount)) { amount = numberText(it.value) }
                 }
                 val kcalLabel = when (mode) {
                     EditMode.KPL -> R.string.food_edit_kcal_kpl
@@ -203,4 +214,24 @@ internal fun FoodEditor(item: FoodItem, products: List<Product>, actions: FoodAc
             }
         },
     )
+}
+
+/**
+ * The editor's recent amounts (food-log "Recent amounts in the editor"): one chip per amount, the
+ * one equal to the field ([current]) chosen; a tap fills the field and saves nothing. No row when empty.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun RecentAmountChips(recent: List<fi.jukkakot.terveyslappu.food.Amount>, current: Double?, onPick: (fi.jukkakot.terveyslappu.food.Amount) -> Unit) {
+    if (recent.isEmpty()) return
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("recentAmounts")) {
+        recent.forEach { chip ->
+            FilterChip(
+                selected = current == chip.value,
+                onClick = { onPick(chip) },
+                label = { Text(formatAmount(chip)) },
+                modifier = Modifier.testTag("recent-${chip.value}"),
+            )
+        }
+    }
 }

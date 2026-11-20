@@ -1,5 +1,7 @@
 package fi.jukkakot.terveyslappu.ui
 
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,7 +12,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -169,6 +170,26 @@ class FoodScreenTest {
     fun `no more menu for a day with a single annos`() {
         show(MainUiState(access = Access.GRANTED, weights = emptyList(), screen = Screen.FOOD), granted.copy(day = today.minusDays(1)))
         compose.onNodeWithTag("foodMore").assertDoesNotExist()
+    }
+
+    /** The editor dialog itself never idles under Robolectric, so its chips row is tested on its own. */
+    @Test
+    fun `recent amount chips fill the amount and mark the chosen one`() {
+        val g = AmountUnit.G
+        var current by androidx.compose.runtime.mutableStateOf<Double?>(150.0)
+        compose.setContent {
+            TerveysTheme { RecentAmountChips(listOf(Amount(250.0, g), Amount(200.0, g)), current) { current = it.value } }
+        }
+        compose.onNodeWithTag("recent-250.0").assertIsNotSelected()
+        compose.onNodeWithTag("recent-200.0").performClick()
+        assertEquals(200.0, current)
+        compose.onNodeWithTag("recent-200.0").assertIsSelected()
+    }
+
+    @Test
+    fun `no recent amounts, no chips row`() {
+        compose.setContent { TerveysTheme { RecentAmountChips(emptyList(), null) {} } }
+        compose.onNodeWithTag("recentAmounts").assertDoesNotExist()
     }
 
     @Test

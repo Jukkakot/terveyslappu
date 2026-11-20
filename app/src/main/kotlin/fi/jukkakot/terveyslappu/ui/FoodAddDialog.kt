@@ -11,6 +11,6 @@ import fi.jukkakot.terveyslappu.food.BaseProduct
 @Composable
 internal fun FoodAddDialog(food: FoodUiState, base: List<BaseProduct>, actions: FoodActions, dialog: FoodDialogActions) {
     AddFoodSearch(food, base, actions, dialog)
-    food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), actions, draft = food.draft != null) }
+    food.editing?.let { FoodEditor(it, food.products + listOfNotNull(food.draft?.product), actions, draft = food.draft != null, items = food.items) }
     food.energyAsk?.let { EnergyDialog(it, actions.onEnergyChoice) }
 }

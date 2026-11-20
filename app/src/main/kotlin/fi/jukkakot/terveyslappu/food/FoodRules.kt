@@ -234,6 +234,19 @@ object FoodDay {
     fun ordered(items: Collection<FoodItem>): List<FoodItem> =
         items.sortedWith(compareBy<FoodItem> { it.pos == null }.thenBy { it.pos ?: 0 }.thenBy { it.time })
 
+    /**
+     * The amounts the item editor offers as chips (food-log "Recent amounts in the editor"): the
+     * ruoka's other annokset ([key] = [FoodItem.key], all days, [exclude] the edited annos) in [unit],
+     * newest first by day then logging time, distinct by the amount as shown (one decimal), annokset
+     * without an amount (Yhteensä) skipped, at most [limit].
+     */
+    fun recentAmounts(items: Collection<FoodItem>, key: String, unit: AmountUnit, exclude: String? = null, limit: Int = 3): List<Amount> =
+        items.filter { it.key == key && it.uuid != exclude && it.amount?.unit == unit }
+            .sortedWith(compareByDescending<FoodItem> { it.day }.thenByDescending { it.time })
+            .mapNotNull { it.amount }
+            .distinctBy { Math.round(it.value * 10) }
+            .take(limit)
+
     fun nextPos(dayItems: Collection<FoodItem>): Int = (dayItems.mapNotNull { it.pos }.maxOrNull() ?: 0) + 1
 
     /** [order] renumbered 1..n; only the items whose position changed. */
