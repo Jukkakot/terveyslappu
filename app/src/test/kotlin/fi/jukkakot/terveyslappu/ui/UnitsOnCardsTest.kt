@@ -25,6 +25,8 @@ class UnitsOnCardsTest {
         R.string.home_food_average_long,
         R.string.home_steps_average_long,
         R.string.home_burn_average_long,
+        R.string.food_day_treats,
+        R.string.burn_active_line,
     )
 
     private val unit = Regex("(%\\d[$]s|\\d|→) (kg|kcal|askelta)")

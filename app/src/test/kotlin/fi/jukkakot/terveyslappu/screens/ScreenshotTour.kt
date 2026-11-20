@@ -8,7 +8,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import fi.jukkakot.terveyslappu.food.Amount
@@ -101,6 +104,28 @@ class ScreenshotTour {
                     compose.waitForIdle()
                     val file = File(out, "${colours.name.lowercase()}-${if (dark) "tumma" else "vaalea"}-$name.png")
                     compose.onRoot().captureRoboImage(file.absolutePath)
+                }
+            }
+        }
+    }
+
+    /** ui-polish design 11: the front page (top and scrolled to its end), Ruoka and Ulkoasu at 200 % text. */
+    @Test
+    @Config(fontScale = 2f)
+    fun tour200() {
+        val current = androidx.compose.runtime.mutableStateOf(base to true)
+        compose.setContent { current.value.let { androidx.compose.runtime.key(it) { Shown(it.first, it.second, ColourChoice.BRAND) } } }
+        val shots = listOf("etusivu" to base, "ruoka" to base.copy(screen = Screen.FOOD), "ulkoasu" to base.copy(screen = Screen.SETTINGS, settingsPage = SettingsPage.APPEARANCE))
+        for (dark in listOf(true, false)) {
+            for ((name, state) in shots) {
+                current.value = state to dark
+                compose.waitForIdle()
+                val prefix = "brand-${if (dark) "tumma" else "vaalea"}-$name"
+                compose.onRoot().captureRoboImage(File(out, "$prefix-200.png").absolutePath)
+                if (name == "etusivu") {
+                    compose.onNodeWithTag("homeGrid").performScrollToNode(hasTestTag("homeSlot-steps"))
+                    compose.waitForIdle()
+                    compose.onRoot().captureRoboImage(File(out, "$prefix-loppu-200.png").absolutePath)
                 }
             }
         }

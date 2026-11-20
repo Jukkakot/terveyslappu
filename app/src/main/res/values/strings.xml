@@ -326,7 +326,7 @@
     <string name="food_permission_settings">Avaa Health Connect</string>
     <string name="food_read_failed">Annoksia ei voitu lukea. Syy on lokissa.</string>
     <string name="food_kcal">%1$s kcal</string>
-    <string name="food_day_treats">herkkuja %1$s kcal</string>
+    <string name="food_day_treats">herkkuja %1$s kcal</string>
     <string name="food_day_without">%1$d ilman kcal</string>
     <string name="food_day_empty">Tälle päivälle ei ole annoksia. Lisää annos alta, myös jälkikäteen.</string>
     <string name="food_today">Tänään</string>
@@ -613,7 +613,7 @@
     <string name="burn_legend">kulutus</string>
     <string name="burn_stat_active">Aktiivinen keskiarvo</string>
     <string name="burn_stat_days">Päiviä</string>
-    <string name="burn_active_line">aktiivinen %1$s kcal</string>
+    <string name="burn_active_line">aktiivinen %1$s kcal</string>
     <string name="home_burn_title">Kulutus</string>
     <string name="home_burn_average_long">keskiarvo %1$s kcal/⁠pv</string>
     <string name="home_burn_bars">Päivittäinen kulutus jaksolla, %1$d päivää</string>

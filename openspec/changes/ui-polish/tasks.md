@@ -31,7 +31,7 @@ Test data is made up. `everyday-feedback` is merged; the weigh-in dialog and `au
 
 ## 6. Screenshot tour and checks
 
-- [ ] 6.1 Add the 200 % shots to `ScreenshotTour` (design 10: etusivu top and scrolled, Ruoka, Ulkoasu; brand colours; both themes; `-200` in the name); run `./gradlew testDebugUnitTest -Pscreenshots --tests '*ScreenshotTour*'` and look at the PNGs (never commit them).
+- [x] 6.1 Add the 200 % shots to `ScreenshotTour` (design 10: etusivu top and scrolled, Ruoka, Ulkoasu; brand colours; both themes; `-200` in the name); run `./gradlew testDebugUnitTest -Pscreenshots --tests '*ScreenshotTour*'` and look at the PNGs (never commit them).
 - [ ] 6.2 Run `./gradlew test lint assembleDebug`; all green.
 
 ## 7. Release
@@ -44,3 +44,4 @@ Test data is made up. `everyday-feedback` is merged; the weigh-in dialog and `au
   decisions (Viikossa one decimal, theme radio rows, food card one target) at merge, then archives.
 - Follow-up for `everyday-feedback`'s area: the weigh-in dialog's change line can adopt the
   shown-change helper.
+- Found in the 200 % tour, left for a later change: Ruoka's one-line annos rows shorten long names to "…" at 200 % text (food-row-info layout); "herkkuja N kcal" and "aktiivinen N kcal" now keep their unit (fixed here).
