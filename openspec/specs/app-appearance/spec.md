@@ -15,7 +15,9 @@ own colour palette as before. The quantity colours (see "Quantity colours") and 
 and chart looks SHALL be the same in both. Both choices SHALL be remembered, combine freely and
 apply at once to every screen of the app (home, Historia, Ruoka, Asetukset, Ohje, the weigh-in
 dialog, manual entry, the Lisää annos dialog). Asetukset's Ulkoasu row SHALL read both choices
-("Tumma · Terveyslappu").
+("Tumma · Terveyslappu"). Each choice SHALL be a single-choice list: one full-width row per option
+with a radio button and the option's name, the whole row tappable (at least 48 dp high), so no
+option name wraps or breaks at any width or text size.
 
 #### Scenario: Default
 - **GIVEN** the user has never chosen a theme or colours and the phone is in dark mode
@@ -39,6 +41,13 @@ dialog, manual entry, the Lisää annos dialog). Asetukset's Ulkoasu row SHALL r
 - **WHEN** the user picks Puhelimen värit
 - **THEN** backgrounds, cards and buttons take the wallpaper's colours at once, while the weight
   line stays mint and the Syöty bars amber
+
+#### Scenario: Options on one line each
+- **GIVEN** a 360 dp phone at 100 % or 200 % text size
+- **WHEN** Ulkoasu is shown
+- **THEN** Järjestelmä, Vaalea, Tumma, Terveyslappu and Puhelimen värit each sit whole on their own
+  row with a radio button, the chosen one filled, and TalkBack reads each as a radio button with
+  its state
 
 ### Requirement: Undo messages
 Every message with Kumoa in the app (deleted item, added item, import, removed product, weights)

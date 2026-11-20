@@ -226,6 +226,8 @@ so a shared log can be replayed exactly as a test.
 ### Requirement: Change from the previous weight
 After saving a scale weight the dialog SHALL show the difference to the latest earlier weight in
 Health Connect from any app, with that weight's day, or nothing when there is no earlier weight.
+The difference SHALL be that of the two weights as shown with one decimal (see weight-chart
+"Changes from shown weights"), so it never disagrees with them.
 
 #### Scenario: Lighter than last time
 - **GIVEN** the latest earlier weight is 82.8 kg yesterday
@@ -235,6 +237,10 @@ Health Connect from any app, with that weight's day, or nothing when there is no
 #### Scenario: Same weight
 - **WHEN** the saved weight equals the previous one
 - **THEN** the dialog shows "±0,0 kg edellisestä"
+
+#### Scenario: Rounded as shown
+- **GIVEN** the latest earlier weight is 82.34 kg and 81.76 kg is saved
+- **THEN** the dialog shows 81,8 kg and "−0,5 kg edellisestä", the difference of 82,3 and 81,8
 
 #### Scenario: First weight
 - **WHEN** Health Connect has no earlier weight

@@ -22,9 +22,9 @@ Phases in order; one OpenSpec change each unless noted.
 - **Usability review 2026-11-19** (heuristic audit + competitor research; the 2026-11-09..19 log was mostly feature testing, so log counts are only hypotheses). User 2026-11-19: U1–U6 and U8 go first as one change (everyday-feedback).
   - Everyday paths:
     - ~~U1–U6 and U8~~ done as everyday-feedback (v1.64): end view with Punnitse uudelleen and the repeat line, the recent automatic weight (2 min), notification Kumoa without OK, accessibility timeouts, the search's marks and strip, the bar with the amount, the widget ✓. Left from U6: tapping an added row's mark opens its editor.
-    - U7 last 2–3 amounts of a ruoka as chips in the editor (MacroFactor, MFP) (S).
+    - ~~U7~~ done (ui-polish) last 2–3 amounts of a ruoka as chips in the editor (MacroFactor, MFP) (S).
 
-    - U9 food card opens Ruoka as a whole (today title/number → Ruoka, bars → Historia is hidden) (S).
+    - ~~U9~~ done (ui-polish) food card opens Ruoka as a whole (today title/number → Ruoka, bars → Historia is hidden) (S).
     - ~~U10 front-page FAB "Lisää annos"~~ declined (user 2026-11-19): the Lisää annos home-screen widget covers it.
   - New features from other apps:
     - F1 copy annokset (a day or selected) to today / another day; F2 move an annos to another day (M / S).
@@ -33,7 +33,8 @@ Phases in order; one OpenSpec change each unless noted.
     - F5 week table: average weight and change, Syöty, steps, Kulutus per week (M).
     - F6 day note shown as a chart marker and kept in the data file (M); F7 calendar dots for days with data (S).
     - F8 conditional weigh-in reminder, off by default, only when no weight by a set time (S); F9 barcode → new ruoka (Open Food Facts, Finnish coverage unverified) (M).
-  - Polish: "askelta/pv" wraps mid-unit on small cards (non-breaking space); Paino tab "Muutos −0,6" vs "Viikossa −0,68" decimals; cards clamp font scale to 130 % (test 200 %); Historia tab row clips "Uusi kaavio" (make it a + tab or ⋮ item); theme chips wrap (SegmentedButton); Järjestä icon without label; weigh-in result's 10 s auto-close invisible (countdown on Valmis, Poista apart).
+  - Done as ui-polish (v1.65) with U7 and U9: Polish: "askelta/pv" wraps mid-unit on small cards (non-breaking space); Paino tab "Muutos −0,6" vs "Viikossa −0,68" decimals; cards clamp font scale to 130 % (test 200 %); Historia tab row clips "Uusi kaavio" (make it a + tab or ⋮ item); theme chips wrap (SegmentedButton); Järjestä icon without label; weigh-in result's 10 s auto-close invisible (countdown on Valmis, Poista apart).
+  - Follow-up: at 200 % text Ruoka's one-line annos rows cut long names to "…" (food-row-info layout).
   - Logging to settle hypotheses with normal use: `weighin.end reason= heard= ignored= todaySaved=`, `food.search.end added= typed= ms=`, `food.search.ready ms=`, `auto.action delete ageS=` + re-weigh within 15 min.
 
 - ~~**visual-identity**~~ done 2026-11-17 (v1.61): direction **AC** chosen: A's 24 dp borderless cards, tinted tile icons and one colour per quantity (paino mint, ruoka amber, askeleet blue) on C's graphite (#0E1013 / cards #16191E) with C's glowing mint weight line and today highlight; bigger semibold numbers; Historia header with tabs first and one-row period selector, a big Muutos number, the red row bins replaced by ⋮; plus an Asetukset choice "Puhelimen värit / Terveyslappu" (user 2026-11-17: keep the phone's Material You as an option). Mockups, comparisons and the audit: `openspec/design/visual-identity/`. No gamification (product.md "A plain tool"). Proposed 2026-11-17 as change `visual-identity`.
