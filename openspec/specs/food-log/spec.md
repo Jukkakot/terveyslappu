@@ -732,7 +732,7 @@ Details:
   its removal brings it back in its place.
 - Typing: up to ten matching ruuat (own before Valmiit ruuat, best match first, directly under
   the top bar) and as the last row "Lisää ”<text>” uutena" with a line telling what it adds (for a
-  bare number "Lisää pelkkä <N> kcal"; for other text "ilman kcal" or the known ruoka's kcal).
+  bare number "Lisää pelkkä <N> kcal"; for a known ruoka its kcal, for a new name "täytä tiedot").
   Clearing the field (✕ or deleting the text) brings the empty-field content back. The list
   scrolls when it does not fit; scrolling it hides the keyboard.
 - Every ruoka row starts with a + icon in the primary colour (TalkBack click label "Lisää <name>")
@@ -742,8 +742,10 @@ Details:
   button ("Removing a product from the search"). Rows have no dividers. The "Lisää … uutena" row
   starts with the same + icon and has no ⋮.
 - Tapping "Lisää … uutena" does what Enter does. Enter adds exactly the typed text: a bare number
-  as an annos "Pikalisäys" with that many kcal, any other text as an annos of that name (its
-  ruoka's kcal when the name is a known ruoka, otherwise without kcal).
+  as an annos "Pikalisäys" with that many kcal, a known ruoka's name (own, or Valmiit ruuat by name
+  or alias) as an annos of that ruoka. A new name does not add at once: it opens the editor for a
+  new annos (as ⋮ → Muokkaa below) with the name filled and no kcal, since the details come next;
+  Lisää adds it as edited, Peruuta returns to the search with the typed text kept and adds nothing.
 - After any add the keyboard stays as it was and the bar "<name> <amount> lisätty · Kumoa" shows
   ("Search messages and loading"); Kumoa removes that annos.
 - Added mark: a ruoka row whose ruoka has annokset counted as added in this search ("Leaving the
@@ -848,10 +850,6 @@ Details:
 - **THEN** the search reads "Lisätään: Eilen", yesterday gets an annos "Pikalisäys" 2 200 kcal,
   and back shows yesterday on Ruoka with it highlighted
 
-#### Scenario: Only a name
-- **WHEN** the user types "työpaikan pizza", which is no ruoka yet, and presses Enter
-- **THEN** an annos "työpaikan pizza" without kcal is logged
-
 #### Scenario: Forgiving search
 - **WHEN** the user types "jaulihak"
 - **THEN** Jauhelihakastike is suggested (letters ä/a and ö/o equal, parts of compound words and
@@ -865,6 +863,17 @@ Details:
 - **WHEN** a ruoka "Keitetty täysjyvämakaroni" is listed on a narrow phone
 - **THEN** the row shows the name on one line shortened with "…", the amount and kcal under it,
   and the ⋮ button in full
+
+#### Scenario: Only a name
+- **GIVEN** no ruoka is named "työpaikan pizza"
+- **WHEN** the user types "työpaikan pizza" and presses Enter
+- **THEN** the editor for a new annos opens with the name "työpaikan pizza", Lisää and Peruuta, and
+  nothing is logged until Lisää
+
+#### Scenario: Known name adds at once
+- **GIVEN** an own ruoka Rahka 130 kcal
+- **WHEN** the user types "rahka" and presses Enter
+- **THEN** Rahka is logged at once with the bar "Rahka 200 g lisätty · Kumoa"
 
 ### Requirement: Leaving the search
 Leaving the search (the back arrow, the added strip's Valmis, or system back when the keyboard is
