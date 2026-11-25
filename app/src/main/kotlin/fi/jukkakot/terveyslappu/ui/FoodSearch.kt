@@ -309,7 +309,7 @@ private fun EnterRowView(row: EnterRow, actions: FoodActions) {
             Text(stringResource(R.string.food_enter_row, row.text), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val detail = when (row) {
                 is EnterRow.Quick -> stringResource(R.string.food_enter_quick, formatKcal(row.kcal))
-                is EnterRow.Named -> row.product?.let { suggestionDetail(it) } ?: stringResource(R.string.food_no_kcal)
+                is EnterRow.Named -> row.product?.let { suggestionDetail(it) } ?: stringResource(R.string.food_enter_fill)
             }
             Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

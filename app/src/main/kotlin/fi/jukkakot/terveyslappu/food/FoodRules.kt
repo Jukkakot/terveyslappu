@@ -141,6 +141,13 @@ fun resolveTyped(name: String, own: List<Product>, base: List<BaseProduct>): Sug
     return Suggestion.Own(Product(FoodNames.clean(name)))
 }
 
+/** A typed name is a known ruoka: own by key, or a base product by name or alias; a new name opens the editor on Enter. */
+fun isKnownName(name: String, own: List<Product>, base: List<BaseProduct>): Boolean {
+    val key = FoodNames.key(name)
+    return own.any { it.key == key } ||
+        base.any { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }
+}
+
 /** The typed list's last row "Lisää ”<text>” uutena": what enter adds (food-log "Adding an item"). */
 sealed interface EnterRow {
     /** The quoted text, cleaned. */
@@ -163,12 +170,8 @@ sealed interface EnterRow {
             if (listed.any { it.product.key == FoodNames.key(text) }) return null
             return when (input) {
                 is AddInput.Quick -> Quick(text, input.kcal)
-                is AddInput.Name -> {
-                    val key = FoodNames.key(input.name)
-                    val known = own.any { it.key == key } ||
-                        base.any { b -> FoodNames.key(b.name) == key || b.aliases.any { FoodNames.key(it) == key } }
-                    Named(text, if (known) resolveTyped(input.name, own, base).product else null)
-                }
+                is AddInput.Name ->
+                    Named(text, if (isKnownName(input.name, own, base)) resolveTyped(input.name, own, base).product else null)
             }
         }
     }

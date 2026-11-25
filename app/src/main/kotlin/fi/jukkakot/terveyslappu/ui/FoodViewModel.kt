@@ -32,6 +32,7 @@ import fi.jukkakot.terveyslappu.food.FoodRecords
 import fi.jukkakot.terveyslappu.food.HealthConnectFoods
 import fi.jukkakot.terveyslappu.food.Product
 import fi.jukkakot.terveyslappu.food.Suggestion
+import fi.jukkakot.terveyslappu.food.isKnownName
 import fi.jukkakot.terveyslappu.food.resolveTyped
 import fi.jukkakot.terveyslappu.log.AppLog
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -357,11 +358,19 @@ class FoodViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(query = "") }
     }
 
-    /** Enter: exactly the typed text (a bare number as Pikalisäys, a name with its product's kcal). */
+    /**
+     * Enter: a bare number as Pikalisäys, a known name with its product's kcal; a new name opens the
+     * new-annos editor instead, since its details come next (Peruuta keeps the typed text).
+     */
     fun addTyped() {
         when (val input = AddInput.parse(_state.value.query) ?: return) {
             is AddInput.Quick -> add(null, input.kcal, "quick")
-            is AddInput.Name -> add(resolveTyped(input.name, store.all(), base), null, "typed")
+            is AddInput.Name -> {
+                val own = store.all()
+                val pick = resolveTyped(input.name, own, base)
+                if (!isKnownName(input.name, own, base)) return editDraft(pick)
+                add(pick, null, "typed")
+            }
         }
         _state.update { it.copy(query = "") }
     }

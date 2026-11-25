@@ -219,6 +219,33 @@ class FoodViewModelTest {
     }
 
     @Test
+    fun `Enter on a new name opens the editor and writes only after Lisaa`() {
+        ready()
+        type("Testimuffinssi")
+        assertEquals("Testimuffinssi", state.editing?.name)
+        assertNull(state.editing?.kcal)
+        assertEquals(today, state.editReturn)
+        assertTrue(records.items.isEmpty())
+        model.closeEditor()
+        assertEquals("Testimuffinssi", state.query)
+        assertEquals(today, state.searchDay)
+        model.addTyped()
+        model.addDraft(EditInput("Testimuffinssi", EditMode.KPL, 1.0, 250.0, false))
+        idle()
+        assertEquals(listOf("Testimuffinssi"), records.items.map { it.name })
+        assertEquals("", state.query)
+    }
+
+    @Test
+    fun `Enter on a known name adds at once`() {
+        app.products.put(Product("Testirahka", false, Energy(65.0, AmountUnit.G), Amount(200.0, AmountUnit.G)))
+        ready()
+        type("testirahka")
+        assertNull(state.editing)
+        assertEquals(listOf("Testirahka"), records.items.map { it.name })
+    }
+
+    @Test
     fun `an edited add from the draft editor counts as added and Peruuta does not`() {
         app.products.put(Product("Testikastike", false, Energy(140.0, AmountUnit.G), Amount(250.0, AmountUnit.G)))
         ready()

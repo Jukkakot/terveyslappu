@@ -196,20 +196,16 @@ class FoodAddDialogTest {
     }
 
     @Test
-    fun `the enter row adds what enter adds`() {
+    fun `the enter row adds a bare number at once`() {
         open().use {
             compose.onNodeWithTag("addField").performTextInput("350")
             compose.onNodeWithTag("enterRow").performClick()
             compose.waitUntil(5_000) { shadowOf(Looper.getMainLooper()).idle(); records.items.isNotEmpty() }
             compose.onNodeWithTag("addField").performTextInput("Testimuffinssi")
-            compose.onNodeWithTag("enterRow").performClick()
-            compose.waitForIdle()
-            // The writes run in the app scope on the main looper.
-            shadowOf(Looper.getMainLooper()).idle()
-            val items = records.items.sortedBy { it.pos }
-            assertEquals(listOf("Pikalisäys", "Testimuffinssi"), items.map { it.name })
-            assertEquals(350.0, items.first().kcal)
-            assertNull(items.last().kcal)
+            // A new name opens the editor instead (FoodViewModelTest covers it).
+            compose.onNodeWithTag("enterRow").assertExists()
+            assertEquals(listOf("Pikalisäys"), records.items.map { it.name })
+            assertEquals(350.0, records.items.single().kcal)
         }
     }
 
